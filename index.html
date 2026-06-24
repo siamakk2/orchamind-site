@@ -267,6 +267,23 @@
   .chat-suggestions{display:flex;flex-wrap:wrap;gap:8px;padding:4px 12px 12px;}
   .chat-suggestions button{background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.14);color:rgba(255,255,255,0.8);font-family:'Inter';font-size:13px;padding:8px 14px;border-radius:100px;cursor:pointer;transition:all .2s;}
   .chat-suggestions button:hover{background:rgba(45,127,249,0.2);border-color:var(--signal);color:#fff;}
+
+  .mic-btn{background:var(--navy2);border:1px solid rgba(255,255,255,0.15);border-radius:11px;width:52px;flex-shrink:0;color:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .2s;}
+  .mic-btn svg{width:20px;height:20px;}
+  .mic-btn:hover{border-color:var(--signal);}
+  .mic-btn.listening{background:linear-gradient(135deg,var(--signal),var(--amber));border-color:transparent;animation:micpulse 1.3s infinite;}
+  @keyframes micpulse{0%{box-shadow:0 0 0 0 rgba(45,127,249,0.5);}70%{box-shadow:0 0 0 12px rgba(45,127,249,0);}100%{box-shadow:0 0 0 0 rgba(45,127,249,0);}}
+  .voice-toggle-row{display:flex;align-items:center;justify-content:space-between;padding:4px 14px 12px;}
+  .voice-toggle{display:flex;align-items:center;gap:7px;color:rgba(255,255,255,0.7);font-size:13px;cursor:pointer;}
+  .voice-toggle input{accent-color:var(--signal);width:15px;height:15px;}
+  .voice-status{color:var(--signal-soft);font-size:13px;font-style:italic;}
+
+  .founder-grid{display:grid;grid-template-columns:0.8fr 1.2fr;gap:60px;align-items:center;}
+  .founder-photo{display:flex;flex-direction:column;align-items:center;gap:20px;}
+  .founder-avatar{width:200px;height:200px;border-radius:24px;background:linear-gradient(135deg,var(--navy),var(--signal));display:flex;align-items:center;justify-content:center;font-family:'Sora';font-weight:800;font-size:64px;color:#fff;box-shadow:0 20px 50px rgba(45,127,249,0.3);}
+  .founder-badges{display:flex;flex-direction:column;gap:8px;width:200px;}
+  .fb{background:var(--paper);border:1px solid var(--line);border-radius:100px;padding:9px 16px;text-align:center;font-size:13px;font-weight:600;color:var(--signal);}
+  @media(max-width:900px){.founder-grid{grid-template-columns:1fr;gap:34px;text-align:center;}.founder-photo{order:-1;}.founder-badges{margin:0 auto;}}
 </style>
 </head>
 <body>
@@ -282,6 +299,7 @@
       <a href="#demo">Live Demo</a>
       <a href="#features">Features</a>
       <a href="#industries">Industries</a>
+      <a href="#founder">About</a>
       <a href="#proof">Proof</a>
       <a href="#askai">Ask AI</a>
       <a href="#faq">FAQ</a>
@@ -501,6 +519,28 @@
   </div>
 </section>
 
+
+<section class="founder" id="founder" style="background:var(--white);">
+  <div class="wrap">
+    <div class="founder-grid">
+      <div class="founder-photo">
+        <div class="founder-avatar">SK</div>
+        <div class="founder-badges">
+          <span class="fb">Software Engineer</span>
+          <span class="fb">AI Developer</span>
+          <span class="fb">35+ yrs in business</span>
+        </div>
+      </div>
+      <div class="founder-text">
+        <div class="section-eyebrow">Who's behind it</div>
+        <h2 class="section-title" style="font-size:36px;">Built by someone who's run a business for 35 years — and can actually build the AI.</h2>
+        <p style="font-size:17px;color:var(--slate);margin-bottom:18px;">Orchamind is built by <b style="color:var(--ink);">Siamak Kalhor</b> — software engineer, AI developer, and the founder of Siamak Kalhor Consulting.</p>
+        <p style="font-size:16px;color:var(--slate);margin-bottom:18px;">For 19 years he was the voice on <b style="color:var(--ink);">670 AM KIRN</b> explaining technology to everyday people in plain language. With formal training in software engineering and 35+ years as a licensed Realtor running his own business, he knows both sides: how to build serious AI, and what a busy business owner actually needs from it.</p>
+        <p style="font-size:16px;color:var(--slate);">That's the whole idea behind Orchamind — <b style="color:var(--ink);">powerful technology you run just by talking to it.</b> No tech skills required.</p>
+      </div>
+    </div>
+  </div>
+</section>
 <section class="case" id="proof">
   <div class="wrap case-inner">
     <div>
@@ -543,8 +583,13 @@
         <div class="chat-msg bot"><div class="chat-bubble">👋 Hi! I'm the Orchamind assistant. Ask me anything — like "Does this work for plumbers?" or "How do I get started?"</div></div>
       </div>
       <div class="chat-input-row">
-        <input type="text" id="chatInput" placeholder="Type your question..." autocomplete="off">
+        <button onclick="toggleMic()" id="micBtn" title="Tap and speak" class="mic-btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2M12 19v4"/></svg></button>
+        <input type="text" id="chatInput" placeholder="Type, or tap the mic to talk..." autocomplete="off">
         <button onclick="sendChat()" id="chatSend">Send</button>
+      </div>
+      <div class="voice-toggle-row">
+        <label class="voice-toggle"><input type="checkbox" id="voiceReplies" checked> <span>🔊 Voice replies on</span></label>
+        <span id="voiceStatus" class="voice-status"></span>
       </div>
       <div class="chat-suggestions">
         <button onclick="askSuggested('Does this work for my industry?')">Does this work for my industry?</button>
@@ -647,6 +692,74 @@
     a.addEventListener('click',function(){document.getElementById('navLinks').classList.remove('open');});
   });
 
+  
+  // ===== VOICE: speak answers + listen to questions =====
+  var _voicePick=null;
+  function pickVoice(){
+    var voices=window.speechSynthesis?window.speechSynthesis.getVoices():[];
+    if(!voices.length)return null;
+    // Prefer warm, natural male English voices
+    var prefs=['Google US English','Microsoft Guy','Microsoft David','Daniel','Alex','Fred','Microsoft Mark'];
+    for(var i=0;i<prefs.length;i++){
+      for(var j=0;j<voices.length;j++){
+        if(voices[j].name.indexOf(prefs[i])>=0)return voices[j];
+      }
+    }
+    // fallback: first English voice
+    for(var k=0;k<voices.length;k++){if(voices[k].lang&&voices[k].lang.indexOf('en')===0)return voices[k];}
+    return voices[0];
+  }
+  if(window.speechSynthesis){
+    window.speechSynthesis.onvoiceschanged=function(){_voicePick=pickVoice();};
+    setTimeout(function(){_voicePick=pickVoice();},300);
+  }
+  function speak(text){
+    if(!window.speechSynthesis)return;
+    var rep=document.getElementById('voiceReplies');
+    if(!rep||!rep.checked)return;
+    window.speechSynthesis.cancel();
+    var u=new SpeechSynthesisUtterance(text);
+    if(!_voicePick)_voicePick=pickVoice();
+    if(_voicePick)u.voice=_voicePick;
+    u.rate=1.0;u.pitch=0.95;u.volume=1;
+    window.speechSynthesis.speak(u);
+  }
+
+  // Mic / speech recognition
+  var _recog=null,_listening=false;
+  function setupRecog(){
+    var SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+    if(!SR)return null;
+    var r=new SR();r.lang='en-US';r.interimResults=false;r.maxAlternatives=1;
+    r.onresult=function(e){
+      var said=e.results[0][0].transcript;
+      document.getElementById('chatInput').value=said;
+      stopMic();
+      sendChat();
+    };
+    r.onerror=function(){stopMic();};
+    r.onend=function(){stopMic();};
+    return r;
+  }
+  function toggleMic(){
+    var btn=document.getElementById('micBtn');
+    var status=document.getElementById('voiceStatus');
+    if(!_recog)_recog=setupRecog();
+    if(!_recog){status.textContent='Voice input not supported on this browser — try Chrome.';return;}
+    if(_listening){stopMic();return;}
+    try{
+      // Stop any speaking so it doesn't hear itself
+      if(window.speechSynthesis)window.speechSynthesis.cancel();
+      _recog.start();_listening=true;btn.classList.add('listening');status.textContent='Listening... speak now';
+    }catch(e){stopMic();}
+  }
+  function stopMic(){
+    _listening=false;
+    var btn=document.getElementById('micBtn');if(btn)btn.classList.remove('listening');
+    var status=document.getElementById('voiceStatus');if(status)status.textContent='';
+    try{if(_recog)_recog.stop();}catch(e){}
+  }
+
   // ===== DEMO DASHBOARD TABS =====
   function demoTab(name, btn){
     document.querySelectorAll('.demo-tab').forEach(function(t){t.classList.remove('active');});
@@ -690,6 +803,7 @@
         document.getElementById('chatSend').disabled=false;
         var reply=(d&&d.reply)?d.reply:"Sorry, try again or email siamakk2@gmail.com.";
         addMsg(reply,'bot');
+        speak(reply);
         chatHistory.push({role:'assistant',content:reply});
       })
       .catch(function(){
