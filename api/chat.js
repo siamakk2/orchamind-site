@@ -1,5 +1,6 @@
 // Orchamind landing-page AI assistant. Answers questions about the product only.
 module.exports = async function handler(req, res) {
+  // CORS so it works from the site
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
@@ -14,8 +15,8 @@ module.exports = async function handler(req, res) {
     if (typeof body === 'string') { try { body = JSON.parse(body); } catch (e) { body = {}; } }
     if (!body || typeof body !== 'object') body = {};
 
-    const userMessage = (body.message || '').toString().slice(0, 500);
-    const history = Array.isArray(body.history) ? body.history.slice(-6) : [];
+    const userMessage = (body.message || '').toString().slice(0, 500); // cap input length
+    const history = Array.isArray(body.history) ? body.history.slice(-6) : []; // keep last 6 turns
 
     if (!userMessage.trim()) { return res.status(200).json({ reply: "Ask me anything about Orchamind!" }); }
 
@@ -37,6 +38,16 @@ KEY SELLING POINTS:
 - It's a product of Siamak Kalhor Consulting
 
 TO GET STARTED / PRICING: Interested businesses contact Siamak Kalhor Consulting for a personalized demo and setup. Email: siamakk2@gmail.com. For pricing, explain it's customized per business and they should reach out for a quote — don't invent specific prices.
+
+
+ABOUT THE FOUNDER — SIAMAK KALHOR (when visitors ask "who's behind this", "who made it", "why should I trust you", or about the company):
+- Siamak Kalhor is the founder of Siamak Kalhor Consulting and the developer behind Orchamind. He personally builds the software.
+- Background: formally educated in software engineering, and works today as a developer and AI engineer — he builds these AI systems himself.
+- 35+ years as a licensed real estate Realtor — deep, real-world experience running a business, serving clients, and understanding what owners and operators actually need.
+- Spent 19 years on the radio at 670 AM KIRN talking about technology — a longtime, trusted voice explaining tech in plain language to everyday people. He has also been featured in the news.
+- This combination is rare: a technologist who can actually build the AI, paired with decades of hands-on business experience and a gift for explaining technology simply. That's why Orchamind is powerful under the hood but dead-simple to use.
+- The whole philosophy comes from that experience: build serious technology that a non-technical business owner can run by just talking to it.
+When asked about Siamak, speak about him warmly and credibly using these real facts. Encourage the visitor to reach out to him directly for a demo. Do not invent additional credentials, awards, or claims beyond what is listed here.
 
 YOUR RULES:
 - Only answer questions about Orchamind, the product, how it works, who it's for, and how to get started.
