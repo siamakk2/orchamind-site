@@ -209,6 +209,64 @@
     section{padding:64px 0;}
     .hero{padding:60px 0 70px;}
   }
+
+  /* DEMO DASHBOARD */
+  .demo-frame{margin-top:46px;background:var(--navy);border-radius:18px;overflow:hidden;box-shadow:0 30px 70px rgba(10,22,40,0.35);max-width:880px;margin-left:auto;margin-right:auto;}
+  .demo-topbar{display:flex;justify-content:space-between;align-items:center;padding:16px 22px;background:var(--navy2);border-bottom:1px solid rgba(255,255,255,0.08);}
+  .demo-brand{display:flex;align-items:center;gap:9px;color:#fff;font-family:'Sora';font-weight:700;font-size:15px;}
+  .demo-logo{color:var(--signal);}
+  .demo-badge{background:var(--amber);color:var(--navy);font-size:10px;font-weight:800;padding:2px 8px;border-radius:20px;letter-spacing:0.05em;}
+  .demo-date{color:rgba(255,255,255,0.5);font-size:13px;}
+  .demo-tabs{display:flex;gap:4px;padding:12px 16px 0;background:var(--navy2);}
+  .demo-tab{background:none;border:none;color:rgba(255,255,255,0.6);font-family:'Inter';font-size:14px;font-weight:600;padding:10px 16px;cursor:pointer;border-radius:9px 9px 0 0;transition:all .15s;}
+  .demo-tab.active{background:var(--navy);color:#fff;}
+  .demo-body{padding:26px;min-height:280px;}
+  .demo-panel{display:none;}
+  .demo-panel.active{display:block;animation:fadeUp .35s ease;}
+  @keyframes fadeUp{from{opacity:0;transform:translateY(8px);}to{opacity:1;transform:none;}}
+  .demo-briefing{background:rgba(45,127,249,0.08);border:1px solid rgba(45,127,249,0.2);border-radius:13px;padding:22px;color:rgba(255,255,255,0.9);}
+  .db-head{margin-bottom:12px;}
+  .db-ai{color:var(--signal-soft);font-weight:700;font-size:14px;letter-spacing:0.03em;}
+  .demo-briefing p{font-size:15px;margin-bottom:12px;}
+  .demo-briefing ul{list-style:none;margin:0 0 14px;}
+  .demo-briefing li{padding:9px 0 9px 22px;position:relative;font-size:14.5px;color:rgba(255,255,255,0.82);border-bottom:1px solid rgba(255,255,255,0.06);}
+  .demo-briefing li::before{content:'▸';position:absolute;left:2px;color:var(--amber);}
+  .db-quick{color:var(--amber) !important;font-size:14px !important;margin:0 !important;}
+  .demo-jobcard{background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:12px;padding:16px 18px;margin-bottom:12px;}
+  .dj-top{display:flex;justify-content:space-between;align-items:center;color:#fff;font-size:16px;margin-bottom:12px;}
+  .dj-tag{background:rgba(249,168,37,0.15);color:var(--amber);font-size:11px;font-weight:700;padding:3px 10px;border-radius:20px;}
+  .dj-bar{height:7px;background:rgba(255,255,255,0.1);border-radius:10px;overflow:hidden;margin-bottom:10px;}
+  .dj-fill{height:100%;background:linear-gradient(90deg,var(--signal),var(--amber));border-radius:10px;}
+  .dj-meta{color:rgba(255,255,255,0.55);font-size:13px;}
+  .demo-crewrow{display:flex;align-items:center;gap:14px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:12px;padding:14px 18px;margin-bottom:11px;}
+  .dc-av{width:40px;height:40px;border-radius:50%;background:linear-gradient(135deg,var(--signal),var(--amber));display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-family:'Sora';}
+  .demo-crewrow>div:nth-child(2){flex:1;color:#fff;font-size:15px;}
+  .dc-role{color:rgba(255,255,255,0.55);font-size:13px;font-weight:400;}
+  .dc-status{font-size:12px;font-weight:600;padding:5px 12px;border-radius:20px;}
+  .dc-status.on{background:rgba(46,125,50,0.2);color:#7BD389;}
+  .dc-status.off{background:rgba(255,255,255,0.1);color:rgba(255,255,255,0.6);}
+  .demo-chat{display:flex;flex-direction:column;gap:14px;}
+  .dchat-q{align-self:flex-end;background:var(--signal);color:#fff;padding:12px 16px;border-radius:14px 14px 4px 14px;font-size:14.5px;max-width:80%;}
+  .dchat-a{align-self:flex-start;background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.12);color:rgba(255,255,255,0.9);padding:12px 16px;border-radius:14px 14px 14px 4px;font-size:14.5px;max-width:88%;}
+
+  /* AI CHAT */
+  .chatbox{margin-top:44px;max-width:720px;margin-left:auto;margin-right:auto;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.12);border-radius:18px;padding:8px;}
+  .chat-messages{padding:22px;min-height:200px;max-height:400px;overflow-y:auto;display:flex;flex-direction:column;gap:14px;}
+  .chat-msg{display:flex;}
+  .chat-msg.user{justify-content:flex-end;}
+  .chat-bubble{padding:13px 17px;border-radius:14px;font-size:15px;line-height:1.5;max-width:82%;}
+  .chat-msg.bot .chat-bubble{background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.1);color:rgba(255,255,255,0.92);border-radius:14px 14px 14px 4px;}
+  .chat-msg.user .chat-bubble{background:var(--signal);color:#fff;border-radius:14px 14px 4px 14px;}
+  .chat-typing{color:rgba(255,255,255,0.5);font-size:14px;font-style:italic;padding:0 22px 8px;}
+  .chat-input-row{display:flex;gap:10px;padding:10px;border-top:1px solid rgba(255,255,255,0.08);}
+  .chat-input-row input{flex:1;background:var(--navy2);border:1px solid rgba(255,255,255,0.15);border-radius:11px;padding:14px 16px;color:#fff;font-family:'Inter';font-size:15px;outline:none;}
+  .chat-input-row input::placeholder{color:rgba(255,255,255,0.4);}
+  .chat-input-row input:focus{border-color:var(--signal);}
+  .chat-input-row button{background:var(--signal);color:#fff;border:none;border-radius:11px;padding:0 26px;font-family:'Inter';font-weight:600;font-size:15px;cursor:pointer;transition:background .2s;}
+  .chat-input-row button:hover{background:var(--signal-soft);}
+  .chat-suggestions{display:flex;flex-wrap:wrap;gap:8px;padding:4px 12px 12px;}
+  .chat-suggestions button{background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.14);color:rgba(255,255,255,0.8);font-family:'Inter';font-size:13px;padding:8px 14px;border-radius:100px;cursor:pointer;transition:all .2s;}
+  .chat-suggestions button:hover{background:rgba(45,127,249,0.2);border-color:var(--signal);color:#fff;}
 </style>
 </head>
 <body>
@@ -221,9 +279,11 @@
     </a>
     <div class="nav-links" id="navLinks">
       <a href="#how">How it works</a>
+      <a href="#demo">Live Demo</a>
       <a href="#features">Features</a>
       <a href="#industries">Industries</a>
       <a href="#proof">Proof</a>
+      <a href="#askai">Ask AI</a>
       <a href="#faq">FAQ</a>
       <a href="#contact" class="nav-cta">Get a demo</a>
     </div>
@@ -316,6 +376,64 @@
     </div>
   </div>
 </section>
+<section class="demo" id="demo" style="background:var(--white);">
+  <div class="wrap">
+    <div class="section-eyebrow">See it in action</div>
+    <h2 class="section-title">Click around a live sample.</h2>
+    <p class="section-lead">This is a working preview with sample data — tap the tabs, watch the AI briefing, try a voice command. Nothing here is real; it's just to show you how it feels.</p>
+
+    <div class="demo-frame">
+      <div class="demo-topbar">
+        <div class="demo-brand"><span class="demo-logo">▲</span> Site Manager <span class="demo-badge">SAMPLE</span></div>
+        <div class="demo-date">Tuesday, June 23</div>
+      </div>
+      <div class="demo-tabs">
+        <button class="demo-tab active" onclick="demoTab('today',this)">Today</button>
+        <button class="demo-tab" onclick="demoTab('jobs',this)">Jobs</button>
+        <button class="demo-tab" onclick="demoTab('crew',this)">Crew</button>
+        <button class="demo-tab" onclick="demoTab('ask',this)">Ask AI</button>
+      </div>
+      <div class="demo-body">
+        <!-- TODAY -->
+        <div class="demo-panel active" id="demo-today">
+          <div class="demo-briefing">
+            <div class="db-head"><span class="db-ai">✦ AI Morning Briefing</span></div>
+            <p><b>Good morning.</b> Here's what needs your attention today:</p>
+            <ul>
+              <li><b>Oak Street Remodel</b> is at 88% of budget with finishing work left — review before it slips.</li>
+              <li><b>Hillside Addition</b> framing inspection is tomorrow. Confirm the crew buttoned up the punch list.</li>
+              <li><b>Maple Ave</b> is 1 week behind — get the concrete sub scheduled today.</li>
+            </ul>
+            <p class="db-quick">⚡ Quick win: Tom has no hours logged this week — put him on Maple Ave.</p>
+          </div>
+        </div>
+        <!-- JOBS -->
+        <div class="demo-panel" id="demo-jobs">
+          <div class="demo-jobcard"><div class="dj-top"><b>Oak Street Remodel</b><span class="dj-tag">FINISHING</span></div><div class="dj-bar"><div class="dj-fill" style="width:78%"></div></div><div class="dj-meta">78% complete · Santa Rosa · 4 crew</div></div>
+          <div class="demo-jobcard"><div class="dj-top"><b>Hillside Addition</b><span class="dj-tag">ROUGH-IN</span></div><div class="dj-bar"><div class="dj-fill" style="width:55%"></div></div><div class="dj-meta">55% complete · Napa · 3 crew</div></div>
+          <div class="demo-jobcard"><div class="dj-top"><b>Maple Ave Deck</b><span class="dj-tag">FOUNDATION</span></div><div class="dj-bar"><div class="dj-fill" style="width:20%"></div></div><div class="dj-meta">20% complete · Sonoma · 2 crew</div></div>
+        </div>
+        <!-- CREW -->
+        <div class="demo-panel" id="demo-crew">
+          <div class="demo-crewrow"><div class="dc-av">M</div><div><b>Mike Torres</b><div class="dc-role">Foreman · Oak Street</div></div><span class="dc-status on">On site</span></div>
+          <div class="demo-crewrow"><div class="dc-av">C</div><div><b>Carlos Mendez</b><div class="dc-role">Lead · Hillside</div></div><span class="dc-status on">On site</span></div>
+          <div class="demo-crewrow"><div class="dc-av">T</div><div><b>Tom Walsh</b><div class="dc-role">Laborer · Unassigned</div></div><span class="dc-status off">Available</span></div>
+        </div>
+        <!-- ASK AI -->
+        <div class="demo-panel" id="demo-ask">
+          <div class="demo-chat">
+            <div class="dchat-q">Which job is tightest on budget?</div>
+            <div class="dchat-a">✦ Oak Street Remodel is your tightest — 88% of budget used with finishing work still to go. Worth pulling the cost detail before any surprises hit. The other two have healthy margins.</div>
+            <div class="dchat-q">What inspections do I need before drywall on Hillside?</div>
+            <div class="dchat-a">✦ Before drywall you'll need framing, electrical rough-in, and plumbing rough-in all signed off. In Napa County, schedule the framing inspection first — it gates the others.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <p style="text-align:center;color:var(--slate);font-size:14px;margin-top:20px;">This is a sample preview. Your real system is set up with your own jobs, crew, and branding.</p>
+  </div>
+</section>
+
 
 <section class="features" id="features">
   <div class="wrap">
@@ -413,6 +531,30 @@
   </div>
 </section>
 
+
+<section class="aichat" id="askai" style="background:var(--navy);color:#fff;">
+  <div class="wrap">
+    <div class="section-eyebrow">Ask our AI</div>
+    <h2 class="section-title">Have a question? Ask right now.</h2>
+    <p class="section-lead" style="color:rgba(255,255,255,0.7);">Our AI assistant knows everything about Orchamind. Ask about features, your industry, pricing, security — anything.</p>
+
+    <div class="chatbox">
+      <div class="chat-messages" id="chatMessages">
+        <div class="chat-msg bot"><div class="chat-bubble">👋 Hi! I'm the Orchamind assistant. Ask me anything — like "Does this work for plumbers?" or "How do I get started?"</div></div>
+      </div>
+      <div class="chat-input-row">
+        <input type="text" id="chatInput" placeholder="Type your question..." autocomplete="off">
+        <button onclick="sendChat()" id="chatSend">Send</button>
+      </div>
+      <div class="chat-suggestions">
+        <button onclick="askSuggested('Does this work for my industry?')">Does this work for my industry?</button>
+        <button onclick="askSuggested('How much does it cost?')">How much does it cost?</button>
+        <button onclick="askSuggested('Is my data secure?')">Is my data secure?</button>
+        <button onclick="askSuggested('How do I get started?')">How do I get started?</button>
+      </div>
+    </div>
+  </div>
+</section>
 <section class="faq" id="faq">
   <div class="wrap">
     <div class="section-eyebrow">Questions</div>
@@ -504,6 +646,64 @@
   document.querySelectorAll('#navLinks a').forEach(function(a){
     a.addEventListener('click',function(){document.getElementById('navLinks').classList.remove('open');});
   });
+
+  // ===== DEMO DASHBOARD TABS =====
+  function demoTab(name, btn){
+    document.querySelectorAll('.demo-tab').forEach(function(t){t.classList.remove('active');});
+    document.querySelectorAll('.demo-panel').forEach(function(p){p.classList.remove('active');});
+    btn.classList.add('active');
+    document.getElementById('demo-'+name).classList.add('active');
+  }
+
+  // ===== AI CHAT =====
+  var chatHistory = [];
+  function addMsg(text, who){
+    var box=document.getElementById('chatMessages');
+    var m=document.createElement('div');
+    m.className='chat-msg '+who;
+    m.innerHTML='<div class="chat-bubble">'+text.replace(/</g,'&lt;').replace(/\n/g,'<br>')+'</div>';
+    box.appendChild(m);
+    box.scrollTop=box.scrollHeight;
+  }
+  function setTyping(on){
+    var box=document.getElementById('chatMessages');
+    var ex=document.getElementById('typingInd');
+    if(on){
+      if(ex)return;
+      var t=document.createElement('div');t.id='typingInd';t.className='chat-typing';t.textContent='Assistant is typing...';
+      box.appendChild(t);box.scrollTop=box.scrollHeight;
+    }else if(ex){ex.remove();}
+  }
+  function sendChat(){
+    var inp=document.getElementById('chatInput');
+    var msg=inp.value.trim();
+    if(!msg)return;
+    addMsg(msg,'user');
+    chatHistory.push({role:'user',content:msg});
+    inp.value='';
+    setTyping(true);
+    document.getElementById('chatSend').disabled=true;
+    fetch('/api/chat',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({message:msg,history:chatHistory})})
+      .then(function(r){return r.json();})
+      .then(function(d){
+        setTyping(false);
+        document.getElementById('chatSend').disabled=false;
+        var reply=(d&&d.reply)?d.reply:"Sorry, try again or email siamakk2@gmail.com.";
+        addMsg(reply,'bot');
+        chatHistory.push({role:'assistant',content:reply});
+      })
+      .catch(function(){
+        setTyping(false);
+        document.getElementById('chatSend').disabled=false;
+        addMsg("I could not connect right now. Please email siamakk2@gmail.com and we will help you out.",'bot');
+      });
+  }
+  function askSuggested(q){
+    document.getElementById('chatInput').value=q;
+    sendChat();
+  }
+  document.getElementById('chatInput').addEventListener('keydown',function(e){if(e.key==='Enter')sendChat();});
+
 </script>
 </body>
-</html> 
+</html>
