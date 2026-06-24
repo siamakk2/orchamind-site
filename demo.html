@@ -1,0 +1,1579 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Site Manager AI | Orchamind Demo</title>
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+  <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+<meta name="description" content="AI-powered project management for Orchamind Demo">
+<meta name="robots" content="noindex, nofollow">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --navy:#0A1628;--navy2:#0D2B4E;--blue:#1565C0;--blue-dk:#0D47A1;
+  --accent:#F9A825;--bg:#EEF3F8;--card:#FFFFFF;--ink:#0A1628;
+  --muted:#5A6B7D;--line:#E1E8F0;--green:#2E7D32;--amber:#F9A825;--red:#D32F2F;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Outfit',system-ui,sans-serif;background:var(--bg);color:var(--ink);-webkit-font-smoothing:antialiased;}
+.topbar{background:var(--card);border-bottom:2px solid var(--blue);position:sticky;top:0;z-index:100;}
+.topbar-inner{max-width:1320px;margin:0 auto;padding:12px 20px;display:flex;align-items:center;justify-content:space-between;gap:16px;}
+.topbar img{height:46px;width:auto;display:block;}
+.topbar-right{display:flex;align-items:center;gap:14px;}
+.back-link{font-size:13px;color:var(--blue);text-decoration:none;font-weight:600;}
+.back-link:hover{text-decoration:underline;}
+.crew-badge{font-size:12px;background:rgba(21,101,192,0.1);color:var(--blue);padding:6px 12px;border-radius:100px;font-weight:600;}
+.dash-head{max-width:1320px;margin:0 auto;padding:24px 20px 4px;}
+.dash-head h1{font-family:'Playfair Display',serif;font-size:27px;font-weight:900;color:var(--navy);display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
+.ai-pill{font-family:'Outfit',sans-serif;font-size:11px;font-weight:700;background:linear-gradient(135deg,var(--blue),var(--blue-dk));color:#fff;padding:4px 11px;border-radius:100px;letter-spacing:.5px;text-transform:uppercase;}
+.dash-head p{font-size:14px;color:var(--muted);margin-top:4px;}
+.tabs{max-width:1320px;margin:0 auto;padding:14px 20px 0;display:flex;gap:6px;border-bottom:1px solid var(--line);overflow-x:auto;}
+.tab{background:none;border:none;font-family:inherit;font-size:14px;font-weight:600;color:var(--muted);padding:12px 16px;cursor:pointer;border-bottom:3px solid transparent;margin-bottom:-1px;white-space:nowrap;transition:all .2s;}
+.tab.active{color:var(--blue);border-bottom-color:var(--blue);}
+.tab:hover{color:var(--navy);}
+.content{max-width:1320px;margin:0 auto;padding:22px 20px 60px;}
+.panel{display:none;}
+.panel.active{display:block;animation:fade .3s;}
+@keyframes fade{from{opacity:0;transform:translateY(8px);}to{opacity:1;transform:none;}}
+.panel-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:12px;}
+.panel-head h2{font-family:'Playfair Display',serif;font-size:20px;font-weight:700;color:var(--navy);}
+.btn{background:var(--blue);color:#fff;border:none;border-radius:9px;padding:10px 18px;font-family:inherit;font-size:14px;font-weight:600;cursor:pointer;display:inline-flex;align-items:center;gap:7px;transition:background .2s;}
+.btn:hover{background:var(--blue-dk);}
+.btn svg{width:16px;height:16px;}
+.btn-ghost{background:rgba(21,101,192,0.08);color:var(--blue);}
+.btn-ghost:hover{background:rgba(21,101,192,0.16);}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:8px;}
+.stat{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:15px 17px;}
+.stat-num{font-family:'Playfair Display',serif;font-size:28px;font-weight:900;color:var(--blue);line-height:1;}
+.stat-lbl{font-size:12px;color:var(--muted);margin-top:6px;font-weight:500;}
+.stat.accent .stat-num{color:var(--accent);}
+.stat.green .stat-num{color:var(--green);}
+.stat.red .stat-num{color:var(--red);}
+
+/* AI BRIEFING */
+.briefing{background:linear-gradient(135deg,var(--navy),var(--navy2));border-radius:16px;padding:24px 26px;color:#fff;margin-bottom:20px;position:relative;overflow:hidden;}
+.briefing::before{content:"";position:absolute;top:-40px;right:-40px;width:160px;height:160px;background:radial-gradient(circle,rgba(21,101,192,0.4),transparent 70%);}
+.briefing-head{display:flex;align-items:center;gap:10px;margin-bottom:14px;position:relative;}
+.briefing-head .ai-dot{width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,var(--blue),var(--accent));display:flex;align-items:center;justify-content:center;font-weight:800;font-size:15px;flex-shrink:0;}
+.briefing-head h3{font-family:'Playfair Display',serif;font-size:18px;font-weight:700;}
+.briefing-head .sub{font-size:12px;color:rgba(255,255,255,0.6);}
+.briefing-body{font-size:14.5px;line-height:1.7;position:relative;color:rgba(255,255,255,0.92);}
+.briefing-body h4{color:var(--accent);font-size:13px;text-transform:uppercase;letter-spacing:.5px;margin:16px 0 8px;font-weight:700;}
+.briefing-body ul{list-style:none;margin:0;padding:0;}
+.briefing-body li{padding:7px 0 7px 24px;position:relative;border-bottom:1px solid rgba(255,255,255,0.08);}
+.briefing-body li::before{content:"";position:absolute;left:2px;top:13px;width:8px;height:8px;border-radius:50%;background:var(--accent);}
+.briefing-body li:last-child{border-bottom:none;}
+.briefing-body strong{color:#fff;}
+.briefing-loading{display:flex;align-items:center;gap:12px;color:rgba(255,255,255,0.7);font-size:14px;padding:10px 0;}
+.spinner{width:20px;height:20px;border:2.5px solid rgba(255,255,255,0.2);border-top-color:var(--accent);border-radius:50%;animation:spin 0.8s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg);}}
+.refresh-brief{position:relative;background:rgba(255,255,255,0.12);border:1px solid rgba(255,255,255,0.2);color:#fff;font-size:12px;padding:7px 14px;border-radius:8px;cursor:pointer;font-family:inherit;font-weight:600;margin-top:14px;display:inline-flex;align-items:center;gap:6px;}
+.refresh-brief:hover{background:rgba(255,255,255,0.2);}
+
+/* RISK RADAR */
+.risk-list{display:flex;flex-direction:column;gap:12px;}
+.risk{background:var(--card);border:1px solid var(--line);border-left:4px solid var(--muted);border-radius:12px;padding:16px 18px;display:flex;gap:14px;align-items:flex-start;}
+.risk.high{border-left-color:var(--red);}
+.risk.med{border-left-color:var(--amber);}
+.risk.low{border-left-color:var(--green);}
+.risk-icon{width:38px;height:38px;border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.risk.high .risk-icon{background:rgba(211,47,47,0.12);}
+.risk.med .risk-icon{background:rgba(249,168,37,0.16);}
+.risk.low .risk-icon{background:rgba(46,125,50,0.12);}
+.risk-icon svg{width:20px;height:20px;}
+.risk.high .risk-icon svg{color:var(--red);}
+.risk.med .risk-icon svg{color:var(--amber);}
+.risk.low .risk-icon svg{color:var(--green);}
+.risk-body{flex:1;}
+.risk-title{font-weight:700;font-size:14.5px;color:var(--navy);margin-bottom:3px;}
+.risk-job{font-size:12px;color:var(--blue);font-weight:600;margin-bottom:5px;}
+.risk-desc{font-size:13.5px;color:var(--muted);line-height:1.55;}
+.risk-sev{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;padding:3px 9px;border-radius:100px;align-self:flex-start;}
+.risk.high .risk-sev{background:rgba(211,47,47,0.12);color:var(--red);}
+.risk.med .risk-sev{background:rgba(249,168,37,0.16);color:#B45309;}
+.risk.low .risk-sev{background:rgba(46,125,50,0.12);color:var(--green);}
+
+/* JOB CARDS */
+.jobs-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:16px;}
+.job{background:var(--card);border:1px solid var(--line);border-radius:14px;overflow:hidden;transition:box-shadow .2s,transform .2s;}
+.job:hover{box-shadow:0 8px 28px rgba(13,43,78,0.1);transform:translateY(-2px);}
+.job-top{padding:16px 18px 12px;border-bottom:1px solid var(--line);}
+.job-name-row{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;}
+.job-name{font-size:16px;font-weight:700;color:var(--navy);}
+.job-client{font-size:13px;color:var(--muted);margin-top:2px;}
+.job-status{font-size:11px;font-weight:700;padding:4px 10px;border-radius:100px;white-space:nowrap;text-transform:uppercase;letter-spacing:.5px;}
+.s-planning{background:rgba(90,107,125,0.14);color:#5A6B7D;}
+.s-foundation{background:rgba(123,79,40,0.14);color:#7B4F28;}
+.s-framing{background:rgba(249,168,37,0.18);color:#B45309;}
+.s-rough{background:rgba(21,101,192,0.14);color:#1565C0;}
+.s-finishing{background:rgba(106,76,156,0.14);color:#6A4C9C;}
+.s-inspection{background:rgba(211,47,47,0.12);color:#D32F2F;}
+.s-complete{background:rgba(46,125,50,0.14);color:#2E7D32;}
+.job-body{padding:14px 18px;}
+.job-progress-lbl{display:flex;justify-content:space-between;font-size:12px;color:var(--muted);margin-bottom:6px;font-weight:500;}
+.job-progress-lbl b{color:var(--navy);}
+.progress-track{height:8px;background:var(--line);border-radius:100px;overflow:hidden;}
+.progress-fill{height:100%;background:linear-gradient(90deg,var(--blue),var(--accent));border-radius:100px;transition:width .4s;}
+.job-budget{margin-top:12px;font-size:12.5px;}
+.budget-bar{height:6px;background:var(--line);border-radius:100px;overflow:hidden;margin-top:5px;}
+.budget-fill{height:100%;border-radius:100px;}
+.job-meta{display:flex;flex-wrap:wrap;gap:14px;margin-top:14px;font-size:12.5px;color:var(--muted);}
+.job-meta div{display:flex;align-items:center;gap:5px;}
+.job-meta svg{width:14px;height:14px;color:var(--blue);}
+.job-foot{padding:12px 18px;background:#F7FAFD;border-top:1px solid var(--line);display:flex;gap:8px;}
+.job-foot button{flex:1;font-size:12.5px;padding:8px;border-radius:7px;border:1px solid var(--line);background:#fff;color:var(--navy);font-family:inherit;font-weight:600;cursor:pointer;transition:all .15s;}
+.job-foot button:hover{border-color:var(--blue);color:var(--blue);}
+.job-foot button.ai-btn{background:linear-gradient(135deg,var(--blue),var(--blue-dk));color:#fff;border:none;}
+.job-foot button.ai-btn:hover{opacity:0.9;color:#fff;}
+
+/* AI ASSISTANT CHAT */
+.assistant-wrap{background:var(--card);border:1px solid var(--line);border-radius:16px;overflow:hidden;display:flex;flex-direction:column;height:600px;max-height:75vh;}
+.assistant-head{background:linear-gradient(135deg,var(--navy),var(--navy2));padding:16px 20px;display:flex;align-items:center;gap:12px;}
+.assistant-head .ai-dot{width:38px;height:38px;border-radius:50%;background:linear-gradient(135deg,var(--blue),var(--accent));display:flex;align-items:center;justify-content:center;font-weight:800;color:#fff;font-size:15px;}
+.assistant-head h3{color:#fff;font-size:15px;font-weight:700;}
+.assistant-head .sub{font-size:12px;color:rgba(255,255,255,0.6);display:flex;align-items:center;gap:5px;}
+.assistant-head .sub::before{content:"";width:7px;height:7px;border-radius:50%;background:var(--green);}
+.chat-msgs{flex:1;overflow-y:auto;padding:20px;display:flex;flex-direction:column;gap:14px;background:#F7FAFD;}
+.cmsg{display:flex;flex-direction:column;gap:4px;max-width:88%;}
+.cmsg.user{align-self:flex-end;}
+.cmsg.ai{align-self:flex-start;}
+.cmsg-b{padding:13px 16px;border-radius:13px;font-size:14px;line-height:1.65;}
+.cmsg.ai .cmsg-b{background:#fff;color:var(--ink);border-radius:4px 13px 13px 13px;box-shadow:0 2px 10px rgba(13,43,78,0.06);border:1px solid var(--line);}
+.cmsg.user .cmsg-b{background:linear-gradient(135deg,var(--blue),var(--blue-dk));color:#fff;border-radius:13px 4px 13px 13px;}
+.cmsg-b strong{font-weight:700;}
+.cmsg-b h4{font-size:13px;text-transform:uppercase;letter-spacing:.5px;color:var(--blue);margin:10px 0 5px;}
+.cmsg.ai .cmsg-b ul{margin:6px 0 6px 18px;}
+.cmsg.ai .cmsg-b li{margin:3px 0;}
+.chat-suggest{display:flex;flex-wrap:wrap;gap:7px;margin-top:8px;}
+.chat-sug{background:#fff;border:1.5px solid #BBDEFB;color:var(--blue);font-size:12px;font-weight:600;padding:7px 13px;border-radius:100px;cursor:pointer;transition:all .2s;}
+.chat-sug:hover{background:var(--blue);border-color:var(--blue);color:#fff;}
+.chat-foot{padding:14px;background:#fff;border-top:1px solid var(--line);display:flex;gap:10px;align-items:center;}
+.chat-inp{flex:1;border:1.5px solid var(--line);border-radius:22px;padding:11px 17px;font-family:inherit;font-size:14px;outline:none;color:var(--ink);}
+.chat-inp:focus{border-color:var(--blue);}
+.chat-send{width:42px;height:42px;border-radius:50%;background:linear-gradient(135deg,var(--blue),var(--blue-dk));border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.chat-dots{display:none;align-self:flex-start;padding:13px 16px;background:#fff;border-radius:4px 13px 13px 13px;box-shadow:0 2px 10px rgba(13,43,78,0.06);}
+.chat-dots span{display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--blue);margin:0 2px;animation:cdot 1.2s infinite;}
+.chat-dots span:nth-child(2){animation-delay:.2s;}
+.chat-dots span:nth-child(3){animation-delay:.4s;}
+@keyframes cdot{0%,60%,100%{transform:translateY(0);opacity:.5;}30%{transform:translateY(-5px);opacity:1;}}
+
+/* CREW + HOURS (compact) */
+.crew-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:14px;}
+.crew-card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px;}
+.crew-top{display:flex;align-items:center;gap:12px;margin-bottom:12px;}
+.crew-av{width:46px;height:46px;border-radius:50%;background:linear-gradient(135deg,var(--blue),var(--blue-dk));color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:16px;}
+.crew-name{font-weight:700;font-size:15px;color:var(--navy);}
+.crew-role{font-size:12px;color:var(--muted);}
+.crew-assign{font-size:13px;padding:8px 12px;background:#F7FAFD;border-radius:8px;color:var(--navy);margin-top:8px;}
+.crew-assign span{color:var(--muted);font-size:12px;}
+.crew-status{font-size:11px;font-weight:700;padding:3px 9px;border-radius:100px;margin-left:auto;}
+.on-site{background:rgba(46,125,50,0.14);color:var(--green);}
+.off{background:rgba(90,107,125,0.14);color:var(--muted);}
+.hours-table{background:var(--card);border:1px solid var(--line);border-radius:12px;overflow:hidden;}
+.hours-row{display:grid;grid-template-columns:1.4fr 1.6fr 1fr 0.8fr;gap:10px;padding:13px 18px;border-bottom:1px solid var(--line);font-size:13.5px;align-items:center;}
+.hours-row:last-child{border-bottom:none;}
+.hours-row.head{background:#F7FAFD;font-weight:600;font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;}
+.hours-row .h-name{font-weight:600;color:var(--navy);}
+.hours-total{font-weight:700;color:var(--blue);}
+
+/* MODAL */
+.modal-bg{position:fixed;inset:0;background:rgba(10,22,40,0.6);z-index:1000;display:none;align-items:flex-start;justify-content:center;padding:40px 16px;overflow-y:auto;}
+.modal-bg.show{display:flex;}
+.modal{background:#fff;border-radius:16px;width:100%;max-width:500px;padding:26px;}
+.modal h3{font-family:'Playfair Display',serif;font-size:20px;color:var(--navy);margin-bottom:18px;}
+.field{margin-bottom:14px;}
+.field label{display:block;font-size:13px;font-weight:600;color:var(--navy);margin-bottom:6px;}
+.field input,.field select,.field textarea{width:100%;border:1.5px solid var(--line);border-radius:9px;padding:10px 13px;font-family:inherit;font-size:14px;color:var(--ink);outline:none;background:#fff;}
+.field input:focus,.field select:focus,.field textarea:focus{border-color:var(--blue);}
+.field-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+.modal-foot{display:flex;gap:10px;margin-top:8px;}
+.modal-foot .btn{flex:1;justify-content:center;}
+.ai-output{background:#F7FAFD;border:1px solid var(--line);border-radius:10px;padding:16px;font-size:14px;line-height:1.65;color:var(--ink);margin-top:6px;white-space:pre-wrap;max-height:340px;overflow-y:auto;}
+.empty{text-align:center;padding:50px 20px;color:var(--muted);}
+.empty svg{width:54px;height:54px;color:var(--line);margin-bottom:14px;}
+.empty p{font-size:15px;margin-bottom:6px;}
+
+@media(max-width:760px){
+  .stats{grid-template-columns:1fr 1fr;}
+  .dash-head h1{font-size:22px;}
+  .topbar img{height:38px;}
+  .hours-row{grid-template-columns:1.3fr 1fr 0.8fr;font-size:12.5px;padding:11px 14px;}
+  .hours-row .h-site{display:none;}
+  .tab{padding:11px 13px;font-size:13px;}
+  .content{padding:18px 14px 50px;}
+  .assistant-wrap{height:540px;}
+}
+
+.chat-mic{width:42px;height:42px;border-radius:50%;background:rgba(21,101,192,0.1);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;color:var(--blue);transition:all .2s;}
+.chat-mic:hover{background:rgba(21,101,192,0.18);}
+.chat-mic.listening{background:var(--red);color:#fff;animation:micpulse 1.2s infinite;}
+@keyframes micpulse{0%,100%{box-shadow:0 0 0 0 rgba(211,47,47,0.4);}50%{box-shadow:0 0 0 8px rgba(211,47,47,0);}}
+.voice-bar{background:linear-gradient(135deg,var(--blue),var(--blue-dk));border-radius:14px;padding:18px 20px;margin-bottom:20px;display:flex;align-items:center;gap:16px;color:#fff;}
+.voice-mic-big{width:56px;height:56px;border-radius:50%;background:rgba(255,255,255,0.18);border:2px solid rgba(255,255,255,0.3);cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;color:#fff;transition:all .2s;}
+.voice-mic-big:hover{background:rgba(255,255,255,0.28);}
+.voice-mic-big.listening{background:#fff;color:var(--red);animation:micpulse 1.2s infinite;}
+.voice-mic-big svg{width:26px;height:26px;}
+.voice-bar-text{flex:1;}
+.voice-bar-text h4{font-size:15px;font-weight:700;margin-bottom:3px;}
+.voice-bar-text p{font-size:13px;color:rgba(255,255,255,0.8);line-height:1.4;}
+.voice-status{font-size:13px;color:rgba(255,255,255,0.95);font-style:italic;min-height:18px;}
+.voice-toggle-speak{background:rgba(255,255,255,0.15);border:1px solid rgba(255,255,255,0.25);color:#fff;font-size:12px;padding:7px 13px;border-radius:8px;cursor:pointer;font-family:inherit;font-weight:600;display:flex;align-items:center;gap:6px;white-space:nowrap;}
+.voice-toggle-speak.on{background:var(--accent);color:var(--navy);border-color:var(--accent);}
+@media(max-width:600px){.voice-bar{flex-wrap:wrap;}.voice-toggle-speak{width:100%;justify-content:center;}}
+
+.voice-prompts{margin-top:10px;display:flex;flex-wrap:wrap;gap:7px;align-items:center;}
+.vp-label{font-size:12px;color:rgba(255,255,255,0.75);font-weight:600;margin-right:2px;}
+.vp-chip{background:rgba(255,255,255,0.14);border:1px solid rgba(255,255,255,0.22);color:#fff;font-size:12px;padding:6px 11px;border-radius:100px;cursor:pointer;font-family:inherit;transition:all .2s;}
+.vp-chip:hover{background:#fff;color:var(--blue);}
+
+body.locked .topbar,body.locked .dash-head,body.locked .tabs,body.locked .content{display:none !important;}
+#logoutBar{display:none;}
+body.authed #logoutBar{display:flex;}
+
+  .rep-controls{display:flex;gap:14px;flex-wrap:wrap;align-items:flex-end;background:#fff;border:1px solid var(--line,#E1E8F0);border-radius:12px;padding:18px;margin-bottom:20px;}
+  .rep-field{display:flex;flex-direction:column;gap:5px;}
+  .rep-field label{font-size:12px;font-weight:600;color:#5A6B7D;}
+  .rep-field select,.rep-field input{border:1.5px solid #E1E8F0;border-radius:9px;padding:10px 12px;font-family:inherit;font-size:14px;outline:none;min-width:160px;}
+  .rep-actions{display:flex;gap:8px;margin-left:auto;}
+  .report-output{background:#fff;border:1px solid #E1E8F0;border-radius:12px;padding:26px;min-height:200px;}
+  .rep-title{font-size:20px;font-weight:800;color:#0A1628;margin-bottom:4px;}
+  .rep-sub{font-size:13px;color:#5A6B7D;margin-bottom:20px;}
+  .rep-table{width:100%;border-collapse:collapse;font-size:14px;}
+  .rep-table th{text-align:left;padding:11px 12px;background:#F4F7FA;color:#5A6B7D;font-weight:700;font-size:12px;text-transform:uppercase;letter-spacing:0.03em;border-bottom:2px solid #E1E8F0;}
+  .rep-table td{padding:11px 12px;border-bottom:1px solid #EEF2F6;color:#1a2733;}
+  .rep-table tr:last-child td{border-bottom:none;}
+  .rep-table .rep-total-row td{font-weight:800;background:#F4F7FA;color:#0A1628;border-top:2px solid #E1E8F0;}
+  .rep-table .num{text-align:right;font-variant-numeric:tabular-nums;}
+  .rep-bar{height:7px;background:#EEF2F6;border-radius:10px;overflow:hidden;min-width:90px;display:inline-block;vertical-align:middle;}
+  .rep-bar i{display:block;height:100%;border-radius:10px;}
+  .rep-empty{text-align:center;color:#9aa7b4;padding:40px;}
+  .rep-pill{display:inline-block;font-size:11px;font-weight:700;padding:3px 9px;border-radius:20px;text-transform:capitalize;}
+  @media print{
+    nav,.topbar,.tabs,.rep-controls,.panel-head,#logoutBar{display:none !important;}
+    .report-output{border:none;padding:0;}
+    body{background:#fff;}
+  }
+</style>
+</head>
+<body class="locked">
+<div id="demoBanner" style="position:fixed;top:0;left:0;right:0;z-index:6000;background:linear-gradient(90deg,#0A1628,#1565C0);color:#fff;padding:10px 16px;display:flex;align-items:center;justify-content:center;gap:16px;flex-wrap:wrap;font-family:'Outfit',sans-serif;font-size:14px;box-shadow:0 2px 12px rgba(0,0,0,0.2);">
+  <span style="font-weight:600;">🎮 Demo Mode — this is sample data, nothing is saved. Play around!</span>
+  <a href="https://orchamind-site.vercel.app" style="background:#F9A825;color:#0A1628;font-weight:700;padding:6px 16px;border-radius:8px;text-decoration:none;font-size:13px;">Get this for your business →</a>
+  <span style="opacity:0.8;font-size:13px;">or call (323) 657-7752</span>
+</div>
+<div style="height:46px;"></div>
+
+<!-- AUTH SCREENS -->
+<div id="authWrap" style="position:fixed;inset:0;z-index:5000;background:linear-gradient(135deg,#0A1628,#0D2B4E);display:flex;align-items:center;justify-content:center;padding:20px;">
+  <div style="background:#fff;border-radius:18px;padding:36px 32px;max-width:410px;width:100%;box-shadow:0 20px 60px rgba(0,0,0,0.4);">
+    <div style="text-align:center;margin-bottom:22px;">
+      <div style="font-family:'Playfair Display',serif;font-size:23px;font-weight:900;color:#0A1628;">Orchamind</div>
+      <div style="font-size:13px;color:#5A6B7D;margin-top:3px;" id="authSubtitle">Site Manager &mdash; Team Login</div>
+    </div>
+
+    <!-- LOGIN FORM -->
+    <div id="formLogin">
+      <div style="margin-bottom:13px;"><label style="display:block;font-size:13px;font-weight:600;color:#0A1628;margin-bottom:6px;">Username</label>
+        <input id="liUser" type="text" placeholder="your username" style="width:100%;border:1.5px solid #E1E8F0;border-radius:9px;padding:11px 14px;font-size:15px;outline:none;"></div>
+      <div style="margin-bottom:16px;"><label style="display:block;font-size:13px;font-weight:600;color:#0A1628;margin-bottom:6px;">Password</label>
+        <input id="liPass" type="password" placeholder="your password" style="width:100%;border:1.5px solid #E1E8F0;border-radius:9px;padding:11px 14px;font-size:15px;outline:none;"></div>
+      <button onclick="authLogin()" id="liBtn" style="width:100%;background:#1565C0;color:#fff;border:none;border-radius:9px;padding:13px;font-size:15px;font-weight:700;cursor:pointer;">Log In</button>
+    </div>
+
+    <!-- CHANGE PASSWORD (first login) -->
+    <div id="formChange" style="display:none;">
+      <p style="font-size:13.5px;color:#5A6B7D;margin-bottom:16px;text-align:center;">Welcome! Please set your own password to continue.</p>
+      <div style="margin-bottom:13px;"><label style="display:block;font-size:13px;font-weight:600;color:#0A1628;margin-bottom:6px;">New Password</label>
+        <input id="cpNew" type="password" placeholder="choose a password" style="width:100%;border:1.5px solid #E1E8F0;border-radius:9px;padding:11px 14px;font-size:15px;outline:none;"></div>
+      <div style="margin-bottom:16px;"><label style="display:block;font-size:13px;font-weight:600;color:#0A1628;margin-bottom:6px;">Confirm Password</label>
+        <input id="cpConfirm" type="password" placeholder="type it again" style="width:100%;border:1.5px solid #E1E8F0;border-radius:9px;padding:11px 14px;font-size:15px;outline:none;"></div>
+      <button onclick="authChangePassword()" id="cpBtn" style="width:100%;background:#2E7D32;color:#fff;border:none;border-radius:9px;padding:13px;font-size:15px;font-weight:700;cursor:pointer;">Set Password &amp; Continue</button>
+    </div>
+
+    <!-- FIRST-RUN OWNER SETUP -->
+    <div id="formSetup" style="display:none;">
+      <p style="font-size:13.5px;color:#5A6B7D;margin-bottom:16px;text-align:center;">First time setup. Create the Owner account for Phil Orchamind.</p>
+      <div style="margin-bottom:11px;"><input id="suName" type="text" placeholder="Full name (e.g. Phil Orchamind)" style="width:100%;border:1.5px solid #E1E8F0;border-radius:9px;padding:11px 14px;font-size:15px;outline:none;"></div>
+      <div style="margin-bottom:11px;"><input id="suUser" type="text" placeholder="Username (e.g. phil)" style="width:100%;border:1.5px solid #E1E8F0;border-radius:9px;padding:11px 14px;font-size:15px;outline:none;"></div>
+      <div style="margin-bottom:16px;"><input id="suPass" type="password" placeholder="Choose a password" style="width:100%;border:1.5px solid #E1E8F0;border-radius:9px;padding:11px 14px;font-size:15px;outline:none;"></div>
+      <button onclick="authSeedOwner()" id="suBtn" style="width:100%;background:#1565C0;color:#fff;border:none;border-radius:9px;padding:13px;font-size:15px;font-weight:700;cursor:pointer;">Create Owner Account</button>
+    </div>
+
+    <div id="authError" style="color:#D32F2F;font-size:13px;margin-top:13px;text-align:center;min-height:18px;"></div>
+  </div>
+</div>
+
+
+
+<div class="topbar">
+  <div class="topbar-inner">
+    <a href="https://orchamind-site.vercel.app"><img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAzNDAgNzIiIHdpZHRoPSIzNDAiIGhlaWdodD0iNzIiPgo8cmVjdCB4PSIwIiB5PSIwIiB3aWR0aD0iMzQwIiBoZWlnaHQ9IjcyIiByeD0iNiIgZmlsbD0iI0ZGRkZGRiIvPgo8cmVjdCB4PSI4IiB5PSIxNCIgd2lkdGg9IjQ0IiBoZWlnaHQ9IjQ0IiByeD0iMTEiIGZpbGw9IiMwQTE2MjgiLz4KPHBhdGggZD0iTTE4IDM2IGg2IGw0IDEyIGw2IC0yNCBsNCAxMiBoNiIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjMkQ3RkY5IiBzdHJva2Utd2lkdGg9IjMuNSIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIi8+Cjx0ZXh0IHg9IjY2IiB5PSIzOCIgZm9udC1mYW1pbHk9IkFyaWFsLCBzYW5zLXNlcmlmIiBmb250LXNpemU9IjI0IiBmb250LXdlaWdodD0iODAwIiBmaWxsPSIjMEExNjI4Ij5PcmNoYW1pbmQ8L3RleHQ+Cjx0ZXh0IHg9IjY2IiB5PSI1NiIgZm9udC1mYW1pbHk9IkFyaWFsLCBzYW5zLXNlcmlmIiBmb250LXNpemU9IjExIiBmb250LXdlaWdodD0iNjAwIiBmaWxsPSIjNUE2QjdEIiBsZXR0ZXItc3BhY2luZz0iMSI+QUkgU0lURSBNQU5BR0VSPC90ZXh0Pgo8L3N2Zz4=" alt="Orchamind Demo"></a>
+    <div class="topbar-right">
+      <span class="crew-badge">Site Manager AI</span><span style="font-size:9px;color:#9aa7b4;" title="version">v7-inline</span>
+      <span style="font-size:12px;color:#5A6B7D;">Hi, <b id="whoami" style="color:#1565C0;">there</b> <span id="roleLabel" style="background:#EEF3F8;color:#5A6B7D;font-size:10px;padding:2px 7px;border-radius:10px;text-transform:uppercase;font-weight:700;margin-left:3px;"></span></span>
+      <button onclick="logout()" style="font-size:12px;color:#D32F2F;background:none;border:1px solid #E1E8F0;border-radius:7px;padding:5px 11px;cursor:pointer;font-family:inherit;font-weight:600;">Log Out</button>
+      <a href="https://orchamind-site.vercel.app" class="back-link">&larr; Back to Orchamind</a>
+    </div>
+  </div>
+</div>
+
+<div class="dash-head">
+  <h1>Site Manager <span class="ai-pill">AI Powered</span></h1>
+  <p id="dashDate">Loading...</p>
+</div>
+
+<div class="tabs">
+  <button class="tab active" data-tab="today">Today</button>
+  <button class="tab" data-tab="jobs">Jobs</button>
+  <button class="tab" data-tab="risks">Risk Radar</button>
+  <button class="tab" data-tab="assistant">Ask the AI</button>
+  <button class="tab" data-tab="crew">Crew</button>
+  <button class="tab" data-tab="hours">Hours</button>
+  <button class="tab" data-tab="reports" data-mgronly>Reports</button>
+  <button class="tab" data-tab="subs" data-mgronly>Subcontractors</button>
+  <button class="tab" id="tabAdmin" data-tab="admin" data-owneronly>Team &amp; Access</button>
+</div>
+
+<div class="content">
+
+  <!-- TODAY PANEL -->
+  <div class="panel active" id="panel-today">
+    <div class="stats" style="margin-bottom:20px;">
+      <div class="stat"><div class="stat-num" id="statActive">0</div><div class="stat-lbl">Active Jobs</div></div>
+      <div class="stat red"><div class="stat-num" id="statRisk">0</div><div class="stat-lbl">At Risk</div></div>
+      <div class="stat green"><div class="stat-num" id="statCrew">0</div><div class="stat-lbl">Crew On Site</div></div>
+      <div class="stat accent" data-hidecrew><div class="stat-num" id="statBudget">0%</div><div class="stat-lbl">Avg Budget Used</div></div>
+    </div>
+
+    <div class="voice-bar">
+      <button class="voice-mic-big" id="voiceMicBig" onclick="toggleVoiceCommand()" title="Speak a command"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z"/><path d="M19 10v2a7 7 0 01-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg></button>
+      <div class="voice-bar-text">
+        <h4>Talk to your Site Manager</h4>
+        <p id="voiceHint">Tap the mic and say things like "Mike worked 8 hours at Sonoma Vista" or "Move Carlos to Calistoga" or "Set Valley View to 85 percent."</p>
+        <div class="voice-status" id="voiceStatus"></div>
+        <div class="voice-prompts" id="voicePrompts">
+          <span class="vp-label">Try saying or typing:</span>
+          <button class="vp-chip" onclick="runExample('Add Jose Garcia as an electrician on Valley View')">"Add Jose as an electrician on Valley View"</button>
+          <button class="vp-chip" onclick="runExample('Log 8 hours for Mike at Sonoma Vista today')">"Log 8 hours for Mike today"</button>
+          <button class="vp-chip" onclick="runExample('Set Calistoga to 35 percent')">"Set Calistoga to 35 percent"</button>
+          <button class="vp-chip" onclick="runExample('What inspections do I need before drywall?')">"What inspections before drywall?"</button>
+          <button class="vp-chip" onclick="runExample('How should I price a 400 square foot deck?')">"How do I price a deck?"</button>
+        </div>
+      </div>
+      <button class="voice-toggle-speak" id="speakToggle" onclick="toggleSpeak()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M19.07 4.93a10 10 0 010 14.14M15.54 8.46a5 5 0 010 7.07"/></svg> Voice replies: Off</button>
+    </div>
+
+    <div class="briefing">
+      <div class="briefing-head">
+        <div class="ai-dot">AI</div>
+        <div>
+          <h3>Your Morning Briefing</h3>
+          <div class="sub">Claude analyzed all your projects &middot; <span id="briefTime"></span></div>
+        </div>
+      </div>
+      <div class="briefing-body" id="briefingBody">
+        <div class="briefing-loading"><div class="spinner"></div> Reading your projects and preparing today's briefing...</div>
+      </div>
+      <button class="refresh-brief" onclick="generateBriefing()"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M23 4v6h-6M1 20v-6h6"/><path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"/></svg> Refresh Briefing</button>
+    </div>
+  </div>
+
+  <!-- JOBS PANEL -->
+  <div class="panel" id="panel-jobs">
+    <div class="panel-head">
+      <h2>Active Projects</h2>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;">
+        <button class="btn btn-ghost" onclick="clearAllData()" style="color:var(--red);"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>Clear All</button>
+        <button class="btn btn-ghost" id="saveBtn" onclick="manualSave()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>Save</button>
+        <button class="btn" onclick="openJobModal()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>New Job</button>
+      </div>
+    </div>
+    <div class="jobs-grid" id="jobsGrid"></div>
+  </div>
+
+  <!-- RISK RADAR PANEL -->
+  <div class="panel" id="panel-risks">
+    <div class="panel-head">
+      <h2>Risk Radar</h2>
+      <button class="btn" onclick="generateRisks()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M23 4v6h-6M1 20v-6h6"/><path d="M3.51 9a9 9 0 0114.85-3.36L23 10"/></svg>Re-scan</button>
+    </div>
+    <div class="risk-list" id="riskList">
+      <div class="briefing-loading" style="color:var(--muted);"><div class="spinner" style="border-color:var(--line);border-top-color:var(--blue);"></div> Scanning all jobs for risks...</div>
+    </div>
+  </div>
+
+  <!-- ASSISTANT PANEL -->
+  <div class="panel" id="panel-assistant">
+    <div class="assistant-wrap">
+      <div class="assistant-head">
+        <div class="ai-dot">AI</div>
+        <div>
+          <h3>Phil's Site Manager AI</h3>
+          <div class="sub">Knows all your jobs, crew &amp; schedule</div>
+        </div>
+      </div>
+      <div class="chat-msgs" id="chatMsgs">
+        <div class="cmsg ai">
+          <div class="cmsg-b">Morning, Phil. I'm your site manager &mdash; I know all your jobs, crew, hours and budgets, and I can help with construction, scheduling, job costing, invoicing, and crew management. Ask me anything, or tap a question below.
+          <div class="chat-suggest">
+            <button class="chat-sug" data-q="Which jobs are at risk right now?">Which jobs are at risk?</button>
+            <button class="chat-sug" data-q="Who can I move to the Calistoga job?">Who can I reassign?</button>
+            <button class="chat-sug" data-q="What inspections do I need coming up on my active jobs?">Upcoming inspections?</button>
+            <button class="chat-sug" data-q="Am I losing margin on any job? Check spent versus progress.">Margin check</button>
+            <button class="chat-sug" data-q="How should I sequence the trades on the Hillside ADU?">Sequencing advice</button>
+            <button class="chat-sug" data-q="Draft a progress invoice summary for Valley View Estate.">Draft an invoice</button>
+          </div>
+          </div>
+        </div>
+        <div class="chat-dots" id="chatDots"><span></span><span></span><span></span></div>
+      </div>
+      <div class="chat-foot">
+        <button class="chat-mic" id="chatMic" onclick="toggleVoiceChat()" title="Speak your question"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z"/><path d="M19 10v2a7 7 0 01-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg></button>
+        <input class="chat-inp" id="chatInp" type="text" placeholder="Ask or speak..." autocomplete="off">
+        <button class="chat-send" onclick="sendChat()"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg></button>
+      </div>
+    </div>
+  </div>
+
+  <!-- CREW PANEL -->
+  <div class="panel" id="panel-crew">
+    <div class="panel-head">
+      <h2>Crew &amp; Today's Assignments</h2>
+      <button class="btn" onclick="openCrewModal()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Add Crew</button>
+    </div>
+    <div class="crew-grid" id="crewGrid"></div>
+  </div>
+
+  <!-- HOURS PANEL -->
+  <div class="panel" id="panel-hours">
+    <div class="panel-head">
+      <h2>This Week's Hours</h2>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;">
+        <button class="btn btn-ghost" onclick="clearHours()" style="color:var(--red);"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>Clear Hours</button>
+        <button class="btn" onclick="openHoursModal()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Log Hours</button>
+      </div>
+    </div>
+    <div class="hours-table" id="hoursTable"></div>
+  </div>
+
+  <!-- REPORTS PANEL -->
+  <div class="panel" id="panel-reports">
+    <div class="panel-head">
+      <h2>Reports</h2>
+    </div>
+
+    <!-- Controls -->
+    <div class="rep-controls">
+      <div class="rep-field">
+        <label>Report</label>
+        <select id="repType" onchange="renderReport()">
+          <option value="payroll">Hours / Payroll — totals per worker</option>
+          <option value="jobcost">Job Cost — budget vs. spent per job</option>
+          <option value="productivity">Crew Productivity — who worked what</option>
+          <option value="status">Job Status — all jobs at a glance</option>
+        </select>
+      </div>
+      <div class="rep-field">
+        <label>Date range</label>
+        <select id="repRange" onchange="repRangeChange()">
+          <option value="thisweek">This week</option>
+          <option value="lastweek">Last week</option>
+          <option value="thismonth">This month</option>
+          <option value="all">All time</option>
+          <option value="custom">Custom dates</option>
+        </select>
+      </div>
+      <div class="rep-field rep-custom" id="repCustomFrom" style="display:none;">
+        <label>From</label>
+        <input type="date" id="repFrom" onchange="renderReport()">
+      </div>
+      <div class="rep-field rep-custom" id="repCustomTo" style="display:none;">
+        <label>To</label>
+        <input type="date" id="repTo" onchange="renderReport()">
+      </div>
+      <div class="rep-actions">
+        <button class="btn btn-ghost" onclick="exportReportCSV()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>Excel/CSV</button>
+        <button class="btn" onclick="exportReportPDF()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2h9l5 5v13a2 2 0 01-2 2H6a2 2 0 01-2-2V4a2 2 0 012-2z"/><polyline points="14 2 14 8 20 8"/></svg>PDF / Print</button>
+      </div>
+    </div>
+
+    <!-- Report output -->
+    <div id="reportOutput" class="report-output"></div>
+  </div>
+
+  <!-- SUBCONTRACTORS PANEL -->
+  <div class="panel" id="panel-subs">
+    <div class="panel-head">
+      <h2>Subcontractors</h2>
+      <button class="btn" onclick="openSubModal()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Add Sub</button>
+    </div>
+    <div class="crew-grid" id="subsGrid"></div>
+  </div>
+
+  <!-- ADMIN / TEAM PANEL -->
+  <div class="panel" id="panel-admin">
+    <div class="panel-head">
+      <h2>Team &amp; Access</h2>
+    </div>
+    <div style="background:#EEF3F8;border-radius:10px;padding:14px 16px;margin-bottom:16px;font-size:13px;color:#5A6B7D;">
+      <b style="color:#0A1628;">Roles:</b> &nbsp;<b style="color:#1565C0;">Owner</b> — full control incl. accounts &amp; financials &nbsp;·&nbsp; <b style="color:#1565C0;">Manager</b> — manage jobs, crew, hours, subs &amp; financials &nbsp;·&nbsp; <b style="color:#1565C0;">Crew</b> — see only their assigned jobs, log hours, no financials
+    </div>
+
+    <!-- INLINE ADD PERSON FORM (always visible, no popup) -->
+    <div style="background:#fff;border:2px solid #1565C0;border-radius:12px;padding:20px;margin-bottom:20px;">
+      <h3 style="margin:0 0 14px;color:#0A1628;font-size:16px;">Add a Person</h3>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;">
+        <div><label style="display:block;font-size:12px;font-weight:600;color:#5A6B7D;margin-bottom:4px;">Full Name</label>
+          <input type="text" id="npName" placeholder="e.g. Carlos Mendez" style="width:100%;border:1.5px solid #E1E8F0;border-radius:8px;padding:10px;font-size:14px;box-sizing:border-box;"></div>
+        <div><label style="display:block;font-size:12px;font-weight:600;color:#5A6B7D;margin-bottom:4px;">Username (for login)</label>
+          <input type="text" id="npUser" placeholder="e.g. carlos" style="width:100%;border:1.5px solid #E1E8F0;border-radius:8px;padding:10px;font-size:14px;box-sizing:border-box;"></div>
+        <div><label style="display:block;font-size:12px;font-weight:600;color:#5A6B7D;margin-bottom:4px;">Role</label>
+          <select id="npRole" style="width:100%;border:1.5px solid #E1E8F0;border-radius:8px;padding:10px;font-size:14px;box-sizing:border-box;">
+            <option value="crew">Crew — only their jobs, no financials</option>
+            <option value="manager">Manager — jobs, crew, hours, financials</option>
+            <option value="owner">Owner — full control</option>
+          </select></div>
+        <div><label style="display:block;font-size:12px;font-weight:600;color:#5A6B7D;margin-bottom:4px;">Temporary Password</label>
+          <input type="text" id="npPass" placeholder="they change it on first login" style="width:100%;border:1.5px solid #E1E8F0;border-radius:8px;padding:10px;font-size:14px;box-sizing:border-box;"></div>
+      </div>
+      <button onclick="addPersonInline()" style="background:#1565C0;color:#fff;border:none;border-radius:8px;padding:12px 24px;font-size:15px;font-weight:700;cursor:pointer;">Create Account</button>
+      <div id="npMsg" style="margin-top:10px;font-size:13px;min-height:18px;"></div>
+    </div>
+
+    <h3 style="margin:0 0 10px;color:#0A1628;font-size:15px;">Current Team</h3>
+    <div class="hours-table" id="usersTable"></div>
+  </div>
+  
+
+</div>
+
+<!-- MODALS -->
+<div class="modal-bg" id="jobModal"><div class="modal">
+  <h3 id="jobModalTitle">New Job</h3>
+  <input type="hidden" id="jobId">
+  <div class="field"><label>Project Name</label><input type="text" id="jobName" placeholder="e.g. Sonoma Vista Residence"></div>
+  <div class="field"><label>Client Name</label><input type="text" id="jobClient" placeholder="e.g. The Andersons"></div>
+  <div class="field"><label>Location</label><input type="text" id="jobLocation" placeholder="e.g. Santa Rosa, CA"></div>
+  <div class="field-row">
+    <div class="field"><label>Phase</label><select id="jobStatus">
+      <option value="planning">Planning</option><option value="foundation">Foundation</option><option value="framing">Framing</option><option value="rough">Rough-In</option><option value="finishing">Finishing</option><option value="inspection">Inspection</option><option value="complete">Complete</option>
+    </select></div>
+    <div class="field"><label>Progress %</label><input type="number" id="jobProgress" min="0" max="100" value="0"></div>
+  </div>
+  <div class="field-row">
+    <div class="field"><label>Crew Assigned</label><input type="number" id="jobCrew" min="0" value="0"></div>
+    <div class="field"><label>Target Date</label><input type="date" id="jobDate"></div>
+  </div>
+  <div class="field-row">
+    <div class="field"><label>Budget ($)</label><input type="number" id="jobBudget" min="0" placeholder="450000"></div>
+    <div class="field"><label>Spent ($)</label><input type="number" id="jobSpent" min="0" placeholder="180000"></div>
+  </div>
+  <div class="field"><label>Next Milestone / Notes</label><textarea id="jobNotes" rows="2" placeholder="e.g. Framing inspection scheduled, waiting on window delivery"></textarea></div>
+  <div class="modal-foot"><button class="btn btn-ghost" onclick="closeModal('jobModal')">Cancel</button><button class="btn" onclick="saveJob()">Save Job</button></div>
+</div></div>
+
+<div class="modal-bg" id="crewModal"><div class="modal">
+  <h3 id="crewModalTitle">Add Crew Member</h3>
+  <input type="hidden" id="crewId">
+  <div class="field"><label>Name</label><input type="text" id="crewName" placeholder="e.g. Mike Torres"></div>
+  <div class="field"><label>Role</label><input type="text" id="crewRole" placeholder="e.g. Lead Framer"></div>
+  <div class="field"><label>Assigned To</label><input type="text" id="crewAssign" placeholder="e.g. Sonoma Vista Residence"></div>
+  <div class="field"><label>Status Today</label><select id="crewStatus"><option value="on-site">On Site</option><option value="off">Off / Unassigned</option></select></div>
+  <div class="modal-foot"><button class="btn btn-ghost" onclick="closeModal('crewModal')">Cancel</button><button class="btn" onclick="saveCrew()">Save</button></div>
+</div></div>
+
+<div class="modal-bg" id="hoursModal"><div class="modal">
+  <h3>Log Hours</h3>
+  <div class="field"><label>Crew Member</label><input type="text" id="hoursName" placeholder="e.g. Mike Torres"></div>
+  <div class="field"><label>Job Site</label><input type="text" id="hoursSite" placeholder="e.g. Sonoma Vista Residence"></div>
+  <div class="field-row"><div class="field"><label>Date</label><input type="date" id="hoursDate"></div><div class="field"><label>Hours</label><input type="number" id="hoursAmount" min="0" max="24" step="0.5" placeholder="8"></div></div>
+  <div class="modal-foot"><button class="btn btn-ghost" onclick="closeModal('hoursModal')">Cancel</button><button class="btn" onclick="saveHours()">Log Hours</button></div>
+</div></div>
+
+<div class="modal-bg" id="aiModal"><div class="modal">
+  <h3 id="aiModalTitle">AI Analysis</h3>
+  <div class="ai-output" id="aiModalBody"><div class="briefing-loading" style="color:var(--muted);"><div class="spinner" style="border-color:var(--line);border-top-color:var(--blue);"></div> Analyzing...</div></div>
+<!-- SUB MODAL -->
+<div class="modal-bg" id="subModal"><div class="modal">
+  <h3 id="subModalTitle">Add Subcontractor</h3>
+  <input type="hidden" id="subId">
+  <div class="field"><label>Company / Name</label><input type="text" id="subName" placeholder="e.g. Valley Electric"></div>
+  <div class="field"><label>Trade</label><select id="subTrade">
+    <option>Electrical</option><option>Plumbing</option><option>Drywall</option><option>Painting</option><option>HVAC</option><option>Roofing</option><option>Concrete</option><option>Flooring</option><option>Landscaping</option><option>Other</option>
+  </select></div>
+  <div class="field"><label>Contact Phone</label><input type="text" id="subPhone" placeholder="(707) 555-0123"></div>
+  <div class="field"><label>Assigned To Job</label><input type="text" id="subJob" placeholder="e.g. Sonoma Vista Residence"></div>
+  <div class="field"><label>Notes</label><textarea id="subNotes" rows="2" placeholder="Scope, schedule, bid amount..."></textarea></div>
+  <div class="modal-foot"><button class="btn btn-ghost" onclick="closeModal('subModal')">Cancel</button><button class="btn" onclick="saveSub()">Save</button></div>
+</div></div>
+
+<!-- USER MODAL -->
+<div class="modal-bg" id="userModal"><div class="modal">
+  <h3>Add Person</h3>
+  <div class="field"><label>Full Name</label><input type="text" id="uFullName" placeholder="e.g. Carlos Mendez"></div>
+  <div class="field"><label>Username (they log in with this)</label><input type="text" id="uUsername" placeholder="e.g. carlos"></div>
+  <div class="field"><label>Role</label><select id="uRole">
+    <option value="crew">Crew — sees only their jobs, logs hours, no financials</option>
+    <option value="manager">Manager — manages jobs, crew, hours, subs, financials</option>
+    <option value="owner">Owner — full control including accounts</option>
+  </select></div>
+  <div class="field"><label>Temporary Password</label><input type="text" id="uTempPass" placeholder="give them this to log in first time"></div>
+  <div style="font-size:12.5px;color:#5A6B7D;margin-bottom:14px;">They'll be asked to set their own password when they first log in. Share this temporary password with them directly.</div>
+  <div class="modal-foot"><button class="btn btn-ghost" onclick="closeModal('userModal')">Cancel</button><button class="btn" onclick="saveUser()">Create Account</button></div>
+</div></div>
+
+  <div class="modal-foot" style="margin-top:16px;"><button class="btn btn-ghost" onclick="closeModal('aiModal')">Close</button><button class="btn" id="aiCopyBtn" onclick="copyAiOutput()">Copy</button></div>
+</div></div>
+
+<script>
+// ====== DEMO MODE ======
+// (demo overrides for save are defined after originals load)
+window.DEMO_MODE = true;
+var DEMO_AI_LIMIT = 5; // real AI calls allowed
+var _demoAICount = 0;
+
+var STATUS_LABELS={planning:'Planning',foundation:'Foundation',framing:'Framing',rough:'Rough-In',finishing:'Finishing',inspection:'Inspection',complete:'Complete'};
+
+var jobs=[
+  {id:'j1',name:'Sonoma Vista Residence',client:'The Andersons',location:'Santa Rosa, CA',status:'framing',progress:45,crew:5,date:'2026-09-15',budget:680000,spent:298000,notes:'Framing inspection scheduled for next week. Waiting on window delivery (2 wk lead).'},
+  {id:'j2',name:'Valley View Estate',client:'M. Reynolds',location:'Sonoma, CA',status:'finishing',progress:78,crew:4,date:'2026-07-30',budget:540000,spent:475000,notes:'Final finishes underway. Client wants to add wine cellar - potential change order.'},
+  {id:'j3',name:'Hillside ADU Project',client:'J. Castellano',location:'Napa, CA',status:'rough',progress:55,crew:3,date:'2026-08-20',budget:240000,spent:142000,notes:'Electrical rough-in this week. Inspector visit pending.'},
+  {id:'j4',name:'Calistoga Pool & Deck',client:'The Bennetts',location:'Calistoga, CA',status:'foundation',progress:20,crew:2,date:'2026-08-10',budget:135000,spent:38000,notes:'Excavation done. Rebar and gunite next. Behind 1 week due to rain.'}
+];
+var crew=[
+  {id:'c1',name:'Mike Torres',role:'Lead Framer',assign:'Sonoma Vista Residence',status:'on-site'},
+  {id:'c2',name:'Danny Ruiz',role:'Carpenter',assign:'Valley View Estate',status:'on-site'},
+  {id:'c3',name:'Carlos Mendez',role:'Concrete / Foundation',assign:'Calistoga Pool & Deck',status:'on-site'},
+  {id:'c4',name:'Steve Park',role:'Electrician',assign:'Hillside ADU Project',status:'on-site'},
+  {id:'c5',name:'Tom Walsh',role:'General Laborer',assign:'Unassigned',status:'off'}
+];
+var hours=[
+  {id:'h1',name:'Mike Torres',site:'Sonoma Vista Residence',date:'2026-06-22',amount:8},
+  {id:'h2',name:'Danny Ruiz',site:'Valley View Estate',date:'2026-06-22',amount:7.5},
+  {id:'h3',name:'Carlos Mendez',site:'Calistoga Pool & Deck',date:'2026-06-22',amount:8},
+  {id:'h4',name:'Steve Park',site:'Hillside ADU Project',date:'2026-06-21',amount:6}
+];
+
+var _saveTimer=null;
+function save(){
+  // Debounced save to shared database (silently no-ops if DB not configured)
+  if(_saveTimer)clearTimeout(_saveTimer);
+  _saveTimer=setTimeout(function(){
+    fetch('/api/data',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({data:{saved:true,jobs:jobs,crew:crew,hours:hours,subs:subs}})}).then(function(r){return r.json();}).then(function(o){if(o&&!o.error)_dbReady=true;}).catch(function(){});
+  },600);
+}
+var _dbReady=false;
+function load(cb){
+  // Try the shared database, but NEVER block the app if it's not set up.
+  var done=false;
+  var finish=function(){if(done)return;done=true;if(cb)cb();};
+  // Safety timeout — if DB doesn't answer in 3s, start anyway with seed data
+  var timer=setTimeout(finish,3000);
+  fetch('/api/data').then(function(r){return r.json();}).then(function(out){
+    clearTimeout(timer);
+    if(out&&!out.error&&out.data&&out.data.saved){
+      // User has saved data before (even if empty) - it is authoritative
+      jobs=Array.isArray(out.data.jobs)?out.data.jobs:[];
+      crew=Array.isArray(out.data.crew)?out.data.crew:[];
+      hours=Array.isArray(out.data.hours)?out.data.hours:[];
+      subs=Array.isArray(out.data.subs)?out.data.subs:[];
+      _dbReady=true;
+    }
+    finish();
+  }).catch(function(){clearTimeout(timer);finish();});
+}
+function uid(){return 'x'+Date.now()+Math.floor(Math.random()*1000);}
+function esc(s){return String(s||'').replace(/[&<>"]/g,function(m){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[m];});}
+function fmtDate(d){if(!d)return '';var dt=new Date(d+'T00:00:00');return dt.toLocaleDateString('en-US',{month:'short',day:'numeric'});}
+function daysUntil(d){if(!d)return null;var dt=new Date(d+'T00:00:00');var now=new Date();now.setHours(0,0,0,0);return Math.round((dt-now)/(1000*60*60*24));}
+
+// ====== CLAUDE API INTEGRATION ======
+function buildContext(){
+  var EXPERTISE="You are the AI Site Manager for Orchamind Demo, a Northern California general contractor owned by Philip Orchamind (3rd-generation builder, 25+ years). You are a seasoned expert and trusted right hand. Your knowledge runs deep across:\n\nCONSTRUCTION & BUILDING: residential & light commercial construction, framing, foundations, concrete, roofing, ADUs, remodels, decks, pools. California Building Code (CBC), Title 24 energy, seismic/structural requirements, Sonoma/Napa County permitting, inspections sequence (foundation, rough framing, rough electrical/plumbing/mechanical, insulation, drywall, final), and what triggers each. Material lead times, weather windows, scheduling dependencies, and how delays cascade.\n\nCONSTRUCTION MANAGEMENT: critical-path scheduling, sequencing trades, managing subs, RFIs, change orders, punch lists, avoiding bottlenecks, keeping multiple jobs moving, and preventing the owner from being the constraint.\n\nBOOKKEEPING & JOB COSTING: estimating, bidding, markup vs margin, job costing, draw schedules, progress billing, AIA-style invoicing, retention, tracking spent vs budget, labor burden, overhead allocation, cash flow, and spotting margin erosion early. Practical small-contractor bookkeeping (not heavy accounting jargon).\n\nCREW & LABOR MANAGEMENT: crew scheduling, assigning the right trade to the right job, tracking hours, labor productivity, prevailing wage awareness, keeping crews busy but not double-booked, and simple HR sense.\n\nWhen you advise, be specific and practical like a master builder who also runs the books — reference real numbers and names from the data below. Today is "+new Date().toDateString()+".\n\n";
+  var ctx=EXPERTISE+"CURRENT STATE OF ALL PROJECTS:\n\n";
+  jobs.forEach(function(j){
+    var d=daysUntil(j.date);
+    var budgetPct=j.budget?Math.round(j.spent/j.budget*100):0;
+    ctx+="PROJECT: "+j.name+" (client: "+j.client+", "+j.location+")\n";
+    ctx+="  Phase: "+STATUS_LABELS[j.status]+" | Progress: "+j.progress+"%\n";
+    ctx+="  Crew assigned: "+j.crew+" | Target completion: "+(j.date||'not set')+(d!==null?" ("+(d<0?Math.abs(d)+" days overdue":d+" days away")+")":"")+"\n";
+    if(j.budget)ctx+="  Budget: $"+j.budget.toLocaleString()+" | Spent: $"+j.spent.toLocaleString()+" ("+budgetPct+"% used)\n";
+    if(j.notes)ctx+="  Notes: "+j.notes+"\n";
+    ctx+="\n";
+  });
+  ctx+="CREW ROSTER ("+crew.length+" people):\n";
+  crew.forEach(function(c){
+    // compute this person's hours this week and how many jobs they touch
+    var theirHours=hours.filter(function(h){return h.name.toLowerCase().indexOf(c.name.toLowerCase().split(' ')[0])>=0;});
+    var totalH=theirHours.reduce(function(s,h){return s+(parseFloat(h.amount)||0);},0);
+    var sites={};theirHours.forEach(function(h){if(h.site)sites[h.site]=1;});
+    var siteCount=Object.keys(sites).length;
+    ctx+="  "+c.name+" - "+c.role+" - "+(c.status==='on-site'?'ON SITE at '+c.assign:'OFF / UNASSIGNED (AVAILABLE)')+" - "+totalH+"h logged this week"+(siteCount>1?" across "+siteCount+" sites (possibly stretched)":"")+"\n";
+  });
+  // availability summary
+  var avail=crew.filter(function(c){return c.status!=='on-site'||!c.assign||c.assign==='Unassigned';});
+  if(avail.length){ctx+="  AVAILABLE TO REASSIGN: "+avail.map(function(c){return c.name+" ("+c.role+")";}).join(", ")+"\n";}
+  // role coverage
+  var roles={};crew.forEach(function(c){var r=(c.role||'').toLowerCase();roles[r]=(roles[r]||0)+1;});
+  ctx+="\nHOURS THIS WEEK:\n";
+  hours.forEach(function(h){ctx+="  "+h.name+": "+h.amount+"h at "+h.site+" ("+h.date+")\n";});
+  var totalAll=hours.reduce(function(s,h){return s+(parseFloat(h.amount)||0);},0);
+  ctx+="  TOTAL LABOR THIS WEEK: "+totalAll+" hours\n";
+  ctx+="\nWHEN ANSWERING: connect crew, jobs, and hours together. Know each person's trade/role, who is on-site vs available, who is logging heavy hours or spread across multiple sites (overloaded), and which jobs are short-handed for their phase. If asked who to move, name the right person by trade and explain the tradeoff for both jobs.\n";
+  return ctx;
+}
+
+function callClaude(systemPrompt, userMessage, cb, errCb){
+  fetch("/api/claude",{
+    method:"POST",
+    headers:{"Content-Type":"application/json"},
+    body:JSON.stringify({
+      model:"claude-sonnet-4-6",
+      max_tokens:1200,
+      system:systemPrompt,
+      messages:[{role:"user",content:userMessage}]
+    })
+  }).then(function(r){return r.json();}).then(function(data){
+    if(data&&data.error){errCb&&errCb(data.error);return;}
+    var text="";
+    if(data&&data.content){text=data.content.filter(function(b){return b.type==="text";}).map(function(b){return b.text;}).join("\n");}
+    if(text){cb(text);}else{errCb&&errCb("No response from AI");}
+  }).catch(function(e){errCb&&errCb(e.message);});
+}
+
+function mdToHtml(t){
+  t=esc(t);
+  t=t.replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>');
+  t=t.replace(/^### (.+)$/gm,'<h4>$1</h4>');
+  t=t.replace(/^## (.+)$/gm,'<h4>$1</h4>');
+  t=t.replace(/^[-*] (.+)$/gm,'<li>$1</li>');
+  t=t.replace(/(<li>.*<\/li>)/s,'<ul>$1</ul>');
+  t=t.replace(/\n\n/g,'<br><br>');
+  return t;
+}
+
+// ====== MORNING BRIEFING ======
+function generateBriefing(){
+  var el=document.getElementById('briefingBody');
+  el.innerHTML='<div class="briefing-loading"><div class="spinner"></div> Reading your projects and preparing today\'s briefing...</div>';
+  document.getElementById('briefTime').textContent=new Date().toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'});
+  var sys=buildContext()+"\n\nYou are giving Phil his morning briefing. Be direct and practical like a sharp foreman. Use this exact format:\n### Top Priorities Today\n(2-4 bullet points of what needs Phil's attention most, mentioning specific projects)\n### Watch Out\n(1-3 bullets on risks, delays, or budget concerns building up)\n### Quick Wins\n(1-2 bullets on things that can be knocked out easily)\nKeep it tight - Phil is busy. Reference real project names, dates, and numbers. No fluff.";
+  callClaude(sys,"Give me my morning briefing.",function(text){
+    el.innerHTML=mdToHtml(text);
+  },function(err){
+    el.innerHTML='<div style="color:rgba(255,255,255,0.85);">I could not reach the AI service right now. '+esc(err)+'<br><br>Your projects are still tracked below in the Jobs tab.</div>';
+  });
+}
+
+// ====== RISK RADAR ======
+function generateRisks(){
+  var el=document.getElementById('riskList');
+  el.innerHTML='<div class="briefing-loading" style="color:var(--muted);"><div class="spinner" style="border-color:var(--line);border-top-color:var(--blue);"></div> Scanning all jobs for risks...</div>';
+  var sys=buildContext()+'\n\nAnalyze every project for risks. Return ONLY a JSON array (no other text, no markdown fences). Each item: {"severity":"high|med|low","job":"project name","title":"short risk title","desc":"one sentence explaining the risk and what to do"}. Consider: budget overruns (spent vs budget vs progress), schedule slips (days to deadline vs progress), inspection timing, crew coverage gaps, change orders, weather delays, material lead times. Order by severity, high first. Max 6 risks.';
+  callClaude(sys,"Scan for risks and return the JSON array.",function(text){
+    try{
+      var jsonText=text.replace(/```json/g,'').replace(/```/g,'').trim();
+      var start=jsonText.indexOf('[');var end=jsonText.lastIndexOf(']');
+      if(start>=0&&end>=0)jsonText=jsonText.substring(start,end+1);
+      var risks=JSON.parse(jsonText);
+      renderRisks(risks);
+    }catch(e){
+      el.innerHTML='<div class="risk med"><div class="risk-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></div><div class="risk-body"><div class="risk-title">Could not parse risk analysis</div><div class="risk-desc">'+esc(text.substring(0,200))+'</div></div></div>';
+    }
+  },function(err){
+    el.innerHTML='<div class="empty"><p>Risk scan unavailable</p><span>'+esc(err)+'</span></div>';
+  });
+}
+
+function renderRisks(risks){
+  var el=document.getElementById('riskList');
+  if(!risks.length){el.innerHTML='<div class="empty"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg><p>No major risks detected</p><span>All projects look on track.</span></div>';return;}
+  var icons={high:'<path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>',med:'<circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>',low:'<path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/>'};
+  el.innerHTML=risks.map(function(r){
+    var sev=(r.severity||'med').toLowerCase();
+    if(['high','med','low'].indexOf(sev)<0)sev='med';
+    return '<div class="risk '+sev+'"><div class="risk-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">'+icons[sev]+'</svg></div><div class="risk-body"><div class="risk-job">'+esc(r.job||'')+'</div><div class="risk-title">'+esc(r.title||'')+'</div><div class="risk-desc">'+esc(r.desc||'')+'</div></div><span class="risk-sev">'+sev+'</span></div>';
+  }).join('');
+}
+
+// ====== CHAT ASSISTANT ======
+var chatHistory=[];
+function sendChat(q){
+  var inp=document.getElementById('chatInp');
+  var msg=q||inp.value.trim();
+  if(!msg)return;
+  inp.value='';
+  addChatMsg(msg,'user');
+  var dots=document.getElementById('chatDots');var msgs=document.getElementById('chatMsgs');
+  dots.style.display='block';msgs.scrollTop=msgs.scrollHeight;
+  var sys=buildContext()+"\n\nYou are the AI site manager. Answer his question directly and practically, like an experienced construction PM who knows these exact jobs. Reference specific projects, crew names, dates, and dollar figures from the data. Be concise - 2-4 short paragraphs or a tight bulleted list. If he asks who to move or reassign, name specific crew and explain the tradeoff. Use **bold** for key points.";
+  var convo=chatHistory.slice(-4).map(function(m){return (m.role==='user'?'Phil':'You')+': '+m.text;}).join('\n');
+  var fullMsg=(convo?convo+'\n\n':'')+'Phil: '+msg;
+  callClaude(sys,fullMsg,function(text){
+    dots.style.display='none';
+    addChatMsg(text,'ai');
+    chatHistory.push({role:'user',text:msg});
+    chatHistory.push({role:'ai',text:text});
+  },function(err){
+    dots.style.display='none';
+    addChatMsg("I couldn't reach the AI service right now ("+esc(err)+"). Try again in a moment.",'ai');
+  });
+}
+function addChatMsg(text,who){
+  var msgs=document.getElementById('chatMsgs');var dots=document.getElementById('chatDots');
+  var d=document.createElement('div');d.className='cmsg '+who;
+  d.innerHTML='<div class="cmsg-b">'+(who==='ai'?mdToHtml(text):esc(text))+'</div>';
+  msgs.insertBefore(d,dots);msgs.scrollTop=msgs.scrollHeight;if(who==='ai')speak(text);
+}
+
+// ====== PER-JOB AI ANALYSIS ======
+var lastAiOutput='';
+function analyzeJob(id){
+  var j=jobs.find(function(x){return x.id===id;});if(!j)return;
+  openModal('aiModal');
+  document.getElementById('aiModalTitle').textContent='AI Analysis: '+j.name;
+  var body=document.getElementById('aiModalBody');
+  body.innerHTML='<div class="briefing-loading" style="color:var(--muted);"><div class="spinner" style="border-color:var(--line);border-top-color:var(--blue);"></div> Analyzing this project...</div>';
+  var sys=buildContext()+"\n\nPhil wants a focused analysis of ONE project: "+j.name+". Give him: (1) where it really stands, (2) the biggest risk or concern, (3) 2-3 specific recommended next actions. Be direct and practical. Reference the real numbers.";
+  callClaude(sys,"Analyze the "+j.name+" project for me.",function(text){
+    lastAiOutput=text;
+    body.innerHTML=mdToHtml(text);
+  },function(err){
+    body.innerHTML='Could not analyze right now: '+esc(err);
+  });
+}
+
+// ====== DRAFT CLIENT UPDATE ======
+function draftClientUpdate(id){
+  var j=jobs.find(function(x){return x.id===id;});if(!j)return;
+  openModal('aiModal');
+  document.getElementById('aiModalTitle').textContent='Client Update: '+j.client;
+  var body=document.getElementById('aiModalBody');
+  body.innerHTML='<div class="briefing-loading" style="color:var(--muted);"><div class="spinner" style="border-color:var(--line);border-top-color:var(--blue);"></div> Drafting a client update...</div>';
+  var sys=buildContext()+"\n\nWrite a warm, professional progress update email from Philip Orchamind to the client "+j.client+" about their "+j.name+" project. Mention current phase, recent progress, what's coming next, and keep it reassuring and clear. 2 short paragraphs. Sign off as Phil. Don't mention internal budget numbers or crew names.";
+  callClaude(sys,"Draft the client update email.",function(text){
+    lastAiOutput=text;
+    body.innerHTML=mdToHtml(text);
+  },function(err){
+    body.innerHTML='Could not draft right now: '+esc(err);
+  });
+}
+function copyAiOutput(){
+  if(!lastAiOutput)return;
+  navigator.clipboard.writeText(lastAiOutput).then(function(){
+    var b=document.getElementById('aiCopyBtn');b.textContent='Copied!';setTimeout(function(){b.textContent='Copy';},1800);
+  });
+}
+
+// ====== RENDER ======
+function renderStats(){
+  var active=jobs.filter(function(j){return j.status!=='complete';}).length;
+  var atRisk=jobs.filter(function(j){var bp=j.budget?j.spent/j.budget*100:0;var d=daysUntil(j.date);return (bp>j.progress+15)||(d!==null&&d<14&&j.progress<70);}).length;
+  var onSite=crew.filter(function(c){return c.status==='on-site';}).length;
+  var budgets=jobs.filter(function(j){return j.budget;});
+  var avgBudget=budgets.length?Math.round(budgets.reduce(function(s,j){return s+j.spent/j.budget*100;},0)/budgets.length):0;
+  document.getElementById('statActive').textContent=active;
+  document.getElementById('statRisk').textContent=atRisk;
+  document.getElementById('statCrew').textContent=onSite;
+  document.getElementById('statBudget').textContent=avgBudget+'%';
+}
+function renderJobs(){
+  var g=document.getElementById('jobsGrid');
+  var visibleJobs=jobs;
+  if(typeof isCrew==='function'&&isCrew()){
+    // Crew sees only jobs they're assigned to (by their name appearing in crew assignments)
+    var myName=(CURRENT_USER&&CURRENT_USER.name)?CURRENT_USER.name.toLowerCase():'';
+    var myJobs={};
+    crew.forEach(function(cm){if(cm.name&&myName&&cm.name.toLowerCase().indexOf(myName.split(' ')[0])>=0&&cm.assign){myJobs[cm.assign.toLowerCase()]=1;}});
+    visibleJobs=jobs.filter(function(j){return myJobs[(j.name||'').toLowerCase()];});
+  }
+  if(!visibleJobs.length){g.innerHTML='<div class="empty"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 21h18M5 21V7l8-4v18M19 21V11l-6-4"/></svg><p>No active jobs yet</p><span>Click New Job to add your first project.</span></div>';return;}
+  g.innerHTML=visibleJobs.map(function(j){
+    var d=daysUntil(j.date);
+    var bp=j.budget?Math.round(j.spent/j.budget*100):0;
+    var bcolor=bp>j.progress+15?'var(--red)':bp>j.progress+5?'var(--amber)':'var(--green)';
+    return '<div class="job"><div class="job-top"><div class="job-name-row"><div><div class="job-name">'+esc(j.name)+'</div><div class="job-client">'+esc(j.client)+'</div></div><span class="job-status s-'+j.status+'">'+STATUS_LABELS[j.status]+'</span></div></div>'+
+      '<div class="job-body"><div class="job-progress-lbl"><span>Progress</span><b>'+j.progress+'%</b></div><div class="progress-track"><div class="progress-fill" style="width:'+j.progress+'%"></div></div>'+
+      ((j.budget&&!(typeof isCrew==='function'&&isCrew()))?'<div class="job-budget"><div class="job-progress-lbl" style="margin-top:10px;"><span>Budget &middot; $'+(j.spent/1000).toFixed(0)+'k / $'+(j.budget/1000).toFixed(0)+'k</span><b style="color:'+bcolor+'">'+bp+'%</b></div><div class="budget-bar"><div class="budget-fill" style="width:'+Math.min(100,bp)+'%;background:'+bcolor+'"></div></div></div>':'')+
+      '<div class="job-meta"><div><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>'+esc(j.location)+'</div><div><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>'+j.crew+' crew</div>'+(j.date?'<div><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/></svg>'+(d!==null&&d<0?Math.abs(d)+'d over':d+'d')+'</div>':'')+'</div></div>'+
+      '<div class="job-foot"><button class="ai-btn" onclick="analyzeJob(\''+j.id+'\')">AI Analyze</button><button onclick="draftClientUpdate(\''+j.id+'\')">Client Update</button><button onclick="editJob(\''+j.id+'\')">Edit</button><button onclick="delJob(\''+j.id+'\')" style="color:var(--red);">Delete</button></div></div>';
+  }).join('');
+}
+function renderCrew(){
+  var g=document.getElementById('crewGrid');
+  if(!crew.length){g.innerHTML='<div class="empty"><p>No crew added yet</p></div>';return;}
+  g.innerHTML=crew.map(function(c){
+    var ini=c.name.split(' ').map(function(n){return n[0];}).join('').substring(0,2).toUpperCase();
+    return '<div class="crew-card"><div class="crew-top"><div class="crew-av">'+ini+'</div><div><div class="crew-name">'+esc(c.name)+'</div><div class="crew-role">'+esc(c.role)+'</div></div><span class="crew-status '+(c.status==='on-site'?'on-site':'off')+'">'+(c.status==='on-site'?'On Site':'Off')+'</span></div><div class="crew-assign"><span>Assigned to</span><br>'+esc(c.assign||'Unassigned')+'</div><div class="job-foot" style="background:none;border:none;padding:10px 0 0;"><button onclick="editCrew(\''+c.id+'\')">Edit</button><button onclick="delCrew(\''+c.id+'\')">Remove</button></div></div>';
+  }).join('');
+}
+function renderHours(){
+  var t=document.getElementById('hoursTable');
+  var rows='<div class="hours-row head"><div>Crew</div><div class="h-site">Job Site</div><div>Date</div><div>Hours</div></div>';
+  if(!hours.length){t.innerHTML=rows+'<div class="empty"><p>No hours logged yet</p></div>';return;}
+  rows+=hours.map(function(h){return '<div class="hours-row"><div class="h-name">'+esc(h.name)+'</div><div class="h-site">'+esc(h.site)+'</div><div>'+fmtDate(h.date)+'</div><div class="hours-total">'+h.amount+'h <span onclick="delHours(\''+h.id+'\')" style="color:#D32F2F;cursor:pointer;font-weight:700;margin-left:8px;" title="Remove">&times;</span></div></div>';}).join('');
+  var total=hours.reduce(function(s,h){return s+(parseFloat(h.amount)||0);},0);
+  rows+='<div class="hours-row" style="background:#F7FAFD;font-weight:700;"><div class="h-name">Total</div><div class="h-site"></div><div></div><div class="hours-total">'+total+'h</div></div>';
+  t.innerHTML=rows;
+}
+function renderAll(){renderStats();renderJobs();renderCrew();renderHours();renderSubs();save();}
+
+// ====== TABS ======
+document.querySelectorAll('.tab').forEach(function(t){
+  t.addEventListener('click',function(){
+    document.querySelectorAll('.tab').forEach(function(x){x.classList.remove('active');});
+    document.querySelectorAll('.panel').forEach(function(x){x.classList.remove('active');});
+    t.classList.add('active');
+    document.getElementById('panel-'+t.dataset.tab).classList.add('active');
+    if(t.dataset.tab==='admin'){loadUsers();}
+    if(t.dataset.tab==='reports'){renderReport();}
+  });
+});
+// ====== MODALS ======
+function openModal(id){document.getElementById(id).classList.add('show');}
+function closeModal(id){document.getElementById(id).classList.remove('show');}
+document.querySelectorAll('.modal-bg').forEach(function(m){m.addEventListener('click',function(e){if(e.target===m)closeModal(m.id);});});
+function openJobModal(){document.getElementById('jobModalTitle').textContent='New Job';['jobId','jobName','jobClient','jobLocation','jobNotes'].forEach(function(i){document.getElementById(i).value='';});document.getElementById('jobStatus').value='planning';document.getElementById('jobProgress').value=0;document.getElementById('jobCrew').value=0;document.getElementById('jobDate').value='';document.getElementById('jobBudget').value='';document.getElementById('jobSpent').value='';openModal('jobModal');}
+function editJob(id){var j=jobs.find(function(x){return x.id===id;});if(!j)return;document.getElementById('jobModalTitle').textContent='Edit Job';document.getElementById('jobId').value=j.id;document.getElementById('jobName').value=j.name;document.getElementById('jobClient').value=j.client;document.getElementById('jobLocation').value=j.location;document.getElementById('jobStatus').value=j.status;document.getElementById('jobProgress').value=j.progress;document.getElementById('jobCrew').value=j.crew;document.getElementById('jobDate').value=j.date||'';document.getElementById('jobBudget').value=j.budget||'';document.getElementById('jobSpent').value=j.spent||'';document.getElementById('jobNotes').value=j.notes||'';openModal('jobModal');}
+function saveJob(){var id=document.getElementById('jobId').value;var name=document.getElementById('jobName').value.trim();if(!name){alert('Please enter a project name.');return;}var data={name:name,client:document.getElementById('jobClient').value.trim(),location:document.getElementById('jobLocation').value.trim(),status:document.getElementById('jobStatus').value,progress:Math.min(100,Math.max(0,parseInt(document.getElementById('jobProgress').value)||0)),crew:parseInt(document.getElementById('jobCrew').value)||0,date:document.getElementById('jobDate').value,budget:parseInt(document.getElementById('jobBudget').value)||0,spent:parseInt(document.getElementById('jobSpent').value)||0,notes:document.getElementById('jobNotes').value.trim()};if(id){var j=jobs.find(function(x){return x.id===id;});Object.assign(j,data);}else{data.id=uid();jobs.unshift(data);}closeModal('jobModal');renderAll();}
+
+
+function manualSave(){
+  var b=document.getElementById('saveBtn');
+  if(b)b.textContent='Saving...';
+  saveNow(function(ok){
+    if(b){b.textContent=ok?'Saved!':'Save failed';setTimeout(function(){b.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>Save';},2000);}
+  });
+}
+
+
+function delHours(id){
+  if(!confirm('Remove this hours entry?'))return;
+  hours=hours.filter(function(x){return x.id!==id;});
+  renderAll();saveNow();
+}
+function clearHours(){
+  if(!hours.length){alert('There are no hours to clear.');return;}
+  if(!confirm('Clear all logged hours for this week? Your jobs and crew will NOT be affected.'))return;
+  hours=[];
+  renderAll();
+  saveNow(function(ok){
+    if(ok){alert('Hours cleared and saved. Ready for a fresh week.');}
+    else{alert('Cleared on screen, but could not save to the database. Try again.');}
+  });
+}
+function clearAllData(){
+  if(!confirm('This will permanently delete ALL jobs, crew, and hours and save an empty slate to your shared database so you can start fresh. Continue?'))return;
+  jobs=[];crew=[];hours=[];
+  renderAll();
+  saveNow(function(ok){
+    if(ok){alert('Cleared and saved to the database. The samples are gone for good. Add your real projects with New Job and Add Crew.');}
+    else{alert('Cleared on screen, but the database save FAILED. Your samples may come back on reload. Tell me and we will fix the database connection.');}
+  });
+}
+
+// Explicit, non-debounced save that reports success/failure
+function saveNow(cb){
+  fetch('/api/data',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({data:{saved:true,jobs:jobs,crew:crew,hours:hours,subs:subs}})})
+    .then(function(r){return r.json();})
+    .then(function(o){var ok=o&&!o.error;if(ok)_dbReady=true;if(cb)cb(ok);})
+    .catch(function(){if(cb)cb(false);});
+}
+function delJob(id){if(confirm('Remove this job?')){jobs=jobs.filter(function(x){return x.id!==id;});renderAll();saveNow();}}
+function openCrewModal(){document.getElementById('crewModalTitle').textContent='Add Crew Member';['crewId','crewName','crewRole','crewAssign'].forEach(function(i){document.getElementById(i).value='';});document.getElementById('crewStatus').value='on-site';openModal('crewModal');}
+function editCrew(id){var c=crew.find(function(x){return x.id===id;});if(!c)return;document.getElementById('crewModalTitle').textContent='Edit Crew Member';document.getElementById('crewId').value=c.id;document.getElementById('crewName').value=c.name;document.getElementById('crewRole').value=c.role;document.getElementById('crewAssign').value=c.assign;document.getElementById('crewStatus').value=c.status;openModal('crewModal');}
+function saveCrew(){var id=document.getElementById('crewId').value;var name=document.getElementById('crewName').value.trim();if(!name){alert('Please enter a name.');return;}var data={name:name,role:document.getElementById('crewRole').value.trim(),assign:document.getElementById('crewAssign').value.trim(),status:document.getElementById('crewStatus').value};if(id){var c=crew.find(function(x){return x.id===id;});Object.assign(c,data);}else{data.id=uid();crew.push(data);}closeModal('crewModal');renderAll();}
+function delCrew(id){if(confirm('Remove this crew member?')){crew=crew.filter(function(x){return x.id!==id;});renderAll();saveNow();}}
+function openHoursModal(){['hoursName','hoursSite','hoursAmount'].forEach(function(i){document.getElementById(i).value='';});document.getElementById('hoursDate').value=new Date().toISOString().split('T')[0];openModal('hoursModal');}
+function saveHours(){var name=document.getElementById('hoursName').value.trim();var amt=parseFloat(document.getElementById('hoursAmount').value);if(!name||!amt){alert('Please enter a name and hours.');return;}hours.unshift({id:uid(),name:name,site:document.getElementById('hoursSite').value.trim(),date:document.getElementById('hoursDate').value||new Date().toISOString().split('T')[0],amount:amt});closeModal('hoursModal');renderAll();}
+
+// chat input enter + suggestions
+document.getElementById('chatInp').addEventListener('keydown',function(e){if(e.key==='Enter')sendChat();});
+document.querySelectorAll('.chat-sug').forEach(function(s){s.addEventListener('click',function(){sendChat(s.getAttribute('data-q'));});});
+
+
+// ====== VOICE FEATURES ======
+function runExample(text){
+  // Route data commands through the voice processor, questions too (it handles both)
+  document.getElementById('voiceStatus').textContent='Working on: "'+text+'"';
+  processVoiceCommand(text);
+}
+
+var _speakOn=false;
+var _recog=null;
+var _recogActive=false;
+var _recogTarget=null; // 'command' or 'chat'
+
+function initVoice(){
+  var SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+  if(!SR){
+    var hint=document.getElementById('voiceHint');
+    if(hint)hint.textContent='Voice input is not supported in this browser. Try Chrome or Safari. You can still type below.';
+    var mic=document.getElementById('voiceMicBig');if(mic)mic.style.display='none';
+    var cmic=document.getElementById('chatMic');if(cmic)cmic.style.display='none';
+    return;
+  }
+  _recog=new SR();
+  _recog.continuous=false;
+  _recog.interimResults=true;
+  _recog.lang='en-US';
+  _recog.onresult=function(e){
+    var txt='';
+    for(var i=e.resultIndex;i<e.results.length;i++){txt+=e.results[i][0].transcript;}
+    if(_recogTarget==='command'){
+      document.getElementById('voiceStatus').textContent='"'+txt+'"';
+      if(e.results[e.results.length-1].isFinal){processVoiceCommand(txt);}
+    }else if(_recogTarget==='chat'){
+      document.getElementById('chatInp').value=txt;
+      if(e.results[e.results.length-1].isFinal){_stopRecog();sendChat();}
+    }
+  };
+  _recog.onend=function(){_recogActive=false;updateMicUI();};
+  _recog.onerror=function(e){_recogActive=false;updateMicUI();var s=document.getElementById('voiceStatus');if(s&&_recogTarget==='command')s.textContent='Didn\'t catch that — tap the mic and try again.';};
+}
+
+function updateMicUI(){
+  var big=document.getElementById('voiceMicBig');var chat=document.getElementById('chatMic');
+  if(big)big.classList.toggle('listening',_recogActive&&_recogTarget==='command');
+  if(chat)chat.classList.toggle('listening',_recogActive&&_recogTarget==='chat');
+}
+function _stopRecog(){if(_recog&&_recogActive){try{_recog.stop();}catch(e){}}_recogActive=false;updateMicUI();}
+
+function toggleVoiceCommand(){
+  if(!_recog)return;
+  if(_recogActive&&_recogTarget==='command'){_stopRecog();return;}
+  if(_recogActive)_stopRecog();
+  _recogTarget='command';_recogActive=true;updateMicUI();
+  document.getElementById('voiceStatus').textContent='Listening...';
+  try{_recog.start();}catch(e){}
+}
+function toggleVoiceChat(){
+  if(!_recog)return;
+  if(_recogActive&&_recogTarget==='chat'){_stopRecog();return;}
+  if(_recogActive)_stopRecog();
+  _recogTarget='chat';_recogActive=true;updateMicUI();
+  document.getElementById('chatInp').placeholder='Listening...';
+  try{_recog.start();}catch(e){}
+  setTimeout(function(){document.getElementById('chatInp').placeholder='Ask or speak...';},4000);
+}
+
+function toggleSpeak(){
+  _speakOn=!_speakOn;
+  var b=document.getElementById('speakToggle');
+  b.classList.toggle('on',_speakOn);
+  b.innerHTML=b.innerHTML.replace(/Voice replies: (On|Off)/,'Voice replies: '+(_speakOn?'On':'Off'));
+  if(_speakOn)speak('Voice replies are on. I\'ll read my answers out loud.');
+}
+function speak(text){
+  if(!_speakOn||!window.speechSynthesis)return;
+  var clean=text.replace(/[#*_>`]/g,'').replace(/\n+/g,'. ');
+  var u=new SpeechSynthesisUtterance(clean);
+  u.rate=1.02;u.pitch=1;
+  window.speechSynthesis.cancel();
+  window.speechSynthesis.speak(u);
+}
+
+// ====== AI-POWERED VOICE COMMAND PARSER ======
+function processVoiceCommand(text){
+  document.getElementById('voiceStatus').textContent='Got it — working on: "'+text+'"';
+  var sys=buildContext()+'\n\nPhil just gave you a spoken command on a construction job site. He may speak casually or imperfectly. Figure out his intent and convert it into a structured action. Return ONLY a JSON object (no markdown fences, no other text).\n\nShape: {"action":"ACTION","params":{...},"confirm":"short friendly sentence to read back","answer":"only for ask_question action"}\n\nValid actions and examples:\n\n1. log_hours - "Mike worked 8 hours at Sonoma Vista today" -> {"action":"log_hours","params":{"name":"Mike Torres","site":"Sonoma Vista Residence","amount":8,"date":"TODAY"},"confirm":"Logged 8 hours for Mike Torres at Sonoma Vista Residence."}\n\n2. assign_crew (move existing person) - "Move Carlos to Calistoga" -> {"action":"assign_crew","params":{"name":"Carlos Mendez","assign":"Calistoga Pool & Deck","status":"on-site"},"confirm":"Moved Carlos Mendez to Calistoga Pool & Deck."}\n\n3. add_crew (create NEW person) - "Add Danny Ruiz as a carpenter" or "New crew member Jose Garcia, electrician on Valley View" -> {"action":"add_crew","params":{"name":"Jose Garcia","role":"Electrician","assign":"Valley View Estate","status":"on-site"},"confirm":"Added Jose Garcia as Electrician on Valley View Estate."}\n\n4. set_progress - "Set Valley View to 85 percent" -> {"action":"set_progress","params":{"job":"Valley View Estate","progress":85},"confirm":"Updated Valley View Estate to 85 percent."}\n\n5. set_status - "Sonoma Vista is now in finishing" -> {"action":"set_status","params":{"job":"Sonoma Vista Residence","status":"finishing"},"confirm":"Set Sonoma Vista Residence to finishing phase."}\n\n6. add_job (create NEW project) - "New job, kitchen remodel for the Hendersons in Petaluma, budget 90 thousand" -> {"action":"add_job","params":{"name":"Henderson Kitchen Remodel","client":"The Hendersons","location":"Petaluma, CA","status":"planning","progress":0,"budget":90000,"spent":0},"confirm":"Created Henderson Kitchen Remodel for the Hendersons."}\n\n7. add_note - "Note on Calistoga: waiting on gunite delivery" -> {"action":"add_note","params":{"job":"Calistoga Pool & Deck","note":"Waiting on gunite delivery"},"confirm":"Added a note to Calistoga Pool & Deck."}\n\n8. ask_question (Phil is asking for advice/info, NOT changing data) - "What inspections do I need before drywall?" or "How do I price a deck?" -> {"action":"ask_question","answer":"Give a genuinely helpful, expert answer here as a master builder and construction business advisor. 2-4 sentences, specific and practical.","confirm":""}\n\nMatch names/projects to the CLOSEST existing one, even from a short version. Status must be one of: planning, foundation, framing, rough, finishing, inspection, complete. For add_crew/add_job, fill in sensible values from what Phil said and leave blanks reasonable. If you genuinely cannot understand, use {"action":"unknown","confirm":"I did not catch that - try saying it another way."}';
+  callClaude(sys,'Command: "'+text+'"',function(resp){
+    try{
+      var jt=resp.replace(/```json/g,'').replace(/```/g,'').trim();
+      var s=jt.indexOf('{');var e=jt.lastIndexOf('}');
+      if(s>=0&&e>=0)jt=jt.substring(s,e+1);
+      var act=JSON.parse(jt);
+      applyVoiceAction(act);
+    }catch(err){
+      document.getElementById('voiceStatus').textContent='I had trouble with that one. Try rephrasing.';
+    }
+  },function(e){document.getElementById('voiceStatus').textContent='Could not reach AI: '+e;});
+}
+
+function fuzzyJob(q){q=(q||'').toLowerCase();return jobs.find(function(x){var n=x.name.toLowerCase();return n.indexOf(q)>=0||q.indexOf(n)>=0||n.split(' ')[0]===q.split(' ')[0];})||jobs.find(function(x){return x.name.toLowerCase().indexOf((q.split(' ')[0]||'~'))>=0;});}
+function fuzzyCrew(q){q=(q||'').toLowerCase();var first=q.split(' ')[0];return crew.find(function(x){var n=x.name.toLowerCase();return n.indexOf(q)>=0||n.indexOf(first)>=0;});}
+
+function applyVoiceAction(act){
+  var p=act.params||{};
+  var today=new Date().toISOString().split('T')[0];
+  var done=false;
+  if(act.action==='log_hours'){
+    hours.unshift({id:uid(),name:p.name||'',site:p.site||'',date:(p.date==='TODAY'||!p.date)?today:p.date,amount:parseFloat(p.amount)||0});
+    done=true;
+  }else if(act.action==='assign_crew'){
+    var c=fuzzyCrew(p.name);
+    if(c){c.assign=p.assign||c.assign;if(p.status)c.status=p.status;done=true;}
+  }else if(act.action==='add_crew'){
+    crew.push({id:uid(),name:p.name||'New Crew',role:p.role||'Crew',assign:p.assign||'Unassigned',status:p.status||'on-site'});
+    done=true;
+  }else if(act.action==='set_progress'||act.action==='update_job'){
+    var j=fuzzyJob(p.job);
+    if(j){if(p.progress!=null)j.progress=Math.min(100,Math.max(0,parseInt(p.progress)));if(p.status)j.status=p.status;if(p.crew!=null)j.crew=parseInt(p.crew);done=true;}
+  }else if(act.action==='set_status'){
+    var j2=fuzzyJob(p.job);
+    if(j2&&p.status){j2.status=p.status;done=true;}
+  }else if(act.action==='add_job'){
+    jobs.unshift({id:uid(),name:p.name||'New Project',client:p.client||'',location:p.location||'',status:p.status||'planning',progress:parseInt(p.progress)||0,crew:parseInt(p.crew)||0,date:p.date||'',budget:parseInt(p.budget)||0,spent:parseInt(p.spent)||0,notes:p.notes||''});
+    done=true;
+  }else if(act.action==='add_note'){
+    var j3=fuzzyJob(p.job);
+    if(j3){j3.notes=(j3.notes?j3.notes+' ':'')+(p.note||'');done=true;}
+  }else if(act.action==='ask_question'){
+    // Phil asked for advice - show & speak the answer, no data change
+    var ans=act.answer||'I am not sure, can you rephrase?';
+    document.getElementById('voiceStatus').textContent=ans;
+    speak(ans);
+    return;
+  }
+  var msg=act.confirm||(done?'Done.':'I could not complete that — try again.');
+  document.getElementById('voiceStatus').textContent=(done?'✓ ':'')+msg;
+  if(done){renderAll();}
+  speak(msg);
+}
+
+
+
+// ====== AUTHENTICATION ======
+var CURRENT_USER=null;
+
+function showForm(which){
+  ['formLogin','formChange','formSetup'].forEach(function(f){document.getElementById(f).style.display='none';});
+  document.getElementById(which).style.display='block';
+  document.getElementById('authError').textContent='';
+}
+function authErr(msg){document.getElementById('authError').textContent=msg||'';}
+
+function bootAuth(){
+  // Check if any accounts exist yet
+  fetch('/api/accounts',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'status'})})
+    .then(function(r){return r.json();})
+    .then(function(d){
+      // Resume session if present
+      var saved=null;try{saved=JSON.parse(sessionStorage.getItem('hci_session')||'null');}catch(e){}
+      if(saved&&saved.username){CURRENT_USER=saved;enterApp();return;}
+      if(d&&d.ok&&!d.hasUsers){showForm('formSetup');document.getElementById('authSubtitle').textContent='Welcome — let\'s get set up';}
+      else{showForm('formLogin');}
+    })
+    .catch(function(){showForm('formLogin');authErr('Could not reach the server.');});
+}
+
+function authSeedOwner(){
+  var name=document.getElementById('suName').value.trim();
+  var user=document.getElementById('suUser').value.trim().toLowerCase();
+  var pass=document.getElementById('suPass').value;
+  if(!name||!user||!pass){authErr('Fill in all fields.');return;}
+  document.getElementById('suBtn').textContent='Creating...';
+  fetch('/api/accounts',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'seedOwner',name:name,username:user,password:pass})})
+    .then(function(r){return r.json();}).then(function(d){
+      document.getElementById('suBtn').textContent='Create Owner Account';
+      if(d&&d.ok){CURRENT_USER={username:user,name:name,role:'owner'};sessionStorage.setItem('hci_session',JSON.stringify(CURRENT_USER));enterApp();}
+      else{authErr((d&&d.error)||'Setup failed.');}
+    }).catch(function(){document.getElementById('suBtn').textContent='Create Owner Account';authErr('Server error.');});
+}
+
+function authLogin(){
+  var user=document.getElementById('liUser').value.trim().toLowerCase();
+  var pass=document.getElementById('liPass').value;
+  if(!user||!pass){authErr('Enter username and password.');return;}
+  document.getElementById('liBtn').textContent='Checking...';
+  fetch('/api/accounts',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'login',username:user,password:pass})})
+    .then(function(r){return r.json();}).then(function(d){
+      document.getElementById('liBtn').textContent='Log In';
+      if(d&&d.ok){
+        CURRENT_USER=d.user;
+        if(d.user.mustChange){showForm('formChange');document.getElementById('authSubtitle').textContent='Set your password';}
+        else{sessionStorage.setItem('hci_session',JSON.stringify(CURRENT_USER));enterApp();}
+      }else{authErr((d&&d.error)||'Login failed.');}
+    }).catch(function(){document.getElementById('liBtn').textContent='Log In';authErr('Server error.');});
+}
+
+function authChangePassword(){
+  var np=document.getElementById('cpNew').value;
+  var cf=document.getElementById('cpConfirm').value;
+  if(!np||np.length<4){authErr('Password must be at least 4 characters.');return;}
+  if(np!==cf){authErr('Passwords do not match.');return;}
+  document.getElementById('cpBtn').textContent='Saving...';
+  // old password is the temp one they just logged in with
+  var oldPass=document.getElementById('liPass').value;
+  fetch('/api/accounts',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'changePassword',username:CURRENT_USER.username,oldPassword:oldPass,newPassword:np})})
+    .then(function(r){return r.json();}).then(function(d){
+      document.getElementById('cpBtn').textContent='Set Password & Continue';
+      if(d&&d.ok){CURRENT_USER.mustChange=false;sessionStorage.setItem('hci_session',JSON.stringify(CURRENT_USER));enterApp();}
+      else{authErr((d&&d.error)||'Could not change password.');}
+    }).catch(function(){document.getElementById('cpBtn').textContent='Set Password & Continue';authErr('Server error.');});
+}
+
+function logout(){try{sessionStorage.removeItem('hci_session');}catch(e){}location.reload();}
+
+function enterApp(){
+  document.getElementById('authWrap').style.display='none';
+  document.body.classList.remove('locked');
+  document.body.classList.add('authed');
+  document.body.classList.add('role-'+(CURRENT_USER.role||'crew'));
+  var who=document.getElementById('whoami');if(who)who.textContent=CURRENT_USER.name;
+  var rl=document.getElementById('roleLabel');if(rl)rl.textContent=CURRENT_USER.role;
+  applyRoleAccess();
+  if(!window.__APP_STARTED){window.__APP_STARTED=true;startApp();}setTimeout(applyRoleAccess,300);
+}
+
+// ENTER key support on auth fields
+function _wireEnter(id,fn){var el=document.getElementById(id);if(el)el.addEventListener('keydown',function(e){if(e.key==='Enter')fn();});}
+_wireEnter('liPass',authLogin);_wireEnter('liUser',authLogin);
+_wireEnter('cpConfirm',authChangePassword);
+_wireEnter('suPass',authSeedOwner);
+
+// ====== ROLE-BASED ACCESS ======
+function isOwner(){return CURRENT_USER&&CURRENT_USER.role==='owner';}
+function isManager(){return CURRENT_USER&&(CURRENT_USER.role==='owner'||CURRENT_USER.role==='manager');}
+function isCrew(){return CURRENT_USER&&CURRENT_USER.role==='crew';}
+
+function applyRoleAccess(){
+  // Crew: hide financials, hide admin, hide risk/AI management as needed
+  var crew=isCrew();
+  // Hide the Admin tab unless owner
+  var adminTab=document.getElementById('tabAdmin');
+  if(adminTab)adminTab.style.display=isOwner()?'':'none';
+  // Crew sees limited tabs
+  document.querySelectorAll('[data-owneronly]').forEach(function(el){el.style.display=isOwner()?'':'none';});
+  document.querySelectorAll('[data-mgronly]').forEach(function(el){el.style.display=isManager()?'':'none';});
+  document.querySelectorAll('[data-hidecrew]').forEach(function(el){el.style.display=crew?'none':'';});
+}
+
+
+// ====== SUBCONTRACTORS ======
+var subs=[];
+function renderSubs(){
+  var g=document.getElementById('subsGrid');if(!g)return;
+  if(!subs.length){g.innerHTML='<div class="empty"><p>No subcontractors yet</p><span>Add electrical, plumbing, drywall, painting, HVAC and more.</span></div>';return;}
+  g.innerHTML=subs.map(function(s){
+    return '<div class="crew-card"><div class="crew-top"><div class="crew-av" style="background:linear-gradient(135deg,#6A4C9C,#0D47A1);">'+esc((s.trade||'?')[0])+'</div><div><div class="crew-name">'+esc(s.name)+'</div><div class="crew-role">'+esc(s.trade)+'</div></div></div>'+
+      '<div class="crew-assign"><span>Job</span><br>'+esc(s.job||'Unassigned')+'</div>'+
+      (s.phone?'<div style="font-size:13px;color:#5A6B7D;margin-top:8px;">📞 '+esc(s.phone)+'</div>':'')+
+      (s.notes?'<div style="font-size:12.5px;color:#5A6B7D;margin-top:6px;">'+esc(s.notes)+'</div>':'')+
+      '<div class="job-foot" style="background:none;border:none;padding:10px 0 0;"><button onclick="editSub(\''+s.id+'\')">Edit</button><button onclick="delSub(\''+s.id+'\')" style="color:var(--red);">Remove</button></div></div>';
+  }).join('');
+}
+function openSubModal(){document.getElementById('subModalTitle').textContent='Add Subcontractor';['subId','subName','subPhone','subJob','subNotes'].forEach(function(i){document.getElementById(i).value='';});document.getElementById('subTrade').value='Electrical';openModal('subModal');}
+function editSub(id){var s=subs.find(function(x){return x.id===id;});if(!s)return;document.getElementById('subModalTitle').textContent='Edit Subcontractor';document.getElementById('subId').value=s.id;document.getElementById('subName').value=s.name;document.getElementById('subTrade').value=s.trade;document.getElementById('subPhone').value=s.phone||'';document.getElementById('subJob').value=s.job||'';document.getElementById('subNotes').value=s.notes||'';openModal('subModal');}
+function saveSub(){var name=document.getElementById('subName').value.trim();if(!name){alert('Enter a name.');return;}var id=document.getElementById('subId').value;var data={name:name,trade:document.getElementById('subTrade').value,phone:document.getElementById('subPhone').value.trim(),job:document.getElementById('subJob').value.trim(),notes:document.getElementById('subNotes').value.trim()};if(id){var s=subs.find(function(x){return x.id===id;});Object.assign(s,data);}else{data.id=uid();subs.push(data);}closeModal('subModal');renderSubs();saveNow();}
+function delSub(id){if(confirm('Remove this subcontractor?')){subs=subs.filter(function(x){return x.id!==id;});renderSubs();saveNow();}}
+
+// ====== USER MANAGEMENT (Admin) ======
+function loadUsers(){
+  if(!isOwner()&&!isManager())return;
+  fetch('/api/accounts',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'list',callerRole:CURRENT_USER.role})})
+    .then(function(r){return r.json();}).then(function(d){if(d&&d.ok){renderUsers(d.users);}});
+}
+function renderUsers(list){
+  var t=document.getElementById('usersTable');if(!t)return;
+  var rows='<div class="hours-row head"><div>Name</div><div>Username</div><div>Role</div><div>Actions</div></div>';
+  rows+=list.map(function(u){
+    return '<div class="hours-row"><div class="h-name">'+esc(u.name)+'</div><div>'+esc(u.username)+'</div><div><span style="text-transform:capitalize;font-weight:600;color:#1565C0;">'+esc(u.role)+'</span>'+(u.mustChange?' <span style="font-size:11px;color:#B45309;">(temp pw)</span>':'')+'</div><div>'+(u.role!=='owner'?'<button onclick="changeUserRole(\''+u.username+'\')" style="font-size:12px;border:1px solid #E1E8F0;background:#fff;border-radius:6px;padding:4px 9px;cursor:pointer;margin-right:5px;">Change Role</button><button onclick="removeUser(\''+u.username+'\')" style="font-size:12px;border:1px solid #E1E8F0;background:#fff;color:#D32F2F;border-radius:6px;padding:4px 9px;cursor:pointer;">Remove</button>':'<span style="font-size:12px;color:#9aa7b4;">—</span>')+'</div></div>';
+  }).join('');
+  t.innerHTML=rows;
+}
+function openUserModal(){['uFullName','uUsername','uTempPass'].forEach(function(i){document.getElementById(i).value='';});document.getElementById('uRole').value='crew';openModal('userModal');}
+
+function addPersonInline(){
+  var name=document.getElementById('npName').value.trim();
+  var user=document.getElementById('npUser').value.trim().toLowerCase();
+  var role=document.getElementById('npRole').value;
+  var pass=document.getElementById('npPass').value;
+  var msg=document.getElementById('npMsg');
+  if(!name||!user||!pass){msg.style.color='#D32F2F';msg.textContent='Please fill in name, username, and temporary password.';return;}
+  msg.style.color='#5A6B7D';msg.textContent='Creating account...';
+  fetch('/api/accounts',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'add',callerRole:(CURRENT_USER&&CURRENT_USER.role)||'owner',name:name,username:user,role:role,password:pass})})
+    .then(function(r){return r.json();})
+    .then(function(d){
+      if(d&&d.ok){
+        msg.style.color='#2E7D32';
+        msg.textContent='✓ Account created for '+name+'! Give them username "'+user+'" and the temporary password. They set their own password on first login.';
+        document.getElementById('npName').value='';document.getElementById('npUser').value='';document.getElementById('npPass').value='';
+        loadUsers();
+      }else{
+        msg.style.color='#D32F2F';
+        msg.textContent='✗ '+((d&&d.error)||'Could not create account.');
+      }
+    })
+    .catch(function(){msg.style.color='#D32F2F';msg.textContent='✗ Could not reach the server. Try again.';});
+}
+function saveUser(){
+  var name=document.getElementById('uFullName').value.trim();
+  var user=document.getElementById('uUsername').value.trim().toLowerCase();
+  var role=document.getElementById('uRole').value;
+  var pass=document.getElementById('uTempPass').value;
+  if(!name||!user||!pass){alert('Fill in name, username, and temporary password.');return;}
+  fetch('/api/accounts',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'add',callerRole:CURRENT_USER.role,name:name,username:user,role:role,password:pass})})
+    .then(function(r){return r.json();}).then(function(d){
+      if(d&&d.ok){closeModal('userModal');loadUsers();alert('Account created for '+name+'. Give them the username "'+user+'" and the temporary password. They will set their own password on first login.');}
+      else{alert((d&&d.error)||'Could not create account.');}
+    });
+}
+function removeUser(username){
+  if(!confirm('Remove '+username+'\'s account? They will no longer be able to log in.'))return;
+  fetch('/api/accounts',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'remove',callerRole:CURRENT_USER.role,username:username})})
+    .then(function(r){return r.json();}).then(function(d){if(d&&d.ok){loadUsers();}else{alert((d&&d.error)||'Could not remove.');}});
+}
+function changeUserRole(username){
+  var role=prompt('Set role for '+username+' — type: owner, manager, or crew');
+  if(!role)return;role=role.toLowerCase().trim();
+  if(['owner','manager','crew'].indexOf(role)<0){alert('Please type owner, manager, or crew.');return;}
+  fetch('/api/accounts',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'setRole',callerRole:CURRENT_USER.role,username:username,role:role})})
+    .then(function(r){return r.json();}).then(function(d){if(d&&d.ok){loadUsers();}else{alert((d&&d.error)||'Could not change role.');}});
+}
+
+
+// ====== REPORTS ======
+function repRangeChange(){
+  var v=document.getElementById('repRange').value;
+  var show=(v==='custom');
+  document.getElementById('repCustomFrom').style.display=show?'':'none';
+  document.getElementById('repCustomTo').style.display=show?'':'none';
+  renderReport();
+}
+function repDateBounds(){
+  var v=document.getElementById('repRange').value;
+  var now=new Date();var from=null,to=null;
+  function ymd(d){return d.toISOString().split('T')[0];}
+  if(v==='thisweek'){
+    var day=now.getDay();var diff=(day===0?6:day-1);
+    var mon=new Date(now);mon.setDate(now.getDate()-diff);
+    from=ymd(mon);to=ymd(now);
+  }else if(v==='lastweek'){
+    var day2=now.getDay();var diff2=(day2===0?6:day2-1);
+    var lastMon=new Date(now);lastMon.setDate(now.getDate()-diff2-7);
+    var lastSun=new Date(lastMon);lastSun.setDate(lastMon.getDate()+6);
+    from=ymd(lastMon);to=ymd(lastSun);
+  }else if(v==='thismonth'){
+    from=ymd(new Date(now.getFullYear(),now.getMonth(),1));to=ymd(now);
+  }else if(v==='custom'){
+    from=document.getElementById('repFrom').value||null;
+    to=document.getElementById('repTo').value||null;
+  }else{from=null;to=null;}
+  return {from:from,to:to};
+}
+function inRange(dateStr,b){
+  if(!dateStr)return false;
+  if(b.from&&dateStr<b.from)return false;
+  if(b.to&&dateStr>b.to)return false;
+  return true;
+}
+function repRangeLabel(){
+  var b=repDateBounds();
+  if(!b.from&&!b.to)return 'All time';
+  var f=b.from||'beginning';var t=b.to||'today';
+  return f+'  to  '+t;
+}
+function money(n){return '$'+(n||0).toLocaleString();}
+
+function renderReport(){
+  var type=document.getElementById('repType').value;
+  var out=document.getElementById('reportOutput');
+  if(type==='payroll')out.innerHTML=repPayroll();
+  else if(type==='jobcost')out.innerHTML=repJobCost();
+  else if(type==='productivity')out.innerHTML=repProductivity();
+  else if(type==='status')out.innerHTML=repStatus();
+}
+
+function repHead(title){
+  return '<div class="rep-title">'+title+'</div><div class="rep-sub">Orchamind Demo &nbsp;·&nbsp; '+repRangeLabel()+' &nbsp;·&nbsp; Generated '+new Date().toLocaleDateString()+'</div>';
+}
+
+// 1. PAYROLL — hours per worker
+function repPayroll(){
+  var b=repDateBounds();
+  var filtered=hours.filter(function(h){return inRange(h.date,b);});
+  if(!filtered.length)return repHead('Hours / Payroll Report')+'<div class="rep-empty">No hours logged in this date range.</div>';
+  var byWorker={};
+  filtered.forEach(function(h){
+    if(!byWorker[h.name])byWorker[h.name]={total:0,jobs:{}};
+    byWorker[h.name].total+=Number(h.amount)||0;
+    var s=h.site||'Unassigned';
+    byWorker[h.name].jobs[s]=(byWorker[h.name].jobs[s]||0)+(Number(h.amount)||0);
+  });
+  var rows='',grand=0;
+  Object.keys(byWorker).sort().forEach(function(name){
+    var w=byWorker[name];grand+=w.total;
+    var jobList=Object.keys(w.jobs).map(function(j){return j+' ('+w.jobs[j]+'h)';}).join(', ');
+    rows+='<tr><td><b>'+esc(name)+'</b></td><td>'+esc(jobList)+'</td><td class="num"><b>'+w.total+'</b></td></tr>';
+  });
+  rows+='<tr class="rep-total-row"><td>TOTAL</td><td></td><td class="num">'+grand+' hrs</td></tr>';
+  return repHead('Hours / Payroll Report')+
+    '<table class="rep-table"><thead><tr><th>Worker</th><th>Jobs Worked</th><th class="num">Total Hours</th></tr></thead><tbody>'+rows+'</tbody></table>';
+}
+
+// 2. JOB COST — budget vs spent
+function repJobCost(){
+  if(!jobs.length)return repHead('Job Cost Report')+'<div class="rep-empty">No jobs to report on.</div>';
+  var rows='',tBudget=0,tSpent=0;
+  jobs.forEach(function(j){
+    var budget=Number(j.budget)||0;var spent=Number(j.spent)||0;
+    tBudget+=budget;tSpent+=spent;
+    var pct=budget>0?Math.round(spent/budget*100):0;
+    var color=pct>90?'#D32F2F':(pct>75?'#F9A825':'#2E7D32');
+    rows+='<tr><td><b>'+esc(j.name)+'</b></td><td>'+esc(j.client||'')+'</td><td class="num">'+money(budget)+'</td><td class="num">'+money(spent)+'</td><td class="num" style="color:'+color+';font-weight:700;">'+pct+'%</td><td><span class="rep-bar"><i style="width:'+Math.min(100,pct)+'%;background:'+color+';"></i></span></td></tr>';
+  });
+  var totPct=tBudget>0?Math.round(tSpent/tBudget*100):0;
+  rows+='<tr class="rep-total-row"><td>TOTAL</td><td></td><td class="num">'+money(tBudget)+'</td><td class="num">'+money(tSpent)+'</td><td class="num">'+totPct+'%</td><td></td></tr>';
+  return repHead('Job Cost Report')+
+    '<table class="rep-table"><thead><tr><th>Job</th><th>Client</th><th class="num">Budget</th><th class="num">Spent</th><th class="num">Used</th><th>Progress</th></tr></thead><tbody>'+rows+'</tbody></table>';
+}
+
+// 3. PRODUCTIVITY — hours per worker per job (matrix-ish)
+function repProductivity(){
+  var b=repDateBounds();
+  var filtered=hours.filter(function(h){return inRange(h.date,b);});
+  if(!filtered.length)return repHead('Crew Productivity Report')+'<div class="rep-empty">No hours logged in this date range.</div>';
+  var byWorker={};
+  filtered.forEach(function(h){
+    if(!byWorker[h.name])byWorker[h.name]={total:0,days:{}};
+    byWorker[h.name].total+=Number(h.amount)||0;
+    byWorker[h.name].days[h.date]=(byWorker[h.name].days[h.date]||0)+(Number(h.amount)||0);
+  });
+  var rows='';
+  Object.keys(byWorker).sort(function(a,b){return byWorker[b].total-byWorker[a].total;}).forEach(function(name){
+    var w=byWorker[name];
+    var daysWorked=Object.keys(w.days).length;
+    var avg=daysWorked>0?(w.total/daysWorked).toFixed(1):0;
+    rows+='<tr><td><b>'+esc(name)+'</b></td><td class="num">'+w.total+'</td><td class="num">'+daysWorked+'</td><td class="num">'+avg+'</td></tr>';
+  });
+  return repHead('Crew Productivity Report')+
+    '<table class="rep-table"><thead><tr><th>Worker</th><th class="num">Total Hours</th><th class="num">Days Worked</th><th class="num">Avg Hrs/Day</th></tr></thead><tbody>'+rows+'</tbody></table>';
+}
+
+// 4. STATUS — all jobs at a glance
+function repStatus(){
+  if(!jobs.length)return repHead('Job Status Overview')+'<div class="rep-empty">No jobs to report on.</div>';
+  var rows='';
+  jobs.forEach(function(j){
+    var prog=Number(j.progress)||0;
+    rows+='<tr><td><b>'+esc(j.name)+'</b></td><td>'+esc(j.client||'')+'</td><td>'+esc(j.location||'')+'</td><td><span class="rep-pill" style="background:rgba(21,101,192,0.1);color:#1565C0;">'+esc(j.status||'')+'</span></td><td class="num">'+prog+'%</td><td><span class="rep-bar"><i style="width:'+prog+'%;background:linear-gradient(90deg,#1565C0,#F9A825);"></i></span></td></tr>';
+  });
+  return repHead('Job Status Overview')+
+    '<table class="rep-table"><thead><tr><th>Job</th><th>Client</th><th>Location</th><th>Phase</th><th class="num">Progress</th><th>&nbsp;</th></tr></thead><tbody>'+rows+'</tbody></table>';
+}
+
+// ===== EXPORTS =====
+function currentReportData(){
+  // Build a 2D array (rows of cells) for CSV based on current report
+  var type=document.getElementById('repType').value;
+  var b=repDateBounds();
+  var data=[];
+  if(type==='payroll'){
+    data.push(['Worker','Jobs Worked','Total Hours']);
+    var bw={};hours.filter(function(h){return inRange(h.date,b);}).forEach(function(h){
+      if(!bw[h.name])bw[h.name]={total:0,jobs:{}};bw[h.name].total+=Number(h.amount)||0;
+      var s=h.site||'Unassigned';bw[h.name].jobs[s]=(bw[h.name].jobs[s]||0)+(Number(h.amount)||0);
+    });
+    var g=0;Object.keys(bw).sort().forEach(function(n){var w=bw[n];g+=w.total;
+      data.push([n,Object.keys(w.jobs).map(function(j){return j+' ('+w.jobs[j]+'h)';}).join('; '),w.total]);});
+    data.push(['TOTAL','',g]);
+  }else if(type==='jobcost'){
+    data.push(['Job','Client','Budget','Spent','Used %']);
+    var tb=0,ts=0;jobs.forEach(function(j){var bd=Number(j.budget)||0,sp=Number(j.spent)||0;tb+=bd;ts+=sp;
+      data.push([j.name,j.client||'',bd,sp,(bd>0?Math.round(sp/bd*100):0)+'%']);});
+    data.push(['TOTAL','',tb,ts,(tb>0?Math.round(ts/tb*100):0)+'%']);
+  }else if(type==='productivity'){
+    data.push(['Worker','Total Hours','Days Worked','Avg Hrs/Day']);
+    var bw2={};hours.filter(function(h){return inRange(h.date,b);}).forEach(function(h){
+      if(!bw2[h.name])bw2[h.name]={total:0,days:{}};bw2[h.name].total+=Number(h.amount)||0;bw2[h.name].days[h.date]=1;});
+    Object.keys(bw2).sort(function(a,c){return bw2[c].total-bw2[a].total;}).forEach(function(n){
+      var w=bw2[n];var d=Object.keys(w.days).length;data.push([n,w.total,d,d>0?(w.total/d).toFixed(1):0]);});
+  }else{
+    data.push(['Job','Client','Location','Phase','Progress %']);
+    jobs.forEach(function(j){data.push([j.name,j.client||'',j.location||'',j.status||'',(Number(j.progress)||0)+'%']);});
+  }
+  return data;
+}
+function exportReportCSV(){
+  var data=currentReportData();
+  var csv=data.map(function(row){return row.map(function(cell){
+    var s=String(cell).replace(/"/g,'""');
+    return /[",\n]/.test(s)?'"'+s+'"':s;
+  }).join(',');}).join('\n');
+  var type=document.getElementById('repType').value;
+  var blob=new Blob([csv],{type:'text/csv'});
+  var a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);
+  a.download='OrchamindConstruction-'+type+'-'+new Date().toISOString().split('T')[0]+'.csv';
+  a.click();
+}
+function exportReportPDF(){
+  // Use the browser's print -> Save as PDF (clean print CSS already hides chrome)
+  window.print();
+}
+
+
+// DEMO: override data loading with fresh sample data (never touches the database)
+function load(cb){
+  jobs=[
+    {id:'d1',name:'Oak Street Remodel',client:'The Bryants',location:'Santa Rosa, CA',status:'finishing',progress:78,crew:4,date:'2026-08-15',budget:540000,spent:475000,notes:'Kitchen and bath finishing underway. Cabinets installed, countertops next week.'},
+    {id:'d2',name:'Hillside Addition',client:'J. Castellano',location:'Napa, CA',status:'rough-in',progress:55,crew:3,date:'2026-09-30',budget:240000,spent:142000,notes:'Electrical and plumbing rough-in in progress. Framing inspection passed.'},
+    {id:'d3',name:'Maple Ave Deck',client:'The Bennetts',location:'Sonoma, CA',status:'foundation',progress:20,crew:2,date:'2026-07-20',budget:135000,spent:38000,notes:'Footings poured. Waiting on concrete sub for slab.'}
+  ];
+  crew=[
+    {id:'c1',name:'Mike Torres',role:'Foreman',assign:'Oak Street Remodel',status:'on-site'},
+    {id:'c2',name:'Carlos Mendez',role:'Lead Carpenter',assign:'Hillside Addition',status:'on-site'},
+    {id:'c3',name:'Tom Walsh',role:'Laborer',assign:'Maple Ave Deck',status:'available'},
+    {id:'c4',name:'Danny Ruiz',role:'Finish Carpenter',assign:'Oak Street Remodel',status:'on-site'}
+  ];
+  var today=new Date().toISOString().split('T')[0];
+  var yest=new Date(Date.now()-86400000).toISOString().split('T')[0];
+  hours=[
+    {id:'h1',name:'Mike Torres',site:'Oak Street Remodel',date:today,amount:8},
+    {id:'h2',name:'Mike Torres',site:'Oak Street Remodel',date:yest,amount:7.5},
+    {id:'h3',name:'Carlos Mendez',site:'Hillside Addition',date:today,amount:8},
+    {id:'h4',name:'Tom Walsh',site:'Maple Ave Deck',date:today,amount:6},
+    {id:'h5',name:'Danny Ruiz',site:'Oak Street Remodel',date:today,amount:8}
+  ];
+  subs=[
+    {id:'s1',name:'Valley Electric',trade:'Electrical',phone:'(707) 555-0142',job:'Hillside Addition',notes:'Rough-in scheduled this week'},
+    {id:'s2',name:'Bay Plumbing Co.',trade:'Plumbing',phone:'(707) 555-0198',job:'Hillside Addition',notes:''}
+  ];
+  if(cb)cb();
+}
+
+// ====== INIT ======
+function startApp(){
+  document.getElementById('dashDate').textContent=new Date().toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric',year:'numeric'});
+  load(function(){
+    renderAll();
+    generateBriefing();
+    setTimeout(generateRisks,500);
+  });
+  initVoice();
+}
+// DEMO: skip login, auto-enter with sample data
+CURRENT_USER={username:'demo',name:'Demo User',role:'manager'};
+document.getElementById('authWrap').style.display='none';
+document.body.classList.remove('locked');document.body.classList.add('authed');
+document.body.classList.add('role-manager');
+var _w=document.getElementById('whoami');if(_w)_w.textContent='Demo User';
+var _r=document.getElementById('roleLabel');if(_r)_r.textContent='manager';
+if(typeof applyRoleAccess==='function')applyRoleAccess();
+startApp();
+
+// ====== DEMO MODE OVERRIDES (defined last so they win) ======
+(function(){
+  // Block all database writes
+  window.save=function(){};
+  window.saveNow=function(cb){if(cb)cb(true);};
+  // Limit AI usage to protect API costs
+  var _origCallClaude=window.callClaude;
+  if(typeof _origCallClaude==='function'){
+    window.callClaude=function(){
+      if(_demoAICount>=DEMO_AI_LIMIT){
+        return Promise.resolve("You've reached the demo's AI limit. The full version has unlimited AI — call Siamak at 323-657-7752 to get Orchamind for your business.");
+      }
+      _demoAICount++;
+      return _origCallClaude.apply(this,arguments);
+    };
+  }
+})();
+
+</script>
+</body>
+</html>
