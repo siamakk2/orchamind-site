@@ -13,11 +13,11 @@
 <meta property="og:title" content="Orchamind — The AI Brain That Runs Your Field Business">
 <meta property="og:description" content="Manage jobs, crews, and hours by voice. Get a daily AI briefing and risk alerts. AI operations software for contractors and field-service businesses.">
 <meta property="og:site_name" content="Orchamind by Siamak Kalhor Consulting">
-<meta property="og:image" content="https://orchamind-site.vercel.app/og-image.jpg">
+<meta property="og:image" content="https://orchamind.com/og-image.jpg">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
-<meta property="og:url" content="https://orchamind-site.vercel.app">
-<meta name="twitter:image" content="https://orchamind-site.vercel.app/og-image.jpg">
+<meta property="og:url" content="https://orchamind.com">
+<meta name="twitter:image" content="https://orchamind.com/og-image.jpg">
 <link rel="icon" type="image/svg+xml" href="/favicon.svg">
 <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png">
 <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
@@ -296,7 +296,7 @@
   .fb{background:var(--paper);border:1px solid var(--line);border-radius:100px;padding:9px 16px;text-align:center;font-size:13px;font-weight:600;color:var(--signal);}
   @media(max-width:900px){.founder-grid{grid-template-columns:1fr;gap:34px;text-align:center;}.founder-photo{order:-1;}.founder-badges{margin:0 auto;}}
 
-  .gal-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:26px;margin-top:48px;}
+  .gal-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:26px;margin-top:48px;}
   .gal-card h3{font-size:19px;margin:20px 0 8px;}
   .gal-card p{color:var(--slate);font-size:14.5px;}
   .gal-screen{background:var(--white);border:1px solid var(--line);border-radius:14px;overflow:hidden;box-shadow:0 12px 30px rgba(10,22,40,0.08);min-height:210px;}
@@ -319,6 +319,14 @@
   .gal-risk.med{background:rgba(249,168,37,0.12);color:#B45309;}
   .gal-risk.low{background:rgba(45,127,249,0.08);color:var(--signal);}
   @media(max-width:900px){.gal-grid{grid-template-columns:1fr;}}
+
+  .demo-rep-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;}
+  .demo-rep-btns{display:flex;gap:8px;}
+  .demo-rep-btn{background:rgba(45,127,249,0.2);color:var(--signal-soft);font-size:12px;font-weight:600;padding:5px 11px;border-radius:7px;}
+  .demo-rep-table{width:100%;border-collapse:collapse;font-size:13.5px;}
+  .demo-rep-table th{text-align:left;color:rgba(255,255,255,0.5);font-size:11px;text-transform:uppercase;padding:8px 10px;border-bottom:1px solid rgba(255,255,255,0.1);}
+  .demo-rep-table td{padding:10px;color:rgba(255,255,255,0.85);border-bottom:1px solid rgba(255,255,255,0.06);}
+  .demo-rep-total td{font-weight:800;color:#fff;border-top:1px solid rgba(255,255,255,0.2);border-bottom:none;}
 </style>
 </head>
 <body>
@@ -330,6 +338,7 @@
       Orchamind
     </a>
     <div class="nav-links" id="navLinks">
+      <a href="#what">What is it</a>
       <a href="#how">How it works</a>
       <a href="#demo">Live Demo</a>
       <a href="#features">Features</a>
@@ -338,6 +347,7 @@
       <a href="#proof">Proof</a>
       <a href="#askai">Ask AI</a>
       <a href="#faq">FAQ</a>
+      <a href="demo.html" style="color:#fff !important;border:1px solid rgba(255,255,255,0.3);padding:9px 16px;border-radius:9px;font-weight:600;font-size:14px;">Try Demo</a>
       <a href="#contact" class="nav-cta">Get a demo</a>
     </div>
     <button class="nav-toggle" onclick="document.getElementById('navLinks').classList.toggle('open')">☰</button>
@@ -351,7 +361,7 @@
     <p class="hero-sub">Orchamind tracks every job, crew member, and hour — then briefs you each morning, flags what's about to go wrong, and answers any question. Just talk to it. If you can send a text, you can run it.</p>
     <div class="hero-btns">
       <a href="#contact" class="btn-primary">Get a personalized demo</a>
-      <a href="#how" class="btn-ghost">See how it works</a>
+      <a href="demo.html" class="btn-ghost">▶ Try the live demo</a>
     </div>
 
     <div class="command-demo">
@@ -375,6 +385,22 @@
   </div>
 </div>
 
+
+<section class="explainer" id="what" style="background:var(--white);">
+  <div class="wrap" style="max-width:900px;text-align:center;">
+    <div class="section-eyebrow" style="text-align:center;">In plain English</div>
+    <h2 class="section-title" style="margin:0 auto 24px;max-width:20ch;">What is Orchamind?</h2>
+    <p style="font-size:22px;line-height:1.5;color:var(--ink);margin-bottom:26px;font-weight:500;">
+      It's like having the smartest office manager you've ever had — one who <b>remembers every job, every worker, and every hour</b>, never forgets anything, and works around the clock.
+    </p>
+    <p style="font-size:18px;line-height:1.6;color:var(--slate);margin-bottom:20px;">
+      Except you don't type into spreadsheets or learn complicated software. You just <b style="color:var(--ink);">talk to it like a person</b> — "log 8 hours for Mike at the Johnson job" — and it instantly updates everything, keeps your whole team in sync, and tells you each morning what needs your attention.
+    </p>
+    <p style="font-size:18px;line-height:1.6;color:var(--slate);">
+      No spreadsheets. No training. No tech skills. <b style="color:var(--ink);">If you can send a text message, you can run your entire operation with it.</b>
+    </p>
+  </div>
+</section>
 <section class="problem">
   <div class="wrap">
     <div class="section-eyebrow">The problem</div>
@@ -445,6 +471,7 @@
         <button class="demo-tab" onclick="demoTab('jobs',this)">Jobs</button>
         <button class="demo-tab" onclick="demoTab('crew',this)">Crew</button>
         <button class="demo-tab" onclick="demoTab('ask',this)">Ask AI</button>
+        <button class="demo-tab" onclick="demoTab('reports',this)">Reports</button>
       </div>
       <div class="demo-body">
         <!-- TODAY -->
@@ -481,9 +508,24 @@
             <div class="dchat-a">✦ Before drywall you'll need framing, electrical rough-in, and plumbing rough-in all signed off. In Napa County, schedule the framing inspection first — it gates the others.</div>
           </div>
         </div>
+        <!-- REPORTS -->
+        <div class="demo-panel" id="demo-reports">
+          <div class="demo-rep-head">
+            <div><b style="color:#fff;">Hours / Payroll</b> <span style="color:rgba(255,255,255,0.5);font-size:12px;">· This week</span></div>
+            <div class="demo-rep-btns"><span class="demo-rep-btn">⬇ Excel</span><span class="demo-rep-btn">⬇ PDF</span></div>
+          </div>
+          <table class="demo-rep-table">
+            <tr><th>Worker</th><th>Jobs</th><th style="text-align:right;">Hours</th></tr>
+            <tr><td>Mike Torres</td><td>Oak Street</td><td style="text-align:right;">15.5</td></tr>
+            <tr><td>Carlos Mendez</td><td>Hillside</td><td style="text-align:right;">8</td></tr>
+            <tr><td>Tom Walsh</td><td>Maple Ave</td><td style="text-align:right;">6</td></tr>
+            <tr class="demo-rep-total"><td>TOTAL</td><td></td><td style="text-align:right;">29.5 hrs</td></tr>
+          </table>
+          <div style="color:rgba(255,255,255,0.5);font-size:12px;margin-top:12px;text-align:center;">Download for payroll, or switch to Job Cost to see budget vs. spent per job.</div>
+        </div>
       </div>
     </div>
-    <p style="text-align:center;color:var(--slate);font-size:14px;margin-top:20px;">This is a sample preview. Your real system is set up with your own jobs, crew, and branding.</p>
+    <p style="text-align:center;color:var(--slate);font-size:14px;margin-top:20px;">This is a sample preview. <a href="demo.html" style="color:var(--signal);font-weight:600;">Open the full interactive demo →</a> and click around the real app with sample data.</p>
   </div>
 </section>
 <section class="gallery" id="gallery" style="background:var(--paper);">
@@ -534,6 +576,22 @@
         <h3>Risk Radar</h3>
         <p>Catches budget overruns and slipping jobs before they cost you.</p>
       </div>
+
+      <!-- Reports -->
+      <div class="gal-card">
+        <div class="gal-screen">
+          <div class="gal-bar"><span class="gal-dot"></span><span class="gal-dot"></span><span class="gal-dot"></span> <span class="gal-title">Payroll Report</span></div>
+          <div class="gal-body">
+            <div style="display:flex;justify-content:space-between;font-size:13px;padding:7px 0;border-bottom:1px solid var(--line);"><span>Mike Torres</span><b>15.5h</b></div>
+            <div style="display:flex;justify-content:space-between;font-size:13px;padding:7px 0;border-bottom:1px solid var(--line);"><span>Carlos Mendez</span><b>8h</b></div>
+            <div style="display:flex;justify-content:space-between;font-size:13px;padding:7px 0;border-bottom:1px solid var(--line);"><span>Tom Walsh</span><b>6h</b></div>
+            <div style="display:flex;justify-content:space-between;font-size:13.5px;padding:9px 0;font-weight:800;color:#1565C0;"><span>TOTAL</span><span>29.5 hrs</span></div>
+            <div style="display:flex;gap:6px;margin-top:8px;"><span style="background:rgba(45,127,249,0.1);color:#2D7FF9;font-size:11px;font-weight:600;padding:4px 10px;border-radius:6px;">⬇ Excel</span><span style="background:rgba(45,127,249,0.1);color:#2D7FF9;font-size:11px;font-weight:600;padding:4px 10px;border-radius:6px;">⬇ PDF</span></div>
+          </div>
+        </div>
+        <h3>Reports &amp; Payroll</h3>
+        <p>Worker hours and job-cost summaries, exportable to Excel or PDF.</p>
+      </div>
     </div>
   </div>
 </section>
@@ -575,6 +633,11 @@
         <div class="feat-ic">🔒</div>
         <h3>Role-based access</h3>
         <p>You and your managers see the money. Crew see only their own jobs — never your budgets or margins.</p>
+      </div>
+      <div class="feat">
+        <div class="feat-ic">📊</div>
+        <h3>Payroll &amp; job-cost reports</h3>
+        <p>One-click hours totals per worker for payroll, plus budget-vs-spent on every job. Download to Excel or PDF and hand it straight to your bookkeeper.</p>
       </div>
     </div>
   </div>
@@ -696,6 +759,7 @@
       <div class="faq-item"><div class="faq-q" onclick="this.parentElement.classList.toggle('open')">What kinds of businesses use it?</div><div class="faq-a">Any business that runs jobs with a field team: general contractors, electricians, plumbers, HVAC, roofers, painters, landscapers, pool builders, cleaning and janitorial, pest control, solar, property maintenance, moving companies, and more. It's set up with your industry's language.</div></div>
       <div class="faq-item"><div class="faq-q" onclick="this.parentElement.classList.toggle('open')">Is my data private and secure?</div><div class="faq-a">Yes. Each company gets its own private, secure system with individual logins. Owners and managers see financials and budgets; crew members only see the jobs they're assigned to. Passwords are encrypted and never stored in plain text.</div></div>
       <div class="faq-item"><div class="faq-q" onclick="this.parentElement.classList.toggle('open')">Can my crew see my budgets and margins?</div><div class="faq-a">Only if you let them. Access is role-based: you decide who sees money and who doesn't. Crew members see their assigned jobs and log their hours — never your financials.</div></div>
+      <div class="faq-item"><div class="faq-q" onclick="this.parentElement.classList.toggle('open')">Can it do payroll and reports?</div><div class="faq-a">Yes. With one click you get total hours per worker for the pay period — ready for payroll — plus job-cost reports showing budget versus spent on every job. Everything exports to Excel or PDF, so you can hand it straight to your bookkeeper. You can filter by this week, a pay period, or custom dates.</div></div>
       <div class="faq-item"><div class="faq-q" onclick="this.parentElement.classList.toggle('open')">Does it work on my phone?</div><div class="faq-a">Yes — phone, tablet, and desktop. Most owners run it from their phone in the field, and the whole team stays in sync on the same live information.</div></div>
       <div class="faq-item"><div class="faq-q" onclick="this.parentElement.classList.toggle('open')">How do I get started?</div><div class="faq-a">Reach out to Siamak Kalhor Consulting for a personalized walkthrough. We set the system up for your business — your jobs, your crew, your branding — and show you exactly how to use it.</div></div>
     </div>
