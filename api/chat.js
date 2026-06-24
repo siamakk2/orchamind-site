@@ -9,7 +9,7 @@ module.exports = async function handler(req, res) {
 
   try {
     const apiKey = process.env.ANTHROPIC_API_KEY;
-    if (!apiKey) { return res.status(200).json({ reply: "The assistant isn't configured yet. Please email siamakk2@gmail.com." }); }
+    if (!apiKey) { return res.status(200).json({ reply: "The assistant isn't set up yet. Please call Siamak directly at 323-657-7752." }); }
 
     let body = req.body;
     if (typeof body === 'string') { try { body = JSON.parse(body); } catch (e) { body = {}; } }
@@ -37,7 +37,7 @@ KEY SELLING POINTS:
 - Set up for each business with their own jobs, crew, and branding
 - It's a product of Siamak Kalhor Consulting
 
-TO GET STARTED / PRICING: Interested businesses contact Siamak Kalhor Consulting for a personalized demo and setup. Email: siamakk2@gmail.com. For pricing, explain it's customized per business and they should reach out for a quote — don't invent specific prices.
+TO GET STARTED / PRICING: Interested businesses should CALL Siamak Kalhor directly at 323-657-7752 for a personalized demo and setup. Always give the phone number 323-657-7752 as the main way to reach him — encourage them to call or text. Only mention email if someone specifically asks for an email instead. For pricing, explain it's customized per business and they should call for a quote — don't invent specific prices.
 
 
 ABOUT THE FOUNDER — SIAMAK KALHOR (when visitors ask "who's behind this", "who made it", "why should I trust you", or about the company):
@@ -47,7 +47,7 @@ ABOUT THE FOUNDER — SIAMAK KALHOR (when visitors ask "who's behind this", "who
 - Spent 19 years on the radio at 670 AM KIRN talking about technology — a longtime, trusted voice explaining tech in plain language to everyday people. He has also been featured in the news.
 - This combination is rare: a technologist who can actually build the AI, paired with decades of hands-on business experience and a gift for explaining technology simply. That's why Orchamind is powerful under the hood but dead-simple to use.
 - The whole philosophy comes from that experience: build serious technology that a non-technical business owner can run by just talking to it.
-When asked about Siamak, speak about him warmly and credibly using these real facts. Encourage the visitor to reach out to him directly for a demo. Do not invent additional credentials, awards, or claims beyond what is listed here.
+When asked about Siamak, speak about him warmly and credibly using these real facts. Encourage the visitor to CALL him directly at 323-657-7752 for a demo. Do not invent additional credentials, awards, or claims beyond what is listed here.
 
 YOUR RULES:
 - Only answer questions about Orchamind, the product, how it works, who it's for, and how to get started.
@@ -55,7 +55,7 @@ YOUR RULES:
 - Keep answers SHORT and conversational — 2 to 3 sentences. This is a chat widget, and your answers are often read ALOUD by a voice, so write the way a person actually talks.
 - CRITICAL FOR VOICE: Write in plain, natural spoken English. Do NOT use any markdown, asterisks, bullet points, dashes as list markers, emojis, slashes, or symbols of any kind. No formatting. Just clean sentences, like you're speaking to someone across a table.
 - Do not use lists. If you need to mention a few things, say them in a natural sentence ("It works for electricians, plumbers, and roofers") instead of bullets.
-- Be warm, confident, and helpful, like a knowledgeable salesperson who genuinely wants to help. Encourage them to reach out for a demo when they show interest.
+- Be warm, confident, and helpful, like a knowledgeable salesperson who genuinely wants to help. When they show interest, encourage them to call or text Siamak at 323-657-7752 to set up a demo. The phone number is the primary call to action, not email.
 - Never make up features or specific prices that aren't listed above.`;
 
     const messages = [];
@@ -73,8 +73,8 @@ YOUR RULES:
     if (data && data.content && data.content[0] && data.content[0].text) {
       return res.status(200).json({ reply: data.content[0].text });
     }
-    return res.status(200).json({ reply: "Sorry, I had trouble answering that. Try again, or email siamakk2@gmail.com for a quick reply." });
+    return res.status(200).json({ reply: "Sorry, I had trouble with that one. Try again, or just call Siamak directly at 323-657-7752 for a quick answer." });
   } catch (err) {
-    return res.status(200).json({ reply: "Something went wrong on my end. Please email siamakk2@gmail.com and we'll help you out." });
+    return res.status(200).json({ reply: "Something went wrong on my end. Please call Siamak directly at 323-657-7752 and he'll help you out." });
   }
 };
