@@ -1,0 +1,28 @@
+// Page Generator API — generates full HTML landing pages for the audit tool.
+// Separate from claude.js so the demo chat stays cost-capped at 800 tokens.
+// Each call generates ONE complete landing page (~3000-4000 tokens output).
+module.exports = async function handler(req, res) {
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+  if (req.method === 'OPTIONS') { return res.status(200).end(); }
+  if (req.method !== 'POST') { return res.status(405).json({ error: 'Method not allowed' }); }
+  try {
+    const apiKey = process.env.ANTHROPIC_API_KEY;
+    if (!apiKey) { return res.status(200).json({ error: 'Page generator not configured.' }); }
+    let body = req.body;
+    if (typeof body === 'string') { try { body = JSON.parse(body); } catch (e) { body = {}; } }
+    if (!body || typeof body !== 'object') body = {};
+    const messages = Array.isArray(body.messages) ? body.messages : [];
+    if (!messages.length) { return res.status(200).json({ error: 'No prompt provided.' }); }
+    const r = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'x-api-key': apiKey, 'anthropic-version': '2023-06-01' },
+      body: JSON.stringify({ model: 'claude-sonnet-4-6', max_tokens: 4096, messages: messages })
+    });
+    const data = await r.json();
+    return res.status(200).json(data);
+  } catch (err) {
+    return res.status(200).json({ error: 'Page generator error: ' + err.message });
+  }
+};
