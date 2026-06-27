@@ -1,5 +1,6 @@
 {
   "rewrites": [
     { "source": "/audit", "destination": "/audit.html" }
-  ]
+  ],
+  "buildCommand": "echo build"
 }
