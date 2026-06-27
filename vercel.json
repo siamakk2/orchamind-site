@@ -1,5 +1,14 @@
 {
   "rewrites": [
     { "source": "/audit", "destination": "/audit.html" }
+  ],
+  "headers": [
+    {
+      "source": "/(.*)",
+      "headers": [
+        { "key": "Cache-Control", "value": "no-cache, no-store, must-revalidate" },
+        { "key": "X-Deploy-Version", "value": "v3-2026-06-27" }
+      ]
+    }
   ]
 }
