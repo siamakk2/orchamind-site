@@ -102,7 +102,7 @@
   .build{background:var(--card);border:1px solid var(--line);border-radius:18px;box-shadow:var(--shadow);padding:30px;margin-bottom:22px;}
   .build h2{font-size:24px;color:var(--navy);text-align:center;}
   .build .lead{color:var(--muted);text-align:center;max-width:580px;margin:8px auto 22px;}
-  .styles{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:8px;}
+  .styles{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:8px;}
   .style{border:2px solid var(--line);border-radius:13px;overflow:hidden;cursor:pointer;transition:border-color .15s, transform .15s;background:#fff;}
   .style:hover{transform:translateY(-3px);}
   .style.sel{border-color:var(--blue);box-shadow:0 0 0 3px rgba(45,127,249,0.15);}
@@ -156,7 +156,7 @@
   @media(max-width:680px){
     .audit-row{flex-direction:column;}
     .cards{grid-template-columns:1fr;}
-    .styles{grid-template-columns:1fr 1fr;}
+    .styles{grid-template-columns:1fr;}
     .s-cards{grid-template-columns:1fr;}
     .hero{padding:42px 0 24px;}
     .s-hero{padding:42px 22px 38px;}
@@ -179,7 +179,7 @@
   <section class="hero" id="hero">
     <span class="eyebrow">Free · No signup · Takes 30 seconds</span>
     <h1>How does your business <span class="grad">show up online?</span></h1>
-    <p class="sub">Get your free Online Presence Report. Our AI checks your website, how Google sees you, and how AI assistants describe you — then gives you specific fixes, growth ideas, and a free preview of a brand-new site. By Siamak Kalhor Consulting.</p>
+    <p class="sub">Get your free Online Presence Report — an honest expert review of your public homepage: how clear it is to Google, to AI assistants, and to your customers. Specific tips, growth ideas, and a free preview of a new site. By Siamak Kalhor Consulting.</p>
 
     <div class="audit-box">
       <div class="audit-row">
@@ -216,6 +216,7 @@
       </div>
       <div class="grade" id="repGrade">—</div>
       <div class="headline" id="repHeadline">—</div>
+      <div id="repNote" style="display:none;margin:14px auto 0;max-width:560px;background:#FFF7E6;border:1px solid #F3D38A;color:#8A6516;border-radius:12px;padding:11px 16px;font-size:13.5px;line-height:1.5;"></div>
     </div>
 
     <div class="cards" id="repCards"></div>
@@ -231,8 +232,8 @@
     </div>
 
     <div class="build">
-      <h2>See your business as a brand-new website</h2>
-      <p class="lead">Pick a look below and we'll instantly design a preview using <b>your</b> business — real headline, services, and call-to-action. Siamak Kalhor Consulting can build it for you, with as many pages as you need, in days.</p>
+      <h2>See your business with a high-authority website</h2>
+      <p class="lead">Pick a version below — each is built to rank higher on Google, show up in AI search results, and turn more visitors into calls. Using <b>your</b> real business content. Siamak Kalhor Consulting builds it for you in days.</p>
       <div class="styles" id="styles"></div>
       <div class="preview-hint" id="prevHint">👇 Here's your preview — tap any style above to change the look</div>
 
@@ -259,30 +260,39 @@
 
 <script>
   var THEMES = [
-    { key:"bold",  nm:"Bold &amp; Modern", forr:"Trades, gyms, startups",
-      heroBg:"linear-gradient(135deg,#0A1628 0%,#143A6B 55%,#2D7FF9 120%)", heroInk:"#fff", heroSub:"rgba(255,255,255,.85)",
-      cta1Bg:"#F9A825", cta1Ink:"#0A1628", cta2Ink:"#fff",
-      headFont:"'Poppins',sans-serif",
-      servBg:"#0E1A2B", servInk:"#fff", cardBg:"#16263c", cardInk:"#fff", accent:"#2D7FF9", siBg:"rgba(45,127,249,.18)",
-      aboutBg:"#101D30", aboutInk:"#fff", footBg:"#0A1628", footInk:"#fff", badgeBg:"rgba(255,255,255,.12)", badgeInk:"#fff", border:"" },
-    { key:"clean", nm:"Clean &amp; Pro", forr:"Lawyers, finance, B2B",
-      heroBg:"#FFFFFF", heroInk:"#0A1628", heroSub:"#5A6B7D",
-      cta1Bg:"#0A1628", cta1Ink:"#fff", cta2Ink:"#0A1628",
+    // VERSION 1 — AUTHORITY & TRUST: Built for contractors, trades, and service businesses
+    // High-contrast navy + amber. CTA language drives calls. LLMO signals: credentials, years, location.
+    { key:"authority", nm:"Authority &amp; Trust", forr:"Contractors, trades, service",
+      heroBg:"linear-gradient(160deg,#0A1628 0%,#0F2040 50%,#0A1628 100%)", heroInk:"#fff", heroSub:"rgba(255,255,255,.82)",
+      cta1Bg:"#F9A825", cta1Ink:"#0A1628", cta2Ink:"rgba(255,255,255,.9)",
       headFont:"'Sora',sans-serif",
-      servBg:"#F7F9FC", servInk:"#0A1628", cardBg:"#fff", cardInk:"#0A1628", accent:"#2D7FF9", siBg:"rgba(45,127,249,.1)",
-      aboutBg:"#0A1628", aboutInk:"#fff", footBg:"#F7F9FC", footInk:"#0A1628", badgeBg:"#EEF3FB", badgeInk:"#2D7FF9", border:"#E4EAF2" },
-    { key:"warm",  nm:"Warm &amp; Local", forr:"Restaurants, salons",
-      heroBg:"linear-gradient(135deg,#7C2D12 0%,#B45309 60%,#F9A825 130%)", heroInk:"#fff", heroSub:"rgba(255,255,255,.9)",
-      cta1Bg:"#fff", cta1Ink:"#7C2D12", cta2Ink:"#fff",
-      headFont:"'Fraunces',serif",
-      servBg:"#FFFBF5", servInk:"#3a2415", cardBg:"#fff", cardInk:"#3a2415", accent:"#B45309", siBg:"rgba(180,83,9,.12)",
-      aboutBg:"#7C2D12", aboutInk:"#fff", footBg:"#FFF3E2", footInk:"#3a2415", badgeBg:"#FBE7CD", badgeInk:"#B45309", border:"#F0E2D0" },
-    { key:"prem",  nm:"Premium", forr:"Real estate, luxury",
-      heroBg:"linear-gradient(135deg,#0B1F38 0%,#16314f 60%,#1d3a5c 120%)", heroInk:"#fff", heroSub:"rgba(255,255,255,.82)",
-      cta1Bg:"#C9A227", cta1Ink:"#0B1F38", cta2Ink:"#fff",
+      servBg:"#F4F7FB", servInk:"#0A1628", cardBg:"#fff", cardInk:"#0A1628", accent:"#2D7FF9", siBg:"rgba(45,127,249,.1)",
+      aboutBg:"#0A1628", aboutInk:"#fff", footBg:"#0A1628", footInk:"#fff",
+      badgeBg:"rgba(249,168,37,.18)", badgeInk:"#F9A825", border:"#E1E8F2",
+      ctaOverride:"Call Now — Free Estimate", cta2Override:"See Our Work" },
+
+    // VERSION 2 — MODERN AI-FIRST: For tech-forward businesses that want to signal innovation
+    // Deep slate + electric blue. Structured content for AI indexing. LLMO: schema-friendly headings.
+    { key:"aifirst", nm:"Modern AI-First", forr:"Tech, consulting, SaaS, agencies",
+      heroBg:"linear-gradient(135deg,#0D1B2A 0%,#1B2E45 45%,#0B2D4E 100%)", heroInk:"#fff", heroSub:"rgba(255,255,255,.75)",
+      cta1Bg:"#2D7FF9", cta1Ink:"#fff", cta2Ink:"rgba(255,255,255,.85)",
+      headFont:"'Poppins',sans-serif",
+      servBg:"#0D1B2A", servInk:"#fff", cardBg:"rgba(255,255,255,.05)", cardInk:"#fff", accent:"#5B9DFF", siBg:"rgba(91,157,255,.15)",
+      aboutBg:"linear-gradient(135deg,#2D7FF9,#1E63D8)", aboutInk:"#fff", footBg:"#060E18", footInk:"rgba(255,255,255,.7)",
+      badgeBg:"rgba(91,157,255,.18)", badgeInk:"#5B9DFF", border:"rgba(255,255,255,.1)",
+      ctaOverride:"Get a Free Strategy Call", cta2Override:"See How It Works" },
+
+    // VERSION 3 — LOCAL AUTHORITY: For established local businesses that own their market
+    // Deep forest green + gold. Signals longevity, community trust, local dominance.
+    // LLMO: location signals, years in business, specific service areas.
+    { key:"local", nm:"Local Market Leader", forr:"Established local, real estate, law",
+      heroBg:"linear-gradient(150deg,#0F2918 0%,#1A3D26 55%,#0F2918 100%)", heroInk:"#fff", heroSub:"rgba(255,255,255,.8)",
+      cta1Bg:"#C9A227", cta1Ink:"#0F2918", cta2Ink:"rgba(255,255,255,.9)",
       headFont:"'Playfair Display',serif",
-      servBg:"#fff", servInk:"#0B1F38", cardBg:"#F7F5EF", cardInk:"#0B1F38", accent:"#C9A227", siBg:"rgba(201,162,39,.16)",
-      aboutBg:"#0B1F38", aboutInk:"#fff", footBg:"#0B1F38", footInk:"#fff", badgeBg:"rgba(201,162,39,.16)", badgeInk:"#C9A227", border:"" }
+      servBg:"#F8F7F4", servInk:"#0F2918", cardBg:"#fff", cardInk:"#0F2918", accent:"#C9A227", siBg:"rgba(201,162,39,.12)",
+      aboutBg:"#0F2918", aboutInk:"#fff", footBg:"#0B2015", footInk:"rgba(255,255,255,.7)",
+      badgeBg:"rgba(201,162,39,.15)", badgeInk:"#C9A227", border:"#E8E4D8",
+      ctaOverride:"Schedule Your Consultation", cta2Override:"Meet Our Team" }
   ];
   var serviceIcons = ["🛠️","⭐","📞","🏆","✅","📍"];
   var REPORT=null, curTheme=0;
@@ -309,7 +319,8 @@
     var name=p.logo_text||REPORT.business_name||REPORT.host||"Your Business";
     var head=p.hero_headline||"Quality you can count on";
     var sub=p.hero_sub||REPORT.what_they_do||"";
-    var cta=p.primary_cta||"Get a Free Quote";
+    var cta=t.ctaOverride||(p.primary_cta||"Get a Free Quote");
+    var cta2label=t.cta2Override||"📞 Call Us";
     var tagline=p.tagline||"";
     var services=(p.services&&p.services.length?p.services:[{title:"Our Services",desc:""},{title:"Quality Work",desc:""},{title:"Get in Touch",desc:""}]).slice(0,3);
     var why=(p.why_us||[]).slice(0,4);
@@ -335,7 +346,7 @@
         (sub?'<p style="color:'+t.heroSub+'">'+esc(sub)+'</p>':'')+
         '<div class="ctas">'+
           '<div class="cta1" style="background:'+t.cta1Bg+';color:'+t.cta1Ink+'">'+esc(cta)+'</div>'+
-          '<div class="cta2" style="color:'+t.cta2Ink+'">📞 Call Us</div>'+
+          '<div class="cta2" style="color:'+t.cta2Ink+'">'+cta2label+'</div>'+
         '</div>'+
         (badges?'<div class="s-badges">'+badges+'</div>':'')+
       '</div>'+
@@ -418,6 +429,9 @@
     document.getElementById('repDoes').textContent=r.what_they_do||'';
     document.getElementById('repGrade').textContent=r.grade_label||'';
     document.getElementById('repHeadline').textContent=r.headline||'';
+    var noteEl=document.getElementById('repNote');
+    if(r.read_note && r.read_note.trim()){ noteEl.textContent='ⓘ '+r.read_note; noteEl.style.display='block'; }
+    else { noteEl.style.display='none'; }
 
     var s=r.scores||{};
     document.getElementById('repCards').innerHTML=
