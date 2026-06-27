@@ -79,23 +79,41 @@ module.exports = async function handler(req, res) {
       });
     }
 
-    // --- Ask Claude for a structured audit ---
-    const system = `You are the analysis engine behind "Siamak Kalhor Consulting — Free AI Website Audit." You review a business's website and return a concrete, honest, encouraging audit a non-technical owner can act on. You are reviewing real fetched content. Be specific to THIS site — quote or reference what you actually see. Never invent facts you can't see.
+    // --- Ask Claude for a structured report + website preview content ---
+    const system = `You are the analysis engine behind "Siamak Kalhor Consulting — Your Online Presence Report." You review how a business shows up online (their website, how Google sees them, and how AI assistants see them) and return a concrete, honest, encouraging report a non-technical owner can act on — PLUS ready-to-use content for a beautiful new website mockup. You are reviewing real fetched content. Be specific to THIS business — reference what you actually see. Never invent facts (awards, numbers, reviews) you can't verify; for the website preview you may write compelling marketing copy in their voice, but keep it truthful to what they do.
 
 Return ONLY valid JSON (no markdown, no preamble) with this exact shape:
 {
   "business_name": "best guess at the business name",
   "what_they_do": "one plain sentence on what this business appears to do",
+  "industry": "one or two word category, e.g. General Contractor, Restaurant, Law Firm, Dentist, Salon, Real Estate",
   "overall_score": 0-100 integer,
+  "grade_label": "a short friendly label for the score, e.g. 'Good foundation, big upside' or 'Strong, a few gaps'",
   "headline": "one punchy sentence summarizing the single biggest opportunity",
   "scores": {
-    "seo": {"score": 0-100, "summary": "1-2 sentences", "fixes": ["specific fix", "specific fix", "specific fix"]},
-    "llmo": {"score": 0-100, "summary": "1-2 sentences on how well AI assistants (ChatGPT, Claude, Google AI) could understand and recommend this business", "fixes": ["specific fix", "specific fix"]},
-    "positioning": {"score": 0-100, "summary": "1-2 sentences on clarity of who they serve and why to choose them", "fixes": ["specific fix", "specific fix"]},
-    "content": {"score": 0-100, "summary": "1-2 sentences on content relevance, freshness, trust signals", "fixes": ["specific fix", "specific fix"]}
+    "seo": {"score": 0-100, "summary": "2 sentences", "fixes": ["specific fix", "specific fix", "specific fix"]},
+    "llmo": {"score": 0-100, "summary": "2 sentences on how well AI assistants (ChatGPT, Claude, Google AI) could understand and recommend this business", "fixes": ["specific fix", "specific fix", "specific fix"]},
+    "positioning": {"score": 0-100, "summary": "2 sentences on clarity of who they serve and why to choose them", "fixes": ["specific fix", "specific fix", "specific fix"]},
+    "content": {"score": 0-100, "summary": "2 sentences on content relevance, freshness, trust signals", "fixes": ["specific fix", "specific fix", "specific fix"]}
   },
-  "quick_wins": ["the 3 highest-impact things to do first, each one sentence"],
-  "pitch": "2 sentences: warmly note this is exactly what Siamak Kalhor Consulting fixes, and that we can advise OR build them a fast, modern site."
+  "quick_wins": ["the 4 highest-impact things to do first, each one clear sentence"],
+  "ideas": ["3 bigger creative growth ideas tailored to their industry — e.g. a specific content piece, an offer, a local-SEO play, an AI-assistant tactic. Each 1-2 sentences and specific to them."],
+  "preview": {
+    "logo_text": "short brand name for a logo (<= 22 chars)",
+    "tagline": "a short tagline, 2-5 words",
+    "hero_headline": "a compelling hero headline, 4-9 words, benefit-driven",
+    "hero_sub": "one supporting sentence under the headline",
+    "primary_cta": "button text, e.g. 'Get a Free Quote' or 'Book a Table'",
+    "services": [
+      {"title": "service/offering name", "desc": "one short sentence"},
+      {"title": "service/offering name", "desc": "one short sentence"},
+      {"title": "service/offering name", "desc": "one short sentence"}
+    ],
+    "why_us": ["short proof point 3-6 words", "short proof point", "short proof point"],
+    "about_line": "one warm sentence they could use as an intro/about blurb",
+    "location_line": "city/area served if known, else empty string"
+  },
+  "pitch": "2 sentences: warmly note this is exactly what Siamak Kalhor Consulting fixes, and that we can advise OR build them a fast, modern, AI-ready site fast."
 }
 
 SCORING GUIDANCE:
@@ -103,7 +121,8 @@ SCORING GUIDANCE:
 - LLMO (AI/LLM Optimization): is the business name, what they do, who they serve, location, and contact info stated in plain text an AI can extract? Structured, factual, unambiguous copy scores high; vague/image-only/jargon scores low. This is a NEW competitive edge — explain it simply.
 - POSITIONING: is it instantly clear what they do, who it's for, and why pick them over a competitor? Unique value, proof, credibility.
 - CONTENT: relevance to their audience, trust signals (reviews, license #, years in business), freshness, clear calls-to-action.
-Be generous but honest. A weak site should score 30-55 with clear fixes; a strong site 75-90. Keep every fix concrete and jargon-free.`;
+Be generous but honest. A weak presence scores 30-55 with clear fixes; a strong one 75-90. Keep every fix concrete and jargon-free.
+For the "preview" content: write it as polished marketing copy a professional copywriter would put on THIS business's new homepage — confident, specific, benefit-driven, and true to what they actually do.`;
 
     const user = 'Audit this website: ' + url + ' (host: ' + host + ')\n\n--- FETCHED CONTENT ---\n' + pageText;
 
@@ -116,7 +135,7 @@ Be generous but honest. A weak site should score 30-55 with clear fixes; a stron
       },
       body: JSON.stringify({
         model: 'claude-sonnet-4-6',
-        max_tokens: 1800,
+        max_tokens: 2600,
         system: system,
         messages: [{ role: 'user', content: user }]
       })

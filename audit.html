@@ -3,19 +3,18 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Free AI Website Audit — Siamak Kalhor Consulting</title>
-<meta name="description" content="Get a free AI-powered audit of your website — SEO, AI visibility (LLMO), positioning, and content. Then get expert advice or a fast modern site, by Siamak Kalhor Consulting.">
+<title>Your Online Presence Report — Siamak Kalhor Consulting</title>
+<meta name="description" content="A free AI report on how your business shows up online — your website, Google/SEO, and AI assistants. Get specific fixes, growth ideas, and a free preview of a brand-new site, by Siamak Kalhor Consulting.">
 
-<!-- Open Graph -->
 <meta property="og:type" content="website">
-<meta property="og:title" content="Free AI Website Audit — Siamak Kalhor Consulting">
-<meta property="og:description" content="Drop your URL. Get a free AI audit of your SEO, AI visibility, positioning & content — plus options to improve or rebuild your site fast.">
+<meta property="og:title" content="Your Online Presence Report — free, by Siamak Kalhor Consulting">
+<meta property="og:description" content="See how your business shows up on Google and to AI assistants — and preview a beautiful new website built from your own content.">
 <meta property="og:image" content="https://orchamind.com/og-image.jpg">
 
 <link rel="icon" type="image/svg+xml" href="/favicon.svg">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700;800&family=Inter:wght@400;500;600&family=Playfair+Display:wght@700;800&family=Poppins:wght@600;700;800&family=Fraunces:opsz,wght@9..144,600;9..144,800&display=swap" rel="stylesheet">
 <style>
   :root{
     --navy:#0A1628; --blue:#2D7FF9; --blue2:#5B9DFF; --amber:#F9A825;
@@ -27,23 +26,20 @@
   body{font-family:'Inter',-apple-system,sans-serif;color:var(--ink);background:var(--bg);line-height:1.6;-webkit-font-smoothing:antialiased;}
   h1,h2,h3,.brand{font-family:'Sora',sans-serif;}
   a{color:inherit;text-decoration:none;}
-  .wrap{max-width:920px;margin:0 auto;padding:0 20px;}
+  .wrap{max-width:940px;margin:0 auto;padding:0 20px;}
 
-  /* Top bar */
   .top{position:sticky;top:0;z-index:50;background:rgba(247,249,252,0.85);backdrop-filter:blur(10px);border-bottom:1px solid var(--line);}
-  .top-in{max-width:920px;margin:0 auto;padding:14px 20px;display:flex;align-items:center;justify-content:space-between;gap:12px;}
+  .top-in{max-width:940px;margin:0 auto;padding:14px 20px;display:flex;align-items:center;justify-content:space-between;gap:12px;}
   .brand{font-weight:800;font-size:18px;color:var(--navy);display:flex;align-items:center;gap:9px;}
   .brand .dot{width:30px;height:30px;border-radius:8px;background:linear-gradient(135deg,var(--blue),var(--navy));display:grid;place-items:center;color:#fff;font-size:15px;font-weight:800;}
   .top .call{font-size:14px;font-weight:600;color:var(--blue);}
 
-  /* Hero */
-  .hero{padding:62px 0 34px;text-align:center;}
+  .hero{padding:60px 0 30px;text-align:center;}
   .eyebrow{display:inline-block;font-size:12.5px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--blue);background:rgba(45,127,249,0.09);border:1px solid rgba(45,127,249,0.2);padding:6px 14px;border-radius:100px;margin-bottom:20px;}
   .hero h1{font-size:clamp(30px,5.5vw,50px);line-height:1.08;font-weight:800;letter-spacing:-0.02em;color:var(--navy);}
   .hero h1 .grad{background:linear-gradient(100deg,var(--blue),var(--amber));-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;}
-  .hero p.sub{font-size:clamp(16px,2.4vw,19px);color:var(--muted);max-width:620px;margin:18px auto 0;}
+  .hero p.sub{font-size:clamp(16px,2.4vw,19px);color:var(--muted);max-width:640px;margin:18px auto 0;}
 
-  /* URL form */
   .audit-box{background:var(--card);border:1px solid var(--line);border-radius:18px;box-shadow:var(--shadow);padding:26px;margin:30px auto 0;max-width:660px;}
   .audit-row{display:flex;gap:10px;}
   .audit-row input{flex:1;font-size:17px;font-family:'Inter';padding:15px 18px;border:2px solid var(--line);border-radius:12px;outline:none;transition:border-color .15s;}
@@ -60,26 +56,25 @@
   .trust span{display:flex;align-items:center;gap:6px;}
   .trust svg{width:16px;height:16px;color:var(--green);}
 
-  /* Loading */
   .loading{display:none;text-align:center;padding:46px 0;}
   .loading.show{display:block;}
   .spinner{width:48px;height:48px;border:4px solid var(--line);border-top-color:var(--blue);border-radius:50%;margin:0 auto 18px;animation:spin .8s linear infinite;}
   @keyframes spin{to{transform:rotate(360deg);}}
   .loading .step{font-size:15px;color:var(--muted);min-height:24px;transition:opacity .3s;}
 
-  /* Report */
   .report{display:none;padding:14px 0 10px;}
   .report.show{display:block;animation:rise .5s ease both;}
   @keyframes rise{from{opacity:0;transform:translateY(14px);}to{opacity:1;transform:none;}}
   .rep-head{background:var(--card);border:1px solid var(--line);border-radius:18px;box-shadow:var(--shadow);padding:28px;text-align:center;margin-bottom:18px;}
   .rep-head .biz{font-size:13px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);font-weight:600;}
-  .rep-head h2{font-size:24px;color:var(--navy);margin:4px 0 2px;}
-  .rep-head .does{color:var(--muted);font-size:15px;margin-bottom:18px;}
-  .gauge{width:150px;height:150px;margin:8px auto 6px;position:relative;}
+  .rep-head h2{font-size:25px;color:var(--navy);margin:4px 0 2px;}
+  .rep-head .does{color:var(--muted);font-size:15px;margin-bottom:16px;}
+  .gauge{width:150px;height:150px;margin:8px auto 4px;position:relative;}
   .gauge svg{transform:rotate(-90deg);}
   .gauge .num{position:absolute;inset:0;display:grid;place-items:center;font-family:'Sora';font-weight:800;font-size:40px;color:var(--navy);}
   .gauge .num small{font-size:15px;color:var(--muted);font-weight:600;}
-  .rep-head .headline{font-size:17px;color:var(--ink);font-weight:600;max-width:520px;margin:10px auto 0;}
+  .grade{font-size:14px;font-weight:700;color:var(--blue);margin-top:2px;}
+  .rep-head .headline{font-size:17px;color:var(--ink);font-weight:600;max-width:540px;margin:10px auto 0;}
 
   .cards{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:18px;}
   .card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:20px;box-shadow:var(--shadow);}
@@ -89,35 +84,70 @@
   .card .sm{font-size:14px;color:var(--muted);margin-bottom:10px;}
   .card ul{list-style:none;display:flex;flex-direction:column;gap:7px;}
   .card li{font-size:13.5px;color:var(--ink);padding-left:22px;position:relative;}
-  .card li::before{content:"→";position:absolute;left:0;color:var(--blue);font-weight:700;}
+  .card li::before{content:"\2192";position:absolute;left:0;color:var(--blue);font-weight:700;}
   .what{font-size:11px;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);font-weight:700;margin:2px 0 4px;}
 
-  .wins{background:linear-gradient(135deg,var(--navy),#10243f);color:#fff;border-radius:18px;padding:26px 28px;margin-bottom:22px;}
+  .wins{background:linear-gradient(135deg,var(--navy),#10243f);color:#fff;border-radius:18px;padding:26px 28px;margin-bottom:16px;}
   .wins h3{font-size:19px;margin-bottom:14px;display:flex;align-items:center;gap:9px;}
   .wins ol{list-style:none;counter-reset:w;display:flex;flex-direction:column;gap:11px;}
   .wins li{counter-increment:w;padding-left:40px;position:relative;font-size:15px;}
   .wins li::before{content:counter(w);position:absolute;left:0;top:-2px;width:27px;height:27px;border-radius:8px;background:var(--amber);color:var(--navy);font-family:'Sora';font-weight:800;display:grid;place-items:center;font-size:14px;}
 
-  /* Build section */
+  .ideas{background:var(--card);border:1px solid var(--line);border-radius:18px;box-shadow:var(--shadow);padding:24px 26px;margin-bottom:22px;}
+  .ideas h3{font-size:18px;color:var(--navy);margin-bottom:12px;display:flex;align-items:center;gap:9px;}
+  .ideas .row{display:flex;gap:12px;padding:11px 0;border-top:1px solid var(--line);font-size:14.5px;}
+  .ideas .row:first-of-type{border-top:none;}
+  .ideas .ic{flex:none;width:30px;height:30px;border-radius:8px;background:rgba(45,127,249,0.1);color:var(--blue);display:grid;place-items:center;font-size:16px;}
+
   .build{background:var(--card);border:1px solid var(--line);border-radius:18px;box-shadow:var(--shadow);padding:30px;margin-bottom:22px;}
-  .build h2{font-size:23px;color:var(--navy);text-align:center;}
-  .build .lead{color:var(--muted);text-align:center;max-width:560px;margin:8px auto 22px;}
-  .styles{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;}
+  .build h2{font-size:24px;color:var(--navy);text-align:center;}
+  .build .lead{color:var(--muted);text-align:center;max-width:580px;margin:8px auto 22px;}
+  .styles{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:8px;}
   .style{border:2px solid var(--line);border-radius:13px;overflow:hidden;cursor:pointer;transition:border-color .15s, transform .15s;background:#fff;}
   .style:hover{transform:translateY(-3px);}
   .style.sel{border-color:var(--blue);box-shadow:0 0 0 3px rgba(45,127,249,0.15);}
-  .style .prev{height:84px;position:relative;overflow:hidden;}
-  .style .prev .bar{position:absolute;top:0;left:0;right:0;height:14px;}
+  .style .prev{height:70px;position:relative;overflow:hidden;}
+  .style .prev .bar{position:absolute;top:0;left:0;right:0;height:13px;}
   .style .prev .h{position:absolute;left:10px;right:10px;border-radius:3px;}
-  .style .nm{padding:9px 10px;font-size:12.5px;font-weight:700;color:var(--navy);text-align:center;font-family:'Sora';}
+  .style .nm{padding:9px 10px 2px;font-size:12.5px;font-weight:700;color:var(--navy);text-align:center;font-family:'Sora';}
   .style .for{font-size:10.5px;color:var(--muted);text-align:center;padding:0 6px 9px;}
+  .preview-hint{text-align:center;font-size:13px;color:var(--blue);font-weight:600;margin:6px 0 4px;}
+
+  .siteprev{margin:18px 0 4px;border-radius:16px;overflow:hidden;border:1px solid var(--line);box-shadow:0 20px 60px rgba(10,22,40,0.18);background:#fff;}
+  .browserbar{display:flex;align-items:center;gap:6px;padding:9px 12px;background:#EDEFF3;border-bottom:1px solid var(--line);}
+  .browserbar i{width:10px;height:10px;border-radius:50%;background:#cdd4dd;display:block;}
+  .browserbar .addr{flex:1;margin-left:8px;background:#fff;border-radius:6px;font-size:11px;color:#8a96a3;padding:4px 10px;font-family:Inter;}
+  .site{min-height:200px;}
+  .s-hero{position:relative;padding:54px 40px 48px;text-align:center;overflow:hidden;}
+  .s-hero .logo{position:absolute;top:18px;left:24px;font-weight:800;font-size:16px;}
+  .s-hero .navhint{position:absolute;top:20px;right:24px;font-size:11px;opacity:.7;letter-spacing:.05em;}
+  .s-hero h2{font-size:clamp(24px,4vw,40px);line-height:1.1;margin:14px auto 0;max-width:600px;}
+  .s-hero p{font-size:15px;margin:14px auto 0;max-width:480px;opacity:.92;}
+  .s-hero .ctas{margin-top:22px;display:flex;gap:10px;justify-content:center;flex-wrap:wrap;}
+  .s-hero .cta1{padding:13px 26px;border-radius:10px;font-weight:700;font-family:Sora;font-size:14px;}
+  .s-hero .cta2{padding:13px 22px;border-radius:10px;font-weight:600;font-size:14px;border:1.5px solid currentColor;}
+  .s-badges{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-top:20px;}
+  .s-badge{font-size:11px;font-weight:600;padding:5px 12px;border-radius:100px;}
+  .s-serv{padding:40px;}
+  .s-serv .ey{text-align:center;font-size:12px;letter-spacing:.12em;text-transform:uppercase;font-weight:700;opacity:.6;}
+  .s-serv h3{text-align:center;font-size:24px;margin:6px 0 26px;}
+  .s-cards{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;}
+  .s-c{padding:22px;border-radius:12px;}
+  .s-c .si{width:40px;height:40px;border-radius:10px;display:grid;place-items:center;font-size:20px;margin-bottom:12px;}
+  .s-c h4{font-size:16px;margin-bottom:6px;}
+  .s-c p{font-size:13px;opacity:.8;line-height:1.5;}
+  .s-about{padding:38px 40px;text-align:center;}
+  .s-about p{font-size:18px;max-width:620px;margin:0 auto;line-height:1.5;font-weight:500;}
+  .s-foot{padding:40px;text-align:center;}
+  .s-foot h3{font-size:22px;margin-bottom:8px;}
+  .s-foot p{font-size:14px;opacity:.85;margin-bottom:18px;}
+  .s-foot .cta1{padding:14px 30px;border-radius:10px;font-weight:700;font-family:Sora;font-size:15px;display:inline-block;}
 
   .cta-row{display:flex;gap:12px;flex-wrap:wrap;justify-content:center;margin-top:24px;}
   .btn-call{background:var(--amber);color:var(--navy);padding:15px 28px;box-shadow:0 6px 18px rgba(249,168,37,0.35);}
   .btn-call:hover{transform:translateY(-1px);}
   .btn-ghost{background:transparent;border:2px solid var(--line)!important;color:var(--ink);padding:13px 24px;}
-  .pitch{text-align:center;color:var(--muted);font-size:14.5px;max-width:560px;margin:18px auto 0;}
-
+  .pitch{text-align:center;color:var(--muted);font-size:14.5px;max-width:580px;margin:18px auto 0;}
   .again{display:block;margin:8px auto 0;background:none;border:none;color:var(--blue);font-size:14px;cursor:pointer;font-weight:600;}
 
   footer{text-align:center;padding:36px 20px 48px;color:var(--muted);font-size:13.5px;}
@@ -127,7 +157,11 @@
     .audit-row{flex-direction:column;}
     .cards{grid-template-columns:1fr;}
     .styles{grid-template-columns:1fr 1fr;}
-    .hero{padding:42px 0 26px;}
+    .s-cards{grid-template-columns:1fr;}
+    .hero{padding:42px 0 24px;}
+    .s-hero{padding:42px 22px 38px;}
+    .s-serv,.s-about,.s-foot{padding:30px 22px;}
+    .s-hero .logo,.s-hero .navhint{position:static;display:inline-block;margin-bottom:6px;}
   }
 </style>
 </head>
@@ -142,38 +176,35 @@
 
 <div class="wrap">
 
-  <!-- HERO + FORM -->
   <section class="hero" id="hero">
-    <span class="eyebrow">Free · No signup · 30 seconds</span>
-    <h1>Is your website <span class="grad">working as hard as you are?</span></h1>
-    <p class="sub">Drop your web address below. Our AI reviews your SEO, your visibility to AI assistants, your positioning, and your content — then shows you exactly what to fix. Free, by Siamak Kalhor Consulting.</p>
+    <span class="eyebrow">Free · No signup · Takes 30 seconds</span>
+    <h1>How does your business <span class="grad">show up online?</span></h1>
+    <p class="sub">Get your free Online Presence Report. Our AI checks your website, how Google sees you, and how AI assistants describe you — then gives you specific fixes, growth ideas, and a free preview of a brand-new site. By Siamak Kalhor Consulting.</p>
 
     <div class="audit-box">
       <div class="audit-row">
         <input id="urlInput" type="text" placeholder="yourbusiness.com" autocomplete="off" spellcheck="false">
-        <button class="btn btn-go" id="goBtn" onclick="runAudit()">Audit my site →</button>
+        <button class="btn btn-go" id="goBtn" onclick="runAudit()">Get my report →</button>
       </div>
       <div class="err" id="errMsg"></div>
-      <div class="reassure">We analyze your public homepage. <b>No login, no spam, totally free.</b></div>
+      <div class="reassure">We look at your public homepage. <b>No login, no spam, totally free.</b></div>
     </div>
 
     <div class="trust">
-      <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6L9 17l-5-5"/></svg> SEO &amp; Google readiness</span>
-      <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6L9 17l-5-5"/></svg> AI / LLM visibility</span>
-      <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6L9 17l-5-5"/></svg> Positioning &amp; content</span>
+      <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6L9 17l-5-5"/></svg> Google &amp; SEO readiness</span>
+      <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6L9 17l-5-5"/></svg> AI assistant visibility</span>
+      <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6L9 17l-5-5"/></svg> Free new-site preview</span>
     </div>
   </section>
 
-  <!-- LOADING -->
   <section class="loading" id="loading">
     <div class="spinner"></div>
-    <div class="step" id="loadStep">Fetching your website…</div>
+    <div class="step" id="loadStep">Looking up your website…</div>
   </section>
 
-  <!-- REPORT -->
   <section class="report" id="report">
     <div class="rep-head">
-      <div class="biz" id="repBiz">YOUR WEBSITE</div>
+      <div class="biz" id="repBiz">YOUR BUSINESS</div>
       <h2 id="repName">—</h2>
       <div class="does" id="repDoes">—</div>
       <div class="gauge">
@@ -183,6 +214,7 @@
         </svg>
         <div class="num"><span id="gaugeNum">0</span><small>/100</small></div>
       </div>
+      <div class="grade" id="repGrade">—</div>
       <div class="headline" id="repHeadline">—</div>
     </div>
 
@@ -193,19 +225,29 @@
       <ol id="repWins"></ol>
     </div>
 
-    <!-- BUILD / ADVISE -->
+    <div class="ideas">
+      <h3>💡 Growth ideas for your business</h3>
+      <div id="repIdeas"></div>
+    </div>
+
     <div class="build">
-      <h2>Want us to fix it — or build you a brand-new site?</h2>
-      <p class="lead">Siamak Kalhor Consulting can advise you, or build you a fast, modern, AI-ready website with as many pages as you need — usually in days, not months. Pick a look you like:</p>
+      <h2>See your business as a brand-new website</h2>
+      <p class="lead">Pick a look below and we'll instantly design a preview using <b>your</b> business — real headline, services, and call-to-action. Siamak Kalhor Consulting can build it for you, with as many pages as you need, in days.</p>
       <div class="styles" id="styles"></div>
+      <div class="preview-hint" id="prevHint">👇 Here's your preview — tap any style above to change the look</div>
+
+      <div class="siteprev" id="sitePrev">
+        <div class="browserbar"><i></i><i></i><i></i><div class="addr" id="prevAddr">www.yourbusiness.com</div></div>
+        <div class="site" id="siteBody"></div>
+      </div>
+
       <div class="cta-row">
-        <a class="btn btn-call" href="tel:13236577752">📞 Call (323) 657-7752</a>
-        <button class="btn btn-ghost" onclick="document.getElementById('repName').scrollIntoView({behavior:'smooth'})">See my report again</button>
+        <a class="btn btn-call" href="tel:13236577752">📞 Call (323) 657-7752 to build it</a>
+        <button class="btn btn-ghost" onclick="resetAudit()">Check another site</button>
       </div>
       <p class="pitch" id="repPitch">—</p>
     </div>
 
-    <button class="again" onclick="resetAudit()">← Audit another website</button>
   </section>
 
 </div>
@@ -216,88 +258,148 @@
 </footer>
 
 <script>
-  var styleData = [
-    {nm:"Bold &amp; Modern", for:"Trades, gyms, startups", bg:"#0A1628", bar:"#2D7FF9", h:"#5B9DFF"},
-    {nm:"Clean &amp; Pro",   for:"Lawyers, finance, B2B",  bg:"#FFFFFF", bar:"#0A1628", h:"#0A1628"},
-    {nm:"Warm &amp; Local",  for:"Restaurants, salons",    bg:"#FFF7ED", bar:"#B45309", h:"#F9A825"},
-    {nm:"Premium",          for:"Real estate, luxury",    bg:"#10243f", bar:"#F9A825", h:"#C9A227"}
+  var THEMES = [
+    { key:"bold",  nm:"Bold &amp; Modern", forr:"Trades, gyms, startups",
+      heroBg:"linear-gradient(135deg,#0A1628 0%,#143A6B 55%,#2D7FF9 120%)", heroInk:"#fff", heroSub:"rgba(255,255,255,.85)",
+      cta1Bg:"#F9A825", cta1Ink:"#0A1628", cta2Ink:"#fff",
+      headFont:"'Poppins',sans-serif",
+      servBg:"#0E1A2B", servInk:"#fff", cardBg:"#16263c", cardInk:"#fff", accent:"#2D7FF9", siBg:"rgba(45,127,249,.18)",
+      aboutBg:"#101D30", aboutInk:"#fff", footBg:"#0A1628", footInk:"#fff", badgeBg:"rgba(255,255,255,.12)", badgeInk:"#fff", border:"" },
+    { key:"clean", nm:"Clean &amp; Pro", forr:"Lawyers, finance, B2B",
+      heroBg:"#FFFFFF", heroInk:"#0A1628", heroSub:"#5A6B7D",
+      cta1Bg:"#0A1628", cta1Ink:"#fff", cta2Ink:"#0A1628",
+      headFont:"'Sora',sans-serif",
+      servBg:"#F7F9FC", servInk:"#0A1628", cardBg:"#fff", cardInk:"#0A1628", accent:"#2D7FF9", siBg:"rgba(45,127,249,.1)",
+      aboutBg:"#0A1628", aboutInk:"#fff", footBg:"#F7F9FC", footInk:"#0A1628", badgeBg:"#EEF3FB", badgeInk:"#2D7FF9", border:"#E4EAF2" },
+    { key:"warm",  nm:"Warm &amp; Local", forr:"Restaurants, salons",
+      heroBg:"linear-gradient(135deg,#7C2D12 0%,#B45309 60%,#F9A825 130%)", heroInk:"#fff", heroSub:"rgba(255,255,255,.9)",
+      cta1Bg:"#fff", cta1Ink:"#7C2D12", cta2Ink:"#fff",
+      headFont:"'Fraunces',serif",
+      servBg:"#FFFBF5", servInk:"#3a2415", cardBg:"#fff", cardInk:"#3a2415", accent:"#B45309", siBg:"rgba(180,83,9,.12)",
+      aboutBg:"#7C2D12", aboutInk:"#fff", footBg:"#FFF3E2", footInk:"#3a2415", badgeBg:"#FBE7CD", badgeInk:"#B45309", border:"#F0E2D0" },
+    { key:"prem",  nm:"Premium", forr:"Real estate, luxury",
+      heroBg:"linear-gradient(135deg,#0B1F38 0%,#16314f 60%,#1d3a5c 120%)", heroInk:"#fff", heroSub:"rgba(255,255,255,.82)",
+      cta1Bg:"#C9A227", cta1Ink:"#0B1F38", cta2Ink:"#fff",
+      headFont:"'Playfair Display',serif",
+      servBg:"#fff", servInk:"#0B1F38", cardBg:"#F7F5EF", cardInk:"#0B1F38", accent:"#C9A227", siBg:"rgba(201,162,39,.16)",
+      aboutBg:"#0B1F38", aboutInk:"#fff", footBg:"#0B1F38", footInk:"#fff", badgeBg:"rgba(201,162,39,.16)", badgeInk:"#C9A227", border:"" }
   ];
+  var serviceIcons = ["🛠️","⭐","📞","🏆","✅","📍"];
+  var REPORT=null, curTheme=0;
+
   function paintStyles(){
     var c=document.getElementById('styles'); c.innerHTML='';
-    styleData.forEach(function(s,i){
-      var d=document.createElement('div'); d.className='style'+(i===0?' sel':'');
-      d.onclick=function(){document.querySelectorAll('.style').forEach(function(x){x.classList.remove('sel');});d.classList.add('sel');};
-      d.innerHTML='<div class="prev" style="background:'+s.bg+'">'+
-        '<div class="bar" style="background:'+s.bar+'"></div>'+
-        '<div class="h" style="top:30px;height:13px;width:55%;background:'+s.h+';opacity:.95"></div>'+
-        '<div class="h" style="top:50px;height:7px;width:74%;background:'+s.h+';opacity:.4"></div>'+
-        '<div class="h" style="top:62px;height:7px;width:64%;background:'+s.h+';opacity:.4"></div>'+
+    THEMES.forEach(function(s,i){
+      var d=document.createElement('div'); d.className='style'+(i===curTheme?' sel':'');
+      d.onclick=function(){ curTheme=i; document.querySelectorAll('.style').forEach(function(x){x.classList.remove('sel');}); d.classList.add('sel'); renderPreview(); };
+      var swatch = s.heroBg.indexOf('gradient')>=0 ? s.heroBg : s.cta1Bg;
+      d.innerHTML='<div class="prev" style="background:'+swatch+'">'+
+        '<div class="bar" style="background:'+(s.accent)+'"></div>'+
+        '<div class="h" style="top:26px;height:11px;width:55%;background:'+(s.heroInk)+';opacity:.9"></div>'+
+        '<div class="h" style="top:43px;height:6px;width:72%;background:'+(s.heroInk)+';opacity:.45"></div>'+
         '</div>'+
-        '<div class="nm">'+s.nm+'</div><div class="for">'+s.for+'</div>';
+        '<div class="nm">'+s.nm+'</div><div class="for">'+s.forr+'</div>';
       c.appendChild(d);
     });
   }
 
+  function renderPreview(){
+    if(!REPORT) return;
+    var t=THEMES[curTheme]; var p=REPORT.preview||{};
+    var name=p.logo_text||REPORT.business_name||REPORT.host||"Your Business";
+    var head=p.hero_headline||"Quality you can count on";
+    var sub=p.hero_sub||REPORT.what_they_do||"";
+    var cta=p.primary_cta||"Get a Free Quote";
+    var tagline=p.tagline||"";
+    var services=(p.services&&p.services.length?p.services:[{title:"Our Services",desc:""},{title:"Quality Work",desc:""},{title:"Get in Touch",desc:""}]).slice(0,3);
+    var why=(p.why_us||[]).slice(0,4);
+    var about=p.about_line||"";
+    var loc=p.location_line||"";
+
+    document.getElementById('prevAddr').textContent = "www."+(REPORT.host||"yourbusiness.com");
+
+    var badges = why.map(function(w){return '<span class="s-badge" style="background:'+t.badgeBg+';color:'+t.badgeInk+'">'+esc(w)+'</span>';}).join('');
+    var cards = services.map(function(s,i){
+      return '<div class="s-c" style="background:'+t.cardBg+';color:'+t.cardInk+(t.border?';border:1px solid '+t.border:'')+'">'+
+        '<div class="si" style="background:'+t.siBg+';color:'+t.accent+'">'+serviceIcons[i%serviceIcons.length]+'</div>'+
+        '<h4 style="font-family:'+t.headFont+'">'+esc(s.title)+'</h4>'+
+        '<p>'+esc(s.desc||'')+'</p></div>';
+    }).join('');
+
+    var html =
+      '<div class="s-hero" style="background:'+t.heroBg+';color:'+t.heroInk+'">'+
+        '<div class="logo" style="font-family:'+t.headFont+'">'+esc(name)+'</div>'+
+        '<div class="navhint">Home · Services · About · Contact</div>'+
+        (tagline?'<div style="font-size:12px;letter-spacing:.14em;text-transform:uppercase;opacity:.8;font-weight:700">'+esc(tagline)+'</div>':'')+
+        '<h2 style="font-family:'+t.headFont+'">'+esc(head)+'</h2>'+
+        (sub?'<p style="color:'+t.heroSub+'">'+esc(sub)+'</p>':'')+
+        '<div class="ctas">'+
+          '<div class="cta1" style="background:'+t.cta1Bg+';color:'+t.cta1Ink+'">'+esc(cta)+'</div>'+
+          '<div class="cta2" style="color:'+t.cta2Ink+'">📞 Call Us</div>'+
+        '</div>'+
+        (badges?'<div class="s-badges">'+badges+'</div>':'')+
+      '</div>'+
+      '<div class="s-serv" style="background:'+t.servBg+';color:'+t.servInk+'">'+
+        '<div class="ey">What we do</div>'+
+        '<h3 style="font-family:'+t.headFont+'">'+(loc?'Serving '+esc(loc):'Our Services')+'</h3>'+
+        '<div class="s-cards">'+cards+'</div>'+
+      '</div>'+
+      (about?'<div class="s-about" style="background:'+t.aboutBg+';color:'+t.aboutInk+'"><p style="font-family:'+t.headFont+'">\u201C'+esc(about)+'\u201D</p></div>':'')+
+      '<div class="s-foot" style="background:'+t.footBg+';color:'+t.footInk+'">'+
+        '<h3 style="font-family:'+t.headFont+'">Ready to get started?</h3>'+
+        '<p>Reach out today — we\u2019d love to help.</p>'+
+        '<div class="cta1" style="background:'+t.cta1Bg+';color:'+t.cta1Ink+'">'+esc(cta)+'</div>'+
+      '</div>';
+
+    document.getElementById('siteBody').innerHTML=html;
+  }
+
   var loadSteps = [
-    "Fetching your website…",
+    "Looking up your website…",
     "Reading your headlines and copy…",
     "Checking how Google sees you (SEO)…",
-    "Checking how AI assistants see you (LLMO)…",
-    "Reviewing your positioning…",
+    "Checking how AI assistants describe you…",
+    "Reviewing your positioning &amp; content…",
+    "Designing your free website preview…",
     "Writing your report…"
   ];
   var stepTimer=null;
   function cycleSteps(){
-    var i=0; var el=document.getElementById('loadStep');
-    el.textContent=loadSteps[0];
+    var i=0; var el=document.getElementById('loadStep'); el.innerHTML=loadSteps[0];
     stepTimer=setInterval(function(){
       i++; if(i>=loadSteps.length){i=loadSteps.length-1;}
       el.style.opacity=0;
-      setTimeout(function(){el.textContent=loadSteps[i];el.style.opacity=1;},200);
-    },1600);
+      setTimeout(function(){el.innerHTML=loadSteps[i];el.style.opacity=1;},200);
+    },1500);
   }
-
-  function colorFor(score){
-    if(score>=75) return "#1FA463";
-    if(score>=50) return "#F9A825";
-    return "#E53935";
-  }
+  function colorFor(s){ if(s>=75)return"#1FA463"; if(s>=50)return"#F9A825"; return"#E53935"; }
+  function esc(s){return (s==null?'':String(s)).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
 
   function runAudit(){
     var url=document.getElementById('urlInput').value.trim();
-    var err=document.getElementById('errMsg');
-    err.style.display='none';
+    var err=document.getElementById('errMsg'); err.style.display='none';
     if(!url){ err.textContent="Please enter your website address."; err.style.display='block'; return; }
-
     document.getElementById('hero').style.display='none';
     document.getElementById('report').classList.remove('show');
-    var load=document.getElementById('loading'); load.classList.add('show');
-    cycleSteps();
+    var load=document.getElementById('loading'); load.classList.add('show'); cycleSteps();
     document.getElementById('goBtn').disabled=true;
 
     fetch('/api/audit',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({url:url})})
       .then(function(r){return r.json();})
       .then(function(d){
-        clearInterval(stepTimer);
-        load.classList.remove('show');
-        document.getElementById('goBtn').disabled=false;
+        clearInterval(stepTimer); load.classList.remove('show'); document.getElementById('goBtn').disabled=false;
         if(d.error || !d.report){
           document.getElementById('hero').style.display='block';
-          err.textContent=d.error||"Something went wrong. Please try again."; err.style.display='block';
-          return;
+          err.textContent=d.error||"Something went wrong. Please try again."; err.style.display='block'; return;
         }
         renderReport(d.report);
       })
       .catch(function(){
-        clearInterval(stepTimer);
-        load.classList.remove('show');
-        document.getElementById('goBtn').disabled=false;
+        clearInterval(stepTimer); load.classList.remove('show'); document.getElementById('goBtn').disabled=false;
         document.getElementById('hero').style.display='block';
-        err.textContent="Couldn't reach the audit service. Please try again."; err.style.display='block';
+        err.textContent="Couldn't reach the report service. Please try again."; err.style.display='block';
       });
   }
-
-  function esc(s){return (s==null?'':String(s)).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
 
   function scoreCard(title, icon, obj){
     if(!obj) obj={score:0,summary:'',fixes:[]};
@@ -310,37 +412,40 @@
   }
 
   function renderReport(r){
-    document.getElementById('repBiz').textContent=(r.host||'YOUR WEBSITE').toUpperCase();
-    document.getElementById('repName').textContent=r.business_name||r.host||'Your website';
+    REPORT=r; curTheme=0;
+    document.getElementById('repBiz').textContent=(r.host||'YOUR BUSINESS').toUpperCase();
+    document.getElementById('repName').textContent=r.business_name||r.host||'Your business';
     document.getElementById('repDoes').textContent=r.what_they_do||'';
+    document.getElementById('repGrade').textContent=r.grade_label||'';
     document.getElementById('repHeadline').textContent=r.headline||'';
 
     var s=r.scores||{};
     document.getElementById('repCards').innerHTML=
       scoreCard('SEO','🔍',s.seo)+
-      scoreCard('AI Visibility (LLMO)','🤖',s.llmo)+
+      scoreCard('AI Visibility','🤖',s.llmo)+
       scoreCard('Positioning','🎯',s.positioning)+
       scoreCard('Content','📝',s.content);
 
-    var wins=(r.quick_wins||[]).map(function(w){return '<li>'+esc(w)+'</li>';}).join('');
-    document.getElementById('repWins').innerHTML=wins;
+    document.getElementById('repWins').innerHTML=(r.quick_wins||[]).map(function(w){return '<li>'+esc(w)+'</li>';}).join('');
+
+    var ideaIcons=["🚀","📣","🌟"];
+    document.getElementById('repIdeas').innerHTML=(r.ideas||[]).map(function(idea,i){
+      return '<div class="row"><div class="ic">'+ideaIcons[i%ideaIcons.length]+'</div><div>'+esc(idea)+'</div></div>';
+    }).join('');
+
     document.getElementById('repPitch').textContent=r.pitch||'';
 
     paintStyles();
+    renderPreview();
 
-    var rep=document.getElementById('report'); rep.classList.add('show');
+    document.getElementById('report').classList.add('show');
     window.scrollTo({top:0,behavior:'smooth'});
 
-    // animate gauge
     var score=Math.max(0,Math.min(100,parseInt(r.overall_score,10)||0));
-    var col=colorFor(score);
-    var arc=document.getElementById('gaugeArc');
-    arc.setAttribute('stroke',col);
-    var circ=402;
-    setTimeout(function(){ arc.style.strokeDashoffset = circ-(circ*score/100); },150);
-    // count up
-    var n=document.getElementById('gaugeNum'); var cur=0;
-    var t=setInterval(function(){ cur+=Math.ceil(score/28); if(cur>=score){cur=score;clearInterval(t);} n.textContent=cur; },35);
+    var col=colorFor(score), arc=document.getElementById('gaugeArc'); arc.setAttribute('stroke',col);
+    var circ=402; setTimeout(function(){ arc.style.strokeDashoffset=circ-(circ*score/100); },150);
+    var n=document.getElementById('gaugeNum'), cur=0;
+    var tt=setInterval(function(){ cur+=Math.ceil(score/28); if(cur>=score){cur=score;clearInterval(tt);} n.textContent=cur; },35);
   }
 
   function resetAudit(){
@@ -349,8 +454,6 @@
     document.getElementById('urlInput').value='';
     window.scrollTo({top:0,behavior:'smooth'});
   }
-
-  // Enter key submits
   document.getElementById('urlInput').addEventListener('keydown',function(e){ if(e.key==='Enter') runAudit(); });
 </script>
 </body>
