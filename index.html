@@ -376,6 +376,36 @@
   @media(prefers-reduced-motion:reduce){
     .appwin{animation:none;}
   }
+
+  /* ===== AUDIT PROMO — free lead magnet ===== */
+  .audit-promo{background:var(--navy2);}
+  .audit-card{display:grid;grid-template-columns:1.1fr .9fr;gap:48px;align-items:center;background:linear-gradient(135deg,rgba(249,168,37,0.12),rgba(45,127,249,0.08));border:1px solid rgba(249,168,37,0.25);border-radius:20px;padding:44px;position:relative;overflow:hidden;}
+  .audit-card::before{content:'';position:absolute;top:-40%;right:-10%;width:420px;height:420px;background:radial-gradient(circle,rgba(249,168,37,0.16),transparent 60%);pointer-events:none;}
+  .audit-text{position:relative;z-index:2;}
+  .audit-eyebrow{display:inline-flex;align-items:center;gap:8px;background:rgba(249,168,37,0.18);border:1px solid rgba(249,168,37,0.4);color:var(--amber);font-size:13px;font-weight:700;padding:6px 14px;border-radius:100px;margin-bottom:18px;}
+  .audit-eyebrow svg{width:15px;height:15px;}
+  .audit-text h2{font-size:34px;font-weight:800;color:#fff;margin-bottom:14px;max-width:18ch;}
+  .audit-text p{color:rgba(255,255,255,0.78);font-size:16.5px;margin-bottom:24px;max-width:52ch;}
+  .audit-btn{display:inline-flex;align-items:center;gap:9px;background:var(--amber);color:var(--navy);box-shadow:0 8px 24px rgba(249,168,37,0.32);}
+  .audit-btn:hover{transform:translateY(-2px);box-shadow:0 12px 30px rgba(249,168,37,0.42);}
+  .audit-btn svg{width:17px;height:17px;}
+  .audit-note{display:block;margin-top:14px;color:rgba(255,255,255,0.5);font-size:13px;}
+  .audit-visual{position:relative;z-index:2;}
+  .report-mock{background:var(--navy);border:1px solid rgba(255,255,255,0.12);border-radius:14px;overflow:hidden;box-shadow:0 24px 60px rgba(0,0,0,0.45);}
+  .report-bar{display:flex;align-items:center;gap:6px;padding:11px 14px;background:rgba(255,255,255,0.03);border-bottom:1px solid rgba(255,255,255,0.08);}
+  .report-bar i{width:9px;height:9px;border-radius:50%;background:rgba(255,255,255,0.2);display:block;}
+  .report-body{padding:20px;display:flex;align-items:center;gap:20px;}
+  .score-ring{width:84px;height:84px;border-radius:50%;flex-shrink:0;background:conic-gradient(var(--amber) 0% 78%,rgba(255,255,255,0.1) 78% 100%);display:flex;align-items:center;justify-content:center;}
+  .score-ring span{width:62px;height:62px;border-radius:50%;background:var(--navy);display:flex;flex-direction:column;align-items:center;justify-content:center;color:#fff;font-family:'Sora';}
+  .score-ring b{font-size:22px;font-weight:800;line-height:1;}
+  .score-ring small{font-size:9px;color:rgba(255,255,255,0.5);}
+  .report-rows{flex:1;display:flex;flex-direction:column;gap:10px;}
+  .report-row{display:flex;align-items:center;gap:9px;font-size:12.5px;color:rgba(255,255,255,0.82);}
+  .report-row svg{width:15px;height:15px;flex-shrink:0;color:var(--signal-soft);}
+  @media(max-width:900px){
+    .audit-card{grid-template-columns:1fr;gap:30px;padding:30px;}
+    .audit-text h2{font-size:26px;}
+  }
 </style>
 </head>
 <body>
@@ -595,6 +625,32 @@
       </div>
     </div>
     <p style="text-align:center;color:var(--slate);font-size:14px;margin-top:20px;">This is a sample preview. <a href="demo.html" style="color:var(--signal);font-weight:600;">Open the full interactive demo →</a> and click around the real app with sample data.</p>
+  </div>
+</section>
+<section class="audit-promo" id="audit">
+  <div class="wrap">
+    <div class="audit-card">
+      <div class="audit-text">
+        <div class="audit-eyebrow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg> Free tool &middot; No signup &middot; 30 seconds</div>
+        <h2>See how your business shows up online.</h2>
+        <p>Get a free Online Presence Report. Our AI checks your website, how Google sees you, and how AI assistants describe you — then shows you a brand-new site preview built from your own business.</p>
+        <a href="/audit" class="btn-primary audit-btn">Get my free report <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></a>
+        <span class="audit-note">We only read your public homepage. No login, no spam.</span>
+      </div>
+      <div class="audit-visual" aria-hidden="true">
+        <div class="report-mock">
+          <div class="report-bar"><i></i><i></i><i></i></div>
+          <div class="report-body">
+            <div class="score-ring"><span><b>78</b><small>/100</small></span></div>
+            <div class="report-rows">
+              <div class="report-row"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Website &amp; SEO readiness</div>
+              <div class="report-row"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> AI assistant visibility</div>
+              <div class="report-row"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Free new-site preview</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
 </section>
 <section class="gallery" id="gallery" style="background:var(--paper);">
