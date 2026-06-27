@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Free AI Website Audit — Siamak Kalhor Consulting</title>
+<meta name="description" content="Get a free AI-powered audit of your website — SEO, AI visibility (LLMO), positioning, and content. Then get expert advice or a fast modern site, by Siamak Kalhor Consulting.">
+
+<!-- Open Graph -->
+<meta property="og:type" content="website">
+<meta property="og:title" content="Free AI Website Audit — Siamak Kalhor Consulting">
+<meta property="og:description" content="Drop your URL. Get a free AI audit of your SEO, AI visibility, positioning & content — plus options to improve or rebuild your site fast.">
+<meta property="og:image" content="https://orchamind.com/og-image.jpg">
+
+<link rel="icon" type="image/svg+xml" href="/favicon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --navy:#0A1628; --blue:#2D7FF9; --blue2:#5B9DFF; --amber:#F9A825;
+    --green:#1FA463; --red:#E53935; --ink:#0A1628; --muted:#5A6B7D;
+    --line:#E4EAF2; --bg:#F7F9FC; --card:#FFFFFF;
+    --shadow:0 10px 40px rgba(10,22,40,0.08);
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{font-family:'Inter',-apple-system,sans-serif;color:var(--ink);background:var(--bg);line-height:1.6;-webkit-font-smoothing:antialiased;}
+  h1,h2,h3,.brand{font-family:'Sora',sans-serif;}
+  a{color:inherit;text-decoration:none;}
+  .wrap{max-width:920px;margin:0 auto;padding:0 20px;}
+
+  /* Top bar */
+  .top{position:sticky;top:0;z-index:50;background:rgba(247,249,252,0.85);backdrop-filter:blur(10px);border-bottom:1px solid var(--line);}
+  .top-in{max-width:920px;margin:0 auto;padding:14px 20px;display:flex;align-items:center;justify-content:space-between;gap:12px;}
+  .brand{font-weight:800;font-size:18px;color:var(--navy);display:flex;align-items:center;gap:9px;}
+  .brand .dot{width:30px;height:30px;border-radius:8px;background:linear-gradient(135deg,var(--blue),var(--navy));display:grid;place-items:center;color:#fff;font-size:15px;font-weight:800;}
+  .top .call{font-size:14px;font-weight:600;color:var(--blue);}
+
+  /* Hero */
+  .hero{padding:62px 0 34px;text-align:center;}
+  .eyebrow{display:inline-block;font-size:12.5px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--blue);background:rgba(45,127,249,0.09);border:1px solid rgba(45,127,249,0.2);padding:6px 14px;border-radius:100px;margin-bottom:20px;}
+  .hero h1{font-size:clamp(30px,5.5vw,50px);line-height:1.08;font-weight:800;letter-spacing:-0.02em;color:var(--navy);}
+  .hero h1 .grad{background:linear-gradient(100deg,var(--blue),var(--amber));-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;}
+  .hero p.sub{font-size:clamp(16px,2.4vw,19px);color:var(--muted);max-width:620px;margin:18px auto 0;}
+
+  /* URL form */
+  .audit-box{background:var(--card);border:1px solid var(--line);border-radius:18px;box-shadow:var(--shadow);padding:26px;margin:30px auto 0;max-width:660px;}
+  .audit-row{display:flex;gap:10px;}
+  .audit-row input{flex:1;font-size:17px;font-family:'Inter';padding:15px 18px;border:2px solid var(--line);border-radius:12px;outline:none;transition:border-color .15s;}
+  .audit-row input:focus{border-color:var(--blue);}
+  .btn{font-family:'Sora';font-weight:700;font-size:16px;border:none;border-radius:12px;cursor:pointer;transition:transform .12s, box-shadow .2s;}
+  .btn-go{background:linear-gradient(135deg,var(--blue),#1E63D8);color:#fff;padding:15px 26px;white-space:nowrap;box-shadow:0 6px 18px rgba(45,127,249,0.32);}
+  .btn-go:hover{transform:translateY(-1px);box-shadow:0 10px 26px rgba(45,127,249,0.4);}
+  .btn-go:disabled{opacity:.6;cursor:wait;transform:none;}
+  .reassure{font-size:13px;color:var(--muted);margin-top:13px;text-align:center;}
+  .reassure b{color:var(--ink);}
+  .err{color:var(--red);font-size:14px;margin-top:12px;text-align:center;display:none;}
+
+  .trust{display:flex;flex-wrap:wrap;gap:8px 22px;justify-content:center;margin-top:26px;font-size:13.5px;color:var(--muted);}
+  .trust span{display:flex;align-items:center;gap:6px;}
+  .trust svg{width:16px;height:16px;color:var(--green);}
+
+  /* Loading */
+  .loading{display:none;text-align:center;padding:46px 0;}
+  .loading.show{display:block;}
+  .spinner{width:48px;height:48px;border:4px solid var(--line);border-top-color:var(--blue);border-radius:50%;margin:0 auto 18px;animation:spin .8s linear infinite;}
+  @keyframes spin{to{transform:rotate(360deg);}}
+  .loading .step{font-size:15px;color:var(--muted);min-height:24px;transition:opacity .3s;}
+
+  /* Report */
+  .report{display:none;padding:14px 0 10px;}
+  .report.show{display:block;animation:rise .5s ease both;}
+  @keyframes rise{from{opacity:0;transform:translateY(14px);}to{opacity:1;transform:none;}}
+  .rep-head{background:var(--card);border:1px solid var(--line);border-radius:18px;box-shadow:var(--shadow);padding:28px;text-align:center;margin-bottom:18px;}
+  .rep-head .biz{font-size:13px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);font-weight:600;}
+  .rep-head h2{font-size:24px;color:var(--navy);margin:4px 0 2px;}
+  .rep-head .does{color:var(--muted);font-size:15px;margin-bottom:18px;}
+  .gauge{width:150px;height:150px;margin:8px auto 6px;position:relative;}
+  .gauge svg{transform:rotate(-90deg);}
+  .gauge .num{position:absolute;inset:0;display:grid;place-items:center;font-family:'Sora';font-weight:800;font-size:40px;color:var(--navy);}
+  .gauge .num small{font-size:15px;color:var(--muted);font-weight:600;}
+  .rep-head .headline{font-size:17px;color:var(--ink);font-weight:600;max-width:520px;margin:10px auto 0;}
+
+  .cards{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:18px;}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:20px;box-shadow:var(--shadow);}
+  .card .top-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;}
+  .card h3{font-size:16px;color:var(--navy);display:flex;align-items:center;gap:8px;}
+  .card .badge{font-family:'Sora';font-weight:800;font-size:18px;padding:2px 10px;border-radius:8px;}
+  .card .sm{font-size:14px;color:var(--muted);margin-bottom:10px;}
+  .card ul{list-style:none;display:flex;flex-direction:column;gap:7px;}
+  .card li{font-size:13.5px;color:var(--ink);padding-left:22px;position:relative;}
+  .card li::before{content:"→";position:absolute;left:0;color:var(--blue);font-weight:700;}
+  .what{font-size:11px;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);font-weight:700;margin:2px 0 4px;}
+
+  .wins{background:linear-gradient(135deg,var(--navy),#10243f);color:#fff;border-radius:18px;padding:26px 28px;margin-bottom:22px;}
+  .wins h3{font-size:19px;margin-bottom:14px;display:flex;align-items:center;gap:9px;}
+  .wins ol{list-style:none;counter-reset:w;display:flex;flex-direction:column;gap:11px;}
+  .wins li{counter-increment:w;padding-left:40px;position:relative;font-size:15px;}
+  .wins li::before{content:counter(w);position:absolute;left:0;top:-2px;width:27px;height:27px;border-radius:8px;background:var(--amber);color:var(--navy);font-family:'Sora';font-weight:800;display:grid;place-items:center;font-size:14px;}
+
+  /* Build section */
+  .build{background:var(--card);border:1px solid var(--line);border-radius:18px;box-shadow:var(--shadow);padding:30px;margin-bottom:22px;}
+  .build h2{font-size:23px;color:var(--navy);text-align:center;}
+  .build .lead{color:var(--muted);text-align:center;max-width:560px;margin:8px auto 22px;}
+  .styles{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;}
+  .style{border:2px solid var(--line);border-radius:13px;overflow:hidden;cursor:pointer;transition:border-color .15s, transform .15s;background:#fff;}
+  .style:hover{transform:translateY(-3px);}
+  .style.sel{border-color:var(--blue);box-shadow:0 0 0 3px rgba(45,127,249,0.15);}
+  .style .prev{height:84px;position:relative;overflow:hidden;}
+  .style .prev .bar{position:absolute;top:0;left:0;right:0;height:14px;}
+  .style .prev .h{position:absolute;left:10px;right:10px;border-radius:3px;}
+  .style .nm{padding:9px 10px;font-size:12.5px;font-weight:700;color:var(--navy);text-align:center;font-family:'Sora';}
+  .style .for{font-size:10.5px;color:var(--muted);text-align:center;padding:0 6px 9px;}
+
+  .cta-row{display:flex;gap:12px;flex-wrap:wrap;justify-content:center;margin-top:24px;}
+  .btn-call{background:var(--amber);color:var(--navy);padding:15px 28px;box-shadow:0 6px 18px rgba(249,168,37,0.35);}
+  .btn-call:hover{transform:translateY(-1px);}
+  .btn-ghost{background:transparent;border:2px solid var(--line)!important;color:var(--ink);padding:13px 24px;}
+  .pitch{text-align:center;color:var(--muted);font-size:14.5px;max-width:560px;margin:18px auto 0;}
+
+  .again{display:block;margin:8px auto 0;background:none;border:none;color:var(--blue);font-size:14px;cursor:pointer;font-weight:600;}
+
+  footer{text-align:center;padding:36px 20px 48px;color:var(--muted);font-size:13.5px;}
+  footer b{color:var(--ink);}
+
+  @media(max-width:680px){
+    .audit-row{flex-direction:column;}
+    .cards{grid-template-columns:1fr;}
+    .styles{grid-template-columns:1fr 1fr;}
+    .hero{padding:42px 0 26px;}
+  }
+</style>
+</head>
+<body>
+
+<div class="top">
+  <div class="top-in">
+    <a class="brand" href="/"><span class="dot">O</span> Orchamind</a>
+    <a class="call" href="tel:13236577752">📞 (323) 657-7752</a>
+  </div>
+</div>
+
+<div class="wrap">
+
+  <!-- HERO + FORM -->
+  <section class="hero" id="hero">
+    <span class="eyebrow">Free · No signup · 30 seconds</span>
+    <h1>Is your website <span class="grad">working as hard as you are?</span></h1>
+    <p class="sub">Drop your web address below. Our AI reviews your SEO, your visibility to AI assistants, your positioning, and your content — then shows you exactly what to fix. Free, by Siamak Kalhor Consulting.</p>
+
+    <div class="audit-box">
+      <div class="audit-row">
+        <input id="urlInput" type="text" placeholder="yourbusiness.com" autocomplete="off" spellcheck="false">
+        <button class="btn btn-go" id="goBtn" onclick="runAudit()">Audit my site →</button>
+      </div>
+      <div class="err" id="errMsg"></div>
+      <div class="reassure">We analyze your public homepage. <b>No login, no spam, totally free.</b></div>
+    </div>
+
+    <div class="trust">
+      <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6L9 17l-5-5"/></svg> SEO &amp; Google readiness</span>
+      <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6L9 17l-5-5"/></svg> AI / LLM visibility</span>
+      <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6L9 17l-5-5"/></svg> Positioning &amp; content</span>
+    </div>
+  </section>
+
+  <!-- LOADING -->
+  <section class="loading" id="loading">
+    <div class="spinner"></div>
+    <div class="step" id="loadStep">Fetching your website…</div>
+  </section>
+
+  <!-- REPORT -->
+  <section class="report" id="report">
+    <div class="rep-head">
+      <div class="biz" id="repBiz">YOUR WEBSITE</div>
+      <h2 id="repName">—</h2>
+      <div class="does" id="repDoes">—</div>
+      <div class="gauge">
+        <svg width="150" height="150" viewBox="0 0 150 150">
+          <circle cx="75" cy="75" r="64" fill="none" stroke="#E4EAF2" stroke-width="13"/>
+          <circle id="gaugeArc" cx="75" cy="75" r="64" fill="none" stroke="#2D7FF9" stroke-width="13" stroke-linecap="round" stroke-dasharray="402" stroke-dashoffset="402" style="transition:stroke-dashoffset 1.1s ease, stroke .6s;"/>
+        </svg>
+        <div class="num"><span id="gaugeNum">0</span><small>/100</small></div>
+      </div>
+      <div class="headline" id="repHeadline">—</div>
+    </div>
+
+    <div class="cards" id="repCards"></div>
+
+    <div class="wins">
+      <h3>⚡ Your top quick wins</h3>
+      <ol id="repWins"></ol>
+    </div>
+
+    <!-- BUILD / ADVISE -->
+    <div class="build">
+      <h2>Want us to fix it — or build you a brand-new site?</h2>
+      <p class="lead">Siamak Kalhor Consulting can advise you, or build you a fast, modern, AI-ready website with as many pages as you need — usually in days, not months. Pick a look you like:</p>
+      <div class="styles" id="styles"></div>
+      <div class="cta-row">
+        <a class="btn btn-call" href="tel:13236577752">📞 Call (323) 657-7752</a>
+        <button class="btn btn-ghost" onclick="document.getElementById('repName').scrollIntoView({behavior:'smooth'})">See my report again</button>
+      </div>
+      <p class="pitch" id="repPitch">—</p>
+    </div>
+
+    <button class="again" onclick="resetAudit()">← Audit another website</button>
+  </section>
+
+</div>
+
+<footer>
+  A free tool by <b>Siamak Kalhor Consulting</b> · Powered by Orchamind AI · <b>(323) 657-7752</b><br>
+  We respect your privacy — we only read your public homepage and never store or share it.
+</footer>
+
+<script>
+  var styleData = [
+    {nm:"Bold &amp; Modern", for:"Trades, gyms, startups", bg:"#0A1628", bar:"#2D7FF9", h:"#5B9DFF"},
+    {nm:"Clean &amp; Pro",   for:"Lawyers, finance, B2B",  bg:"#FFFFFF", bar:"#0A1628", h:"#0A1628"},
+    {nm:"Warm &amp; Local",  for:"Restaurants, salons",    bg:"#FFF7ED", bar:"#B45309", h:"#F9A825"},
+    {nm:"Premium",          for:"Real estate, luxury",    bg:"#10243f", bar:"#F9A825", h:"#C9A227"}
+  ];
+  function paintStyles(){
+    var c=document.getElementById('styles'); c.innerHTML='';
+    styleData.forEach(function(s,i){
+      var d=document.createElement('div'); d.className='style'+(i===0?' sel':'');
+      d.onclick=function(){document.querySelectorAll('.style').forEach(function(x){x.classList.remove('sel');});d.classList.add('sel');};
+      d.innerHTML='<div class="prev" style="background:'+s.bg+'">'+
+        '<div class="bar" style="background:'+s.bar+'"></div>'+
+        '<div class="h" style="top:30px;height:13px;width:55%;background:'+s.h+';opacity:.95"></div>'+
+        '<div class="h" style="top:50px;height:7px;width:74%;background:'+s.h+';opacity:.4"></div>'+
+        '<div class="h" style="top:62px;height:7px;width:64%;background:'+s.h+';opacity:.4"></div>'+
+        '</div>'+
+        '<div class="nm">'+s.nm+'</div><div class="for">'+s.for+'</div>';
+      c.appendChild(d);
+    });
+  }
+
+  var loadSteps = [
+    "Fetching your website…",
+    "Reading your headlines and copy…",
+    "Checking how Google sees you (SEO)…",
+    "Checking how AI assistants see you (LLMO)…",
+    "Reviewing your positioning…",
+    "Writing your report…"
+  ];
+  var stepTimer=null;
+  function cycleSteps(){
+    var i=0; var el=document.getElementById('loadStep');
+    el.textContent=loadSteps[0];
+    stepTimer=setInterval(function(){
+      i++; if(i>=loadSteps.length){i=loadSteps.length-1;}
+      el.style.opacity=0;
+      setTimeout(function(){el.textContent=loadSteps[i];el.style.opacity=1;},200);
+    },1600);
+  }
+
+  function colorFor(score){
+    if(score>=75) return "#1FA463";
+    if(score>=50) return "#F9A825";
+    return "#E53935";
+  }
+
+  function runAudit(){
+    var url=document.getElementById('urlInput').value.trim();
+    var err=document.getElementById('errMsg');
+    err.style.display='none';
+    if(!url){ err.textContent="Please enter your website address."; err.style.display='block'; return; }
+
+    document.getElementById('hero').style.display='none';
+    document.getElementById('report').classList.remove('show');
+    var load=document.getElementById('loading'); load.classList.add('show');
+    cycleSteps();
+    document.getElementById('goBtn').disabled=true;
+
+    fetch('/api/audit',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({url:url})})
+      .then(function(r){return r.json();})
+      .then(function(d){
+        clearInterval(stepTimer);
+        load.classList.remove('show');
+        document.getElementById('goBtn').disabled=false;
+        if(d.error || !d.report){
+          document.getElementById('hero').style.display='block';
+          err.textContent=d.error||"Something went wrong. Please try again."; err.style.display='block';
+          return;
+        }
+        renderReport(d.report);
+      })
+      .catch(function(){
+        clearInterval(stepTimer);
+        load.classList.remove('show');
+        document.getElementById('goBtn').disabled=false;
+        document.getElementById('hero').style.display='block';
+        err.textContent="Couldn't reach the audit service. Please try again."; err.style.display='block';
+      });
+  }
+
+  function esc(s){return (s==null?'':String(s)).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+
+  function scoreCard(title, icon, obj){
+    if(!obj) obj={score:0,summary:'',fixes:[]};
+    var col=colorFor(obj.score||0);
+    var fixes=(obj.fixes||[]).map(function(f){return '<li>'+esc(f)+'</li>';}).join('');
+    return '<div class="card"><div class="top-row"><h3>'+icon+' '+title+'</h3>'+
+      '<span class="badge" style="background:'+col+'18;color:'+col+'">'+(obj.score||0)+'</span></div>'+
+      '<div class="sm">'+esc(obj.summary||'')+'</div>'+
+      '<div class="what">How to improve</div><ul>'+fixes+'</ul></div>';
+  }
+
+  function renderReport(r){
+    document.getElementById('repBiz').textContent=(r.host||'YOUR WEBSITE').toUpperCase();
+    document.getElementById('repName').textContent=r.business_name||r.host||'Your website';
+    document.getElementById('repDoes').textContent=r.what_they_do||'';
+    document.getElementById('repHeadline').textContent=r.headline||'';
+
+    var s=r.scores||{};
+    document.getElementById('repCards').innerHTML=
+      scoreCard('SEO','🔍',s.seo)+
+      scoreCard('AI Visibility (LLMO)','🤖',s.llmo)+
+      scoreCard('Positioning','🎯',s.positioning)+
+      scoreCard('Content','📝',s.content);
+
+    var wins=(r.quick_wins||[]).map(function(w){return '<li>'+esc(w)+'</li>';}).join('');
+    document.getElementById('repWins').innerHTML=wins;
+    document.getElementById('repPitch').textContent=r.pitch||'';
+
+    paintStyles();
+
+    var rep=document.getElementById('report'); rep.classList.add('show');
+    window.scrollTo({top:0,behavior:'smooth'});
+
+    // animate gauge
+    var score=Math.max(0,Math.min(100,parseInt(r.overall_score,10)||0));
+    var col=colorFor(score);
+    var arc=document.getElementById('gaugeArc');
+    arc.setAttribute('stroke',col);
+    var circ=402;
+    setTimeout(function(){ arc.style.strokeDashoffset = circ-(circ*score/100); },150);
+    // count up
+    var n=document.getElementById('gaugeNum'); var cur=0;
+    var t=setInterval(function(){ cur+=Math.ceil(score/28); if(cur>=score){cur=score;clearInterval(t);} n.textContent=cur; },35);
+  }
+
+  function resetAudit(){
+    document.getElementById('report').classList.remove('show');
+    document.getElementById('hero').style.display='block';
+    document.getElementById('urlInput').value='';
+    window.scrollTo({top:0,behavior:'smooth'});
+  }
+
+  // Enter key submits
+  document.getElementById('urlInput').addEventListener('keydown',function(e){ if(e.key==='Enter') runAudit(); });
+</script>
+</body>
+</html>
