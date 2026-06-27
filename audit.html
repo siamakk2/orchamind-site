@@ -133,6 +133,35 @@
     .page-iframe{height:520px;}
     .hero{padding:40px 0 22px;}
   }
+
+  /* ===== LEAD GATE MODAL ===== */
+  .gate-overlay{display:none;position:fixed;inset:0;z-index:200;background:rgba(10,22,40,0.7);backdrop-filter:blur(4px);align-items:center;justify-content:center;}
+  .gate-overlay.show{display:flex;}
+  .gate-box{background:#fff;border-radius:22px;padding:38px 36px;max-width:460px;width:90%;box-shadow:0 40px 100px rgba(10,22,40,0.35);animation:rise .35s ease both;text-align:center;}
+  .gate-box h2{font-size:24px;color:var(--navy);margin-bottom:8px;}
+  .gate-box p{color:var(--muted);font-size:15px;margin-bottom:22px;max-width:340px;margin-left:auto;margin-right:auto;}
+  .gate-fields{display:flex;flex-direction:column;gap:10px;margin-bottom:14px;}
+  .gate-fields input{font-size:16px;font-family:'Inter';padding:14px 16px;border:2px solid var(--line);border-radius:12px;outline:none;transition:border-color .15s;width:100%;}
+  .gate-fields input:focus{border-color:var(--blue);}
+  .btn-gate{width:100%;padding:16px;font-size:16px;background:linear-gradient(135deg,var(--blue),#1E63D8);color:#fff;box-shadow:0 6px 18px rgba(45,127,249,0.32);}
+  .btn-gate:hover{transform:translateY(-1px);}
+  .gate-skip{margin-top:12px;font-size:13px;color:var(--muted);cursor:pointer;text-decoration:underline;display:inline-block;}
+  .gate-note{font-size:12px;color:var(--muted);margin-top:10px;}
+
+  /* ===== BUILD THIS BUTTON ===== */
+  .build-bar{background:linear-gradient(135deg,#0A1628,#0F2040);border-radius:16px;padding:22px 24px;display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:16px;flex-wrap:wrap;}
+  .build-bar .build-text{color:#fff;}
+  .build-bar .build-text strong{display:block;font-family:'Sora';font-size:17px;margin-bottom:3px;}
+  .build-bar .build-text span{font-size:13.5px;color:rgba(255,255,255,0.65);}
+  .build-btns{display:flex;gap:10px;flex-wrap:wrap;}
+  .btn-text{background:var(--amber);color:var(--navy);padding:13px 20px;font-size:14px;}
+  .btn-text:hover{transform:translateY(-1px);}
+  .btn-stripe{background:#635BFF;color:#fff;padding:13px 20px;font-size:14px;box-shadow:0 4px 14px rgba(99,91,255,0.35);}
+  .btn-stripe:hover{transform:translateY(-1px);}
+
+  /* ===== LEAD SAVED TOAST ===== */
+  .toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(80px);background:var(--navy);color:#fff;padding:13px 24px;border-radius:100px;font-size:14px;font-weight:600;z-index:300;transition:transform .4s ease;pointer-events:none;}
+  .toast.show{transform:translateX(-50%) translateY(0);}
 </style>
 </head>
 <body>
@@ -232,6 +261,16 @@
         </div>
       </div>
 
+      <div class="build-bar" id="buildBar">
+        <div class="build-text">
+          <strong id="buildTitle">Love a version? Let's build it.</strong>
+          <span id="buildSub">Siamak Kalhor Consulting builds your new site in days — starting at $750.</span>
+        </div>
+        <div class="build-btns">
+          <button class="btn btn-text" onclick="textSiamak()">📱 Text Siamak</button>
+          <button class="btn btn-stripe" onclick="payStripe()">💳 Start for $750</button>
+        </div>
+      </div>
       <div class="page-cta-row">
         <a class="btn btn-call" href="tel:13236577752">📞 Call (323) 657-7752 — build this site</a>
         <button class="btn btn-ghost" onclick="resetAudit()">Check another site</button>
@@ -307,6 +346,8 @@
           err.textContent=d.error||"Something went wrong. Please try again."; err.style.display='block'; return;
         }
         renderReport(d.report);
+        // Show lead gate after a short delay so user sees the score animate
+        setTimeout(function(){ showGate(url, d.report.business_name||url); }, 1400);
       })
       .catch(function(){
         clearInterval(stepTimer); load.classList.remove('show'); document.getElementById('goBtn').disabled=false;
@@ -482,6 +523,7 @@
       if(i===idx) t.style.borderColor='var(--blue)';
     });
 
+    updateBuildBar();
     var display = document.getElementById('pageDisplay');
     var html = PAGES[idx];
 
@@ -527,6 +569,108 @@
   document.getElementById('urlInput').addEventListener('keydown',function(e){
     if(e.key==='Enter') runAudit();
   });
+
+  // ── LEAD GATE ────────────────────────────────────────────────────
+  var LEAD = { name:'', email:'', url:'', businessName:'', version:'' };
+
+  function showGate(url, businessName){
+    LEAD.url = url; LEAD.businessName = businessName;
+    document.getElementById('gateOverlay').classList.add('show');
+  }
+
+  function submitGate(){
+    var name = document.getElementById('gateName').value.trim();
+    var email = document.getElementById('gateEmail').value.trim();
+    var err = document.getElementById('gateErr');
+    if(!name){ err.textContent='Please enter your name.'; err.style.display='block'; return; }
+    if(!email || !email.includes('@')){ err.textContent='Please enter a valid email.'; err.style.display='block'; return; }
+    err.style.display='none';
+    LEAD.name = name; LEAD.email = email;
+    // Save to our backend (fire and forget — doesn't block the user)
+    saveLead();
+    closeGate();
+    showToast('✓ Got it, ' + name.split(' ')[0] + '! Your report is ready.');
+  }
+
+  function skipGate(){
+    closeGate();
+  }
+
+  function closeGate(){
+    document.getElementById('gateOverlay').classList.remove('show');
+  }
+
+  function saveLead(){
+    // Save lead to Upstash via our data API
+    var lead = {
+      name: LEAD.name,
+      email: LEAD.email,
+      url: LEAD.url,
+      businessName: LEAD.businessName,
+      ts: new Date().toISOString()
+    };
+    fetch('/api/leads', {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ action:'saveLead', lead: lead })
+    }).catch(function(){/* silent fail */});
+  }
+
+  function showToast(msg){
+    var t = document.getElementById('toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    setTimeout(function(){ t.classList.remove('show'); }, 3200);
+  }
+
+  // ── BUILD THIS BUTTON ─────────────────────────────────────────────
+  function updateBuildBar(){
+    var name = VERSION_NAMES[currentPage] || 'this version';
+    var biz = (REPORT && REPORT.business_name) ? REPORT.business_name : 'your business';
+    document.getElementById('buildTitle').textContent = 'Love the "' + name + '" version? Let\'s build it.';
+    document.getElementById('buildSub').textContent = 'We\'ll rebuild ' + biz + '\'s website in this style — starting at $750 setup.';
+    LEAD.version = name;
+  }
+
+  function textSiamak(){
+    var biz = (REPORT && REPORT.business_name) ? REPORT.business_name : 'my business';
+    var url = (REPORT && REPORT.host) ? REPORT.host : '';
+    var ver = LEAD.version || VERSION_NAMES[currentPage] || 'Authority & Trust';
+    var msg = encodeURIComponent(
+      'Hi Siamak! I just ran the Orchamind site audit for ' + biz + ' (' + url + '). ' +
+      'I liked the "' + ver + '" version. Can we talk about building it? ' +
+      '— ' + (LEAD.name || 'a potential client')
+    );
+    window.open('sms:+13236577752?body=' + msg, '_blank');
+  }
+
+  function payStripe(){
+    // Replace this URL with your real Stripe payment link
+    var stripeUrl = 'https://buy.stripe.com/9B64gA4GYg7e3B26M90kE00';
+    window.open(stripeUrl, '_blank');
+  }
+
 </script>
+
+<!-- LEAD GATE MODAL -->
+<div class="gate-overlay" id="gateOverlay">
+  <div class="gate-box">
+    <div style="font-size:38px;margin-bottom:12px;">🎯</div>
+    <h2>Your report is ready!</h2>
+    <p>Enter your name and email and we'll send you the full report + all 4 website versions — free.</p>
+    <div class="gate-fields">
+      <input id="gateName" type="text" placeholder="Your name" autocomplete="name">
+      <input id="gateEmail" type="email" placeholder="Your email address" autocomplete="email">
+    </div>
+    <button class="btn btn-gate" onclick="submitGate()">Send me my report →</button>
+    <div id="gateErr" style="color:var(--red);font-size:13px;margin-top:8px;display:none;"></div>
+    <div class="gate-note">No spam. We'll only use this to follow up about your website.</div>
+    <div class="gate-skip" onclick="skipGate()">Skip for now — just show me the report</div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
 </body>
 </html>
