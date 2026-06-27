@@ -4,17 +4,15 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Your Online Presence Report — Siamak Kalhor Consulting</title>
-<meta name="description" content="A free AI report on how your business shows up online — your website, Google/SEO, and AI assistants. Get specific fixes, growth ideas, and a free preview of a brand-new site, by Siamak Kalhor Consulting.">
-
+<meta name="description" content="A free AI report on how your business shows up online — your website, Google/SEO, and AI assistants. Get specific fixes, growth ideas, and 4 AI-generated landing pages built from your own content. By Siamak Kalhor Consulting.">
 <meta property="og:type" content="website">
 <meta property="og:title" content="Your Online Presence Report — free, by Siamak Kalhor Consulting">
-<meta property="og:description" content="See how your business shows up on Google and to AI assistants — and preview a beautiful new website built from your own content.">
+<meta property="og:description" content="See how your business shows up on Google and to AI assistants — and get 4 real landing pages built from your own content by AI.">
 <meta property="og:image" content="https://orchamind.com/og-image.jpg">
-
 <link rel="icon" type="image/svg+xml" href="/favicon.svg">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700;800&family=Inter:wght@400;500;600&family=Playfair+Display:wght@700;800&family=Poppins:wght@600;700;800&family=Fraunces:opsz,wght@9..144,600;9..144,800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
   :root{
     --navy:#0A1628; --blue:#2D7FF9; --blue2:#5B9DFF; --amber:#F9A825;
@@ -26,10 +24,10 @@
   body{font-family:'Inter',-apple-system,sans-serif;color:var(--ink);background:var(--bg);line-height:1.6;-webkit-font-smoothing:antialiased;}
   h1,h2,h3,.brand{font-family:'Sora',sans-serif;}
   a{color:inherit;text-decoration:none;}
-  .wrap{max-width:940px;margin:0 auto;padding:0 20px;}
+  .wrap{max-width:960px;margin:0 auto;padding:0 20px;}
 
-  .top{position:sticky;top:0;z-index:50;background:rgba(247,249,252,0.85);backdrop-filter:blur(10px);border-bottom:1px solid var(--line);}
-  .top-in{max-width:940px;margin:0 auto;padding:14px 20px;display:flex;align-items:center;justify-content:space-between;gap:12px;}
+  .top{position:sticky;top:0;z-index:50;background:rgba(247,249,252,0.92);backdrop-filter:blur(10px);border-bottom:1px solid var(--line);}
+  .top-in{max-width:960px;margin:0 auto;padding:14px 20px;display:flex;align-items:center;justify-content:space-between;}
   .brand{font-weight:800;font-size:18px;color:var(--navy);display:flex;align-items:center;gap:9px;}
   .brand .dot{width:30px;height:30px;border-radius:8px;background:linear-gradient(135deg,var(--blue),var(--navy));display:grid;place-items:center;color:#fff;font-size:15px;font-weight:800;}
   .top .call{font-size:14px;font-weight:600;color:var(--blue);}
@@ -38,21 +36,19 @@
   .eyebrow{display:inline-block;font-size:12.5px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--blue);background:rgba(45,127,249,0.09);border:1px solid rgba(45,127,249,0.2);padding:6px 14px;border-radius:100px;margin-bottom:20px;}
   .hero h1{font-size:clamp(30px,5.5vw,50px);line-height:1.08;font-weight:800;letter-spacing:-0.02em;color:var(--navy);}
   .hero h1 .grad{background:linear-gradient(100deg,var(--blue),var(--amber));-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;}
-  .hero p.sub{font-size:clamp(16px,2.4vw,19px);color:var(--muted);max-width:640px;margin:18px auto 0;}
+  .hero p.sub{font-size:clamp(15px,2.2vw,18px);color:var(--muted);max-width:620px;margin:16px auto 0;}
 
-  .audit-box{background:var(--card);border:1px solid var(--line);border-radius:18px;box-shadow:var(--shadow);padding:26px;margin:30px auto 0;max-width:660px;}
+  .audit-box{background:var(--card);border:1px solid var(--line);border-radius:18px;box-shadow:var(--shadow);padding:26px;margin:28px auto 0;max-width:660px;}
   .audit-row{display:flex;gap:10px;}
   .audit-row input{flex:1;font-size:17px;font-family:'Inter';padding:15px 18px;border:2px solid var(--line);border-radius:12px;outline:none;transition:border-color .15s;}
   .audit-row input:focus{border-color:var(--blue);}
-  .btn{font-family:'Sora';font-weight:700;font-size:16px;border:none;border-radius:12px;cursor:pointer;transition:transform .12s, box-shadow .2s;}
+  .btn{font-family:'Sora';font-weight:700;font-size:15px;border:none;border-radius:12px;cursor:pointer;transition:transform .12s,box-shadow .2s;}
   .btn-go{background:linear-gradient(135deg,var(--blue),#1E63D8);color:#fff;padding:15px 26px;white-space:nowrap;box-shadow:0 6px 18px rgba(45,127,249,0.32);}
   .btn-go:hover{transform:translateY(-1px);box-shadow:0 10px 26px rgba(45,127,249,0.4);}
   .btn-go:disabled{opacity:.6;cursor:wait;transform:none;}
   .reassure{font-size:13px;color:var(--muted);margin-top:13px;text-align:center;}
-  .reassure b{color:var(--ink);}
   .err{color:var(--red);font-size:14px;margin-top:12px;text-align:center;display:none;}
-
-  .trust{display:flex;flex-wrap:wrap;gap:8px 22px;justify-content:center;margin-top:26px;font-size:13.5px;color:var(--muted);}
+  .trust{display:flex;flex-wrap:wrap;gap:8px 22px;justify-content:center;margin-top:24px;font-size:13.5px;color:var(--muted);}
   .trust span{display:flex;align-items:center;gap:6px;}
   .trust svg{width:16px;height:16px;color:var(--green);}
 
@@ -65,6 +61,7 @@
   .report{display:none;padding:14px 0 10px;}
   .report.show{display:block;animation:rise .5s ease both;}
   @keyframes rise{from{opacity:0;transform:translateY(14px);}to{opacity:1;transform:none;}}
+
   .rep-head{background:var(--card);border:1px solid var(--line);border-radius:18px;box-shadow:var(--shadow);padding:28px;text-align:center;margin-bottom:18px;}
   .rep-head .biz{font-size:13px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);font-weight:600;}
   .rep-head h2{font-size:25px;color:var(--navy);margin:4px 0 2px;}
@@ -93,62 +90,37 @@
   .wins li{counter-increment:w;padding-left:40px;position:relative;font-size:15px;}
   .wins li::before{content:counter(w);position:absolute;left:0;top:-2px;width:27px;height:27px;border-radius:8px;background:var(--amber);color:var(--navy);font-family:'Sora';font-weight:800;display:grid;place-items:center;font-size:14px;}
 
-  .ideas{background:var(--card);border:1px solid var(--line);border-radius:18px;box-shadow:var(--shadow);padding:24px 26px;margin-bottom:22px;}
+  .ideas{background:var(--card);border:1px solid var(--line);border-radius:18px;box-shadow:var(--shadow);padding:24px 26px;margin-bottom:28px;}
   .ideas h3{font-size:18px;color:var(--navy);margin-bottom:12px;display:flex;align-items:center;gap:9px;}
   .ideas .row{display:flex;gap:12px;padding:11px 0;border-top:1px solid var(--line);font-size:14.5px;}
   .ideas .row:first-of-type{border-top:none;}
   .ideas .ic{flex:none;width:30px;height:30px;border-radius:8px;background:rgba(45,127,249,0.1);color:var(--blue);display:grid;place-items:center;font-size:16px;}
 
-  .build{background:var(--card);border:1px solid var(--line);border-radius:18px;box-shadow:var(--shadow);padding:30px;margin-bottom:22px;}
-  .build h2{font-size:24px;color:var(--navy);text-align:center;}
-  .build .lead{color:var(--muted);text-align:center;max-width:580px;margin:8px auto 22px;}
-  .styles{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:8px;}
-  .style{border:2px solid var(--line);border-radius:13px;overflow:hidden;cursor:pointer;transition:border-color .15s, transform .15s;background:#fff;}
-  .style:hover{transform:translateY(-3px);}
-  .style.sel{border-color:var(--blue);box-shadow:0 0 0 3px rgba(45,127,249,0.15);}
-  .style .prev{height:70px;position:relative;overflow:hidden;}
-  .style .prev .bar{position:absolute;top:0;left:0;right:0;height:13px;}
-  .style .prev .h{position:absolute;left:10px;right:10px;border-radius:3px;}
-  .style .nm{padding:9px 10px 2px;font-size:12.5px;font-weight:700;color:var(--navy);text-align:center;font-family:'Sora';}
-  .style .for{font-size:10.5px;color:var(--muted);text-align:center;padding:0 6px 9px;}
-  .preview-hint{text-align:center;font-size:13px;color:var(--blue);font-weight:600;margin:6px 0 4px;}
+  /* ===== 4 LANDING PAGE PREVIEWS ===== */
+  .pages-section{margin-bottom:28px;}
+  .pages-section h2{font-family:'Sora';font-size:26px;font-weight:800;color:var(--navy);margin-bottom:8px;}
+  .pages-section .lead{color:var(--muted);font-size:16px;margin-bottom:24px;max-width:680px;}
+  .page-tabs{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:20px;}
+  .page-tab{background:var(--card);border:2px solid var(--line);border-radius:12px;padding:11px 18px;cursor:pointer;font-family:'Sora';font-weight:700;font-size:14px;color:var(--muted);transition:all .15s;}
+  .page-tab:hover{border-color:var(--blue);color:var(--blue);}
+  .page-tab.active{border-color:var(--blue);color:var(--blue);background:#EEF5FF;box-shadow:0 0 0 3px rgba(45,127,249,0.12);}
+  .page-tab .tab-lbl{display:block;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.08em;opacity:.7;margin-bottom:2px;}
 
-  .siteprev{margin:18px 0 4px;border-radius:16px;overflow:hidden;border:1px solid var(--line);box-shadow:0 20px 60px rgba(10,22,40,0.18);background:#fff;}
-  .browserbar{display:flex;align-items:center;gap:6px;padding:9px 12px;background:#EDEFF3;border-bottom:1px solid var(--line);}
-  .browserbar i{width:10px;height:10px;border-radius:50%;background:#cdd4dd;display:block;}
-  .browserbar .addr{flex:1;margin-left:8px;background:#fff;border-radius:6px;font-size:11px;color:#8a96a3;padding:4px 10px;font-family:Inter;}
-  .site{min-height:200px;}
-  .s-hero{position:relative;padding:54px 40px 48px;text-align:center;overflow:hidden;}
-  .s-hero .logo{position:absolute;top:18px;left:24px;font-weight:800;font-size:16px;}
-  .s-hero .navhint{position:absolute;top:20px;right:24px;font-size:11px;opacity:.7;letter-spacing:.05em;}
-  .s-hero h2{font-size:clamp(24px,4vw,40px);line-height:1.1;margin:14px auto 0;max-width:600px;}
-  .s-hero p{font-size:15px;margin:14px auto 0;max-width:480px;opacity:.92;}
-  .s-hero .ctas{margin-top:22px;display:flex;gap:10px;justify-content:center;flex-wrap:wrap;}
-  .s-hero .cta1{padding:13px 26px;border-radius:10px;font-weight:700;font-family:Sora;font-size:14px;}
-  .s-hero .cta2{padding:13px 22px;border-radius:10px;font-weight:600;font-size:14px;border:1.5px solid currentColor;}
-  .s-badges{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-top:20px;}
-  .s-badge{font-size:11px;font-weight:600;padding:5px 12px;border-radius:100px;}
-  .s-serv{padding:40px;}
-  .s-serv .ey{text-align:center;font-size:12px;letter-spacing:.12em;text-transform:uppercase;font-weight:700;opacity:.6;}
-  .s-serv h3{text-align:center;font-size:24px;margin:6px 0 26px;}
-  .s-cards{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;}
-  .s-c{padding:22px;border-radius:12px;}
-  .s-c .si{width:40px;height:40px;border-radius:10px;display:grid;place-items:center;font-size:20px;margin-bottom:12px;}
-  .s-c h4{font-size:16px;margin-bottom:6px;}
-  .s-c p{font-size:13px;opacity:.8;line-height:1.5;}
-  .s-about{padding:38px 40px;text-align:center;}
-  .s-about p{font-size:18px;max-width:620px;margin:0 auto;line-height:1.5;font-weight:500;}
-  .s-foot{padding:40px;text-align:center;}
-  .s-foot h3{font-size:22px;margin-bottom:8px;}
-  .s-foot p{font-size:14px;opacity:.85;margin-bottom:18px;}
-  .s-foot .cta1{padding:14px 30px;border-radius:10px;font-weight:700;font-family:Sora;font-size:15px;display:inline-block;}
+  .page-frame-wrap{position:relative;border-radius:16px;overflow:hidden;border:1px solid var(--line);box-shadow:0 24px 70px rgba(10,22,40,0.18);background:#fff;margin-bottom:16px;}
+  .browser-chrome{display:flex;align-items:center;gap:6px;padding:10px 14px;background:#EDEFF3;border-bottom:1px solid #D8DCE4;}
+  .browser-chrome i{width:10px;height:10px;border-radius:50%;background:#cdd4dd;display:block;}
+  .browser-chrome .addr-bar{flex:1;margin-left:8px;background:#fff;border-radius:6px;font-size:11.5px;color:#7a8796;padding:5px 10px;font-family:Inter;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;}
+  .page-iframe{width:100%;height:680px;border:none;display:block;}
+  .page-generating{display:flex;flex-direction:column;align-items:center;justify-content:center;height:440px;gap:16px;color:var(--muted);}
+  .page-generating .mini-spin{width:36px;height:36px;border:3px solid var(--line);border-top-color:var(--blue);border-radius:50%;animation:spin .7s linear infinite;}
+  .page-generating p{font-size:15px;}
+  .page-err{display:flex;align-items:center;justify-content:center;height:220px;color:var(--red);font-size:14px;padding:20px;text-align:center;}
 
-  .cta-row{display:flex;gap:12px;flex-wrap:wrap;justify-content:center;margin-top:24px;}
+  .page-cta-row{display:flex;gap:12px;flex-wrap:wrap;justify-content:center;margin-bottom:8px;}
   .btn-call{background:var(--amber);color:var(--navy);padding:15px 28px;box-shadow:0 6px 18px rgba(249,168,37,0.35);}
   .btn-call:hover{transform:translateY(-1px);}
-  .btn-ghost{background:transparent;border:2px solid var(--line)!important;color:var(--ink);padding:13px 24px;}
-  .pitch{text-align:center;color:var(--muted);font-size:14.5px;max-width:580px;margin:18px auto 0;}
-  .again{display:block;margin:8px auto 0;background:none;border:none;color:var(--blue);font-size:14px;cursor:pointer;font-weight:600;}
+  .btn-ghost{background:transparent;border:2px solid var(--line);color:var(--ink);padding:13px 24px;}
+  .pitch{text-align:center;color:var(--muted);font-size:14.5px;max-width:580px;margin:14px auto 0;}
 
   footer{text-align:center;padding:36px 20px 48px;color:var(--muted);font-size:13.5px;}
   footer b{color:var(--ink);}
@@ -156,12 +128,10 @@
   @media(max-width:680px){
     .audit-row{flex-direction:column;}
     .cards{grid-template-columns:1fr;}
-    .styles{grid-template-columns:1fr;}
-    .s-cards{grid-template-columns:1fr;}
-    .hero{padding:42px 0 24px;}
-    .s-hero{padding:42px 22px 38px;}
-    .s-serv,.s-about,.s-foot{padding:30px 22px;}
-    .s-hero .logo,.s-hero .navhint{position:static;display:inline-block;margin-bottom:6px;}
+    .page-tabs{gap:8px;}
+    .page-tab{padding:9px 14px;font-size:13px;}
+    .page-iframe{height:520px;}
+    .hero{padding:40px 0 22px;}
   }
 </style>
 </head>
@@ -177,9 +147,9 @@
 <div class="wrap">
 
   <section class="hero" id="hero">
-    <span class="eyebrow">Free · No signup · Takes 30 seconds</span>
+    <span class="eyebrow">Free · No signup · Takes 60 seconds</span>
     <h1>How does your business <span class="grad">show up online?</span></h1>
-    <p class="sub">Get your free Online Presence Report — an honest expert review of your public homepage: how clear it is to Google, to AI assistants, and to your customers. Specific tips, growth ideas, and a free preview of a new site. By Siamak Kalhor Consulting.</p>
+    <p class="sub">Enter your website. Our AI reads every word, checks how Google and AI assistants see you, then builds you 4 real, upgraded landing pages — using your actual business content.</p>
 
     <div class="audit-box">
       <div class="audit-row">
@@ -187,13 +157,13 @@
         <button class="btn btn-go" id="goBtn" onclick="runAudit()">Get my report →</button>
       </div>
       <div class="err" id="errMsg"></div>
-      <div class="reassure">We look at your public homepage. <b>No login, no spam, totally free.</b></div>
+      <div class="reassure">We read your public homepage only. <b>No login, no spam, totally free.</b></div>
     </div>
 
     <div class="trust">
-      <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6L9 17l-5-5"/></svg> Google &amp; SEO readiness</span>
+      <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6L9 17l-5-5"/></svg> SEO & Google readiness</span>
       <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6L9 17l-5-5"/></svg> AI assistant visibility</span>
-      <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6L9 17l-5-5"/></svg> Free new-site preview</span>
+      <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6L9 17l-5-5"/></svg> 4 real upgraded landing pages</span>
     </div>
   </section>
 
@@ -203,6 +173,7 @@
   </section>
 
   <section class="report" id="report">
+
     <div class="rep-head">
       <div class="biz" id="repBiz">YOUR BUSINESS</div>
       <h2 id="repName">—</h2>
@@ -210,7 +181,7 @@
       <div class="gauge">
         <svg width="150" height="150" viewBox="0 0 150 150">
           <circle cx="75" cy="75" r="64" fill="none" stroke="#E4EAF2" stroke-width="13"/>
-          <circle id="gaugeArc" cx="75" cy="75" r="64" fill="none" stroke="#2D7FF9" stroke-width="13" stroke-linecap="round" stroke-dasharray="402" stroke-dashoffset="402" style="transition:stroke-dashoffset 1.1s ease, stroke .6s;"/>
+          <circle id="gaugeArc" cx="75" cy="75" r="64" fill="none" stroke="#2D7FF9" stroke-width="13" stroke-linecap="round" stroke-dasharray="402" stroke-dashoffset="402" style="transition:stroke-dashoffset 1.1s ease,stroke .6s;"/>
         </svg>
         <div class="num"><span id="gaugeNum">0</span><small>/100</small></div>
       </div>
@@ -231,22 +202,41 @@
       <div id="repIdeas"></div>
     </div>
 
-    <div class="build">
-      <h2>See your business with a high-authority website</h2>
-      <p class="lead">Pick a version below — each is built to rank higher on Google, show up in AI search results, and turn more visitors into calls. Using <b>your</b> real business content. Siamak Kalhor Consulting builds it for you in days.</p>
-      <div class="styles" id="styles"></div>
-      <div class="preview-hint" id="prevHint">👇 Here's your preview — tap any style above to change the look</div>
+    <!-- ===== 4 AI-GENERATED LANDING PAGES ===== -->
+    <div class="pages-section" id="pagesSection">
+      <h2>Your website — rebuilt 4 ways</h2>
+      <p class="lead">Claude AI read your entire site and rebuilt it 4 different ways — each with stronger SEO, clearer positioning, and CTAs designed to convert. Tap a version to see it. Siamak Kalhor Consulting builds whichever you choose, in days.</p>
 
-      <div class="siteprev" id="sitePrev">
-        <div class="browserbar"><i></i><i></i><i></i><div class="addr" id="prevAddr">www.yourbusiness.com</div></div>
-        <div class="site" id="siteBody"></div>
+      <div class="page-tabs" id="pageTabs">
+        <div class="page-tab active" data-idx="0" onclick="showPage(0)">
+          <span class="tab-lbl">Version 1</span>Authority & Trust
+        </div>
+        <div class="page-tab" data-idx="1" onclick="showPage(1)">
+          <span class="tab-lbl">Version 2</span>Modern & Bold
+        </div>
+        <div class="page-tab" data-idx="2" onclick="showPage(2)">
+          <span class="tab-lbl">Version 3</span>Local Leader
+        </div>
+        <div class="page-tab" data-idx="3" onclick="showPage(3)">
+          <span class="tab-lbl">Version 4</span>Premium & Clean
+        </div>
       </div>
 
-      <div class="cta-row">
-        <a class="btn btn-call" href="tel:13236577752">📞 Call (323) 657-7752 to build it</a>
+      <div class="page-frame-wrap">
+        <div class="browser-chrome">
+          <i></i><i></i><i></i>
+          <div class="addr-bar" id="pageAddr">www.yourbusiness.com</div>
+        </div>
+        <div id="pageDisplay">
+          <div class="page-generating"><div class="mini-spin"></div><p>Building your pages…</p></div>
+        </div>
+      </div>
+
+      <div class="page-cta-row">
+        <a class="btn btn-call" href="tel:13236577752">📞 Call (323) 657-7752 — build this site</a>
         <button class="btn btn-ghost" onclick="resetAudit()">Check another site</button>
       </div>
-      <p class="pitch" id="repPitch">—</p>
+      <p class="pitch" id="repPitch"></p>
     </div>
 
   </section>
@@ -259,122 +249,34 @@
 </footer>
 
 <script>
-  var THEMES = [
-    // VERSION 1 — AUTHORITY & TRUST: Built for contractors, trades, and service businesses
-    // High-contrast navy + amber. CTA language drives calls. LLMO signals: credentials, years, location.
-    { key:"authority", nm:"Authority &amp; Trust", forr:"Contractors, trades, service",
-      heroBg:"linear-gradient(160deg,#0A1628 0%,#0F2040 50%,#0A1628 100%)", heroInk:"#fff", heroSub:"rgba(255,255,255,.82)",
-      cta1Bg:"#F9A825", cta1Ink:"#0A1628", cta2Ink:"rgba(255,255,255,.9)",
-      headFont:"'Sora',sans-serif",
-      servBg:"#F4F7FB", servInk:"#0A1628", cardBg:"#fff", cardInk:"#0A1628", accent:"#2D7FF9", siBg:"rgba(45,127,249,.1)",
-      aboutBg:"#0A1628", aboutInk:"#fff", footBg:"#0A1628", footInk:"#fff",
-      badgeBg:"rgba(249,168,37,.18)", badgeInk:"#F9A825", border:"#E1E8F2",
-      ctaOverride:"Call Now — Free Estimate", cta2Override:"See Our Work" },
+  var REPORT = null;
+  var PAGES = [null, null, null, null]; // Generated HTML for each version
+  var currentPage = 0;
 
-    // VERSION 2 — MODERN AI-FIRST: For tech-forward businesses that want to signal innovation
-    // Deep slate + electric blue. Structured content for AI indexing. LLMO: schema-friendly headings.
-    { key:"aifirst", nm:"Modern AI-First", forr:"Tech, consulting, SaaS, agencies",
-      heroBg:"linear-gradient(135deg,#0D1B2A 0%,#1B2E45 45%,#0B2D4E 100%)", heroInk:"#fff", heroSub:"rgba(255,255,255,.75)",
-      cta1Bg:"#2D7FF9", cta1Ink:"#fff", cta2Ink:"rgba(255,255,255,.85)",
-      headFont:"'Poppins',sans-serif",
-      servBg:"#0D1B2A", servInk:"#fff", cardBg:"rgba(255,255,255,.05)", cardInk:"#fff", accent:"#5B9DFF", siBg:"rgba(91,157,255,.15)",
-      aboutBg:"linear-gradient(135deg,#2D7FF9,#1E63D8)", aboutInk:"#fff", footBg:"#060E18", footInk:"rgba(255,255,255,.7)",
-      badgeBg:"rgba(91,157,255,.18)", badgeInk:"#5B9DFF", border:"rgba(255,255,255,.1)",
-      ctaOverride:"Get a Free Strategy Call", cta2Override:"See How It Works" },
-
-    // VERSION 3 — LOCAL AUTHORITY: For established local businesses that own their market
-    // Deep forest green + gold. Signals longevity, community trust, local dominance.
-    // LLMO: location signals, years in business, specific service areas.
-    { key:"local", nm:"Local Market Leader", forr:"Established local, real estate, law",
-      heroBg:"linear-gradient(150deg,#0F2918 0%,#1A3D26 55%,#0F2918 100%)", heroInk:"#fff", heroSub:"rgba(255,255,255,.8)",
-      cta1Bg:"#C9A227", cta1Ink:"#0F2918", cta2Ink:"rgba(255,255,255,.9)",
-      headFont:"'Playfair Display',serif",
-      servBg:"#F8F7F4", servInk:"#0F2918", cardBg:"#fff", cardInk:"#0F2918", accent:"#C9A227", siBg:"rgba(201,162,39,.12)",
-      aboutBg:"#0F2918", aboutInk:"#fff", footBg:"#0B2015", footInk:"rgba(255,255,255,.7)",
-      badgeBg:"rgba(201,162,39,.15)", badgeInk:"#C9A227", border:"#E8E4D8",
-      ctaOverride:"Schedule Your Consultation", cta2Override:"Meet Our Team" }
+  var VERSION_NAMES = [
+    'Authority & Trust',
+    'Modern & Bold',
+    'Local Leader',
+    'Premium & Clean'
   ];
-  var serviceIcons = ["🛠️","⭐","📞","🏆","✅","📍"];
-  var REPORT=null, curTheme=0;
 
-  function paintStyles(){
-    var c=document.getElementById('styles'); c.innerHTML='';
-    THEMES.forEach(function(s,i){
-      var d=document.createElement('div'); d.className='style'+(i===curTheme?' sel':'');
-      d.onclick=function(){ curTheme=i; document.querySelectorAll('.style').forEach(function(x){x.classList.remove('sel');}); d.classList.add('sel'); renderPreview(); };
-      var swatch = s.heroBg.indexOf('gradient')>=0 ? s.heroBg : s.cta1Bg;
-      d.innerHTML='<div class="prev" style="background:'+swatch+'">'+
-        '<div class="bar" style="background:'+(s.accent)+'"></div>'+
-        '<div class="h" style="top:26px;height:11px;width:55%;background:'+(s.heroInk)+';opacity:.9"></div>'+
-        '<div class="h" style="top:43px;height:6px;width:72%;background:'+(s.heroInk)+';opacity:.45"></div>'+
-        '</div>'+
-        '<div class="nm">'+s.nm+'</div><div class="for">'+s.forr+'</div>';
-      c.appendChild(d);
-    });
-  }
+  var VERSION_DIRECTIONS = [
+    'Navy blue background, amber CTA buttons, Sora font. Signals: years in business, license number, certifications, service area. Hero CTA: "Call Now — Free Estimate". Trust badges. Structure: Hero → Services → Why Us → About → CTA.',
+    'Dark slate background, electric blue accents, bold Poppins font. High-energy, modern. Hero CTA: "Get a Free Strategy Call". Animated feel. Structure: Hero → How It Works (numbered) → Services → Social proof → CTA.',
+    'Forest green + gold, Playfair Display serif font. Warm, established, community-rooted. Hero CTA: "Schedule Your Consultation". Emphasizes local roots, years in market, community. Structure: Hero → About us → Services → Testimonial → CTA.',
+    'Pure white, deep navy text, thin Inter font. Minimal, premium, high-trust. Hero CTA: "Request a Quote". Clean card layout. Structure: Hero → Services grid → Trust row → Team/about → CTA.'
+  ];
 
-  function renderPreview(){
-    if(!REPORT) return;
-    var t=THEMES[curTheme]; var p=REPORT.preview||{};
-    var name=p.logo_text||REPORT.business_name||REPORT.host||"Your Business";
-    var head=p.hero_headline||"Quality you can count on";
-    var sub=p.hero_sub||REPORT.what_they_do||"";
-    var cta=t.ctaOverride||(p.primary_cta||"Get a Free Quote");
-    var cta2label=t.cta2Override||"📞 Call Us";
-    var tagline=p.tagline||"";
-    var services=(p.services&&p.services.length?p.services:[{title:"Our Services",desc:""},{title:"Quality Work",desc:""},{title:"Get in Touch",desc:""}]).slice(0,3);
-    var why=(p.why_us||[]).slice(0,4);
-    var about=p.about_line||"";
-    var loc=p.location_line||"";
-
-    document.getElementById('prevAddr').textContent = "www."+(REPORT.host||"yourbusiness.com");
-
-    var badges = why.map(function(w){return '<span class="s-badge" style="background:'+t.badgeBg+';color:'+t.badgeInk+'">'+esc(w)+'</span>';}).join('');
-    var cards = services.map(function(s,i){
-      return '<div class="s-c" style="background:'+t.cardBg+';color:'+t.cardInk+(t.border?';border:1px solid '+t.border:'')+'">'+
-        '<div class="si" style="background:'+t.siBg+';color:'+t.accent+'">'+serviceIcons[i%serviceIcons.length]+'</div>'+
-        '<h4 style="font-family:'+t.headFont+'">'+esc(s.title)+'</h4>'+
-        '<p>'+esc(s.desc||'')+'</p></div>';
-    }).join('');
-
-    var html =
-      '<div class="s-hero" style="background:'+t.heroBg+';color:'+t.heroInk+'">'+
-        '<div class="logo" style="font-family:'+t.headFont+'">'+esc(name)+'</div>'+
-        '<div class="navhint">Home · Services · About · Contact</div>'+
-        (tagline?'<div style="font-size:12px;letter-spacing:.14em;text-transform:uppercase;opacity:.8;font-weight:700">'+esc(tagline)+'</div>':'')+
-        '<h2 style="font-family:'+t.headFont+'">'+esc(head)+'</h2>'+
-        (sub?'<p style="color:'+t.heroSub+'">'+esc(sub)+'</p>':'')+
-        '<div class="ctas">'+
-          '<div class="cta1" style="background:'+t.cta1Bg+';color:'+t.cta1Ink+'">'+esc(cta)+'</div>'+
-          '<div class="cta2" style="color:'+t.cta2Ink+'">'+cta2label+'</div>'+
-        '</div>'+
-        (badges?'<div class="s-badges">'+badges+'</div>':'')+
-      '</div>'+
-      '<div class="s-serv" style="background:'+t.servBg+';color:'+t.servInk+'">'+
-        '<div class="ey">What we do</div>'+
-        '<h3 style="font-family:'+t.headFont+'">'+(loc?'Serving '+esc(loc):'Our Services')+'</h3>'+
-        '<div class="s-cards">'+cards+'</div>'+
-      '</div>'+
-      (about?'<div class="s-about" style="background:'+t.aboutBg+';color:'+t.aboutInk+'"><p style="font-family:'+t.headFont+'">\u201C'+esc(about)+'\u201D</p></div>':'')+
-      '<div class="s-foot" style="background:'+t.footBg+';color:'+t.footInk+'">'+
-        '<h3 style="font-family:'+t.headFont+'">Ready to get started?</h3>'+
-        '<p>Reach out today — we\u2019d love to help.</p>'+
-        '<div class="cta1" style="background:'+t.cta1Bg+';color:'+t.cta1Ink+'">'+esc(cta)+'</div>'+
-      '</div>';
-
-    document.getElementById('siteBody').innerHTML=html;
-  }
-
+  // ── Audit API call ──────────────────────────────────────────────
   var loadSteps = [
-    "Looking up your website…",
-    "Reading your headlines and copy…",
-    "Checking how Google sees you (SEO)…",
-    "Checking how AI assistants describe you…",
-    "Reviewing your positioning &amp; content…",
-    "Designing your free website preview…",
-    "Writing your report…"
+    "Reading your website…",
+    "Analyzing your headlines and copy…",
+    "Checking SEO signals…",
+    "Checking AI assistant visibility…",
+    "Evaluating your positioning…",
+    "Preparing your report…"
   ];
-  var stepTimer=null;
+  var stepTimer = null;
   function cycleSteps(){
     var i=0; var el=document.getElementById('loadStep'); el.innerHTML=loadSteps[0];
     stepTimer=setInterval(function(){
@@ -383,13 +285,14 @@
       setTimeout(function(){el.innerHTML=loadSteps[i];el.style.opacity=1;},200);
     },1500);
   }
+
   function colorFor(s){ if(s>=75)return"#1FA463"; if(s>=50)return"#F9A825"; return"#E53935"; }
   function esc(s){return (s==null?'':String(s)).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
 
   function runAudit(){
     var url=document.getElementById('urlInput').value.trim();
     var err=document.getElementById('errMsg'); err.style.display='none';
-    if(!url){ err.textContent="Please enter your website address."; err.style.display='block'; return; }
+    if(!url){err.textContent="Please enter your website address.";err.style.display='block';return;}
     document.getElementById('hero').style.display='none';
     document.getElementById('report').classList.remove('show');
     var load=document.getElementById('loading'); load.classList.add('show'); cycleSteps();
@@ -399,7 +302,7 @@
       .then(function(r){return r.json();})
       .then(function(d){
         clearInterval(stepTimer); load.classList.remove('show'); document.getElementById('goBtn').disabled=false;
-        if(d.error || !d.report){
+        if(d.error||!d.report){
           document.getElementById('hero').style.display='block';
           err.textContent=d.error||"Something went wrong. Please try again."; err.style.display='block'; return;
         }
@@ -412,8 +315,8 @@
       });
   }
 
-  function scoreCard(title, icon, obj){
-    if(!obj) obj={score:0,summary:'',fixes:[]};
+  function scoreCard(title,icon,obj){
+    if(!obj)obj={score:0,summary:'',fixes:[]};
     var col=colorFor(obj.score||0);
     var fixes=(obj.fixes||[]).map(function(f){return '<li>'+esc(f)+'</li>';}).join('');
     return '<div class="card"><div class="top-row"><h3>'+icon+' '+title+'</h3>'+
@@ -423,15 +326,16 @@
   }
 
   function renderReport(r){
-    REPORT=r; curTheme=0;
+    REPORT=r; PAGES=[null,null,null,null]; currentPage=0;
     document.getElementById('repBiz').textContent=(r.host||'YOUR BUSINESS').toUpperCase();
     document.getElementById('repName').textContent=r.business_name||r.host||'Your business';
     document.getElementById('repDoes').textContent=r.what_they_do||'';
     document.getElementById('repGrade').textContent=r.grade_label||'';
     document.getElementById('repHeadline').textContent=r.headline||'';
+    document.getElementById('pageAddr').textContent='www.'+(r.host||'yourbusiness.com');
     var noteEl=document.getElementById('repNote');
-    if(r.read_note && r.read_note.trim()){ noteEl.textContent='ⓘ '+r.read_note; noteEl.style.display='block'; }
-    else { noteEl.style.display='none'; }
+    if(r.read_note&&r.read_note.trim()){noteEl.textContent='ⓘ '+r.read_note;noteEl.style.display='block';}
+    else{noteEl.style.display='none';}
 
     var s=r.scores||{};
     document.getElementById('repCards').innerHTML=
@@ -441,34 +345,188 @@
       scoreCard('Content','📝',s.content);
 
     document.getElementById('repWins').innerHTML=(r.quick_wins||[]).map(function(w){return '<li>'+esc(w)+'</li>';}).join('');
-
     var ideaIcons=["🚀","📣","🌟"];
     document.getElementById('repIdeas').innerHTML=(r.ideas||[]).map(function(idea,i){
       return '<div class="row"><div class="ic">'+ideaIcons[i%ideaIcons.length]+'</div><div>'+esc(idea)+'</div></div>';
     }).join('');
-
     document.getElementById('repPitch').textContent=r.pitch||'';
-
-    paintStyles();
-    renderPreview();
 
     document.getElementById('report').classList.add('show');
     window.scrollTo({top:0,behavior:'smooth'});
 
     var score=Math.max(0,Math.min(100,parseInt(r.overall_score,10)||0));
-    var col=colorFor(score), arc=document.getElementById('gaugeArc'); arc.setAttribute('stroke',col);
-    var circ=402; setTimeout(function(){ arc.style.strokeDashoffset=circ-(circ*score/100); },150);
-    var n=document.getElementById('gaugeNum'), cur=0;
-    var tt=setInterval(function(){ cur+=Math.ceil(score/28); if(cur>=score){cur=score;clearInterval(tt);} n.textContent=cur; },35);
+    var col=colorFor(score), arc=document.getElementById('gaugeArc');
+    arc.setAttribute('stroke',col);
+    var circ=402; setTimeout(function(){arc.style.strokeDashoffset=circ-(circ*score/100);},150);
+    var n=document.getElementById('gaugeNum'),cur=0;
+    var tt=setInterval(function(){cur+=Math.ceil(score/28);if(cur>=score){cur=score;clearInterval(tt);}n.textContent=cur;},35);
+
+    // Start generating all 4 pages in background
+    generateAllPages();
+  }
+
+  // ── Claude-powered page generator ──────────────────────────────
+  function buildPrompt(versionIndex){
+    var r=REPORT; var p=r.preview||{};
+    var direction = VERSION_DIRECTIONS[versionIndex];
+    var versionName = VERSION_NAMES[versionIndex];
+
+    var businessInfo = [
+      'Business name: '+(r.business_name||r.host),
+      'What they do: '+(r.what_they_do||p.hero_sub||''),
+      'Location: '+(p.location_line||''),
+      'Hero headline: '+(p.hero_headline||''),
+      'Tagline: '+(p.tagline||''),
+      'Services: '+(p.services?p.services.map(function(s){return s.title+(s.desc?': '+s.desc:'');}).join(' | '):''),
+      'Why choose them: '+(p.why_us?p.why_us.join(', '):''),
+      'About/story: '+(p.about_line||''),
+      'Primary CTA: '+(p.primary_cta||''),
+      'Phone: (323) 657-7752 (Siamak Kalhor Consulting — do NOT use this, use the business phone or a generic CTA)',
+      'Website: www.'+(r.host||'yourbusiness.com'),
+      'Score issues: SEO '+(r.scores&&r.scores.seo?r.scores.seo.score:0)+'/100, AI visibility '+(r.scores&&r.scores.llmo?r.scores.llmo.score:0)+'/100'
+    ].join('\n');
+
+    return 'You are an expert web designer building a high-converting, SEO-optimized, LLMO-optimized landing page.\n\n'+
+      'BUSINESS INFO:\n'+businessInfo+'\n\n'+
+      'VERSION: '+versionName+'\n'+
+      'DESIGN DIRECTION: '+direction+'\n\n'+
+      'REQUIREMENTS:\n'+
+      '- Complete, self-contained HTML page with all CSS inlined in a <style> tag\n'+
+      '- No external dependencies except Google Fonts (allowed)\n'+
+      '- Full landing page: nav, hero, services section, why-us/trust section, about section, CTA section, footer\n'+
+      '- Use the REAL business name, services, location, and story from the info above\n'+
+      '- Write strong, specific, conversion-focused copy — not generic filler\n'+
+      '- Include schema markup (JSON-LD: LocalBusiness or relevant type) for LLMO/AI visibility\n'+
+      '- Include proper meta tags: title, description, og:title, og:description\n'+
+      '- Mobile responsive\n'+
+      '- The footer should say "Website redesign by Siamak Kalhor Consulting · (323) 657-7752 · orchamind.com"\n'+
+      '- Strong, specific CTAs — not "Learn More" or "Submit"\n'+
+      '- Trust signals: years in business, license numbers, certifications, service area — use real data from above\n'+
+      '- Location-specific content for local SEO\n\n'+
+      'Output ONLY the complete HTML. No explanation, no markdown, no backticks. Start with <!DOCTYPE html>.';
+  }
+
+  function generatePage(versionIndex, callback){
+    var prompt = buildPrompt(versionIndex);
+    fetch('/api/pagegen',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({
+        model:'claude-sonnet-4-6',
+        max_tokens:4000,
+        messages:[{role:'user',content:prompt}]
+      })
+    })
+    .then(function(r){return r.json();})
+    .then(function(d){
+      var html = '';
+      if(d && d.content && d.content[0] && d.content[0].text){
+        html = d.content[0].text.trim();
+        // Strip any accidental markdown fences
+        html = html.replace(/^```html\n?/i,'').replace(/```$/,'').trim();
+      }
+      callback(null, html);
+    })
+    .catch(function(e){ callback(e, null); });
+  }
+
+  function generateAllPages(){
+    // Show loading state in tab area
+    showLoadingState(0);
+    // Generate all 4 in parallel
+    var done = 0;
+    for(var i=0;i<4;i++){
+      (function(idx){
+        generatePage(idx, function(err, html){
+          PAGES[idx] = err ? null : html;
+          done++;
+          // Update tab state
+          updateTabState(idx, err);
+          // Show first page as soon as it's done
+          if(idx===0 || (currentPage===idx)){
+            showPage(idx);
+          }
+        });
+      })(i);
+    }
+  }
+
+  function showLoadingState(idx){
+    document.getElementById('pageDisplay').innerHTML =
+      '<div class="page-generating"><div class="mini-spin"></div>'+
+      '<p>Building '+VERSION_NAMES[idx]+' version…</p></div>';
+  }
+
+  function updateTabState(idx, err){
+    var tabs = document.querySelectorAll('.page-tab');
+    if(tabs[idx]){
+      if(err){
+        tabs[idx].style.opacity='0.5';
+      } else {
+        tabs[idx].style.borderColor = '#1FA463';
+        // Brief green flash
+        setTimeout(function(){
+          if(!tabs[idx].classList.contains('active')){
+            tabs[idx].style.borderColor='';
+          }
+        },1200);
+      }
+    }
+  }
+
+  function showPage(idx){
+    currentPage = idx;
+    // Update tabs
+    document.querySelectorAll('.page-tab').forEach(function(t,i){
+      t.classList.toggle('active', i===idx);
+      if(i===idx) t.style.borderColor='var(--blue)';
+    });
+
+    var display = document.getElementById('pageDisplay');
+    var html = PAGES[idx];
+
+    if(html === null && PAGES[idx] === null && !PAGES[idx]){
+      // Not yet generated
+      display.innerHTML='<div class="page-generating"><div class="mini-spin"></div>'+
+        '<p>Building '+VERSION_NAMES[idx]+' version… (takes ~20 seconds)</p></div>';
+      return;
+    }
+
+    if(!html){
+      display.innerHTML='<div class="page-err">This version couldn\'t be generated. Try refreshing or call Siamak at (323) 657-7752.</div>';
+      return;
+    }
+
+    // Render in iframe for true isolation
+    var iframe = document.createElement('iframe');
+    iframe.className='page-iframe';
+    iframe.setAttribute('sandbox','allow-same-origin allow-popups');
+    display.innerHTML='';
+    display.appendChild(iframe);
+
+    var doc = iframe.contentDocument || iframe.contentWindow.document;
+    doc.open(); doc.write(html); doc.close();
+
+    // Auto-adjust height after a moment
+    setTimeout(function(){
+      try{
+        var h = iframe.contentDocument.body.scrollHeight;
+        if(h>400) iframe.style.height = Math.min(h,1100)+'px';
+      }catch(e){}
+    },600);
   }
 
   function resetAudit(){
+    REPORT=null; PAGES=[null,null,null,null]; currentPage=0;
     document.getElementById('report').classList.remove('show');
-    document.getElementById('hero').style.display='block';
     document.getElementById('urlInput').value='';
+    document.getElementById('hero').style.display='block';
     window.scrollTo({top:0,behavior:'smooth'});
   }
-  document.getElementById('urlInput').addEventListener('keydown',function(e){ if(e.key==='Enter') runAudit(); });
+
+  document.getElementById('urlInput').addEventListener('keydown',function(e){
+    if(e.key==='Enter') runAudit();
+  });
 </script>
 </body>
 </html>
