@@ -327,6 +327,55 @@
   .demo-rep-table th{text-align:left;color:rgba(255,255,255,0.5);font-size:11px;text-transform:uppercase;padding:8px 10px;border-bottom:1px solid rgba(255,255,255,0.1);}
   .demo-rep-table td{padding:10px;color:rgba(255,255,255,0.85);border-bottom:1px solid rgba(255,255,255,0.06);}
   .demo-rep-total td{font-weight:800;color:#fff;border-top:1px solid rgba(255,255,255,0.2);border-bottom:none;}
+
+  /* ===== HERO REDESIGN v2 — two-column + product mock ===== */
+  .hero-inner{display:grid;grid-template-columns:1.04fr .96fr;gap:54px;align-items:center;}
+  .hero-copy{min-width:0;}
+  .hero-copy h1{max-width:16ch;}
+  .btn-ic{width:14px;height:14px;margin-right:7px;vertical-align:-2px;}
+  .hero-audit{display:inline-flex;align-items:center;gap:8px;margin-top:24px;color:var(--signal-soft);font-weight:600;font-size:14.5px;transition:color .2s;}
+  .hero-audit:hover{color:var(--amber);}
+  .hero-audit svg{width:16px;height:16px;}
+  .hero-mock{min-width:0;}
+  .appwin{background:linear-gradient(180deg,var(--navy2),#0c1c30);border:1px solid rgba(255,255,255,0.12);border-radius:16px;overflow:hidden;box-shadow:0 40px 90px rgba(0,0,0,0.5);animation:float 6s ease-in-out infinite;}
+  @keyframes float{0%,100%{transform:translateY(0);}50%{transform:translateY(-9px);}}
+  .appwin-bar{display:flex;align-items:center;justify-content:space-between;padding:13px 16px;background:rgba(255,255,255,0.03);border-bottom:1px solid rgba(255,255,255,0.08);}
+  .appwin-brand{display:flex;align-items:center;gap:9px;font-family:'Sora';font-weight:700;font-size:14px;color:#fff;}
+  .appwin-dot{width:18px;height:18px;border-radius:6px;background:linear-gradient(135deg,var(--signal),var(--amber));flex-shrink:0;}
+  .appwin-tag{background:var(--amber);color:var(--navy);font-size:9.5px;font-weight:800;letter-spacing:.05em;padding:2px 7px;border-radius:20px;}
+  .appwin-date{color:rgba(255,255,255,0.45);font-size:12.5px;}
+  .appwin-body{padding:18px;display:flex;flex-direction:column;gap:14px;}
+  .mock-brief{background:rgba(45,127,249,0.09);border:1px solid rgba(45,127,249,0.22);border-radius:12px;padding:16px;}
+  .mock-brief-head{display:flex;align-items:center;gap:7px;color:var(--signal-soft);font-weight:700;font-size:13px;letter-spacing:.02em;margin-bottom:10px;}
+  .mock-brief-head svg{width:15px;height:15px;}
+  .mock-row{display:flex;align-items:center;gap:10px;font-size:13.5px;color:rgba(255,255,255,0.85);padding:8px 0;border-top:1px solid rgba(255,255,255,0.06);}
+  .mock-row:first-of-type{border-top:none;padding-top:0;}
+  .mock-row b{color:#fff;font-weight:600;}
+  .mdot{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
+  .mdot.amber{background:var(--amber);}
+  .mdot.blue{background:var(--signal-soft);}
+  .mdot.red{background:#FF6B6B;}
+  .hero-mock .command-demo{max-width:none;margin:0;}
+  .hero-mock .command-bar{padding:13px 14px;}
+  .hero-mock .command-text{font-size:14px;}
+  .hero-mock .mic{width:34px;height:34px;}
+  .hero-mock .mic svg{width:17px;height:17px;}
+  .hero-mock .command-result{padding:11px 14px 2px;font-size:12.5px;}
+
+  /* ===== ICON TILES ===== */
+  .problem-card .pc-icon{width:46px;height:46px;border-radius:12px;background:rgba(45,127,249,0.1);display:flex;align-items:center;justify-content:center;color:var(--signal);margin-bottom:16px;}
+  .problem-card .pc-icon svg{width:24px;height:24px;}
+  .feat-ic{font-size:0;}
+  .feat-ic svg{width:24px;height:24px;stroke:#fff;}
+
+  @media(max-width:900px){
+    .hero-inner{grid-template-columns:1fr;gap:38px;}
+    .hero-mock{max-width:440px;}
+    .appwin{animation:none;}
+  }
+  @media(prefers-reduced-motion:reduce){
+    .appwin{animation:none;}
+  }
 </style>
 </head>
 <body>
@@ -347,8 +396,8 @@
       <a href="#proof">Proof</a>
       <a href="#askai">Ask AI</a>
       <a href="#faq">FAQ</a>
+      <a href="/audit">Free Report</a>
       <a href="demo.html" style="color:#fff !important;border:1px solid rgba(255,255,255,0.3);padding:9px 16px;border-radius:9px;font-weight:600;font-size:14px;">Try Demo</a>
-      <a href="/audit" style="color:#fff !important;border:1px solid rgba(255,255,255,0.3);padding:9px 16px;border-radius:9px;font-weight:600;font-size:14px;">Free Online Presence Report</a>
       <a href="#contact" class="nav-cta">Get a demo</a>
     </div>
     <button class="nav-toggle" onclick="document.getElementById('navLinks').classList.toggle('open')">☰</button>
@@ -357,23 +406,41 @@
 
 <header class="hero" id="top">
   <div class="hero-inner">
-    <div class="eyebrow"><span class="pulse-dot"></span> AI operations assistant for field businesses</div>
-    <h1>The AI brain that <span class="grad">runs your jobs</span> while you run your business.</h1>
-    <p class="hero-sub">Orchamind tracks every job, crew member, and hour — then briefs you each morning, flags what's about to go wrong, and answers any question. Just talk to it. If you can send a text, you can run it.</p>
-    <div class="hero-btns">
-      <a href="#contact" class="btn-primary">Get a personalized demo</a>
-      <a href="demo.html" class="btn-ghost">▶ Try the live demo</a>
-      <a href="/audit" class="btn-ghost">🔍 Free Online Presence Report</a>
+    <div class="hero-copy">
+      <div class="eyebrow"><span class="pulse-dot"></span> AI operations assistant for field businesses</div>
+      <h1>The AI brain that <span class="grad">runs your jobs</span> while you run your business.</h1>
+      <p class="hero-sub">Orchamind tracks every job, crew member, and hour — then briefs you each morning, flags what's about to go wrong, and answers any question. Just talk to it. If you can send a text, you can run it.</p>
+      <div class="hero-btns">
+        <a href="#contact" class="btn-primary">Get a personalized demo</a>
+        <a href="demo.html" class="btn-ghost"><svg class="btn-ic" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg> Try the live demo</a>
+      </div>
+      <a href="/audit" class="hero-audit"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg> Free Online Presence Report &rarr;</a>
     </div>
 
-    <div class="command-demo">
-      <div class="command-bar">
-        <div class="mic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2M12 19v4"/></svg></div>
-        <div class="command-text">"<span class="typed" id="typed"></span>"</div>
-      </div>
-      <div class="command-result" id="cmdResult">
-        <svg viewBox="0 0 24 24" fill="none" stroke="#5B9DFF" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
-        <span id="resultText">Done — logged and saved across your whole team.</span>
+    <div class="hero-mock">
+      <div class="appwin">
+        <div class="appwin-bar">
+          <div class="appwin-brand"><span class="appwin-dot"></span> Orchamind <span class="appwin-tag">SAMPLE</span></div>
+          <div class="appwin-date">Tue, Jun 24</div>
+        </div>
+        <div class="appwin-body">
+          <div class="mock-brief">
+            <div class="mock-brief-head"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v18M3 12h18M5.6 5.6l12.8 12.8M18.4 5.6 5.6 18.4"/></svg> AI Morning Briefing</div>
+            <div class="mock-row"><span class="mdot amber"></span> <b>Oak Street</b> — 88% of budget, finishing left.</div>
+            <div class="mock-row"><span class="mdot blue"></span> <b>Hillside</b> — framing inspection tomorrow.</div>
+            <div class="mock-row"><span class="mdot red"></span> <b>Maple Ave</b> — 1 week behind, book concrete.</div>
+          </div>
+          <div class="command-demo">
+            <div class="command-bar">
+              <div class="mic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2M12 19v4"/></svg></div>
+              <div class="command-text">"<span class="typed" id="typed"></span>"</div>
+            </div>
+            <div class="command-result" id="cmdResult">
+              <svg viewBox="0 0 24 24" fill="none" stroke="#5B9DFF" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+              <span id="resultText">Done — logged and saved across your whole team.</span>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   </div>
@@ -410,17 +477,17 @@
     <p class="section-lead">Where's each job? Who's on site? Did anyone order the materials? Who's over budget? The information is scattered across calls, texts, whiteboards, and memory — and the moment you step away, it falls apart.</p>
     <div class="problem-grid">
       <div class="problem-card">
-        <div class="pc-icon">🧠</div>
+        <div class="pc-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9.5 2A2.5 2.5 0 0 1 12 4.5v15a2.5 2.5 0 0 1-4.96.44 2.5 2.5 0 0 1-2.96-3.08 3 3 0 0 1-.34-5.58 2.5 2.5 0 0 1 1.32-4.24 2.5 2.5 0 0 1 1.98-3A2.5 2.5 0 0 1 9.5 2Z"/><path d="M14.5 2A2.5 2.5 0 0 0 12 4.5v15a2.5 2.5 0 0 0 4.96.44 2.5 2.5 0 0 0 2.96-3.08 3 3 0 0 0 .34-5.58 2.5 2.5 0 0 0-1.32-4.24 2.5 2.5 0 0 0-1.98-3A2.5 2.5 0 0 0 14.5 2Z"/></svg></div>
         <h3>It's all in your head</h3>
         <p>Every job status, every crew assignment, every deadline. If you're not there, nobody else knows the full picture.</p>
       </div>
       <div class="problem-card">
-        <div class="pc-icon">📉</div>
+        <div class="pc-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></div>
         <h3>Problems surface too late</h3>
         <p>A job slips over budget or misses an inspection — and you find out after it's already cost you money.</p>
       </div>
       <div class="problem-card">
-        <div class="pc-icon">⏱️</div>
+        <div class="pc-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><line x1="10" y1="9" x2="8" y2="9"/></svg></div>
         <h3>Paperwork eats your evenings</h3>
         <p>Hours, updates, client emails, estimates — the office work piles up long after the crews go home.</p>
       </div>
@@ -607,37 +674,37 @@
     <p class="section-lead">Not a database you have to feed. A working assistant that knows your jobs, your crew, and your trade — and helps you run all of it.</p>
     <div class="feat-grid">
       <div class="feat">
-        <div class="feat-ic">🎙️</div>
+        <div class="feat-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2M12 19v4"/></svg></div>
         <h3>Voice command everything</h3>
         <p>Log hours, assign crew, update job progress, add notes — all by talking. Hands-free from the truck or the job site.</p>
       </div>
       <div class="feat">
-        <div class="feat-ic">☀️</div>
+        <div class="feat-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 18a5 5 0 0 0-10 0"/><line x1="12" y1="2" x2="12" y2="9"/><line x1="4.22" y1="10.22" x2="5.64" y2="11.64"/><line x1="1" y1="18" x2="3" y2="18"/><line x1="21" y1="18" x2="23" y2="18"/><line x1="18.36" y1="11.64" x2="19.78" y2="10.22"/><line x1="23" y1="22" x2="1" y2="22"/><polyline points="8 6 12 2 16 6"/></svg></div>
         <h3>AI morning briefing</h3>
         <p>A daily plain-English rundown of what matters most across every job — priorities, watch-outs, and quick wins.</p>
       </div>
       <div class="feat">
-        <div class="feat-ic">📡</div>
+        <div class="feat-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg></div>
         <h3>Risk radar</h3>
         <p>The AI scans for budget overruns, jobs falling behind, idle crew, and inspections coming up — before they cost you.</p>
       </div>
       <div class="feat">
-        <div class="feat-ic">💬</div>
-        <h3>Ask it anything</h3>
-        <p>"Which job is tightest on budget?" "What permits do I need before drywall?" It knows your business and your trade.</p>
+        <div class="feat-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1"/><path d="m9 14 2 2 4-4"/></svg></div>
+        <h3>Knows codes &amp; permits</h3>
+        <p>"What permits do I need for a deck in Irvine?" "What's the inspection order before drywall?" It knows California building codes, CALGreen, Title 24, and SoCal permitting — and always reminds you to confirm with your local department.</p>
       </div>
       <div class="feat">
-        <div class="feat-ic">👷</div>
+        <div class="feat-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></div>
         <h3>Crew &amp; hours tracking</h3>
         <p>See who's on what job, log hours for payroll, and keep your whole team on the same live page.</p>
       </div>
       <div class="feat">
-        <div class="feat-ic">🔒</div>
+        <div class="feat-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></div>
         <h3>Role-based access</h3>
         <p>You and your managers see the money. Crew see only their own jobs — never your budgets or margins.</p>
       </div>
       <div class="feat">
-        <div class="feat-ic">📊</div>
+        <div class="feat-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="20" x2="12" y2="10"/><line x1="18" y1="20" x2="18" y2="4"/><line x1="6" y1="20" x2="6" y2="16"/></svg></div>
         <h3>Payroll &amp; job-cost reports</h3>
         <p>One-click hours totals per worker for payroll, plus budget-vs-spent on every job. Download to Excel or PDF and hand it straight to your bookkeeper.</p>
       </div>
@@ -761,6 +828,7 @@
       <div class="faq-item"><div class="faq-q" onclick="this.parentElement.classList.toggle('open')">What kinds of businesses use it?</div><div class="faq-a">Any business that runs jobs with a field team: general contractors, electricians, plumbers, HVAC, roofers, painters, landscapers, pool builders, cleaning and janitorial, pest control, solar, property maintenance, moving companies, and more. It's set up with your industry's language.</div></div>
       <div class="faq-item"><div class="faq-q" onclick="this.parentElement.classList.toggle('open')">Is my data private and secure?</div><div class="faq-a">Yes. Each company gets its own private, secure system with individual logins. Owners and managers see financials and budgets; crew members only see the jobs they're assigned to. Passwords are encrypted and never stored in plain text.</div></div>
       <div class="faq-item"><div class="faq-q" onclick="this.parentElement.classList.toggle('open')">Can my crew see my budgets and margins?</div><div class="faq-a">Only if you let them. Access is role-based: you decide who sees money and who doesn't. Crew members see their assigned jobs and log their hours — never your financials.</div></div>
+      <div class="faq-item"><div class="faq-q" onclick="this.parentElement.classList.toggle('open')">Does it know building codes and permits?</div><div class="faq-a">Yes. The AI knows general California building-code and permitting basics — when permits are typically needed, the standard inspection sequence, CALGreen and Title 24 requirements, and Southern California specifics for Los Angeles, Orange County, and the wider region. It always reminds you to confirm exact requirements with your local building department, since codes are local and change. It helps you avoid the costly mistake of covering up work before an inspection.</div></div>
       <div class="faq-item"><div class="faq-q" onclick="this.parentElement.classList.toggle('open')">Can it do payroll and reports?</div><div class="faq-a">Yes. With one click you get total hours per worker for the pay period — ready for payroll — plus job-cost reports showing budget versus spent on every job. Everything exports to Excel or PDF, so you can hand it straight to your bookkeeper. You can filter by this week, a pay period, or custom dates.</div></div>
       <div class="faq-item"><div class="faq-q" onclick="this.parentElement.classList.toggle('open')">Does it work on my phone?</div><div class="faq-a">Yes — phone, tablet, and desktop. Most owners run it from their phone in the field, and the whole team stays in sync on the same live information.</div></div>
       <div class="faq-item"><div class="faq-q" onclick="this.parentElement.classList.toggle('open')">How do I get started?</div><div class="faq-a">Reach out to Siamak Kalhor Consulting for a personalized walkthrough. We set the system up for your business — your jobs, your crew, your branding — and show you exactly how to use it.</div></div>
