@@ -1193,33 +1193,76 @@
   document.getElementById('chatInput').addEventListener('keydown',function(e){if(e.key==='Enter')sendChat();});
 
 </script>
-<!-- AI Assistant: loads only on click — no auto-open box on page load -->
-<style>elevenlabs-convai{z-index:2147483000!important;}</style>
-<button id="talkBtn" aria-label="Talk to the AI assistant"
-  style="position:fixed;bottom:22px;left:50%;transform:translateX(-50%);z-index:9998;display:inline-flex;align-items:center;gap:9px;background:#2D7FF9;color:#fff;border:none;border-radius:999px;padding:15px 26px;font-family:inherit;font-size:15px;font-weight:700;cursor:pointer;box-shadow:0 8px 30px rgba(45,127,249,.45);-webkit-tap-highlight-color:transparent">
-  🎙️ Talk to AI
-</button>
+<!-- Orchamind Voice â talk to the Advisor (loads on click; one-tap auto-start) -->
+<style>
+elevenlabs-convai{z-index:2147483000!important;}
+#advBtn{position:fixed;bottom:22px;left:50%;transform:translateX(-50%);z-index:9998;display:inline-flex;align-items:center;gap:10px;
+  background:linear-gradient(135deg,#2D7FF9,#5B9DFF);color:#fff;border:none;border-radius:999px;padding:15px 26px;
+  font-family:inherit;font-size:15px;font-weight:800;cursor:pointer;box-shadow:0 10px 34px rgba(45,127,249,.5);
+  -webkit-tap-highlight-color:transparent;animation:advBob 2.8s ease-in-out infinite}
+#advBtn .ic{font-size:19px;display:inline-block;animation:advNod 2.8s ease-in-out infinite;transform-origin:center}
+#advBtn:hover{box-shadow:0 12px 46px rgba(45,127,249,.75)}
+@keyframes advBob{0%,100%{transform:translateX(-50%) translateY(0)}50%{transform:translateX(-50%) translateY(-5px)}}
+@keyframes advNod{0%,100%{transform:rotate(0)}50%{transform:rotate(-10deg)}}
+@media(prefers-reduced-motion:reduce){#advBtn,#advBtn .ic{animation:none}}
+</style>
+<button id="advBtn" aria-label="Talk to the Orchamind advisor"><span class="ic">👷</span> Ask the Advisor</button>
 <script>
 (function(){
   var loaded=false;
+  function enhanceHangup(){
+    function inject(root){
+      try{
+        if(root.getElementById && root.getElementById('om-hangup-style')) return;
+        var st=document.createElement('style'); st.id='om-hangup-style';
+        st.textContent='button[aria-label*="end" i],button[aria-label*="hang" i],button[aria-label*="leave" i],button[aria-label*="stop" i],button[aria-label*="disconnect" i],button[title*="end" i],button[title*="hang" i]{background:#e53935 !important;color:#fff !important;border-color:#e53935 !important;border-radius:14px !important;box-shadow:0 3px 16px rgba(229,57,53,.55) !important;}';
+        root.appendChild(st);
+      }catch(e){}
+    }
+    var tries=0, iv=setInterval(function(){
+      tries++; var w=document.querySelector('elevenlabs-convai');
+      if(w&&w.shadowRoot){ inject(w.shadowRoot); try{ new MutationObserver(function(){inject(w.shadowRoot);}).observe(w.shadowRoot,{childList:true,subtree:true}); }catch(e){} clearInterval(iv); }
+      if(tries>60) clearInterval(iv);
+    },200);
+  }
+  function autoStart(){
+    var tries=0, started=false;
+    var iv=setInterval(function(){
+      tries++;
+      var w=document.querySelector('elevenlabs-convai');
+      if(w && w.shadowRoot){
+        var nodes=w.shadowRoot.querySelectorAll('button,[role="button"]');
+        for(var i=0;i<nodes.length;i++){
+          var n=nodes[i];
+          var lbl=(((n.getAttribute&&(n.getAttribute('aria-label')||n.getAttribute('title')))||'')+' '+(n.textContent||'')).toLowerCase();
+          if(/start|call|talk|begin|tap to|chat/.test(lbl) && !/end|hang|stop|leave|disconnect|mute|close|minim/.test(lbl)){
+            try{ n.click(); started=true; }catch(e){}
+            break;
+          }
+        }
+      }
+      if(started || tries>40) clearInterval(iv);
+    },120);
+  }
   function openAdvisor(){
     if(!loaded){
       loaded=true;
       var el=document.createElement('elevenlabs-convai');
-      el.setAttribute('agent-id','agent_1501ksnmsv1dea1rmb2ed6t8rzwe');
+      el.setAttribute('agent-id','agent_1901kw7xpz5febr9bvmazdbc93hh');
       document.body.appendChild(el);
-      var s=document.createElement('script');
-      s.src='https://unpkg.com/@elevenlabs/convai-widget-embed';
-      s.async=true; s.type='text/javascript';
+      var s=document.createElement('script'); s.src='https://unpkg.com/@elevenlabs/convai-widget-embed'; s.async=true; s.type='text/javascript';
       document.body.appendChild(s);
-      var b=document.getElementById('talkBtn'); if(b) b.style.display='none';
+      var b=document.getElementById('advBtn'); if(b) b.style.display='none';
+      enhanceHangup();
+      autoStart();
+      try{ gtag('event','open_advisor',{event_category:'engagement'}); }catch(e){}
     } else {
       var w=document.querySelector('elevenlabs-convai');
-      if(w && w.shadowRoot){ var btn=w.shadowRoot.querySelector('button,[role="button"]'); if(btn){ try{ btn.click(); }catch(e){} } }
+      if(w&&w.shadowRoot){ var btn=w.shadowRoot.querySelector('button,[role="button"]'); if(btn){ try{btn.click();}catch(e){} } }
     }
   }
-  var tb=document.getElementById('talkBtn');
-  if(tb) tb.addEventListener('click', openAdvisor);
+  var ab=document.getElementById('advBtn');
+  if(ab) ab.addEventListener('click', openAdvisor);
 })();
 </script>
 </body>
