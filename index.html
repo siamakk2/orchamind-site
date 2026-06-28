@@ -2,6 +2,15 @@
 <!-- v2.1 -->
 <html lang="en">
 <head>
+<!-- Google tag (gtag.js) - Orchamind -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-LWCBNFLTDM"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-LWCBNFLTDM');
+</script>
+
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Orchamind — The AI Brain That Runs Your Field Business | Siamak Kalhor Consulting</title>
@@ -1191,5 +1200,31 @@
   document.getElementById('chatInput').addEventListener('keydown',function(e){if(e.key==='Enter')sendChat();});
 
 </script>
+
+<!-- GA4 Event Tracking — Orchamind -->
+<script>
+(function(){
+  function track(n,p){ if(typeof gtag==='function') gtag('event',n,p||{}); }
+  document.addEventListener('click',function(e){
+    var a=e.target.closest('a,button'); if(!a) return;
+    var href=(a.getAttribute('href')||'').toLowerCase();
+    var txt=(a.textContent||'').trim().toLowerCase();
+    if(href.indexOf('/demo')!==-1 || txt.indexOf('demo')!==-1){
+      track('start_demo',{event_category:'conversion',event_label:txt.slice(0,40),value:5});
+    }
+    else if(href.indexOf('/audit')!==-1 || txt.indexOf('audit')!==-1){
+      track('request_audit',{event_category:'conversion',event_label:txt.slice(0,40),value:8});
+    }
+    else if(href.indexOf('tel:')===0){ track('phone_click',{event_category:'lead',value:1}); }
+    else if(href.indexOf('mailto:')===0){ track('email_click',{event_category:'lead',value:1}); }
+    else if(href.indexOf('aislebird.com')!==-1){ track('product_click',{event_label:'AisleBird'}); }
+    else if(href.indexOf('resbizai.com')!==-1){ track('product_click',{event_label:'ResBizAI'}); }
+  },true);
+  document.addEventListener('submit',function(e){
+    if(e.target&&e.target.tagName==='FORM'){ track('generate_lead',{event_category:'lead',value:10}); }
+  },true);
+})();
+</script>
+
 </body>
 </html>
