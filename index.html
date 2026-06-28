@@ -1192,9 +1192,34 @@
   document.getElementById('chatInput').addEventListener('keydown',function(e){if(e.key==='Enter')sendChat();});
 
 </script>
-<!-- ElevenLabs Voice Widget -->
-<style>elevenlabs-convai{z-index:9999;}</style>
-<elevenlabs-convai agent-id="agent_1501ksnmsv1dea1rmb2ed6t8rzwe"></elevenlabs-convai>
-<script src="https://unpkg.com/@elevenlabs/convai-widget-embed" async type="text/javascript"></script>
+<!-- AI Assistant: loads only on click — no auto-open box on page load -->
+<style>elevenlabs-convai{z-index:2147483000!important;}</style>
+<button id="talkBtn" aria-label="Talk to the AI assistant"
+  style="position:fixed;bottom:22px;left:50%;transform:translateX(-50%);z-index:9998;display:inline-flex;align-items:center;gap:9px;background:#2D7FF9;color:#fff;border:none;border-radius:999px;padding:15px 26px;font-family:inherit;font-size:15px;font-weight:700;cursor:pointer;box-shadow:0 8px 30px rgba(45,127,249,.45);-webkit-tap-highlight-color:transparent">
+  🎙️ Talk to AI
+</button>
+<script>
+(function(){
+  var loaded=false;
+  function openAdvisor(){
+    if(!loaded){
+      loaded=true;
+      var el=document.createElement('elevenlabs-convai');
+      el.setAttribute('agent-id','agent_1501ksnmsv1dea1rmb2ed6t8rzwe');
+      document.body.appendChild(el);
+      var s=document.createElement('script');
+      s.src='https://unpkg.com/@elevenlabs/convai-widget-embed';
+      s.async=true; s.type='text/javascript';
+      document.body.appendChild(s);
+      var b=document.getElementById('talkBtn'); if(b) b.style.display='none';
+    } else {
+      var w=document.querySelector('elevenlabs-convai');
+      if(w && w.shadowRoot){ var btn=w.shadowRoot.querySelector('button,[role="button"]'); if(btn){ try{ btn.click(); }catch(e){} } }
+    }
+  }
+  var tb=document.getElementById('talkBtn');
+  if(tb) tb.addEventListener('click', openAdvisor);
+})();
+</script>
 </body>
 </html>
