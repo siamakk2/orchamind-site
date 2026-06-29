@@ -1367,7 +1367,7 @@ function renderUsers(list){
   var t=document.getElementById('usersTable');if(!t)return;
   var rows='<div class="hours-row head"><div>Name</div><div>Username</div><div>Role</div><div>Actions</div></div>';
   rows+=list.map(function(u){
-    return '<div class="hours-row"><div class="h-name">'+esc(u.name)+'</div><div>'+esc(u.username)+'</div><div><span style="text-transform:capitalize;font-weight:600;color:#1565C0;">'+esc(u.role)+'</span>'+(u.mustChange?' <span style="font-size:11px;color:#B45309;">(temp pw)</span>':'')+'</div><div>'+(u.role!=='owner'?'<button onclick="changeUserRole(\''+u.username+'\')" style="font-size:12px;border:1px solid #E1E8F0;background:#fff;border-radius:6px;padding:4px 9px;cursor:pointer;margin-right:5px;">Change Role</button><button onclick="removeUser(\''+u.username+'\')" style="font-size:12px;border:1px solid #E1E8F0;background:#fff;color:#D32F2F;border-radius:6px;padding:4px 9px;cursor:pointer;">Remove</button>':'<span style="font-size:12px;color:#9aa7b4;">—</span>')+'</div></div>';
+    return '<div class="hours-row"><div class="h-name">'+esc(u.name)+'</div><div>'+esc(u.username)+'</div><div><span style="text-transform:capitalize;font-weight:600;color:#1565C0;">'+esc(u.role)+'</span>'+(u.mustChange?' <span style="font-size:11px;color:#B45309;">(temp pw)</span>':'')+'</div><div>'+(u.role!=='owner'?'<button onclick="changeUserRole(\''+u.username+'\')" style="font-size:12px;border:1px solid #E1E8F0;background:#fff;border-radius:6px;padding:4px 9px;cursor:pointer;margin-right:5px;">Change Role</button><button onclick="removeUser(\''+u.username+'\')" style="font-size:12px;border:1px solid #E1E8F0;background:#fff;color:#D32F2F;border-radius:6px;padding:4px 9px;cursor:pointer;">Remove</button><button onclick="resetUserPw(\''+u.username+'\')" style="font-size:12px;border:1px solid #E1E8F0;background:#fff;color:#2D7FF9;border-radius:6px;padding:4px 9px;cursor:pointer;margin-left:5px;">Reset PW</button>':'<span style="font-size:12px;color:#9aa7b4;">—</span>')+'</div></div>';
   }).join('');
   t.innerHTML=rows;
 }
@@ -1407,6 +1407,17 @@ function saveUser(){
       if(d&&d.ok){closeModal('userModal');loadUsers();alert('Account created for '+name+'. Give them the username "'+user+'" and the temporary password. They will set their own password on first login.');}
       else{alert((d&&d.error)||'Could not create account.');}
     });
+}
+function resetUserPw(username){
+  var np=prompt('Set a temporary password for '+username+' (6+ characters). They will be asked to set their own at next login.');
+  if(np===null)return;
+  np=(np||'').trim();
+  if(np.length<6){alert('Password must be at least 6 characters.');return;}
+  fetch('/api/accounts',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'setPassword',callerRole:CURRENT_USER.role,username:username,password:np})})
+    .then(function(r){return r.json();}).then(function(d){
+      if(d&&d.ok){ alert('\u2713 Password reset for '+username+'.\n\nTemporary password: '+np+'\n\nGive it to them \u2014 they will be prompted to set their own password at next login.'); loadUsers(); }
+      else{ alert((d&&d.error)||'Could not reset password.'); }
+    }).catch(function(){alert('Server error \u2014 try again.');});
 }
 function removeUser(username){
   if(!confirm('Remove '+username+'\'s account? They will no longer be able to log in.'))return;
