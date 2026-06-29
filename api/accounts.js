@@ -156,6 +156,17 @@ module.exports = async function handler(req, res) {
       return res.status(200).json({ ok: true });
     }
 
+    if (action === 'setPassword') {
+      if (!isOwner) return res.status(200).json({ ok: false, error: 'Owner only.' });
+      var pu = (body.username || '').toLowerCase().trim();
+      var pp = body.password || '';
+      if (!pu || String(pp).length < 6) return res.status(200).json({ ok: false, error: 'Pick a 6+ character temporary password.' });
+      var prow = await getUser(pu);
+      if (!prow) return res.status(200).json({ ok: false, error: 'No such user.' });
+      await sbFetch(base + '/accounts?username=eq.' + encodeURIComponent(pu), { method: 'PATCH', headers: H, body: JSON.stringify({ pass: hashPw(pp), must_change: true }) });
+      return res.status(200).json({ ok: true });
+    }
+
     if (action === 'setRole') {
       if (!isOwner) return res.status(200).json({ ok: false, error: 'Owner only.' });
       var su = (body.username || '').toLowerCase().trim();
