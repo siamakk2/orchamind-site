@@ -1555,18 +1555,36 @@ function startApp(){
   });
   initVoice();
 }
-// DEMO: skip login, auto-enter with sample data
-CURRENT_USER={username:'demo',name:'Demo User',role:'manager'};
-document.getElementById('authWrap').style.display='none';
-document.body.classList.remove('locked');document.body.classList.add('authed');
-document.body.classList.add('role-manager');
-var _w=document.getElementById('whoami');if(_w)_w.textContent='Demo User';
-var _r=document.getElementById('roleLabel');if(_r)_r.textContent='manager';
-if(typeof applyRoleAccess==='function')applyRoleAccess();
-startApp();
+// ENTRY: open demo by default; real login / owner setup at ?app=1
+(function(){
+  var isApp=false; try{ isApp=new URLSearchParams(location.search).get('app')==='1'; }catch(e){}
+  if(isApp){
+    var saved=null; try{ saved=JSON.parse(sessionStorage.getItem('hci_session')||'null'); }catch(e){}
+    if(saved&&saved.username&&saved.role&&saved.role!=='demo'){ CURRENT_USER=saved; enterApp(); return; }
+    fetch('/api/accounts',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'status'})})
+      .then(function(r){return r.json();})
+      .then(function(d){
+        if(d&&d.ok&&!d.hasUsers){ showForm('formSetup'); var s=document.getElementById('authSubtitle'); if(s)s.textContent='Create your owner account'; }
+        else{ showForm('formLogin'); }
+      })
+      .catch(function(){ showForm('formLogin'); if(typeof authErr==='function')authErr('Could not reach the server.'); });
+    return;
+  }
+  // DEMO: skip login, auto-enter with sample data
+  CURRENT_USER={username:'demo',name:'Demo User',role:'manager'};
+  document.getElementById('authWrap').style.display='none';
+  document.body.classList.remove('locked');document.body.classList.add('authed');
+  document.body.classList.add('role-manager');
+  var _w=document.getElementById('whoami');if(_w)_w.textContent='Demo User';
+  var _r=document.getElementById('roleLabel');if(_r)_r.textContent='manager';
+  if(typeof applyRoleAccess==='function')applyRoleAccess();
+  startApp();
+})();
 
 // ====== DEMO MODE OVERRIDES (defined last so they win) ======
 (function(){
+  var isApp=false; try{ isApp=new URLSearchParams(location.search).get('app')==='1'; }catch(e){}
+  if(isApp) return;
   // Block all database writes
   window.save=function(){};
   window.saveNow=function(cb){if(cb)cb(true);};
