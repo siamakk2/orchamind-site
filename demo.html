@@ -280,6 +280,7 @@ body.authed #logoutBar{display:flex;}
         <input id="liUser" type="text" placeholder="your username" style="width:100%;border:1.5px solid #E1E8F0;border-radius:9px;padding:11px 14px;font-size:15px;outline:none;"></div>
       <div style="margin-bottom:16px;"><label style="display:block;font-size:13px;font-weight:600;color:#0A1628;margin-bottom:6px;">Password</label>
         <input id="liPass" type="password" placeholder="your password" style="width:100%;border:1.5px solid #E1E8F0;border-radius:9px;padding:11px 14px;font-size:15px;outline:none;"></div>
+      <button onclick="demoEnter()" style="width:100%;background:#fff;color:#1565C0;border:1.5px solid #1565C0;border-radius:9px;padding:11px 14px;font-size:14px;font-weight:600;cursor:pointer;margin-bottom:10px;">👀 Explore the demo — no account needed</button>
       <button onclick="authLogin()" id="liBtn" style="width:100%;background:#1565C0;color:#fff;border:none;border-radius:9px;padding:13px;font-size:15px;font-weight:700;cursor:pointer;">Log In</button>
     </div>
 
@@ -1146,7 +1147,13 @@ function showForm(which){
 }
 function authErr(msg){document.getElementById('authError').textContent=msg||'';}
 
+function demoEnter(){
+  CURRENT_USER={username:'demo',name:'Demo',role:'demo'};
+  try{sessionStorage.setItem('hci_session',JSON.stringify(CURRENT_USER));}catch(e){}
+  enterApp();
+}
 function bootAuth(){
+  try{ if(new URLSearchParams(location.search).get('demo')==='1'){ demoEnter(); return; } }catch(e){}
   // Check if any accounts exist yet
   fetch('/api/accounts',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'status'})})
     .then(function(r){return r.json();})
@@ -1206,7 +1213,8 @@ function authChangePassword(){
     }).catch(function(){document.getElementById('cpBtn').textContent='Set Password & Continue';authErr('Server error.');});
 }
 
-function logout(){try{sessionStorage.removeItem('hci_session');}catch(e){}location.reload();}
+function logout(){
+  try{ fetch('/api/accounts',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'logout'})}); }catch(e){}try{sessionStorage.removeItem('hci_session');}catch(e){}location.reload();}
 
 function enterApp(){
   document.getElementById('authWrap').style.display='none';
