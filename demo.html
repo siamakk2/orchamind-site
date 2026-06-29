@@ -256,6 +256,19 @@ body.authed #logoutBar{display:flex;}body.role-demo #logoutBar{display:none!impo
     .report-output{border:none;padding:0;}
     body{background:#fff;}
   }
+
+.btn-export{background:#F9A825;color:#0A1628;border:none;font-weight:700;font-size:13px;padding:9px 14px;border-radius:9px;cursor:pointer;}
+.btn-export:hover{filter:brightness(.95);}
+.exp-sub{color:#5b6b82;font-size:13px;margin:2px 0 12px;}
+.exp-counts{background:#f3f6fb;border:1px solid #e3eaf3;border-radius:8px;padding:9px 12px;font-size:12px;color:#42526b;margin-bottom:14px;}
+.exp-primary{display:block;width:100%;background:#2D7FF9;color:#fff;border:none;font-weight:800;font-size:15px;padding:13px;border-radius:11px;cursor:pointer;}
+.exp-primary:hover{background:#1f6fe6;}
+.exp-or{text-align:center;color:#8595a8;font-size:12px;margin:14px 0 10px;}
+.exp-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+.exp-csv{background:#fff;border:1px solid #cfdcec;color:#0A1628;font-weight:600;font-size:13px;padding:11px;border-radius:9px;cursor:pointer;}
+.exp-csv:hover{background:#f3f6fb;border-color:#2D7FF9;}
+.exp-actions{margin-top:16px;text-align:right;}
+.exp-close{background:transparent;border:1px solid #cfdcec;color:#42526b;font-weight:600;padding:8px 16px;border-radius:8px;cursor:pointer;}
 </style>
 </head>
 <body class="locked">
@@ -463,8 +476,9 @@ body.authed #logoutBar{display:flex;}body.role-demo #logoutBar{display:none!impo
 
   <!-- REPORTS PANEL -->
   <div class="panel" id="panel-reports">
-    <div class="panel-head">
+    <div class="panel-head" style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;">
       <h2>Reports</h2>
+      <button class="btn-export" onclick="openModal('exportModal');renderExportCounts();">⬇️ Export / download my data</button>
     </div>
 
     <!-- Controls -->
@@ -613,6 +627,21 @@ body.authed #logoutBar{display:flex;}body.role-demo #logoutBar{display:none!impo
 </div></div>
 
 <!-- USER MODAL -->
+<div class="modal-bg" id="exportModal"><div class="modal">
+  <h3>Download your data</h3>
+  <p class="exp-sub">Your data is yours — export anytime. No lock-in.</p>
+  <div class="exp-counts" id="exportCounts"></div>
+  <button class="exp-primary" onclick="exportJSON()">⬇️ Download everything (JSON)</button>
+  <div class="exp-or">or download as spreadsheets (CSV)</div>
+  <div class="exp-grid">
+    <button class="exp-csv" onclick="exportCSV('jobs')">Projects</button>
+    <button class="exp-csv" onclick="exportCSV('hours')">Timesheets</button>
+    <button class="exp-csv" onclick="exportCSV('crew')">Crew</button>
+    <button class="exp-csv" onclick="exportCSV('subs')">Subcontractors</button>
+  </div>
+  <div class="exp-actions"><button class="exp-close" onclick="closeModal('exportModal')">Close</button></div>
+</div></div>
+
 <div class="modal-bg" id="userModal"><div class="modal">
   <h3>Add Person</h3>
   <div class="field"><label>Full Name</label><input type="text" id="uFullName" placeholder="e.g. Carlos Mendez"></div>
@@ -937,6 +966,13 @@ document.querySelectorAll('.tab').forEach(function(t){
 // ====== MODALS ======
 function openModal(id){document.getElementById(id).classList.add('show');}
 function closeModal(id){document.getElementById(id).classList.remove('show');}
+function _dl(fn,txt,mime){var b=new Blob([txt],{type:mime||'text/plain'});var u=URL.createObjectURL(b);var a=document.createElement('a');a.href=u;a.download=fn;document.body.appendChild(a);a.click();setTimeout(function(){document.body.removeChild(a);URL.revokeObjectURL(u);},120);}
+function _csvCell(v){v=(v==null?'':String(v));if(/[",\n]/.test(v))v='"'+v.replace(/"/g,'""')+'"';return v;}
+function _csv(rows){if(!rows||!rows.length)return '';var cols=Object.keys(rows[0]);var out=cols.join(',')+'\n';rows.forEach(function(r){out+=cols.map(function(k){return _csvCell(r[k]);}).join(',')+'\n';});return out;}
+function _stamp(){return new Date().toISOString().split('T')[0];}
+function exportJSON(){var data={exportedAt:new Date().toISOString(),company:(CURRENT_USER&&CURRENT_USER.name)||'',jobs:jobs,crew:crew,hours:hours,subs:subs};_dl('orchamind-export-'+_stamp()+'.json',JSON.stringify(data,null,2),'application/json');}
+function exportCSV(which){var map={jobs:jobs,crew:crew,hours:hours,subs:subs};var rows=map[which]||[];if(!rows.length){alert('Nothing to export there yet.');return;}_dl('orchamind-'+which+'-'+_stamp()+'.csv',_csv(rows),'text/csv');}
+function renderExportCounts(){var el=document.getElementById('exportCounts');if(!el)return;el.textContent=jobs.length+' projects \u00b7 '+hours.length+' timesheet entries \u00b7 '+crew.length+' crew \u00b7 '+subs.length+' subcontractors';}
 document.querySelectorAll('.modal-bg').forEach(function(m){m.addEventListener('click',function(e){if(e.target===m)closeModal(m.id);});});
 function openJobModal(){document.getElementById('jobModalTitle').textContent='New Job';['jobId','jobName','jobClient','jobLocation','jobNotes'].forEach(function(i){document.getElementById(i).value='';});document.getElementById('jobStatus').value='planning';document.getElementById('jobProgress').value=0;document.getElementById('jobCrew').value=0;document.getElementById('jobDate').value='';document.getElementById('jobBudget').value='';document.getElementById('jobSpent').value='';openModal('jobModal');}
 function editJob(id){var j=jobs.find(function(x){return x.id===id;});if(!j)return;document.getElementById('jobModalTitle').textContent='Edit Job';document.getElementById('jobId').value=j.id;document.getElementById('jobName').value=j.name;document.getElementById('jobClient').value=j.client;document.getElementById('jobLocation').value=j.location;document.getElementById('jobStatus').value=j.status;document.getElementById('jobProgress').value=j.progress;document.getElementById('jobCrew').value=j.crew;document.getElementById('jobDate').value=j.date||'';document.getElementById('jobBudget').value=j.budget||'';document.getElementById('jobSpent').value=j.spent||'';document.getElementById('jobNotes').value=j.notes||'';openModal('jobModal');}
