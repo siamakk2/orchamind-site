@@ -32,8 +32,8 @@ module.exports = async (req, res) => {
         + '<p><a href="/api/qbo/connect">Try connecting again &rarr;</a></p>'));
     }
 
-    var CID = process.env.QBO_CLIENT_ID, CS = process.env.QBO_CLIENT_SECRET;
-    var REDIRECT = process.env.QBO_REDIRECT_URI || 'https://orchamind.com/api/qbo/callback';
+    var CID = (process.env.QBO_CLIENT_ID||'').trim(), CS = (process.env.QBO_CLIENT_SECRET||'').trim();
+    var REDIRECT = (process.env.QBO_REDIRECT_URI || 'https://orchamind.com/api/qbo/callback').trim();
     if (!CID || !CS) { res.statusCode = 500; return res.end(page('Not configured','<p>QBO_CLIENT_ID / QBO_CLIENT_SECRET missing in Vercel.</p>')); }
     var basic = Buffer.from(CID + ':' + CS).toString('base64');
     var body = 'grant_type=authorization_code&code=' + encodeURIComponent(code) + '&redirect_uri=' + encodeURIComponent(REDIRECT);
