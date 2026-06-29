@@ -62,7 +62,7 @@ module.exports = async (req, res) => {
       return res.end(page('Could not reach Intuit', '<p>The token request failed at the network level:</p><pre>' + esc(reason) + '</pre><p><a href="https://orchamind.com/api/qbo/connect">Try again</a></p>'));
     }
 
-    var SB_URL = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL;
+    var SB_URL = 'https://yqbprvyhzugdmavvurqb.supabase.co';
     var SB_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SECRET_KEY || process.env.SUPABASE_SERVICE_KEY;
     var stored = false, storeErr = '';
     if (SB_URL && SB_KEY) {
