@@ -1,8 +1,7 @@
 // QuickBooks OAuth2 callback: exchange code for tokens, store in Supabase. Redirect URI follows the real host (www-safe).
 function esc(s){ return String(s).replace(/[&<>]/g, function(ch){ return {'&':'&amp;','<':'&lt;','>':'&gt;'}[ch]; }); }
 function calcRedirect(req){
-  var host = (req.headers && req.headers.host) || '';
-  if (host && host.indexOf('.') >= 0) return 'https://' + host + '/api/qbo/callback';
+  // Use the exact redirect URI registered in Intuit (env var), NOT the request host.
   return (process.env.QBO_REDIRECT_URI || 'https://orchamind.com/api/qbo/callback').trim();
 }
 function page(title, bodyHtml){
