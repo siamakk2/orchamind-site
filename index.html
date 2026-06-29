@@ -126,7 +126,7 @@
   .trust-item b{color:#fff;font-weight:700;}
 
   /* SECTIONS */
-  section{padding:90px 0;}
+  section{padding:90px 0;}.pricing-sec{background:var(--paper);color:var(--ink);}.price-grid{display:grid;grid-template-columns:1fr 1fr;gap:24px;margin-top:50px;align-items:stretch;}.pcard{background:#fff;border:1px solid var(--line);border-radius:18px;padding:36px 32px;display:flex;flex-direction:column;}.pcard.feat-card{border:2px solid var(--signal);box-shadow:0 18px 50px rgba(45,127,249,0.14);position:relative;}.pcard .pc-tag{display:inline-block;font-size:13px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:var(--slate);margin-bottom:14px;}.pcard.feat-card .pc-tag{color:var(--signal);}.pc-ribbon{position:absolute;top:-13px;right:24px;background:var(--amber);color:#0A1628;font-size:12.5px;font-weight:800;letter-spacing:.03em;text-transform:uppercase;padding:6px 14px;border-radius:999px;}.pc-price{display:flex;align-items:baseline;gap:8px;margin-bottom:8px;}.pc-price b{font-size:52px;font-weight:800;letter-spacing:-.02em;line-height:1;}.pc-price span{font-size:17px;color:var(--slate);font-weight:600;}.pc-desc{font-size:16px;color:var(--slate);line-height:1.55;margin-bottom:20px;}.pc-list{list-style:none;padding:0;margin:0 0 26px;display:flex;flex-direction:column;gap:11px;}.pc-list li{display:flex;align-items:flex-start;gap:10px;font-size:15.5px;color:var(--ink);}.pc-list svg{flex:0 0 auto;width:18px;height:18px;color:var(--signal);margin-top:1px;}.pc-btn{display:block;text-align:center;width:100%;padding:15px 24px;border-radius:11px;font-weight:700;font-size:16px;cursor:pointer;border:none;transition:transform .15s;}.pc-btn:hover{transform:translateY(-2px);}.pc-btn-primary{background:var(--signal);color:#fff;}.pc-btn-dark{background:var(--navy);color:#fff;}.pc-fine{font-size:13.5px;color:var(--slate);margin-top:12px;text-align:center;}.pc-fine a{color:var(--signal);font-weight:600;}.price-foot{margin-top:34px;text-align:center;font-size:16px;color:var(--slate);}.price-foot a{color:var(--signal);font-weight:700;}@media(max-width:760px){.price-grid{grid-template-columns:1fr;}.pc-price b{font-size:46px;}}
   .section-eyebrow{color:var(--signal);font-size:14px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;margin-bottom:14px;}
   .section-title{font-size:42px;font-weight:800;margin-bottom:18px;max-width:18ch;}
   .section-lead{font-size:19px;color:var(--slate);max-width:60ch;margin-bottom:8px;}
@@ -427,6 +427,7 @@
       <a href="#industries">Industries</a>
       <a href="#founder">About</a>
       <a href="#proof">Proof</a>
+<a href="#pricing">Pricing</a>
       <a href="#askai">Ask AI</a>
       <a href="#faq">FAQ</a>
       <a href="/audit" style="color:var(--amber) !important;font-weight:700;">Free Site Audit</a>
@@ -894,6 +895,51 @@
       </div>
     </div>
   </div>
+</section>
+<section class="pricing-sec" id="pricing">
+  <div class="wrap">
+    <div class="section-eyebrow">Pricing</div>
+    <h2 class="section-title">Simple pricing. Built to pay for itself.</h2>
+    <p class="section-lead">Get a professional website once, or let the AI platform run your back office every day. Most contractors do both.</p>
+    <div class="price-grid">
+      <div class="pcard">
+        <span class="pc-tag">One-time · Done for you</span>
+        <div class="pc-price"><b>$750</b><span>one-time</span></div>
+        <p class="pc-desc">We design, build, and launch a professional website for your contracting business — copy, photos, mobile, and your free site audit baked in.</p>
+        <ul class="pc-list">
+          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg><span>Custom website for your trade</span></li>
+          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg><span>Mobile-fast and Google-ready</span></li>
+          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg><span>Lead form + click-to-call</span></li>
+          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg><span>Live in days, not months</span></li>
+        </ul>
+        <div style="margin-top:auto">
+          <a class="pc-btn pc-btn-dark" href="https://buy.stripe.com/9B64gA4GYg7e3B26M90kE00" target="_blank" rel="noopener">Get your website</a>
+          <p class="pc-fine">One-time payment. <a href="/audit">Start with a free site audit →</a></p>
+        </div>
+      </div>
+      <div class="pcard feat-card">
+        <span class="pc-ribbon">First month free</span>
+        <span class="pc-tag">Subscription · The platform</span>
+        <div class="pc-price"><b>$500</b><span>/ month</span></div>
+        <p class="pc-desc">The AI that runs your back office — estimates, bids, proposals, scheduling, and follow-ups. Talk to it like your sharpest project manager who never sleeps.</p>
+        <ul class="pc-list">
+          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg><span>AI estimating &amp; bidding</span></li>
+          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg><span>Proposal generator</span></li>
+          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg><span>Voice + chat assistant, 24/7</span></li>
+          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg><span>Cancel anytime</span></li>
+        </ul>
+        <div style="margin-top:auto">
+          <button class="pc-btn pc-btn-primary" onclick="orchaTrial()">Start your free month →</button>
+          <p class="pc-fine">30-day free trial, then $500/month. <a href="demo.html">Try the live demo →</a></p>
+        </div>
+      </div>
+    </div>
+    <p class="price-foot">Want both? We'll build your site and set up the platform together — <a href="#contact">just ask →</a></p>
+  </div>
+  <script>
+    var ORCHA_SUBSCRIBE_URL = ""; /* paste Orchamind $500/mo Stripe subscribe link here */
+    function orchaTrial(){ if(ORCHA_SUBSCRIBE_URL){ window.location.href=ORCHA_SUBSCRIBE_URL; } else { var el=document.getElementById("contact"); if(el){ el.scrollIntoView({behavior:"smooth"}); } } }
+  </script>
 </section>
 <section class="faq" id="faq">
   <div class="wrap">
