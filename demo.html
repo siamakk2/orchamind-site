@@ -1153,6 +1153,7 @@ function demoEnter(){
   enterApp();
 }
 function bootAuth(){
+  try{ if(new URLSearchParams(location.search).get('reset')==='1'){ try{fetch('/api/accounts',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'logout'})});}catch(e){} try{sessionStorage.removeItem('hci_session');}catch(e){} CURRENT_USER=null; } }catch(e){}
   try{ if(new URLSearchParams(location.search).get('demo')==='1'){ demoEnter(); return; } }catch(e){}
   // Check if any accounts exist yet
   fetch('/api/accounts',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'status'})})
