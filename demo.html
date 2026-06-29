@@ -1152,19 +1152,9 @@ function demoEnter(){
   enterApp();
 }
 function bootAuth(){
-  try{ if(new URLSearchParams(location.search).get('reset')==='1'){ try{fetch('/api/accounts',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'logout'})});}catch(e){} try{sessionStorage.clear();}catch(e){} try{localStorage.clear();}catch(e){} location.replace('/demo.html'); return; } }catch(e){}
-  try{ if(new URLSearchParams(location.search).get('demo')==='1'){ demoEnter(); return; } }catch(e){}
-  // Check if any accounts exist yet
-  fetch('/api/accounts',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'status'})})
-    .then(function(r){return r.json();})
-    .then(function(d){
-      // Resume session if present
-      var saved=null;try{saved=JSON.parse(sessionStorage.getItem('hci_session')||'null');}catch(e){}
-      if(saved&&saved.username){CURRENT_USER=saved;enterApp();return;}
-      if(d&&d.ok&&!d.hasUsers){showForm('formSetup');document.getElementById('authSubtitle').textContent='Welcome — let\'s get set up';}
-      else{showForm('formLogin');}
-    })
-    .catch(function(){showForm('formLogin');authErr('Could not reach the server.');});
+  // Open demo for everyone — always enter as the demo user, never a login wall.
+  try{ sessionStorage.clear(); }catch(e){}
+  demoEnter();
 }
 
 function authSeedOwner(){
