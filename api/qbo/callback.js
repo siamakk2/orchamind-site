@@ -19,9 +19,16 @@ module.exports = async (req, res) => {
     function gp(k){ if (q && q[k] != null) return q[k]; return url ? url.searchParams.get(k) : null; }
     var code = gp('code'); var realmId = gp('realmId') || ''; var oerr = gp('error'); var oerrd = gp('error_description');
     if (!code) {
+      var allp = {};
+      if (url) { url.searchParams.forEach(function(v,k){ allp[k] = v; }); }
+      if (q) { Object.keys(q).forEach(function(k){ if (allp[k] == null) allp[k] = q[k]; }); }
+      var dump = 'Raw path Intuit hit:\n' + esc(String(req.url)) + '\n\nParams received:\n' + esc(JSON.stringify(allp, null, 2));
       var detail = oerr ? ('Intuit reported: <b>' + esc(oerr) + '</b>' + (oerrd ? (' &mdash; ' + esc(oerrd)) : '') + '.')
-                        : 'No authorization code came back. Make sure you start at <b>https://www.orchamind.com/api/qbo/connect</b> (with www), pick a <b>sandbox</b> company, and click <b>Connect</b>.';
-      res.statusCode = 200; return res.end(page('Connection not completed', '<p>' + detail + '</p><p><a href="https://www.orchamind.com/api/qbo/connect">Try again &rarr;</a></p>'));
+                        : 'No authorization code came back from Intuit \u2014 the authorization did not complete. The usual cause with Development keys is that there is <b>no sandbox company</b> to connect to (or Cancel/back was used).';
+      res.statusCode = 200; return res.end(page('Connection not completed',
+        '<p>' + detail + '</p>'
+        + '<pre>' + dump + '</pre>'
+        + '<p><b>Fix:</b> create a sandbox company at <a href="https://developer.intuit.com/app/developer/sandbox">developer.intuit.com/app/developer/sandbox</a>, then <a href="https://www.orchamind.com/api/qbo/connect">try again &rarr;</a></p>'));
     }
     var CID = (process.env.QBO_CLIENT_ID||'').trim(), CS = (process.env.QBO_CLIENT_SECRET||'').trim();
     if (!CID || !CS) { res.statusCode = 500; return res.end(page('Not configured', '<p>Missing in Vercel: ' + (!CID?'<b>QBO_CLIENT_ID</b> ':'') + (!CS?'<b>QBO_CLIENT_SECRET</b>':'') + '. Add it and redeploy.</p>')); }
