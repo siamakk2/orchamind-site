@@ -1,8 +1,8 @@
 // Starts the QuickBooks Online OAuth2 handshake. Append ?debug=1 to inspect exactly what is sent.
 function esc(s){ return String(s).replace(/[&<>]/g, function(ch){ return {'&':'&amp;','<':'&lt;','>':'&gt;'}[ch]; }); }
 module.exports = async (req, res) => {
-  var CID = process.env.QBO_CLIENT_ID || '';
-  var REDIRECT = process.env.QBO_REDIRECT_URI || 'https://orchamind.com/api/qbo/callback';
+  var CID = (process.env.QBO_CLIENT_ID || '').trim();
+  var REDIRECT = (process.env.QBO_REDIRECT_URI || 'https://orchamind.com/api/qbo/callback').trim();
   var url; try { url = new URL(req.url, 'https://orchamind.com'); } catch(e){ url = null; }
   var debug = url && url.searchParams.get('debug');
   var host = (req.headers && req.headers.host) || '';
