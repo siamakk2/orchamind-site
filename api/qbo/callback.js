@@ -63,16 +63,22 @@ module.exports = async (req, res) => {
     }
 
     var SB_URL = 'https://yqbprvyhzugdmavvurqb.supabase.co';
-    var SB_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SECRET_KEY || process.env.SUPABASE_SERVICE_KEY;
+    var keyName = '(none)', SB_KEY = '';
+    if (process.env.SUPABASE_SERVICE_ROLE_KEY) { SB_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY; keyName = 'SUPABASE_SERVICE_ROLE_KEY'; }
+    else if (process.env.SUPABASE_SECRET_KEY) { SB_KEY = process.env.SUPABASE_SECRET_KEY; keyName = 'SUPABASE_SECRET_KEY'; }
+    else if (process.env.SUPABASE_SERVICE_KEY) { SB_KEY = process.env.SUPABASE_SERVICE_KEY; keyName = 'SUPABASE_SERVICE_KEY'; }
+    SB_KEY = (SB_KEY || '').trim();
+    function keyKind(k){ if(k.indexOf('sb_secret_')===0) return 'secret (correct type)'; if(k.indexOf('sb_publishable_')===0) return 'PUBLISHABLE \u2014 wrong, needs the secret key'; if(k.indexOf('eyJ')===0) return 'legacy JWT'; return 'unknown / empty'; }
+    var keyDiag = 'env var read: ' + keyName + '  |  length: ' + SB_KEY.length + '  |  starts: ' + SB_KEY.slice(0,12) + '\u2026  |  ends: \u2026' + SB_KEY.slice(-4) + '  |  type: ' + keyKind(SB_KEY);
     var stored = false, storeErr = '';
     if (SB_URL && SB_KEY) {
       try {
         var row = JSON.stringify({ id: 'default', realm_id: realmId, access_token: tok.access_token, refresh_token: tok.refresh_token, expires_at: Date.now() + ((tok.expires_in || 3600) * 1000), updated_at: new Date().toISOString() });
         var sr = await httpReq('POST', SB_URL.replace(/\/$/,'') + '/rest/v1/qbo_tokens?on_conflict=id',
           { 'apikey': SB_KEY, 'Authorization': 'Bearer ' + SB_KEY, 'Content-Type': 'application/json', 'Prefer': 'resolution=merge-duplicates' }, row);
-        if (sr.status >= 200 && sr.status < 300) { stored = true; } else { storeErr = 'HTTP ' + sr.status + ' ' + String(sr.text).slice(0,300); }
-      } catch (se) { storeErr = (se && se.message) || String(se); }
-    } else { storeErr = 'Supabase env vars not found.'; }
+        if (sr.status >= 200 && sr.status < 300) { stored = true; } else { storeErr = 'HTTP ' + sr.status + ' ' + String(sr.text).slice(0,300) + '\n\nKey in use → ' + keyDiag; }
+      } catch (se) { storeErr = ((se && se.message) || String(se)) + '\n\nKey in use → ' + keyDiag; }
+    } else { storeErr = 'No Supabase secret key found in env. Checked SUPABASE_SERVICE_ROLE_KEY, SUPABASE_SECRET_KEY, SUPABASE_SERVICE_KEY.'; }
 
     res.statusCode = 200;
     if (stored) return res.end(page('\u2713 QuickBooks connected', '<p>Your QuickBooks company (realm <b>' + esc(realmId) + '</b>) is now linked to Orchamind. You can close this tab.</p><p><a href="/app">Back to Orchamind &rarr;</a></p>'));
