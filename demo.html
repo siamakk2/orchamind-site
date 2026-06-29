@@ -269,6 +269,11 @@ body.authed #logoutBar{display:flex;}body.role-demo #logoutBar{display:none!impo
 .exp-csv:hover{background:#f3f6fb;border-color:#2D7FF9;}
 .exp-actions{margin-top:16px;text-align:right;}
 .exp-close{background:transparent;border:1px solid #cfdcec;color:#42526b;font-weight:600;padding:8px 16px;border-radius:8px;cursor:pointer;}
+
+.sync-pill{display:inline-block;margin-top:6px;font-size:11px;font-weight:700;padding:3px 10px;border-radius:999px;letter-spacing:.2px;}
+.sync-pill.ok{background:#e7f6ec;color:#1b7a3d;}
+.sync-pill.pend{background:#fff3d6;color:#9a6700;}
+.sync-pill.off{background:#fde7e7;color:#b23b3b;}
 </style>
 </head>
 <body class="locked">
@@ -337,6 +342,7 @@ body.authed #logoutBar{display:flex;}body.role-demo #logoutBar{display:none!impo
 <div class="dash-head">
   <h1>Site Manager <span class="ai-pill">AI Powered</span></h1>
   <p id="dashDate">Loading...</p>
+  <span class="sync-pill ok" id="syncPill">✓ Synced</span>
 </div>
 
 <div class="tabs">
@@ -689,33 +695,61 @@ var hours=[
 ];
 
 var _saveTimer=null;
+function _acctKey(){return (typeof CURRENT_USER!=='undefined'&&CURRENT_USER&&CURRENT_USER.username)||'demo';}
+function dataKey(){return 'orcha_data_'+_acctKey();}
+function pendKey(){return 'orcha_pend_'+_acctKey();}
+var _pendingSync=false;
+function writeLocal(){try{localStorage.setItem(dataKey(),JSON.stringify({saved:true,jobs:jobs,crew:crew,hours:hours,subs:subs,_ts:Date.now()}));}catch(e){}}
+function markPending(){_pendingSync=true;try{localStorage.setItem(pendKey(),'1');}catch(e){}updateSyncPill();}
+function markSynced(){_pendingSync=false;try{localStorage.removeItem(pendKey());}catch(e){}updateSyncPill();}
+function pushToServer(){
+  fetch('/api/data',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({data:{saved:true,jobs:jobs,crew:crew,hours:hours,subs:subs}})})
+    .then(function(r){return r.json();})
+    .then(function(o){if(o&&!o.error){_dbReady=true;markSynced();}else{markPending();}})
+    .catch(function(){markPending();});
+}
 function save(){
-  // Debounced save to shared database (silently no-ops if DB not configured)
+  // LOCAL-FIRST: write to this device immediately so an edit is never lost offline
+  writeLocal();
+  // then sync up to the shared database (debounced); queues + retries when offline
   if(_saveTimer)clearTimeout(_saveTimer);
-  _saveTimer=setTimeout(function(){
-    fetch('/api/data',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({data:{saved:true,jobs:jobs,crew:crew,hours:hours,subs:subs}})}).then(function(r){return r.json();}).then(function(o){if(o&&!o.error)_dbReady=true;}).catch(function(){});
-  },600);
+  _saveTimer=setTimeout(pushToServer,600);
 }
 var _dbReady=false;
 function load(cb){
-  // Try the shared database, but NEVER block the app if it's not set up.
   var done=false;
   var finish=function(){if(done)return;done=true;if(cb)cb();};
-  // Safety timeout — if DB doesn't answer in 3s, start anyway with seed data
-  var timer=setTimeout(finish,3000);
+  // 1) OFFLINE-FIRST: recall unsynced flag + hydrate instantly from this device
+  try{_pendingSync=(localStorage.getItem(pendKey())==='1');}catch(e){_pendingSync=false;}
+  var localHad=false;
+  try{var ls=localStorage.getItem(dataKey());if(ls){var d=JSON.parse(ls);if(d&&d.saved){jobs=Array.isArray(d.jobs)?d.jobs:jobs;crew=Array.isArray(d.crew)?d.crew:crew;hours=Array.isArray(d.hours)?d.hours:hours;subs=Array.isArray(d.subs)?d.subs:subs;localHad=true;}}}catch(e){}
+  // 2) reach the shared database, but NEVER block the app
+  var timer=setTimeout(function(){updateSyncPill();finish();},3000);
   fetch('/api/data').then(function(r){return r.json();}).then(function(out){
     clearTimeout(timer);
-    if(out&&!out.error&&out.data&&out.data.saved){
-      // User has saved data before (even if empty) - it is authoritative
+    if(_pendingSync){
+      // edits were made offline and never synced -> this device wins, push them up
+      pushToServer();
+    }else if(out&&out.data&&out.data.saved&&!out.error){
       jobs=Array.isArray(out.data.jobs)?out.data.jobs:[];
       crew=Array.isArray(out.data.crew)?out.data.crew:[];
       hours=Array.isArray(out.data.hours)?out.data.hours:[];
       subs=Array.isArray(out.data.subs)?out.data.subs:[];
-      _dbReady=true;
+      _dbReady=true;writeLocal();
     }
-    finish();
-  }).catch(function(){clearTimeout(timer);finish();});
+    updateSyncPill();finish();
+  }).catch(function(){clearTimeout(timer);updateSyncPill();finish();});
 }
+function updateSyncPill(){
+  var el=document.getElementById('syncPill');if(!el)return;
+  if(_pendingSync){el.className='sync-pill pend';el.textContent='⛅ Saved on device — will sync';}
+  else if(!navigator.onLine){el.className='sync-pill off';el.textContent='⛅ Offline';}
+  else{el.className='sync-pill ok';el.textContent='✓ Synced';}
+}
+window.addEventListener('online',function(){if(_pendingSync)pushToServer();updateSyncPill();});
+window.addEventListener('offline',function(){updateSyncPill();});
+document.addEventListener('visibilitychange',function(){if(!document.hidden&&_pendingSync&&navigator.onLine)pushToServer();});
+setInterval(function(){if(_pendingSync&&navigator.onLine)pushToServer();},30000);
 function uid(){return 'x'+Date.now()+Math.floor(Math.random()*1000);}
 function esc(s){return String(s||'').replace(/[&<>"]/g,function(m){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[m];});}
 function fmtDate(d){if(!d)return '';var dt=new Date(d+'T00:00:00');return dt.toLocaleDateString('en-US',{month:'short',day:'numeric'});}
@@ -1610,6 +1644,7 @@ function startApp(){
 }
 // ENTRY: open demo by default; real login / owner setup at ?app=1
 (function(){
+  if('serviceWorker' in navigator){try{navigator.serviceWorker.register('/sw.js');}catch(e){}}
   var isApp=false; try{ isApp=new URLSearchParams(location.search).get('app')==='1'; }catch(e){}
   if(isApp){
     var saved=null; try{ saved=JSON.parse(sessionStorage.getItem('hci_session')||'null'); }catch(e){}
