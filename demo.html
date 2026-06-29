@@ -1149,11 +1149,10 @@ function authErr(msg){document.getElementById('authError').textContent=msg||'';}
 
 function demoEnter(){
   CURRENT_USER={username:'demo',name:'Demo',role:'demo'};
-  try{sessionStorage.setItem('hci_session',JSON.stringify(CURRENT_USER));}catch(e){}
   enterApp();
 }
 function bootAuth(){
-  try{ if(new URLSearchParams(location.search).get('reset')==='1'){ try{fetch('/api/accounts',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'logout'})});}catch(e){} try{sessionStorage.removeItem('hci_session');}catch(e){} CURRENT_USER=null; } }catch(e){}
+  try{ if(new URLSearchParams(location.search).get('reset')==='1'){ try{fetch('/api/accounts',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'logout'})});}catch(e){} try{sessionStorage.clear();}catch(e){} try{localStorage.clear();}catch(e){} location.replace('/demo.html'); return; } }catch(e){}
   try{ if(new URLSearchParams(location.search).get('demo')==='1'){ demoEnter(); return; } }catch(e){}
   // Check if any accounts exist yet
   fetch('/api/accounts',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'status'})})
