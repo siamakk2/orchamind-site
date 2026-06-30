@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
+<title>Welcome to Orchamind</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{--navy:#0A1628;--navy2:#0D2B4E;--blue:#1565C0;--amber:#F9A825;--ink:#0A1628;--muted:#5A6B7D;--line:#E1E8F0;--green:#2E7D32;--red:#D32F2F;}
+  *{box-sizing:border-box;}
+  body{margin:0;font-family:'Outfit',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:linear-gradient(135deg,var(--navy),var(--navy2));color:var(--ink);min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px;}
+  .card{background:#fff;border-radius:18px;max-width:460px;width:100%;padding:32px 28px;box-shadow:0 24px 60px rgba(0,0,0,.35);}
+  .brand{display:flex;align-items:center;gap:10px;margin-bottom:18px;}
+  .brand svg{width:34px;height:34px;}
+  .brand b{font-family:'Playfair Display',serif;font-size:21px;color:var(--navy);}
+  h1{font-family:'Playfair Display',serif;font-size:25px;line-height:1.2;margin:6px 0 6px;color:var(--navy);}
+  .sub{font-size:14.5px;color:var(--muted);margin:0 0 22px;line-height:1.5;}
+  label{display:block;font-size:12.5px;font-weight:600;color:var(--muted);margin:14px 0 5px;}
+  input{width:100%;border:1.5px solid var(--line);border-radius:10px;padding:12px 13px;font-size:15px;font-family:inherit;outline:none;}
+  input:focus{border-color:var(--blue);}
+  .btn{margin-top:22px;width:100%;background:var(--amber);color:var(--navy);border:none;border-radius:10px;padding:14px;font-size:16px;font-weight:700;font-family:inherit;cursor:pointer;}
+  .btn:disabled{opacity:.6;cursor:default;}
+  .msg{margin-top:14px;font-size:13.5px;min-height:18px;line-height:1.45;}
+  .notice{background:#FFF4E5;border:1px solid #F9A825;border-radius:12px;padding:18px;font-size:14px;color:#7a5300;line-height:1.5;}
+  .foot{margin-top:18px;font-size:12.5px;color:var(--muted);text-align:center;}
+  .foot a{color:var(--blue);text-decoration:none;}
+  .check{display:inline-block;width:16px;height:16px;margin-right:6px;vertical-align:-3px;}
+</style>
+</head>
+<body>
+  <div class="card">
+    <div class="brand">
+      <svg viewBox="0 0 24 24" fill="none" stroke="#F9A825" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12h4l3 8 4-16 3 8h4"/></svg>
+      <b>Orchamind</b>
+    </div>
+
+    <div id="formWrap">
+      <h1>You're in &mdash; welcome aboard.</h1>
+      <p class="sub">Your subscription is active (with a 30-day free trial). Let's set up your company &mdash; it takes about 30 seconds, then you're straight into your dashboard.</p>
+
+      <label for="company">Company Name</label>
+      <input id="company" type="text" placeholder="e.g. Howard Construction" autocomplete="organization">
+
+      <label for="name">Your Full Name</label>
+      <input id="name" type="text" placeholder="e.g. Phil Howard" autocomplete="name">
+
+      <label for="username">Choose a Username (for login)</label>
+      <input id="username" type="text" placeholder="e.g. phil" autocomplete="username" autocapitalize="none">
+
+      <label for="password">Choose a Password</label>
+      <input id="password" type="password" placeholder="At least 6 characters" autocomplete="new-password">
+
+      <button class="btn" id="goBtn" onclick="createWorkspace()">Create my workspace &rarr;</button>
+      <div class="msg" id="msg"></div>
+    </div>
+
+    <div id="noSession" style="display:none;">
+      <h1>Almost there</h1>
+      <div class="notice">
+        We couldn't find your payment details on this page. Please open the link from your Stripe email receipt to finish setting up your company, or reach out and we'll get you sorted.
+      </div>
+      <div class="foot">Questions? <a href="mailto:siamakk2@gmail.com">Contact support</a></div>
+    </div>
+  </div>
+
+<script>
+(function(){
+  var qs = new URLSearchParams(location.search);
+  var sessionId = qs.get('session_id') || qs.get('sessionId') || '';
+  window.__SESSION_ID = sessionId;
+  if(!sessionId){
+    var fw=document.getElementById('formWrap'); if(fw)fw.style.display='none';
+    var ns=document.getElementById('noSession'); if(ns)ns.style.display='block';
+  }
+})();
+
+function _v(id){var e=document.getElementById(id);return e?e.value.trim():'';}
+function _msg(t,c){var m=document.getElementById('msg');if(m){m.textContent=t;m.style.color=c||'#5A6B7D';}}
+
+function createWorkspace(){
+  var company=_v('company');
+  var name=_v('name');
+  var username=_v('username').toLowerCase();
+  var password=document.getElementById('password').value;
+  if(!company||!name||!username||!password){_msg('Please fill in every field.','#D32F2F');return;}
+  if(password.length<6){_msg('Password must be at least 6 characters.','#D32F2F');return;}
+  if(!/^[a-z0-9_]+$/.test(username)){_msg('Username can use only letters, numbers, and underscores.','#D32F2F');return;}
+
+  var btn=document.getElementById('goBtn');
+  btn.disabled=true; btn.textContent='Creating your workspace...';
+  _msg('Setting things up...','#5A6B7D');
+
+  fetch('/api/signup',{method:'POST',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({sessionId:window.__SESSION_ID,company:company,name:name,username:username,password:password})})
+    .then(function(r){return r.json();})
+    .then(function(d){
+      if(d&&d.ok){
+        try{sessionStorage.setItem('hci_session',JSON.stringify(d.user));}catch(e){}
+        _msg('\u2713 All set! Taking you to your dashboard...','#2E7D32');
+        setTimeout(function(){location.href='/app';},700);
+      }else{
+        btn.disabled=false; btn.textContent='Create my workspace \u2192';
+        _msg((d&&d.error)||'Something went wrong. Please try again.','#D32F2F');
+      }
+    })
+    .catch(function(){
+      btn.disabled=false; btn.textContent='Create my workspace \u2192';
+      _msg('Could not reach the server. Check your connection and try again.','#D32F2F');
+    });
+}
+</script>
+</body>
+</html>
