@@ -109,9 +109,10 @@ module.exports = async function handler(req, res) {
       var row = await getUser(lu);
       if (!row || !verifyPw(lp, row.pass)) return res.status(200).json({ ok: false, error: 'Wrong username or password.' });
       setSess(lu, row.role || 'member');
-      var co = row.company || '';
-      if (!co && row.owner && row.owner !== row.username) { try { var orow = await getUser(row.owner); if (orow) co = orow.company || ''; } catch (e) {} }
-      return res.status(200).json({ ok: true, user: { username: row.username, name: row.name, role: row.role || 'member', company: co, mustChange: !!row.must_change } });
+      var brandRow = row;
+      if (row.owner && row.owner !== row.username) { try { var orow = await getUser(row.owner); if (orow) brandRow = orow; } catch (e) {} }
+      var co = row.company || brandRow.company || '';
+      return res.status(200).json({ ok: true, user: { username: row.username, name: row.name, role: row.role || 'member', company: co, profile: brandRow.profile || null, mustChange: !!row.must_change } });
     }
 
     if (action === 'changePassword') {
@@ -185,6 +186,19 @@ module.exports = async function handler(req, res) {
       if (!srow || srow.owner !== sess.username) return res.status(200).json({ ok: false, error: 'Not in your team.' });
       await sbFetch(base + '/accounts?username=eq.' + encodeURIComponent(su), { method: 'PATCH', headers: H, body: JSON.stringify({ role: sr }) });
       return res.status(200).json({ ok: true });
+    }
+
+    if (action === 'saveProfile') {
+      if (!isOwner) return res.status(200).json({ ok: false, error: 'Owner only.' });
+      var pf = body.profile || {};
+      var clean = { logo: String(pf.logo || ''), phone: String(pf.phone || ''), email: String(pf.email || ''), address: String(pf.address || ''), license: String(pf.license || ''), website: String(pf.website || '') };
+      if (clean.logo.length > 900000) return res.status(200).json({ ok: false, error: 'Logo image is too large — please use a smaller one.' });
+      var patch = { profile: clean };
+      var pco = (body.company || '').trim();
+      if (pco) patch.company = pco;
+      var pr = await sbFetch(base + '/accounts?username=eq.' + encodeURIComponent(sess.username), { method: 'PATCH', headers: H, body: JSON.stringify(patch) });
+      if (!pr.ok) { var pe = await pr.text(); return res.status(200).json({ ok: false, error: 'Could not save. ' + pe.slice(0, 140) }); }
+      return res.status(200).json({ ok: true, company: pco, profile: clean });
     }
 
     if (action === 'createCompany') {
