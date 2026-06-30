@@ -298,6 +298,7 @@ body.authed #logoutBar{display:flex;}body.role-demo #logoutBar{display:none!impo
         <input id="liUser" type="text" placeholder="your username" style="width:100%;border:1.5px solid #E1E8F0;border-radius:9px;padding:11px 14px;font-size:15px;outline:none;"></div>
       <div style="margin-bottom:16px;"><label style="display:block;font-size:13px;font-weight:600;color:#0A1628;margin-bottom:6px;">Password</label>
         <input id="liPass" type="password" placeholder="your password" style="width:100%;border:1.5px solid #E1E8F0;border-radius:9px;padding:11px 14px;font-size:15px;outline:none;"></div>
+      <div style="text-align:right;margin:-8px 0 14px;"><a href="#" onclick="forgotPw();return false;" style="font-size:13px;color:#2D7FF9;font-weight:600;">Forgot password?</a></div>
       <button onclick="demoEnter()" style="width:100%;background:#fff;color:#1565C0;border:1.5px solid #1565C0;border-radius:9px;padding:11px 14px;font-size:14px;font-weight:600;cursor:pointer;margin-bottom:10px;">👀 Explore the demo — no account needed</button>
       <button onclick="authLogin()" id="liBtn" style="width:100%;background:#1565C0;color:#fff;border:none;border-radius:9px;padding:13px;font-size:15px;font-weight:700;cursor:pointer;">Log In</button>
     </div>
@@ -1392,11 +1393,20 @@ function loadUsers(){
   fetch('/api/accounts',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'list',callerRole:CURRENT_USER.role})})
     .then(function(r){return r.json();}).then(function(d){if(d&&d.ok){renderUsers(d.users);}});
 }
+function forgotPw(){
+  var u=prompt('Enter your username. Your owner or manager will be notified to reset your password.');
+  if(u===null)return; u=(u||'').trim();
+  if(!u){ alert('Please enter your username.'); return; }
+  fetch('/api/accounts',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'requestReset',username:u})})
+    .then(function(r){return r.json();})
+    .then(function(){ alert('Request sent. Your owner or manager will see it in Team & Access and can reset you in one tap. Once they do, log in with the temporary password and you will be asked to choose a new one.'); })
+    .catch(function(){ alert('Could not send the request. Check your connection and try again.'); });
+}
 function renderUsers(list){
   var t=document.getElementById('usersTable');if(!t)return;
   var rows='<div class="hours-row head"><div>Name</div><div>Username</div><div>Role</div><div>Actions</div></div>';
   rows+=list.map(function(u){
-    return '<div class="hours-row"><div class="h-name">'+esc(u.name)+'</div><div>'+esc(u.username)+'</div><div><span style="text-transform:capitalize;font-weight:600;color:#1565C0;">'+esc(u.role)+'</span>'+(u.mustChange?' <span style="font-size:11px;color:#B45309;">(temp pw)</span>':'')+'</div><div>'+(u.role!=='owner'?'<button onclick="changeUserRole(\''+u.username+'\')" style="font-size:12px;border:1px solid #E1E8F0;background:#fff;border-radius:6px;padding:4px 9px;cursor:pointer;margin-right:5px;">Change Role</button><button onclick="removeUser(\''+u.username+'\')" style="font-size:12px;border:1px solid #E1E8F0;background:#fff;color:#D32F2F;border-radius:6px;padding:4px 9px;cursor:pointer;">Remove</button><button onclick="resetUserPw(\''+u.username+'\')" style="font-size:12px;border:1px solid #E1E8F0;background:#fff;color:#2D7FF9;border-radius:6px;padding:4px 9px;cursor:pointer;margin-left:5px;">Reset PW</button>':'<span style="font-size:12px;color:#9aa7b4;">—</span>')+'</div></div>';
+    return '<div class="hours-row"><div class="h-name">'+esc(u.name)+'</div><div>'+esc(u.username)+'</div><div><span style="text-transform:capitalize;font-weight:600;color:#1565C0;">'+esc(u.role)+'</span>'+(u.mustChange?' <span style="font-size:11px;color:#B45309;">(temp pw)</span>':'')+(u.reset_requested?' <span style="font-size:11px;color:#D32F2F;font-weight:700;">\u26a0 Reset requested</span>':'')+'</div><div>'+(u.role!=='owner'?'<button onclick="changeUserRole(\''+u.username+'\')" style="font-size:12px;border:1px solid #E1E8F0;background:#fff;border-radius:6px;padding:4px 9px;cursor:pointer;margin-right:5px;">Change Role</button><button onclick="removeUser(\''+u.username+'\')" style="font-size:12px;border:1px solid #E1E8F0;background:#fff;color:#D32F2F;border-radius:6px;padding:4px 9px;cursor:pointer;">Remove</button><button onclick="resetUserPw(\''+u.username+'\')" style="font-size:12px;border:1px solid #E1E8F0;background:#fff;color:#2D7FF9;border-radius:6px;padding:4px 9px;cursor:pointer;margin-left:5px;">Reset PW</button>':'<span style="font-size:12px;color:#9aa7b4;">—</span>')+'</div></div>';
   }).join('');
   t.innerHTML=rows;
 }
