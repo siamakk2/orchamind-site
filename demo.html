@@ -314,15 +314,17 @@ body.locked .appwrap{display:none !important;}
   .topbar-inner{gap:8px;flex-wrap:nowrap;}
   .content > .dash-head{padding-top:6px !important;}
 }
+
+@media(max-width:900px){#demoBanner{font-size:12.5px !important;padding:8px 12px !important;gap:6px 10px !important;line-height:1.35;}#demoBanner a{font-size:12.5px !important;}}
 </style>
 </head>
 <body class="locked">
-<div id="demoBanner" style="position:fixed;top:0;left:0;right:0;z-index:6000;background:linear-gradient(90deg,#0A1628,#1565C0);color:#fff;padding:10px 16px;display:flex;align-items:center;justify-content:center;gap:16px;flex-wrap:wrap;font-family:'Outfit',sans-serif;font-size:14px;box-shadow:0 2px 12px rgba(0,0,0,0.2);">
+<div id="demoBanner" style="position:relative;z-index:1;background:linear-gradient(90deg,#0A1628,#1565C0);color:#fff;padding:10px 16px;display:flex;align-items:center;justify-content:center;gap:16px;flex-wrap:wrap;font-family:'Outfit',sans-serif;font-size:14px;box-shadow:0 2px 12px rgba(0,0,0,0.2);">
   <span style="font-weight:600;">🎮 Demo Mode — this is sample data, nothing is saved. Play around!</span>
   <a href="https://orchamind-site.vercel.app" style="background:#F9A825;color:#0A1628;font-weight:700;padding:6px 16px;border-radius:8px;text-decoration:none;font-size:13px;">Get this for your business →</a>
   <span style="opacity:0.8;font-size:13px;">or call (323) 657-7752</span>
 </div>
-<div style="height:46px;"></div>
+
 
 <!-- AUTH SCREENS -->
 <div id="authWrap" style="position:fixed;inset:0;z-index:5000;background:linear-gradient(135deg,#0A1628,#0D2B4E);display:flex;align-items:center;justify-content:center;padding:20px;">
