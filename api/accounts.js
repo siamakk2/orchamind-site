@@ -134,16 +134,18 @@ module.exports = async function handler(req, res) {
     // ---- owner-only actions: role is verified from the signed cookie, NOT from the client ----
     var sess = verifyToken(readCookie());
     var isOwner = !!(sess && sess.role === 'owner');
+    var ADMIN = 'siamakk2';
+    var isAdmin = !!(sess && sess.username === ADMIN);
 
     if (action === 'list') {
-      if (!isOwner) return res.status(200).json({ ok: false, error: 'Owner only.' });
-      var r3 = await sbFetch(base + '/accounts?owner=eq.' + encodeURIComponent(sess.username) + '&select=username,name,role,reset_requested&order=created_at.asc', { headers: H });
+      if (!isAdmin) return res.status(200).json({ ok: false, error: 'Admin only.' });
+      var r3 = await sbFetch(base + '/accounts?select=username,name,role,company,owner,must_change,reset_requested&order=created_at.asc', { headers: H });
       var a3 = await r3.json();
       return res.status(200).json({ ok: true, users: Array.isArray(a3) ? a3 : [] });
     }
 
     if (action === 'add') {
-      if (!isOwner) return res.status(200).json({ ok: false, error: 'Owner only.' });
+      if (!isAdmin) return res.status(200).json({ ok: false, error: 'Admin only.' });
       var au = (body.username || '').toLowerCase().trim();
       var an = body.name || '';
       var ar = body.role || 'member';
@@ -157,33 +159,33 @@ module.exports = async function handler(req, res) {
     }
 
     if (action === 'remove') {
-      if (!isOwner) return res.status(200).json({ ok: false, error: 'Owner only.' });
+      if (!isAdmin) return res.status(200).json({ ok: false, error: 'Admin only.' });
       var ru = (body.username || '').toLowerCase().trim();
-      if (sess.username === ru) return res.status(200).json({ ok: false, error: "You can't remove your own owner account." });
+      if (sess.username === ru) return res.status(200).json({ ok: false, error: "You can't remove your own admin account." });
       var trow = await getUser(ru);
-      if (!trow || trow.owner !== sess.username) return res.status(200).json({ ok: false, error: 'Not in your team.' });
+      if (!trow) return res.status(200).json({ ok: false, error: 'No such account.' });
       await sbFetch(base + '/accounts?username=eq.' + encodeURIComponent(ru), { method: 'DELETE', headers: H });
       await sbFetch(base + '/app_data?username=eq.' + encodeURIComponent(ru), { method: 'DELETE', headers: H });
       return res.status(200).json({ ok: true });
     }
 
     if (action === 'setPassword') {
-      if (!isOwner) return res.status(200).json({ ok: false, error: 'Owner only.' });
+      if (!isAdmin) return res.status(200).json({ ok: false, error: 'Admin only.' });
       var pu = (body.username || '').toLowerCase().trim();
       var pp = body.password || '';
       if (!pu || String(pp).length < 6) return res.status(200).json({ ok: false, error: 'Pick a 6+ character temporary password.' });
       var prow = await getUser(pu);
-      if (!prow || prow.owner !== sess.username) return res.status(200).json({ ok: false, error: 'Not in your team.' });
+      if (!prow) return res.status(200).json({ ok: false, error: 'No such account.' });
       await sbFetch(base + '/accounts?username=eq.' + encodeURIComponent(pu), { method: 'PATCH', headers: H, body: JSON.stringify({ pass: hashPw(pp), must_change: true, reset_requested: false }) });
       return res.status(200).json({ ok: true });
     }
 
     if (action === 'setRole') {
-      if (!isOwner) return res.status(200).json({ ok: false, error: 'Owner only.' });
+      if (!isAdmin) return res.status(200).json({ ok: false, error: 'Admin only.' });
       var su = (body.username || '').toLowerCase().trim();
       var sr = body.role || 'member';
       var srow = await getUser(su);
-      if (!srow || srow.owner !== sess.username) return res.status(200).json({ ok: false, error: 'Not in your team.' });
+      if (!srow) return res.status(200).json({ ok: false, error: 'No such account.' });
       await sbFetch(base + '/accounts?username=eq.' + encodeURIComponent(su), { method: 'PATCH', headers: H, body: JSON.stringify({ role: sr }) });
       return res.status(200).json({ ok: true });
     }
@@ -202,7 +204,7 @@ module.exports = async function handler(req, res) {
     }
 
     if (action === 'createCompany') {
-      if (!isOwner) return res.status(200).json({ ok: false, error: 'Owner only.' });
+      if (!isAdmin) return res.status(200).json({ ok: false, error: 'Admin only.' });
       var cc = (body.company || '').trim();
       var cu2 = (body.username || '').toLowerCase().trim();
       var cn = body.name || '';
