@@ -3,6 +3,10 @@
     {
       "source": "/audit",
       "destination": "/audit.html"
+    },
+    {
+      "source": "/proposal",
+      "destination": "/proposal.html"
     }
   ],
   "headers": [
