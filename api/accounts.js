@@ -97,6 +97,12 @@ module.exports = async function handler(req, res) {
       return res.status(200).json({ ok: true, user: { username: u, name: name, role: 'owner' } });
     }
 
+    if (action === 'requestReset') {
+      var ru = (body.username || '').toLowerCase().trim();
+      if (ru) { try { await sbFetch(base + '/accounts?username=eq.' + encodeURIComponent(ru), { method: 'PATCH', headers: H, body: JSON.stringify({ reset_requested: true }) }); } catch (e) {} }
+      return res.status(200).json({ ok: true });
+    }
+
     if (action === 'login') {
       var lu = (body.username || '').toLowerCase().trim();
       var lp = body.password || '';
@@ -128,7 +134,7 @@ module.exports = async function handler(req, res) {
 
     if (action === 'list') {
       if (!isOwner) return res.status(200).json({ ok: false, error: 'Owner only.' });
-      var r3 = await sbFetch(base + '/accounts?select=username,name,role&order=created_at.asc', { headers: H });
+      var r3 = await sbFetch(base + '/accounts?select=username,name,role,reset_requested&order=created_at.asc', { headers: H });
       var a3 = await r3.json();
       return res.status(200).json({ ok: true, users: Array.isArray(a3) ? a3 : [] });
     }
@@ -163,7 +169,7 @@ module.exports = async function handler(req, res) {
       if (!pu || String(pp).length < 6) return res.status(200).json({ ok: false, error: 'Pick a 6+ character temporary password.' });
       var prow = await getUser(pu);
       if (!prow) return res.status(200).json({ ok: false, error: 'No such user.' });
-      await sbFetch(base + '/accounts?username=eq.' + encodeURIComponent(pu), { method: 'PATCH', headers: H, body: JSON.stringify({ pass: hashPw(pp), must_change: true }) });
+      await sbFetch(base + '/accounts?username=eq.' + encodeURIComponent(pu), { method: 'PATCH', headers: H, body: JSON.stringify({ pass: hashPw(pp), must_change: true, reset_requested: false }) });
       return res.status(200).json({ ok: true });
     }
 
