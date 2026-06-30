@@ -7,6 +7,14 @@
     {
       "source": "/proposal",
       "destination": "/proposal.html"
+    },
+    {
+      "source": "/knowledge-base",
+      "destination": "/proposal.html"
+    },
+    {
+      "source": "/knowledge",
+      "destination": "/proposal.html"
     }
   ],
   "headers": [
