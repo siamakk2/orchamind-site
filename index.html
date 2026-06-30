@@ -153,7 +153,7 @@
   .feat-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:22px;margin-top:50px;}
   .feat{background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.1);border-radius:16px;padding:30px;transition:transform .2s,border-color .2s;}
   .feat:hover{transform:translateY(-3px);border-color:rgba(45,127,249,0.4);}
-  .feat-ic{width:46px;height:46px;border-radius:11px;background:linear-gradient(135deg,rgba(45,127,249,0.25),rgba(249,168,37,0.2));display:flex;align-items:center;justify-content:center;margin-bottom:18px;font-size:22px;}
+  .feat-ic{width:72px;height:72px;border-radius:18px;background:linear-gradient(140deg,rgba(45,127,249,.95),rgba(21,101,192,.92) 55%,rgba(249,168,37,.85));display:flex;align-items:center;justify-content:center;margin-bottom:16px;box-shadow:0 6px 16px rgba(45,127,249,.28);transition:transform .15s ease,box-shadow .15s ease;}
   .feat h3{font-size:20px;margin-bottom:10px;color:#fff;}
   .feat p{color:rgba(255,255,255,0.7);font-size:15px;}
 
@@ -366,10 +366,10 @@
   .hero-mock .command-result{padding:11px 14px 2px;font-size:12.5px;}
 
   /* ===== ICON TILES ===== */
-  .problem-card .pc-icon{width:46px;height:46px;border-radius:12px;background:rgba(45,127,249,0.1);display:flex;align-items:center;justify-content:center;color:var(--signal);margin-bottom:16px;}
-  .problem-card .pc-icon svg{width:24px;height:24px;}
+  .problem-card .pc-icon{width:72px;height:72px;border-radius:18px;background:linear-gradient(140deg,#FFF6E6,#EAF2FF);border:1px solid #F0E2C4;display:flex;align-items:center;justify-content:center;margin-bottom:16px;}
+  .problem-card .pc-icon svg{width:40px;height:40px;}
   .feat-ic{font-size:0;}
-  .feat-ic svg{width:24px;height:24px;stroke:#fff;}
+  .feat-ic svg{width:40px;height:40px;stroke:#fff;}
 
   @media(max-width:900px){
     .hero-inner{grid-template-columns:1fr;gap:38px;}
@@ -529,17 +529,17 @@
     <p class="section-lead">Where's each job? Who's on site? Did anyone order the materials? Who's over budget? The information is scattered across calls, texts, whiteboards, and memory — and the moment you step away, it falls apart.</p>
     <div class="problem-grid">
       <div class="problem-card">
-        <div class="pc-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9.5 2A2.5 2.5 0 0 1 12 4.5v15a2.5 2.5 0 0 1-4.96.44 2.5 2.5 0 0 1-2.96-3.08 3 3 0 0 1-.34-5.58 2.5 2.5 0 0 1 1.32-4.24 2.5 2.5 0 0 1 1.98-3A2.5 2.5 0 0 1 9.5 2Z"/><path d="M14.5 2A2.5 2.5 0 0 0 12 4.5v15a2.5 2.5 0 0 0 4.96.44 2.5 2.5 0 0 0 2.96-3.08 3 3 0 0 0 .34-5.58 2.5 2.5 0 0 0-1.32-4.24 2.5 2.5 0 0 0-1.98-3A2.5 2.5 0 0 0 14.5 2Z"/></svg></div>
+        <div class="pc-icon"><svg viewBox="0 0 48 48" fill="none"><path d="M30 40v-5c5-2 8-7 8-12 0-8-6-14-14-14s-14 6-14 13c0 4 2 7 5 9v9z" fill="#0D2B4E"/><circle cx="20" cy="22" r="2.2" fill="#F9A825"/><circle cx="28" cy="19" r="2.2" fill="#5B9DFF"/><circle cx="25" cy="27" r="2.2" fill="#F9A825"/><path d="M34 10l2-3 2 3-2 1zM38 18l3-1-1 3-2-1z" fill="#F9A825"/></svg></div>
         <h3>It's all in your head</h3>
         <p>Every job status, every crew assignment, every deadline. If you're not there, nobody else knows the full picture.</p>
       </div>
       <div class="problem-card">
-        <div class="pc-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></div>
+        <div class="pc-icon"><svg viewBox="0 0 48 48" fill="none"><path d="M24 8l16 28H8z" fill="#FFF3D6" stroke="#D32F2F" stroke-width="2.4" stroke-linejoin="round"/><rect x="22" y="18" width="4" height="9" rx="2" fill="#D32F2F"/><circle cx="24" cy="31" r="2.3" fill="#D32F2F"/><circle cx="38" cy="13" r="7" fill="#1565C0"/><path d="M38 9.5v4l2.5 1.5" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
         <h3>Problems surface too late</h3>
         <p>A job slips over budget or misses an inspection — and you find out after it's already cost you money.</p>
       </div>
       <div class="problem-card">
-        <div class="pc-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><line x1="10" y1="9" x2="8" y2="9"/></svg></div>
+        <div class="pc-icon"><svg viewBox="0 0 48 48" fill="none"><rect x="11" y="9" width="20" height="26" rx="2" fill="#CBD9EC"/><rect x="15" y="13" width="20" height="26" rx="2" fill="#fff" stroke="#0D2B4E" stroke-width="2"/><line x1="19" y1="20" x2="31" y2="20" stroke="#5B9DFF" stroke-width="2" stroke-linecap="round"/><line x1="19" y1="25" x2="31" y2="25" stroke="#CBD9EC" stroke-width="2" stroke-linecap="round"/><line x1="19" y1="30" x2="27" y2="30" stroke="#CBD9EC" stroke-width="2" stroke-linecap="round"/><path d="M38 30a6 6 0 1 1-6-6 5 5 0 0 0 6 6z" fill="#F9A825"/></svg></div>
         <h3>Paperwork eats your evenings</h3>
         <p>Hours, updates, client emails, estimates — the office work piles up long after the crews go home.</p>
       </div>
