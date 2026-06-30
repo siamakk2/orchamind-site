@@ -1684,7 +1684,7 @@ function startApp(){
 }
 // ENTRY: open demo by default; real login / owner setup at ?app=1
 (function(){
-  if('serviceWorker' in navigator){try{navigator.serviceWorker.register('/sw.js');}catch(e){}}
+  if('serviceWorker' in navigator){try{navigator.serviceWorker.register('/sw.js').then(function(reg){try{reg.update();}catch(e){}});var _swReloaded=false;navigator.serviceWorker.addEventListener('controllerchange',function(){if(_swReloaded)return;_swReloaded=true;try{location.reload();}catch(e){}});}catch(e){}}
   var isApp=false; try{ isApp=new URLSearchParams(location.search).get('app')==='1'; }catch(e){}
   if(isApp){
     var saved=null; try{ saved=JSON.parse(sessionStorage.getItem('hci_session')||'null'); }catch(e){}
