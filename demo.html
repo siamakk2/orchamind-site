@@ -669,6 +669,7 @@ body.authed #logoutBar{display:flex;}body.role-demo #logoutBar{display:none!impo
 // ====== DEMO MODE ======
 // (demo overrides for save are defined after originals load)
 window.DEMO_MODE = true;
+var IS_REAL_APP=false; try{ IS_REAL_APP=(new URLSearchParams(location.search).get('app')==='1'); }catch(e){}
 var DEMO_AI_LIMIT = 5; // real AI calls allowed
 var _demoAICount = 0;
 
@@ -945,6 +946,33 @@ function renderStats(){
   document.getElementById('statCrew').textContent=onSite;
   document.getElementById('statBudget').textContent=avgBudget+'%';
 }
+function sendJobToQBO(jobId){
+  var j=null; for(var i=0;i<jobs.length;i++){ if(jobs[i].id===jobId){ j=jobs[i]; break; } }
+  if(!j){ alert('Job not found.'); return; }
+  var mats=(j.materials||[]).filter(function(m){return !m.qboBillId;});
+  if(!mats.length){ alert('No new materials to send for this job. Log a material by voice first, then send.'); return; }
+  if(!confirm('Send '+mats.length+' material item(s) from "'+(j.name||'this job')+'" to QuickBooks as bills?')) return;
+  var payload={ username:(CURRENT_USER&&CURRENT_USER.username)||'app', jobId:j.id, jobName:j.name||'Job',
+    materials:mats.map(function(m){return {id:m.id,item:m.item,qty:m.qty,vendor:m.vendor,cost:m.cost};}) };
+  fetch('/api/qbo/sync',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)})
+    .then(function(r){return r.json();})
+    .then(function(d){
+      if(!d||d.ok===false){
+        if(d&&d.notConnected){ if(confirm('QuickBooks is not connected yet. Open the connect page now?')){ window.open('/api/qbo/connect','_blank'); } return; }
+        alert('QuickBooks sync failed: '+((d&&d.error)||'unknown error')); return;
+      }
+      var byId={}; (d.results||[]).forEach(function(r){ byId[r.id]=r; });
+      (j.materials||[]).forEach(function(m){ var rr=byId[m.id]; if(rr&&(rr.status==='synced'||rr.status==='skipped')&&rr.billId){ m.qboBillId=rr.billId; } });
+      save(); renderJobs();
+      var s=d.summary||{}; var msg='QuickBooks sync complete:\n'+(s.synced||0)+' bill(s) added';
+      if(s.skipped)msg+='\n'+s.skipped+' already in QuickBooks';
+      if(s.errors)msg+='\n'+s.errors+' had issues';
+      var errs=(d.results||[]).filter(function(r){return r.status==='error';}).map(function(r){return '- '+r.error;});
+      if(errs.length)msg+='\n\nDetails:\n'+errs.slice(0,4).join('\n');
+      alert(msg);
+    })
+    .catch(function(){ alert('Could not reach the server to sync QuickBooks.'); });
+}
 function renderJobs(){
   var g=document.getElementById('jobsGrid');
   var visibleJobs=jobs;
@@ -959,12 +987,13 @@ function renderJobs(){
   g.innerHTML=visibleJobs.map(function(j){
     var d=daysUntil(j.date);
     var bp=j.budget?Math.round(j.spent/j.budget*100):0;
+    var qbBtn='';try{if(typeof IS_REAL_APP!=='undefined'&&IS_REAL_APP&&!(typeof isCrew==='function'&&isCrew())){var _ms=(j.materials||[]);var _un=_ms.filter(function(m){return !m.qboBillId;});if(_ms.length){qbBtn=_un.length?('<button onclick="sendJobToQBO(\''+j.id+'\')" style="color:#2CA01C;font-weight:700;">\u2192 QuickBooks ('+_un.length+')</button>'):'<button disabled style="color:#15ac5b;opacity:.75;">\u2713 In QuickBooks</button>';}}}catch(e){}
     var bcolor=bp>j.progress+15?'var(--red)':bp>j.progress+5?'var(--amber)':'var(--green)';
     return '<div class="job"><div class="job-top"><div class="job-name-row"><div><div class="job-name">'+esc(j.name)+'</div><div class="job-client">'+esc(j.client)+'</div></div><span class="job-status s-'+j.status+'">'+STATUS_LABELS[j.status]+'</span></div></div>'+
       '<div class="job-body"><div class="job-progress-lbl"><span>Progress</span><b>'+j.progress+'%</b></div><div class="progress-track"><div class="progress-fill" style="width:'+j.progress+'%"></div></div>'+
       ((j.budget&&!(typeof isCrew==='function'&&isCrew()))?'<div class="job-budget"><div class="job-progress-lbl" style="margin-top:10px;"><span>Budget &middot; $'+(j.spent/1000).toFixed(0)+'k / $'+(j.budget/1000).toFixed(0)+'k</span><b style="color:'+bcolor+'">'+bp+'%</b></div><div class="budget-bar"><div class="budget-fill" style="width:'+Math.min(100,bp)+'%;background:'+bcolor+'"></div></div></div>':'')+
       '<div class="job-meta"><div><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>'+esc(j.location)+'</div><div><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>'+j.crew+' crew</div>'+(j.date?'<div><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/></svg>'+(d!==null&&d<0?Math.abs(d)+'d over':d+'d')+'</div>':'')+'</div></div>'+
-      '<div class="job-foot"><button class="ai-btn" onclick="analyzeJob(\''+j.id+'\')">AI Analyze</button><button onclick="draftClientUpdate(\''+j.id+'\')">Client Update</button><button onclick="editJob(\''+j.id+'\')">Edit</button><button onclick="delJob(\''+j.id+'\')" style="color:var(--red);">Delete</button></div></div>';
+      '<div class="job-foot"><button class="ai-btn" onclick="analyzeJob(\''+j.id+'\')">AI Analyze</button>'+qbBtn+'<button onclick="draftClientUpdate(\''+j.id+'\')">Client Update</button><button onclick="editJob(\''+j.id+'\')">Edit</button><button onclick="delJob(\''+j.id+'\')" style="color:var(--red);">Delete</button></div></div>';
   }).join('');
 }
 function renderCrew(){
@@ -1193,7 +1222,7 @@ function applyVoiceAction(act,silent){
   }else if(act.action==='log_material'){
     var jm=fuzzyJob(p.job);var qty=p.qty||p.quantity||'';var item=p.item||p.material||'material';var vend=p.vendor||'';var cost=parseFloat(p.cost)||0;
     var mline='📦 '+(qty?qty+' ':'')+item+(vend?' from '+vend:'')+(cost?' — $'+cost.toLocaleString():'');
-    if(jm){jm.notes=(jm.notes?jm.notes+'\n':'')+mline;if(cost)jm.spent=(parseFloat(jm.spent)||0)+cost;}
+    if(jm){jm.notes=(jm.notes?jm.notes+'\n':'')+mline;if(cost)jm.spent=(parseFloat(jm.spent)||0)+cost;jm.materials=jm.materials||[];jm.materials.push({id:uid(),item:item,qty:(qty||''),vendor:vend,cost:cost,date:today,qboBillId:null});}
     done=true;
   }else if(act.action==='set_progress'||act.action==='update_job'){
     var j=fuzzyJob(p.job);
