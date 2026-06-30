@@ -420,7 +420,7 @@ body.locked .appwrap{display:none !important;}
 
 <div class="appwrap">
 <div class="tabs" id="appSide">
-  <div class="side-brand"><div class="side-brand-mk"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12h4l3 8 4-16 3 8h4"/></svg></div><div><div class="side-brand-co">Orchamind</div><div class="side-brand-sb">SITE MANAGER</div></div></div>
+  <div class="side-brand"><div class="side-brand-mk" id="brandMk"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12h4l3 8 4-16 3 8h4"/></svg></div><div><div class="side-brand-co" id="brandCo">Orchamind</div><div class="side-brand-sb">SITE MANAGER</div></div></div>
   <button class="side-talk" onclick="toggleVoiceCommand()" title="Log by voice"><svg viewBox="0 0 24 24" fill="none" stroke="#0A1628" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="2" width="6" height="12" rx="3"/><path d="M5 11a7 7 0 0 0 14 0"/><line x1="12" y1="18" x2="12" y2="22"/></svg><span>Tap to talk<small>Log by voice</small></span></button>
   <button class="tab active" data-tab="today"><svg class="ti" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9.5 12 3l9 6.5V21a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1z"/><path d="M9 22V12h6v10"/></svg>Home</button>
   <button class="tab" data-tab="jobs"><svg class="ti" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 7h20v13a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1z"/><path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>Jobs</button>
@@ -431,6 +431,7 @@ body.locked .appwrap{display:none !important;}
   <button class="tab" data-tab="reports" data-mgronly><svg class="ti" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>Reports &amp; Money</button>
   <button class="tab" data-tab="assistant"><svg class="ti" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8z"/></svg>Ask the AI</button>
   <div class="side-div"></div>
+  <button class="tab" data-tab="profile" data-owneronly><svg class="ti" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="8" cy="11" r="2"/><path d="M5 16.5a3 3 0 0 1 6 0"/><line x1="14" y1="10" x2="18.5" y2="10"/><line x1="14" y1="14" x2="17.5" y2="14"/></svg>Company Profile</button>
   <button class="tab" id="tabAdmin" data-tab="admin" data-owneronly><svg class="ti" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 11h-6"/><path d="M19 8v6"/></svg>Team &amp; Access</button>
 </div>
 
@@ -626,6 +627,38 @@ body.locked .appwrap{display:none !important;}
   </div>
 
   <!-- ADMIN / TEAM PANEL -->
+  <div class="panel" id="panel-profile">
+    <div class="panel-head"><h2>Company Profile</h2></div>
+    <div style="max-width:640px;">
+      <p style="font-size:13px;color:#5A6B7D;margin:0 0 18px;">Your logo and details show at the top of your app. When you're ready, you can turn this same branding into a website.</p>
+      <div style="background:#fff;border:1px solid #E1E8F0;border-radius:12px;padding:20px;">
+        <div style="display:flex;align-items:center;gap:16px;margin-bottom:18px;">
+          <div id="pfLogoPreview" style="width:72px;height:72px;border-radius:14px;background:#EEF3F8;display:flex;align-items:center;justify-content:center;overflow:hidden;border:1px solid #E1E8F0;font-size:11px;color:#9aa6b2;">No logo</div>
+          <div>
+            <label for="pfLogoFile" style="display:inline-block;background:#1565C0;color:#fff;border-radius:8px;padding:9px 16px;font-size:13px;font-weight:700;cursor:pointer;">Upload logo</label>
+            <input id="pfLogoFile" type="file" accept="image/*" style="display:none;" onchange="onLogoPick(event)">
+            <div style="font-size:11.5px;color:#9aa6b2;margin-top:6px;">PNG or JPG &mdash; a square image looks best.</div>
+          </div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+          <div><label style="display:block;font-size:12px;font-weight:600;color:#5A6B7D;margin-bottom:4px;">Company Name</label><input id="pfCompany" style="width:100%;border:1.5px solid #E1E8F0;border-radius:8px;padding:10px;font-size:14px;box-sizing:border-box;" placeholder="EKR Electric"></div>
+          <div><label style="display:block;font-size:12px;font-weight:600;color:#5A6B7D;margin-bottom:4px;">License #</label><input id="pfLicense" style="width:100%;border:1.5px solid #E1E8F0;border-radius:8px;padding:10px;font-size:14px;box-sizing:border-box;" placeholder="e.g. C-10 #123456"></div>
+          <div><label style="display:block;font-size:12px;font-weight:600;color:#5A6B7D;margin-bottom:4px;">Phone</label><input id="pfPhone" style="width:100%;border:1.5px solid #E1E8F0;border-radius:8px;padding:10px;font-size:14px;box-sizing:border-box;" placeholder="(323) 555-0123"></div>
+          <div><label style="display:block;font-size:12px;font-weight:600;color:#5A6B7D;margin-bottom:4px;">Email</label><input id="pfEmail" style="width:100%;border:1.5px solid #E1E8F0;border-radius:8px;padding:10px;font-size:14px;box-sizing:border-box;" placeholder="office@company.com"></div>
+          <div style="grid-column:1/3;"><label style="display:block;font-size:12px;font-weight:600;color:#5A6B7D;margin-bottom:4px;">Address</label><input id="pfAddress" style="width:100%;border:1.5px solid #E1E8F0;border-radius:8px;padding:10px;font-size:14px;box-sizing:border-box;" placeholder="123 Main St, Los Angeles, CA"></div>
+          <div style="grid-column:1/3;"><label style="display:block;font-size:12px;font-weight:600;color:#5A6B7D;margin-bottom:4px;">Website (optional)</label><input id="pfWebsite" style="width:100%;border:1.5px solid #E1E8F0;border-radius:8px;padding:10px;font-size:14px;box-sizing:border-box;" placeholder="www.company.com"></div>
+        </div>
+        <button onclick="saveCompanyProfile()" style="margin-top:16px;background:#2E7D32;color:#fff;border:none;border-radius:8px;padding:12px 24px;font-size:15px;font-weight:700;cursor:pointer;">Save Profile</button>
+        <span id="pfMsg" style="margin-left:12px;font-size:13px;"></span>
+      </div>
+      <div style="margin-top:18px;background:linear-gradient(135deg,#0A1628,#0D2B4E);border-radius:12px;padding:20px;color:#fff;">
+        <div style="font-weight:700;font-size:15px;margin-bottom:4px;">Want a website with this branding?</div>
+        <div style="font-size:13px;color:#cdd9e8;margin-bottom:14px;">Turn your logo and company details into a clean, professional website.</div>
+        <a href="https://buy.stripe.com/9B64gA4GYg7e3B26M90kE00" target="_blank" rel="noopener" style="display:inline-block;background:#F9A825;color:#0A1628;border-radius:8px;padding:11px 20px;font-size:14px;font-weight:700;text-decoration:none;">Get my website &rarr;</a>
+      </div>
+    </div>
+  </div>
+
   <div class="panel" id="panel-admin">
     <div class="panel-head">
       <h2>Team &amp; Access</h2>
@@ -1136,6 +1169,53 @@ function renderHours(){
 }
 function renderAll(){renderStats();renderJobs();renderHomeJobs();renderCrew();renderHours();renderSubs();save();}
 
+// ====== COMPANY PROFILE / BRANDING ======
+var PF_LOGO='';
+function applyBranding(){
+  try{
+    var co=(CURRENT_USER&&CURRENT_USER.company)?CURRENT_USER.company:'Orchamind';
+    var bc=document.getElementById('brandCo'); if(bc)bc.textContent=co;
+    var logo=(CURRENT_USER&&CURRENT_USER.profile&&CURRENT_USER.profile.logo)?CURRENT_USER.profile.logo:'';
+    var mk=document.getElementById('brandMk');
+    if(mk&&logo){mk.innerHTML='<img src="'+logo+'" alt="" style="width:100%;height:100%;object-fit:cover;border-radius:10px;">';mk.style.background='#fff';}
+    document.title=(co&&co!=='Orchamind')?(co+' \u2014 Site Manager'):'Orchamind \u2014 Site Manager';
+  }catch(e){}
+}
+function onLogoPick(e){
+  var f=e.target.files&&e.target.files[0]; if(!f)return;
+  var rd=new FileReader();
+  rd.onload=function(){ var img=new Image(); img.onload=function(){
+    var max=256,w=img.width,h=img.height;
+    if(w>h){if(w>max){h=Math.round(h*max/w);w=max;}}else{if(h>max){w=Math.round(w*max/h);h=max;}}
+    var cv=document.createElement('canvas');cv.width=w;cv.height=h;cv.getContext('2d').drawImage(img,0,0,w,h);
+    PF_LOGO=cv.toDataURL('image/png');
+    var pv=document.getElementById('pfLogoPreview'); if(pv)pv.innerHTML='<img src="'+PF_LOGO+'" style="width:100%;height:100%;object-fit:cover;">';
+  }; img.src=rd.result; };
+  rd.readAsDataURL(f);
+}
+function loadProfileForm(){
+  var pr=(CURRENT_USER&&CURRENT_USER.profile)?CURRENT_USER.profile:{};
+  PF_LOGO=pr.logo||'';
+  var set=function(id,v){var el=document.getElementById(id); if(el)el.value=v||'';};
+  set('pfCompany',(CURRENT_USER&&CURRENT_USER.company)||'');
+  set('pfLicense',pr.license);set('pfPhone',pr.phone);set('pfEmail',pr.email);set('pfAddress',pr.address);set('pfWebsite',pr.website);
+  var pv=document.getElementById('pfLogoPreview'); if(pv)pv.innerHTML=PF_LOGO?('<img src="'+PF_LOGO+'" style="width:100%;height:100%;object-fit:cover;">'):'No logo';
+  var m=document.getElementById('pfMsg'); if(m)m.textContent='';
+}
+function saveCompanyProfile(){
+  var g=function(id){var el=document.getElementById(id);return el?el.value.trim():'';};
+  var profile={logo:PF_LOGO,phone:g('pfPhone'),email:g('pfEmail'),address:g('pfAddress'),license:g('pfLicense'),website:g('pfWebsite')};
+  var company=g('pfCompany');
+  var m=document.getElementById('pfMsg'); if(m){m.style.color='#5A6B7D';m.textContent='Saving\u2026';}
+  fetch('/api/accounts',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'saveProfile',company:company,profile:profile})})
+    .then(function(r){return r.json();}).then(function(d){
+      if(d&&d.ok){ if(company)CURRENT_USER.company=company; CURRENT_USER.profile=d.profile||profile;
+        try{sessionStorage.setItem('hci_session',JSON.stringify(CURRENT_USER));}catch(e){}
+        applyBranding(); if(m){m.style.color='#2E7D32';m.textContent='\u2713 Saved';}
+      }else{ if(m){m.style.color='#D32F2F';m.textContent=(d&&d.error)||'Could not save.';} }
+    }).catch(function(){ if(m){m.style.color='#D32F2F';m.textContent='Server error.';} });
+}
+
 // ====== TABS ======
 document.querySelectorAll('.tab').forEach(function(t){
   t.addEventListener('click',function(){
@@ -1144,6 +1224,7 @@ document.querySelectorAll('.tab').forEach(function(t){
     t.classList.add('active');
     document.getElementById('panel-'+t.dataset.tab).classList.add('active');
     if(t.dataset.tab==='admin'){loadUsers();}
+    if(t.dataset.tab==='profile'){loadProfileForm();}
     if(t.dataset.tab==='reports'){renderReport();}
   });
 });
@@ -1478,6 +1559,7 @@ function enterApp(){
   document.body.classList.add('authed');
   document.body.classList.add('role-'+(CURRENT_USER.role||'crew'));
   var who=document.getElementById('whoami');if(who)who.textContent=CURRENT_USER.name+((CURRENT_USER&&CURRENT_USER.company)?(' \u00b7 '+CURRENT_USER.company):'');
+  try{applyBranding();}catch(e){}
   var rl=document.getElementById('roleLabel');if(rl)rl.textContent=CURRENT_USER.role;
   applyRoleAccess();
   if(!window.__APP_STARTED){window.__APP_STARTED=true;startApp();}setTimeout(applyRoleAccess,300);
