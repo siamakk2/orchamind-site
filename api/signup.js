@@ -64,8 +64,8 @@ module.exports = async function handler(req, res) {
     var sr = await fetch('https://api.stripe.com/v1/checkout/sessions/' + encodeURIComponent(sessionId), { headers: { 'Authorization': 'Bearer ' + useKey } });
     var s = await sr.json();
     if (!sr.ok || !s || s.error) return res.status(200).json({ ok: false, error: 'We could not verify your payment. Please contact support.' });
-    var paid = (s.status === 'complete') && (s.mode === 'subscription') && !!s.subscription;
-    if (!paid) return res.status(200).json({ ok: false, error: 'Your subscription has not completed yet. If you just paid, wait a few seconds and try again.' });
+    var paid = (s.status === 'complete') || (s.payment_status === 'paid');
+    if (!paid) return res.status(200).json({ ok: false, error: 'Your payment has not completed yet. If you just paid, wait a few seconds and try again.' });
 
     // 2) One workspace per subscription — block reuse of the same payment
     var clr = await fetch(base + '/accounts?stripe_session=eq.' + encodeURIComponent(sessionId) + '&select=username', { headers: H });
