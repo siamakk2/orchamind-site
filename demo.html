@@ -634,6 +634,20 @@ body.locked .appwrap{display:none !important;}
       <b style="color:#0A1628;">Roles:</b> &nbsp;<b style="color:#1565C0;">Owner</b> — full control incl. accounts &amp; financials &nbsp;·&nbsp; <b style="color:#1565C0;">Manager</b> — manage jobs, crew, hours, subs &amp; financials &nbsp;·&nbsp; <b style="color:#1565C0;">Crew</b> — see only their assigned jobs, log hours, no financials
     </div>
 
+    <!-- NEW COMPANY (provision a separate client business) -->
+    <div style="background:#fff;border:2px solid #2E7D32;border-radius:12px;padding:20px;margin-bottom:20px;">
+      <h3 style="margin:0 0 4px;color:#0A1628;font-size:16px;">Set up a new company</h3>
+      <p style="margin:0 0 14px;font-size:12.5px;color:#5A6B7D;">Creates a separate, private workspace for a new client business with its own owner login. Their jobs and data are walled off from yours.</p>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;">
+        <div><label style="display:block;font-size:12px;font-weight:600;color:#5A6B7D;margin-bottom:4px;">Company Name</label><input type="text" id="ncCompany" placeholder="e.g. EKR Electric" style="width:100%;border:1.5px solid #E1E8F0;border-radius:8px;padding:10px;font-size:14px;box-sizing:border-box;"></div>
+        <div><label style="display:block;font-size:12px;font-weight:600;color:#5A6B7D;margin-bottom:4px;">Owner's Full Name</label><input type="text" id="ncName" placeholder="e.g. John Smith" style="width:100%;border:1.5px solid #E1E8F0;border-radius:8px;padding:10px;font-size:14px;box-sizing:border-box;"></div>
+        <div><label style="display:block;font-size:12px;font-weight:600;color:#5A6B7D;margin-bottom:4px;">Owner Username (for login)</label><input type="text" id="ncUser" placeholder="e.g. ekr" style="width:100%;border:1.5px solid #E1E8F0;border-radius:8px;padding:10px;font-size:14px;box-sizing:border-box;"></div>
+        <div><label style="display:block;font-size:12px;font-weight:600;color:#5A6B7D;margin-bottom:4px;">Temporary Password</label><input type="text" id="ncPass" placeholder="they change it on first login" style="width:100%;border:1.5px solid #E1E8F0;border-radius:8px;padding:10px;font-size:14px;box-sizing:border-box;"></div>
+      </div>
+      <button onclick="createCompanyInline()" style="background:#2E7D32;color:#fff;border:none;border-radius:8px;padding:12px 24px;font-size:15px;font-weight:700;cursor:pointer;">Create Company</button>
+      <div id="ncMsg" style="margin-top:10px;font-size:13px;min-height:18px;"></div>
+    </div>
+
     <!-- INLINE ADD PERSON FORM (always visible, no popup) -->
     <div style="background:#fff;border:2px solid #1565C0;border-radius:12px;padding:20px;margin-bottom:20px;">
       <h3 style="margin:0 0 14px;color:#0A1628;font-size:16px;">Add a Person</h3>
@@ -1369,6 +1383,24 @@ function showForm(which){
   document.getElementById('authError').textContent='';
 }
 function authErr(msg){document.getElementById('authError').textContent=msg||'';}
+function createCompanyInline(){
+  var company=document.getElementById('ncCompany').value.trim();
+  var name=document.getElementById('ncName').value.trim();
+  var user=document.getElementById('ncUser').value.trim().toLowerCase();
+  var pass=document.getElementById('ncPass').value;
+  var msg=document.getElementById('ncMsg');
+  if(!company||!user||!pass){msg.style.color='#D32F2F';msg.textContent='Company name, owner username, and a password are required.';return;}
+  if(pass.length<6){msg.style.color='#D32F2F';msg.textContent='Temporary password must be 6+ characters.';return;}
+  msg.style.color='#5A6B7D';msg.textContent='Creating\u2026';
+  fetch('/api/accounts',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'createCompany',company:company,name:name,username:user,password:pass})})
+    .then(function(r){return r.json();}).then(function(d){
+      if(d&&d.ok){
+        msg.style.color='#2E7D32';
+        msg.innerHTML='\u2713 '+esc(company)+' created. The owner signs in at <b>orchamind.com/app</b> with username <b>'+esc(user)+'</b> and the temporary password you set \u2014 they choose their own on first login.';
+        document.getElementById('ncCompany').value='';document.getElementById('ncName').value='';document.getElementById('ncUser').value='';document.getElementById('ncPass').value='';
+      }else{msg.style.color='#D32F2F';msg.textContent=(d&&d.error)||'Could not create company.';}
+    }).catch(function(){msg.style.color='#D32F2F';msg.textContent='Server error.';});
+}
 
 function demoEnter(){
   CURRENT_USER={username:'demo',name:'Demo',role:'demo'};
@@ -1445,7 +1477,7 @@ function enterApp(){
   document.body.classList.remove('locked');
   document.body.classList.add('authed');
   document.body.classList.add('role-'+(CURRENT_USER.role||'crew'));
-  var who=document.getElementById('whoami');if(who)who.textContent=CURRENT_USER.name;
+  var who=document.getElementById('whoami');if(who)who.textContent=CURRENT_USER.name+((CURRENT_USER&&CURRENT_USER.company)?(' \u00b7 '+CURRENT_USER.company):'');
   var rl=document.getElementById('roleLabel');if(rl)rl.textContent=CURRENT_USER.role;
   applyRoleAccess();
   if(!window.__APP_STARTED){window.__APP_STARTED=true;startApp();}setTimeout(applyRoleAccess,300);
