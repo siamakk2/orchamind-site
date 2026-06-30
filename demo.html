@@ -776,7 +776,7 @@ body.locked .appwrap{display:none !important;}
 // ====== DEMO MODE ======
 // (demo overrides for save are defined after originals load)
 window.DEMO_MODE = true;
-var IS_REAL_APP=false; try{ IS_REAL_APP=(new URLSearchParams(location.search).get('app')==='1'); }catch(e){}
+var IS_REAL_APP=false; try{ IS_REAL_APP=((new URLSearchParams(location.search).get('app')==='1')||/^\/app\/?$/.test(location.pathname)); }catch(e){}
 var DEMO_AI_LIMIT = 5; // real AI calls allowed
 var _demoAICount = 0;
 
@@ -1408,7 +1408,7 @@ function demoEnter(){
 }
 function bootAuth(){
   var qs=new URLSearchParams(location.search);
-  if(qs.get('app')==='1'){
+  if(qs.get('app')==='1'||/^\/app\/?$/.test(location.pathname)){
     var saved=null;try{saved=JSON.parse(sessionStorage.getItem('hci_session')||'null');}catch(e){}
     if(saved&&saved.username&&saved.role!=='demo'){CURRENT_USER=saved;enterApp();return;}
     fetch('/api/accounts',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'status'})})
