@@ -1815,8 +1815,8 @@ function exportReportPDF(){
 }
 
 
-// DEMO: override data loading with fresh sample data (never touches the database)
-function load(cb){
+// Sample data for the PUBLIC DEMO only. The real app (?app=1) uses load() above, which syncs the database.
+function loadDemo(cb){
   jobs=[
     {id:'d1',name:'Oak Street Remodel',client:'The Bryants',location:'Santa Rosa, CA',status:'finishing',progress:78,crew:4,date:'2026-08-15',budget:540000,spent:475000,notes:'Kitchen and bath finishing underway. Cabinets installed, countertops next week.',materials:[{id:'m1',item:'Framing lumber',qty:120,vendor:'Santa Rosa Building Supply',cost:4200},{id:'m2',item:'Quartz countertop slabs',qty:3,vendor:'North Bay Stone',cost:6800},{id:'m3',item:'Cabinet hardware set',qty:42,vendor:'Home Depot',cost:560}]},
     {id:'d2',name:'Hillside Addition',client:'J. Castellano',location:'Napa, CA',status:'rough-in',progress:55,crew:3,date:'2026-09-30',budget:240000,spent:142000,notes:'Electrical and plumbing rough-in in progress. Framing inspection passed.'},
@@ -1847,7 +1847,7 @@ function load(cb){
 // ====== INIT ======
 function startApp(){
   document.getElementById('dashDate').textContent=new Date().toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric',year:'numeric'});
-  load(function(){
+  (typeof IS_REAL_APP!=='undefined'&&IS_REAL_APP?load:loadDemo)(function(){
     renderAll();
     generateBriefing();
     setTimeout(generateRisks,500);
