@@ -1,6 +1,10 @@
 {
   "rewrites": [
     {
+      "source": "/app",
+      "destination": "/demo.html"
+    },
+    {
       "source": "/audit",
       "destination": "/audit.html"
     },
@@ -34,13 +38,6 @@
           "value": "v3-2026-06-27"
         }
       ]
-    }
-  ],
-  "redirects": [
-    {
-      "source": "/app",
-      "destination": "/demo.html?app=1",
-      "permanent": false
     }
   ]
 }
