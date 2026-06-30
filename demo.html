@@ -1971,7 +1971,7 @@ function startApp(){
 // ENTRY: open demo by default; real login / owner setup at ?app=1
 (function(){
   if('serviceWorker' in navigator){try{navigator.serviceWorker.getRegistrations().then(function(rs){rs.forEach(function(r){try{r.unregister();}catch(e){}});});if(window.caches&&caches.keys){caches.keys().then(function(ks){ks.forEach(function(k){try{caches.delete(k);}catch(e){}});});}}catch(e){}}
-  var isApp=false; try{ isApp=new URLSearchParams(location.search).get('app')==='1'; }catch(e){}
+  var isApp=false; try{ isApp=((new URLSearchParams(location.search).get('app')==='1')||/^\/app\/?$/.test(location.pathname)); }catch(e){}
   if(isApp){
     var saved=null; try{ saved=JSON.parse(sessionStorage.getItem('hci_session')||'null'); }catch(e){}
     if(saved&&saved.username&&saved.role&&saved.role!=='demo'){ CURRENT_USER=saved; enterApp(); return; }
@@ -1997,7 +1997,7 @@ function startApp(){
 
 // ====== DEMO MODE OVERRIDES (defined last so they win) ======
 (function(){
-  var isApp=false; try{ isApp=new URLSearchParams(location.search).get('app')==='1'; }catch(e){}
+  var isApp=false; try{ isApp=((new URLSearchParams(location.search).get('app')==='1')||/^\/app\/?$/.test(location.pathname)); }catch(e){}
   if(isApp) return;
   // Block all database writes
   window.save=function(){};
