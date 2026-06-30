@@ -17,8 +17,9 @@ module.exports = async function handler(req, res) {
   var SUPABASE_URL = 'https://yqbprvyhzugdmavvurqb.supabase.co';
   var KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SECRET_KEY || process.env.SUPABASE_SERVICE_KEY;
   var STRIPE = process.env.STRIPE_SECRET_KEY;
+  var STRIPE_TEST = process.env.STRIPE_SECRET_KEY_TEST;
   if (!KEY) return res.status(200).json({ ok: false, error: 'Server not set up: add SUPABASE_SERVICE_ROLE_KEY in Vercel.' });
-  if (!STRIPE) return res.status(200).json({ ok: false, error: 'Payment check not set up yet: add STRIPE_SECRET_KEY in Vercel, then redeploy.' });
+  if (!STRIPE && !STRIPE_TEST) return res.status(200).json({ ok: false, error: 'Payment check not set up yet: add STRIPE_SECRET_KEY in Vercel, then redeploy.' });
   var base = SUPABASE_URL.replace(/\/$/, '') + '/rest/v1';
   var H = { 'Content-Type': 'application/json', 'apikey': KEY, 'Authorization': 'Bearer ' + KEY };
 
@@ -55,8 +56,12 @@ module.exports = async function handler(req, res) {
     if (!company || !username || String(pass).length < 6) return res.status(200).json({ ok: false, error: 'Company name, a username, and a 6+ character password are required.' });
     if (!/^[a-z0-9_]+$/.test(username)) return res.status(200).json({ ok: false, error: 'Username can use only letters, numbers, and underscores.' });
 
-    // 1) Verify the Stripe checkout session is real and completed
-    var sr = await fetch('https://api.stripe.com/v1/checkout/sessions/' + encodeURIComponent(sessionId), { headers: { 'Authorization': 'Bearer ' + STRIPE } });
+    // 1) Verify the Stripe checkout session is real and completed.
+    // Test sessions (cs_test_...) verify with the test key; live sessions with the live key.
+    var isTest = sessionId.indexOf('cs_test_') === 0;
+    var useKey = isTest ? STRIPE_TEST : STRIPE;
+    if (!useKey) return res.status(200).json({ ok: false, error: isTest ? 'This looks like a test payment, but no test key is set. Add STRIPE_SECRET_KEY_TEST in Vercel and redeploy.' : 'Live payment key is missing. Add STRIPE_SECRET_KEY in Vercel and redeploy.' });
+    var sr = await fetch('https://api.stripe.com/v1/checkout/sessions/' + encodeURIComponent(sessionId), { headers: { 'Authorization': 'Bearer ' + useKey } });
     var s = await sr.json();
     if (!sr.ok || !s || s.error) return res.status(200).json({ ok: false, error: 'We could not verify your payment. Please contact support.' });
     var paid = (s.status === 'complete') && (s.mode === 'subscription') && !!s.subscription;
