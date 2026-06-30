@@ -298,6 +298,22 @@ body.locked .appwrap{display:none !important;}
   #appSide.open{transform:none;}
   .appburger{display:inline-flex;align-items:center;}
 }
+
+/* ===== TIGHTEN TOP + MOBILE MENU ===== */
+.content > .dash-head{max-width:none !important;margin:0 !important;padding:2px 0 14px !important;display:flex;align-items:center;gap:12px;border:none;}
+.content > .dash-head h1{display:none !important;}
+.content > .dash-head #dashDate{margin:0 !important;font-size:14px;font-weight:600;color:var(--muted);}
+.content > .dash-head .sync-pill{margin:0 !important;}
+#appSide{padding-top:18px;}
+@media(max-width:900px){
+  #appSide{z-index:200;}
+  .side-scrim{z-index:190;}
+  .appburger{display:inline-flex !important;align-items:center;gap:6px;color:var(--blue);font-weight:700;font-size:14px;}
+  .appburger::after{content:"Menu";}
+  .topbar .back-link,.topbar .crew-badge,.topbar [title="version"]{display:none !important;}
+  .topbar-inner{gap:8px;flex-wrap:nowrap;}
+  .content > .dash-head{padding-top:6px !important;}
+}
 </style>
 </head>
 <body class="locked">
@@ -365,11 +381,7 @@ body.locked .appwrap{display:none !important;}
   </div>
 </div>
 
-<div class="dash-head">
-  <h1>Site Manager <span class="ai-pill">AI Powered</span></h1>
-  <p id="dashDate">Loading...</p>
-  <span class="sync-pill ok" id="syncPill">✓ Synced</span>
-</div>
+
 
 <div class="appwrap">
 <div class="tabs" id="appSide">
@@ -387,6 +399,11 @@ body.locked .appwrap{display:none !important;}
 </div>
 
 <div class="content">
+<div class="dash-head">
+  <h1>Site Manager <span class="ai-pill">AI Powered</span></h1>
+  <p id="dashDate">Loading...</p>
+  <span class="sync-pill ok" id="syncPill">✓ Synced</span>
+</div>
 
   <!-- TODAY PANEL -->
   <div class="panel active" id="panel-today">
