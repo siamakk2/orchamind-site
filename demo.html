@@ -1818,7 +1818,7 @@ function exportReportPDF(){
 // DEMO: override data loading with fresh sample data (never touches the database)
 function load(cb){
   jobs=[
-    {id:'d1',name:'Oak Street Remodel',client:'The Bryants',location:'Santa Rosa, CA',status:'finishing',progress:78,crew:4,date:'2026-08-15',budget:540000,spent:475000,notes:'Kitchen and bath finishing underway. Cabinets installed, countertops next week.'},
+    {id:'d1',name:'Oak Street Remodel',client:'The Bryants',location:'Santa Rosa, CA',status:'finishing',progress:78,crew:4,date:'2026-08-15',budget:540000,spent:475000,notes:'Kitchen and bath finishing underway. Cabinets installed, countertops next week.',materials:[{id:'m1',item:'Framing lumber',qty:120,vendor:'Santa Rosa Building Supply',cost:4200},{id:'m2',item:'Quartz countertop slabs',qty:3,vendor:'North Bay Stone',cost:6800},{id:'m3',item:'Cabinet hardware set',qty:42,vendor:'Home Depot',cost:560}]},
     {id:'d2',name:'Hillside Addition',client:'J. Castellano',location:'Napa, CA',status:'rough-in',progress:55,crew:3,date:'2026-09-30',budget:240000,spent:142000,notes:'Electrical and plumbing rough-in in progress. Framing inspection passed.'},
     {id:'d3',name:'Maple Ave Deck',client:'The Bennetts',location:'Sonoma, CA',status:'foundation',progress:20,crew:2,date:'2026-07-20',budget:135000,spent:38000,notes:'Footings poured. Waiting on concrete sub for slab.'}
   ];
