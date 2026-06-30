@@ -316,6 +316,39 @@ body.locked .appwrap{display:none !important;}
 }
 
 @media(max-width:900px){#demoBanner{font-size:12.5px !important;padding:8px 12px !important;gap:6px 10px !important;line-height:1.35;}#demoBanner a{font-size:12.5px !important;}}
+
+/* ===== PREMIUM APP POLISH ===== */
+.content{max-width:1360px;padding:24px 28px 64px;}
+.stats{gap:14px;margin-bottom:18px;}
+.stat{border-radius:16px;padding:17px 18px;border:1px solid #EAEFF5;box-shadow:0 1px 2px rgba(16,32,54,.04);transition:box-shadow .15s,transform .15s;}
+.stat:hover{box-shadow:0 10px 24px rgba(16,32,54,.08);transform:translateY(-1px);}
+.stat-num{font-family:'Outfit',sans-serif !important;font-weight:700;font-size:30px;letter-spacing:-.02em;color:var(--navy);}
+.stat.red .stat-num{color:var(--red);}
+.stat.green .stat-num{color:var(--green);}
+.stat.accent .stat-num{color:var(--amber);}
+.stat-lbl{font-size:12.5px;margin-top:7px;}
+.voice-bar{background:linear-gradient(135deg,#0A1628,#102A4D) !important;border-radius:20px !important;padding:22px 24px !important;box-shadow:0 14px 34px rgba(10,22,40,.16);}
+.voice-mic-big{background:linear-gradient(135deg,#F6A609,#FFC04D) !important;color:#0A1628 !important;border:none !important;}
+.voice-bar-text h4{font-family:'Outfit',sans-serif;font-weight:700;}
+.briefing{border-radius:20px !important;box-shadow:0 14px 34px rgba(10,22,40,.16);}
+#appSide{background:linear-gradient(180deg,#0A1628,#0C1B33) !important;}
+.side-brand{display:flex;align-items:center;gap:11px;padding:2px 8px 16px;}
+.side-brand-mk{width:36px;height:36px;border-radius:10px;background:linear-gradient(140deg,#2D7FF9,#5B9DFF);display:flex;align-items:center;justify-content:center;box-shadow:0 6px 16px rgba(45,127,249,.3);}
+.side-brand-mk svg{width:20px;height:20px;}
+.side-brand-co{font-family:'Outfit',sans-serif;font-weight:800;font-size:16px;color:#fff;line-height:1.1;}
+.side-brand-sb{font-size:10.5px;color:#6E83A0;letter-spacing:.08em;margin-top:2px;}
+.home-grid{display:grid;grid-template-columns:1fr 1.4fr;gap:18px;align-items:start;}
+.home-h2{font-family:'Outfit',sans-serif;font-weight:700;font-size:16px;color:var(--ink);margin:0 2px 12px;}
+.hjob{background:#fff;border:1px solid #EAEFF5;border-radius:14px;padding:15px 16px;margin-bottom:12px;box-shadow:0 1px 2px rgba(16,32,54,.04);transition:box-shadow .15s,transform .15s;}
+.hjob:hover{box-shadow:0 8px 20px rgba(16,32,54,.07);transform:translateY(-1px);}
+.hjob-name{font-family:'Outfit',sans-serif;font-weight:700;font-size:14.5px;color:var(--navy);}
+.hjob-client{font-size:12.5px;color:var(--muted);margin-top:1px;}
+.hjob-bar-l{display:flex;justify-content:space-between;font-size:12px;color:var(--muted);margin:11px 0 5px;}
+.hjob-bar-l b{color:var(--ink);}
+.hjob-track{height:7px;border-radius:99px;background:#EEF2F7;overflow:hidden;}
+.hjob-track i{display:block;height:100%;border-radius:99px;}
+.hjob-empty{color:var(--muted);font-size:13.5px;padding:8px 2px;}
+@media(max-width:1024px){.home-grid{grid-template-columns:1fr;}}
 </style>
 </head>
 <body class="locked">
@@ -387,6 +420,7 @@ body.locked .appwrap{display:none !important;}
 
 <div class="appwrap">
 <div class="tabs" id="appSide">
+  <div class="side-brand"><div class="side-brand-mk"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12h4l3 8 4-16 3 8h4"/></svg></div><div><div class="side-brand-co">Orchamind</div><div class="side-brand-sb">SITE MANAGER</div></div></div>
   <button class="side-talk" onclick="toggleVoiceCommand()" title="Log by voice"><svg viewBox="0 0 24 24" fill="none" stroke="#0A1628" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="2" width="6" height="12" rx="3"/><path d="M5 11a7 7 0 0 0 14 0"/><line x1="12" y1="18" x2="12" y2="22"/></svg><span>Tap to talk<small>Log by voice</small></span></button>
   <button class="tab active" data-tab="today"><svg class="ti" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9.5 12 3l9 6.5V21a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1z"/><path d="M9 22V12h6v10"/></svg>Home</button>
   <button class="tab" data-tab="jobs"><svg class="ti" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 7h20v13a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1z"/><path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>Jobs</button>
@@ -435,6 +469,12 @@ body.locked .appwrap{display:none !important;}
       <button class="voice-toggle-speak" id="speakToggle" onclick="toggleSpeak()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M19.07 4.93a10 10 0 010 14.14M15.54 8.46a5 5 0 010 7.07"/></svg> Voice replies: Off</button>
     </div>
 
+    <div class="home-grid">
+      <div class="home-left">
+        <div class="home-h2">Your jobs</div>
+        <div id="homeJobs"></div>
+      </div>
+      <div class="home-right">
     <div class="briefing">
       <div class="briefing-head">
         <div class="ai-dot">AI</div>
@@ -448,6 +488,8 @@ body.locked .appwrap{display:none !important;}
       </div>
       <button class="refresh-brief" onclick="generateBriefing()"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M23 4v6h-6M1 20v-6h6"/><path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"/></svg> Refresh Briefing</button>
     </div>
+      </div>
+      </div>
   </div>
 
   <!-- JOBS PANEL -->
@@ -1014,7 +1056,7 @@ function sendJobToQBO(jobId){
       }
       var byId={}; (d.results||[]).forEach(function(r){ byId[r.id]=r; });
       (j.materials||[]).forEach(function(m){ var rr=byId[m.id]; if(rr&&(rr.status==='synced'||rr.status==='skipped')&&rr.billId){ m.qboBillId=rr.billId; } });
-      save(); renderJobs();
+      save(); renderJobs();renderHomeJobs();
       var s=d.summary||{}; var msg='QuickBooks sync complete:\n'+(s.synced||0)+' bill(s) added';
       if(s.skipped)msg+='\n'+s.skipped+' already in QuickBooks';
       if(s.errors)msg+='\n'+s.errors+' had issues';
@@ -1023,6 +1065,20 @@ function sendJobToQBO(jobId){
       alert(msg);
     })
     .catch(function(){ alert('Could not reach the server to sync QuickBooks.'); });
+}
+function renderHomeJobs(){
+  var el=document.getElementById('homeJobs'); if(!el) return;
+  if(!window.jobs||!jobs.length){ el.innerHTML='<div class="hjob-empty">No active jobs yet \u2014 add one from the Jobs tab.</div>'; return; }
+  el.innerHTML=jobs.slice(0,6).map(function(j){
+    var prog=parseInt(j.progress)||0;
+    var bp=j.budget?Math.round((j.spent||0)/j.budget*100):0;
+    var bc=bp>prog+15?'#D32F2F':(bp>prog+5?'#F9A825':'#2E7D32');
+    var h='<div class="hjob"><div class="hjob-name">'+esc(j.name||'Untitled')+'</div>';
+    if(j.client) h+='<div class="hjob-client">'+esc(j.client)+'</div>';
+    h+='<div class="hjob-bar-l"><span>Progress</span><b>'+prog+'%</b></div><div class="hjob-track"><i style="width:'+Math.min(prog,100)+'%;background:#2D7FF9"></i></div>';
+    if(j.budget){ h+='<div class="hjob-bar-l"><span>Budget</span><b style="color:'+bc+'">'+bp+'%</b></div><div class="hjob-track"><i style="width:'+Math.min(bp,100)+'%;background:'+bc+'"></i></div>'; }
+    return h+'</div>';
+  }).join('');
 }
 function renderJobs(){
   var g=document.getElementById('jobsGrid');
@@ -1064,7 +1120,7 @@ function renderHours(){
   rows+='<div class="hours-row" style="background:#F7FAFD;font-weight:700;"><div class="h-name">Total</div><div class="h-site"></div><div></div><div class="hours-total">'+total+'h</div></div>';
   t.innerHTML=rows;
 }
-function renderAll(){renderStats();renderJobs();renderCrew();renderHours();renderSubs();save();}
+function renderAll(){renderStats();renderJobs();renderHomeJobs();renderCrew();renderHours();renderSubs();save();}
 
 // ====== TABS ======
 document.querySelectorAll('.tab').forEach(function(t){
