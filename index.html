@@ -2,6 +2,9 @@
 <!-- v2.1 -->
 <html lang="en">
 <head>
+<!-- Google Analytics 4 -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-LWCBNFLTDM"></script>
+<script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-LWCBNFLTDM');</script>
 <meta name="google-site-verification" content="UFjkoFfPn6kEZA3GZiQG7yc0IdZOgG-B9QvqdAVJ4DA" />
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -1326,5 +1329,15 @@ elevenlabs-convai{z-index:2147483000!important;}
 })();
 </script>
   <script src="/share.js" defer></script>
+<script>
+/* GA: trial + checkout conversion events */
+document.addEventListener('click',function(e){
+  if(typeof gtag!=='function')return;
+  var t=e.target.closest('[onclick*="orchaTrial"], a[href*="kE02"]');
+  if(t){gtag('event','start_free_month',{event_category:'cta'});return;}
+  var s=e.target.closest('a[href*="buy.stripe.com"]');
+  if(s){gtag('event','begin_checkout',{event_category:'cta',event_label:'website'});}
+},true);
+</script>
 </body>
 </html>
