@@ -91,7 +91,7 @@ module.exports = async function handler(req, res) {
       var name = body.name || '';
       var pass = body.password || '';
       if (!u || String(pass).length < 6) return res.status(200).json({ ok: false, error: 'Pick a username and a password (6+ characters).' });
-      var ins = await sbFetch(base + '/accounts', { method: 'POST', headers: H, body: JSON.stringify({ username: u, name: name, role: 'owner', pass: hashPw(pass), must_change: false }) });
+      var ins = await sbFetch(base + '/accounts', { method: 'POST', headers: H, body: JSON.stringify({ username: u, name: name, role: 'owner', owner: u, company: (body.company||''), pass: hashPw(pass), must_change: false }) });
       if (!ins.ok) { var e1 = await ins.text(); return res.status(200).json({ ok: false, error: 'Could not create owner. ' + e1.slice(0, 140) }); }
       setSess(u, 'owner');
       return res.status(200).json({ ok: true, user: { username: u, name: name, role: 'owner' } });
@@ -109,7 +109,9 @@ module.exports = async function handler(req, res) {
       var row = await getUser(lu);
       if (!row || !verifyPw(lp, row.pass)) return res.status(200).json({ ok: false, error: 'Wrong username or password.' });
       setSess(lu, row.role || 'member');
-      return res.status(200).json({ ok: true, user: { username: row.username, name: row.name, role: row.role || 'member', mustChange: !!row.must_change } });
+      var co = row.company || '';
+      if (!co && row.owner && row.owner !== row.username) { try { var orow = await getUser(row.owner); if (orow) co = orow.company || ''; } catch (e) {} }
+      return res.status(200).json({ ok: true, user: { username: row.username, name: row.name, role: row.role || 'member', company: co, mustChange: !!row.must_change } });
     }
 
     if (action === 'changePassword') {
@@ -134,7 +136,7 @@ module.exports = async function handler(req, res) {
 
     if (action === 'list') {
       if (!isOwner) return res.status(200).json({ ok: false, error: 'Owner only.' });
-      var r3 = await sbFetch(base + '/accounts?select=username,name,role,reset_requested&order=created_at.asc', { headers: H });
+      var r3 = await sbFetch(base + '/accounts?owner=eq.' + encodeURIComponent(sess.username) + '&select=username,name,role,reset_requested&order=created_at.asc', { headers: H });
       var a3 = await r3.json();
       return res.status(200).json({ ok: true, users: Array.isArray(a3) ? a3 : [] });
     }
@@ -148,7 +150,7 @@ module.exports = async function handler(req, res) {
       if (!au || String(ap).length < 6) return res.status(200).json({ ok: false, error: 'Username and a 6+ character temporary password are required.' });
       var ex = await getUser(au);
       if (ex) return res.status(200).json({ ok: false, error: 'That username already exists.' });
-      var ins2 = await sbFetch(base + '/accounts', { method: 'POST', headers: H, body: JSON.stringify({ username: au, name: an, role: ar, pass: hashPw(ap), must_change: true }) });
+      var ins2 = await sbFetch(base + '/accounts', { method: 'POST', headers: H, body: JSON.stringify({ username: au, name: an, role: ar, owner: sess.username, pass: hashPw(ap), must_change: true }) });
       if (!ins2.ok) { var e2 = await ins2.text(); return res.status(200).json({ ok: false, error: 'Could not add user. ' + e2.slice(0, 140) }); }
       return res.status(200).json({ ok: true });
     }
@@ -157,6 +159,8 @@ module.exports = async function handler(req, res) {
       if (!isOwner) return res.status(200).json({ ok: false, error: 'Owner only.' });
       var ru = (body.username || '').toLowerCase().trim();
       if (sess.username === ru) return res.status(200).json({ ok: false, error: "You can't remove your own owner account." });
+      var trow = await getUser(ru);
+      if (!trow || trow.owner !== sess.username) return res.status(200).json({ ok: false, error: 'Not in your team.' });
       await sbFetch(base + '/accounts?username=eq.' + encodeURIComponent(ru), { method: 'DELETE', headers: H });
       await sbFetch(base + '/app_data?username=eq.' + encodeURIComponent(ru), { method: 'DELETE', headers: H });
       return res.status(200).json({ ok: true });
@@ -168,7 +172,7 @@ module.exports = async function handler(req, res) {
       var pp = body.password || '';
       if (!pu || String(pp).length < 6) return res.status(200).json({ ok: false, error: 'Pick a 6+ character temporary password.' });
       var prow = await getUser(pu);
-      if (!prow) return res.status(200).json({ ok: false, error: 'No such user.' });
+      if (!prow || prow.owner !== sess.username) return res.status(200).json({ ok: false, error: 'Not in your team.' });
       await sbFetch(base + '/accounts?username=eq.' + encodeURIComponent(pu), { method: 'PATCH', headers: H, body: JSON.stringify({ pass: hashPw(pp), must_change: true, reset_requested: false }) });
       return res.status(200).json({ ok: true });
     }
@@ -177,8 +181,24 @@ module.exports = async function handler(req, res) {
       if (!isOwner) return res.status(200).json({ ok: false, error: 'Owner only.' });
       var su = (body.username || '').toLowerCase().trim();
       var sr = body.role || 'member';
+      var srow = await getUser(su);
+      if (!srow || srow.owner !== sess.username) return res.status(200).json({ ok: false, error: 'Not in your team.' });
       await sbFetch(base + '/accounts?username=eq.' + encodeURIComponent(su), { method: 'PATCH', headers: H, body: JSON.stringify({ role: sr }) });
       return res.status(200).json({ ok: true });
+    }
+
+    if (action === 'createCompany') {
+      if (!isOwner) return res.status(200).json({ ok: false, error: 'Owner only.' });
+      var cc = (body.company || '').trim();
+      var cu2 = (body.username || '').toLowerCase().trim();
+      var cn = body.name || '';
+      var cp = body.password || '';
+      if (!cc || !cu2 || String(cp).length < 6) return res.status(200).json({ ok: false, error: 'Company name, owner username, and a 6+ character temporary password are required.' });
+      var cex = await getUser(cu2);
+      if (cex) return res.status(200).json({ ok: false, error: 'That username is already taken — pick another.' });
+      var ci = await sbFetch(base + '/accounts', { method: 'POST', headers: H, body: JSON.stringify({ username: cu2, name: cn, role: 'owner', owner: cu2, company: cc, pass: hashPw(cp), must_change: true }) });
+      if (!ci.ok) { var ce = await ci.text(); return res.status(200).json({ ok: false, error: 'Could not create company. ' + ce.slice(0, 140) }); }
+      return res.status(200).json({ ok: true, company: cc, username: cu2 });
     }
 
     return res.status(200).json({ ok: false, error: 'Unknown action.' });
@@ -186,3 +206,4 @@ module.exports = async function handler(req, res) {
     return res.status(200).json({ ok: false, error: 'Server error: ' + (e && e.message ? e.message : String(e)) });
   }
 };
+
