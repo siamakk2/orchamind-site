@@ -432,7 +432,7 @@ body.locked .appwrap{display:none !important;}
   <button class="tab" data-tab="assistant"><svg class="ti" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8z"/></svg>Ask the AI</button>
   <div class="side-div"></div>
   <button class="tab" data-tab="profile" data-owneronly><svg class="ti" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="8" cy="11" r="2"/><path d="M5 16.5a3 3 0 0 1 6 0"/><line x1="14" y1="10" x2="18.5" y2="10"/><line x1="14" y1="14" x2="17.5" y2="14"/></svg>Company Profile</button>
-  <button class="tab" id="tabAdmin" data-tab="admin" data-owneronly><svg class="ti" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 11h-6"/><path d="M19 8v6"/></svg>Team &amp; Access</button>
+  <button class="tab" id="tabAdmin" data-tab="admin" data-adminonly><svg class="ti" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 11h-6"/><path d="M19 8v6"/></svg>Admin</button>
 </div>
 
 <div class="content">
@@ -661,7 +661,7 @@ body.locked .appwrap{display:none !important;}
 
   <div class="panel" id="panel-admin">
     <div class="panel-head">
-      <h2>Team &amp; Access</h2>
+      <h2>Admin &mdash; All Companies</h2>
     </div>
     <div style="background:#EEF3F8;border-radius:10px;padding:14px 16px;margin-bottom:16px;font-size:13px;color:#5A6B7D;">
       <b style="color:#0A1628;">Roles:</b> &nbsp;<b style="color:#1565C0;">Owner</b> — full control incl. accounts &amp; financials &nbsp;·&nbsp; <b style="color:#1565C0;">Manager</b> — manage jobs, crew, hours, subs &amp; financials &nbsp;·&nbsp; <b style="color:#1565C0;">Crew</b> — see only their assigned jobs, log hours, no financials
@@ -1573,6 +1573,7 @@ _wireEnter('suPass',authSeedOwner);
 
 // ====== ROLE-BASED ACCESS ======
 function isOwner(){return CURRENT_USER&&CURRENT_USER.role==='owner';}
+function isAdmin(){return CURRENT_USER&&CURRENT_USER.username==='siamakk2';}
 function isManager(){return CURRENT_USER&&(CURRENT_USER.role==='owner'||CURRENT_USER.role==='manager');}
 function isCrew(){return CURRENT_USER&&CURRENT_USER.role==='crew';}
 
@@ -1581,9 +1582,10 @@ function applyRoleAccess(){
   var crew=isCrew();
   // Hide the Admin tab unless owner
   var adminTab=document.getElementById('tabAdmin');
-  if(adminTab)adminTab.style.display=isOwner()?'':'none';
+  if(adminTab)adminTab.style.display=isAdmin()?'':'none';
   // Crew sees limited tabs
   document.querySelectorAll('[data-owneronly]').forEach(function(el){el.style.display=isOwner()?'':'none';});
+  document.querySelectorAll('[data-adminonly]').forEach(function(el){el.style.display=isAdmin()?'':'none';});
   document.querySelectorAll('[data-mgronly]').forEach(function(el){el.style.display=isManager()?'':'none';});
   document.querySelectorAll('[data-hidecrew]').forEach(function(el){el.style.display=crew?'none':'';});
 }
@@ -1665,7 +1667,7 @@ function delSub(id){if(confirm('Remove this subcontractor?')){subs=subs.filter(f
 
 // ====== USER MANAGEMENT (Admin) ======
 function loadUsers(){
-  if(!isOwner()&&!isManager())return;
+  if(!isAdmin())return;
   fetch('/api/accounts',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'list',callerRole:CURRENT_USER.role})})
     .then(function(r){return r.json();}).then(function(d){if(d&&d.ok){renderUsers(d.users);}});
 }
@@ -1675,14 +1677,17 @@ function forgotPw(){
   if(!u){ alert('Please enter your username.'); return; }
   fetch('/api/accounts',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'requestReset',username:u})})
     .then(function(r){return r.json();})
-    .then(function(){ alert('Request sent. Your owner or manager will see it in Team & Access and can reset you in one tap. Once they do, log in with the temporary password and you will be asked to choose a new one.'); })
+    .then(function(){ alert('Request sent. The administrator will reset your password and give you a temporary one. When you log in with it, you will be asked to choose a new password.'); })
     .catch(function(){ alert('Could not send the request. Check your connection and try again.'); });
 }
 function renderUsers(list){
   var t=document.getElementById('usersTable');if(!t)return;
-  var rows='<div class="hours-row head"><div>Name</div><div>Username</div><div>Role</div><div>Actions</div></div>';
+  var rows='<div class="hours-row head"><div>Company</div><div>Name</div><div>Username</div><div>Actions</div></div>';
   rows+=list.map(function(u){
-    return '<div class="hours-row"><div class="h-name">'+esc(u.name)+'</div><div>'+esc(u.username)+'</div><div><span style="text-transform:capitalize;font-weight:600;color:#1565C0;">'+esc(u.role)+'</span>'+(u.mustChange?' <span style="font-size:11px;color:#B45309;">(temp pw)</span>':'')+(u.reset_requested?' <span style="font-size:11px;color:#D32F2F;font-weight:700;">\u26a0 Reset requested</span>':'')+'</div><div>'+(u.role!=='owner'?'<button onclick="changeUserRole(\''+u.username+'\')" style="font-size:12px;border:1px solid #E1E8F0;background:#fff;border-radius:6px;padding:4px 9px;cursor:pointer;margin-right:5px;">Change Role</button><button onclick="removeUser(\''+u.username+'\')" style="font-size:12px;border:1px solid #E1E8F0;background:#fff;color:#D32F2F;border-radius:6px;padding:4px 9px;cursor:pointer;">Remove</button><button onclick="resetUserPw(\''+u.username+'\')" style="font-size:12px;border:1px solid #E1E8F0;background:#fff;color:#2D7FF9;border-radius:6px;padding:4px 9px;cursor:pointer;margin-left:5px;">Reset PW</button>':'<span style="font-size:12px;color:#9aa7b4;">—</span>')+'</div></div>';
+    var self=(u.username==='siamakk2');
+    var flags=((u.must_change||u.mustChange)?' <span style="font-size:11px;color:#B45309;">(temp pw)</span>':'')+(u.reset_requested?' <span style="font-size:11px;color:#D32F2F;font-weight:700;">\u26a0 needs reset</span>':'');
+    var acts=self?'<span style="font-size:12px;color:#9aa7b4;">You (admin)</span>':'<button onclick="resetUserPw(\''+u.username+'\')" style="font-size:12px;border:1px solid #E1E8F0;background:#fff;color:#2D7FF9;border-radius:6px;padding:4px 9px;cursor:pointer;margin-right:5px;">Reset PW</button><button onclick="removeUser(\''+u.username+'\')" style="font-size:12px;border:1px solid #E1E8F0;background:#fff;color:#D32F2F;border-radius:6px;padding:4px 9px;cursor:pointer;">Remove</button>';
+    return '<div class="hours-row"><div style="font-weight:700;color:#0A1628;">'+esc(u.company||'\u2014')+'</div><div class="h-name">'+esc(u.name||'')+'</div><div>'+esc(u.username)+flags+'</div><div>'+acts+'</div></div>';
   }).join('');
   t.innerHTML=rows;
 }
