@@ -274,6 +274,30 @@ body.authed #logoutBar{display:flex;}body.role-demo #logoutBar{display:none!impo
 .sync-pill.ok{background:#e7f6ec;color:#1b7a3d;}
 .sync-pill.pend{background:#fff3d6;color:#9a6700;}
 .sync-pill.off{background:#fde7e7;color:#b23b3b;}
+
+/* ===== APP LEFT-MENU REDESIGN ===== */
+.appwrap{display:flex;align-items:stretch;max-width:1320px;margin:0 auto;}
+body.locked .appwrap{display:none !important;}
+#appSide{flex:0 0 234px;width:234px;max-width:234px;margin:0;padding:16px 12px;display:flex;flex-direction:column;gap:3px;align-items:stretch;background:#0A1628;border-bottom:none;border-right:none;overflow:visible;}
+#appSide .tab{width:100%;text-align:left;color:#b9c7d8;font-size:14px;font-weight:500;padding:11px 12px;border:none;border-bottom:none;margin:0;border-radius:10px;white-space:normal;display:flex;align-items:center;gap:11px;}
+#appSide .tab .ti{width:19px;height:19px;flex:0 0 19px;}
+#appSide .tab:hover{background:rgba(255,255,255,.06);color:#fff;}
+#appSide .tab.active{background:rgba(45,127,249,.16);color:#fff;border-bottom:none;box-shadow:inset 3px 0 0 #2D7FF9;}
+.side-talk{display:flex;align-items:center;gap:10px;background:#F9A825;color:#0A1628;border:none;border-radius:11px;padding:12px 13px;font-family:inherit;font-weight:700;font-size:14px;cursor:pointer;margin-bottom:12px;width:100%;text-align:left;}
+.side-talk svg{width:19px;height:19px;flex-shrink:0;}
+.side-talk span{line-height:1.15;}
+.side-talk small{display:block;font-weight:500;font-size:11px;color:#5c4708;}
+.side-div{height:1px;background:rgba(255,255,255,.1);margin:9px 6px;}
+.appwrap > .content{flex:1 1 auto;min-width:0;margin:0;max-width:none;}
+.appburger{display:none;background:none;border:none;cursor:pointer;color:var(--blue);padding:4px;margin-right:2px;}
+.appburger svg{width:24px;height:24px;display:block;}
+.side-scrim{position:fixed;inset:0;background:rgba(10,22,40,.5);z-index:94;display:none;}
+.side-scrim.on{display:block;}
+@media(max-width:900px){
+  #appSide{position:fixed;left:0;top:0;height:100vh;z-index:95;transform:translateX(-100%);transition:transform .25s ease;box-shadow:6px 0 30px rgba(0,0,0,.35);width:248px;flex-basis:248px;overflow-y:auto;}
+  #appSide.open{transform:none;}
+  .appburger{display:inline-flex;align-items:center;}
+}
 </style>
 </head>
 <body class="locked">
@@ -330,6 +354,7 @@ body.authed #logoutBar{display:flex;}body.role-demo #logoutBar{display:none!impo
 
 <div class="topbar">
   <div class="topbar-inner">
+    <button class="appburger" onclick="toggleSide()" aria-label="Open menu"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg></button>
     <a href="https://orchamind-site.vercel.app"><img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAzNDAgNzIiIHdpZHRoPSIzNDAiIGhlaWdodD0iNzIiPgo8cmVjdCB4PSIwIiB5PSIwIiB3aWR0aD0iMzQwIiBoZWlnaHQ9IjcyIiByeD0iNiIgZmlsbD0iI0ZGRkZGRiIvPgo8cmVjdCB4PSI4IiB5PSIxNCIgd2lkdGg9IjQ0IiBoZWlnaHQ9IjQ0IiByeD0iMTEiIGZpbGw9IiMwQTE2MjgiLz4KPHBhdGggZD0iTTE4IDM2IGg2IGw0IDEyIGw2IC0yNCBsNCAxMiBoNiIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjMkQ3RkY5IiBzdHJva2Utd2lkdGg9IjMuNSIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIi8+Cjx0ZXh0IHg9IjY2IiB5PSIzOCIgZm9udC1mYW1pbHk9IkFyaWFsLCBzYW5zLXNlcmlmIiBmb250LXNpemU9IjI0IiBmb250LXdlaWdodD0iODAwIiBmaWxsPSIjMEExNjI4Ij5PcmNoYW1pbmQ8L3RleHQ+Cjx0ZXh0IHg9IjY2IiB5PSI1NiIgZm9udC1mYW1pbHk9IkFyaWFsLCBzYW5zLXNlcmlmIiBmb250LXNpemU9IjExIiBmb250LXdlaWdodD0iNjAwIiBmaWxsPSIjNUE2QjdEIiBsZXR0ZXItc3BhY2luZz0iMSI+QUkgU0lURSBNQU5BR0VSPC90ZXh0Pgo8L3N2Zz4=" alt="Orchamind Demo"></a>
     <div class="topbar-right">
       <span class="crew-badge">Site Manager AI</span><span style="font-size:9px;color:#9aa7b4;" title="version">v7-inline</span>
@@ -346,16 +371,19 @@ body.authed #logoutBar{display:flex;}body.role-demo #logoutBar{display:none!impo
   <span class="sync-pill ok" id="syncPill">✓ Synced</span>
 </div>
 
-<div class="tabs">
-  <button class="tab active" data-tab="today">Today</button>
-  <button class="tab" data-tab="jobs">Jobs</button>
-  <button class="tab" data-tab="risks">Risk Radar</button>
-  <button class="tab" data-tab="assistant">Ask the AI</button>
-  <button class="tab" data-tab="crew">Crew</button>
-  <button class="tab" data-tab="hours">Hours</button>
-  <button class="tab" data-tab="reports" data-mgronly>Reports</button>
-  <button class="tab" data-tab="subs" data-mgronly>Subcontractors</button>
-  <button class="tab" id="tabAdmin" data-tab="admin" data-owneronly>Team &amp; Access</button>
+<div class="appwrap">
+<div class="tabs" id="appSide">
+  <button class="side-talk" onclick="toggleVoiceCommand()" title="Log by voice"><svg viewBox="0 0 24 24" fill="none" stroke="#0A1628" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="2" width="6" height="12" rx="3"/><path d="M5 11a7 7 0 0 0 14 0"/><line x1="12" y1="18" x2="12" y2="22"/></svg><span>Tap to talk<small>Log by voice</small></span></button>
+  <button class="tab active" data-tab="today"><svg class="ti" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9.5 12 3l9 6.5V21a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1z"/><path d="M9 22V12h6v10"/></svg>Home</button>
+  <button class="tab" data-tab="jobs"><svg class="ti" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 7h20v13a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1z"/><path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>Jobs</button>
+  <button class="tab" data-tab="risks"><svg class="ti" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>Risk Radar</button>
+  <button class="tab" data-tab="crew"><svg class="ti" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/></svg>Crew</button>
+  <button class="tab" data-tab="hours"><svg class="ti" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>Hours</button>
+  <button class="tab" data-tab="subs" data-mgronly><svg class="ti" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/></svg>Subcontractors</button>
+  <button class="tab" data-tab="reports" data-mgronly><svg class="ti" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>Reports &amp; Money</button>
+  <button class="tab" data-tab="assistant"><svg class="ti" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8z"/></svg>Ask the AI</button>
+  <div class="side-div"></div>
+  <button class="tab" id="tabAdmin" data-tab="admin" data-owneronly><svg class="ti" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 11h-6"/><path d="M19 8v6"/></svg>Team &amp; Access</button>
 </div>
 
 <div class="content">
@@ -572,6 +600,9 @@ body.authed #logoutBar{display:flex;}body.role-demo #logoutBar{display:none!impo
   
 
 </div>
+</div><!-- /appwrap -->
+<div class="side-scrim" id="sideScrim" onclick="closeSide()"></div>
+
 
 <!-- MODALS -->
 <div class="modal-bg" id="jobModal"><div class="modal">
@@ -1814,5 +1845,11 @@ function startApp(){
     </div>
   </div>
 </div>
+
+<script>
+function toggleSide(){var s=document.getElementById('appSide'),sc=document.getElementById('sideScrim');if(!s)return;if(s.classList.contains('open')){s.classList.remove('open');if(sc)sc.classList.remove('on');}else{s.classList.add('open');if(sc)sc.classList.add('on');}}
+function closeSide(){var s=document.getElementById('appSide'),sc=document.getElementById('sideScrim');if(s)s.classList.remove('open');if(sc)sc.classList.remove('on');}
+(function(){var s=document.getElementById('appSide');if(s){s.querySelectorAll('.tab').forEach(function(b){b.addEventListener('click',function(){if(window.innerWidth<=900){closeSide();}});});}})();
+</script>
 </body>
 </html>
