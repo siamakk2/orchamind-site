@@ -531,7 +531,7 @@ body.authed #logoutBar{display:flex;}body.role-demo #logoutBar{display:none!impo
   <div class="panel" id="panel-subs">
     <div class="panel-head">
       <h2>Subcontractors</h2>
-      <button class="btn" onclick="openSubModal()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Add Sub</button>
+      <button class="btn" onclick="sbOpenAdd()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Add Sub</button>
     </div>
     <div class="crew-grid" id="subsGrid"></div>
   </div>
@@ -1372,15 +1372,71 @@ function applyRoleAccess(){
 // ====== SUBCONTRACTORS ======
 var subs=[];
 function renderSubs(){
-  var g=document.getElementById('subsGrid');if(!g)return;
-  if(!subs.length){g.innerHTML='<div class="empty"><p>No subcontractors yet</p><span>Add electrical, plumbing, drywall, painting, HVAC and more.</span></div>';return;}
+  var g=document.getElementById('subsGrid'); if(!g)return;
+  if(!Array.isArray(subs))subs=[];
+  if(!subs.length){g.innerHTML='<div class="empty"><p>No subcontractors yet</p><span>Tap \u201cAdd Sub\u201d to add electrical, plumbing, drywall, painting, HVAC and more.</span></div>';return;}
   g.innerHTML=subs.map(function(s){
-    return '<div class="crew-card"><div class="crew-top"><div class="crew-av" style="background:linear-gradient(135deg,#6A4C9C,#0D47A1);">'+esc((s.trade||'?')[0])+'</div><div><div class="crew-name">'+esc(s.name)+'</div><div class="crew-role">'+esc(s.trade)+'</div></div></div>'+
-      '<div class="crew-assign"><span>Job</span><br>'+esc(s.job||'Unassigned')+'</div>'+
-      (s.phone?'<div style="font-size:13px;color:#5A6B7D;margin-top:8px;">📞 '+esc(s.phone)+'</div>':'')+
-      (s.notes?'<div style="font-size:12.5px;color:#5A6B7D;margin-top:6px;">'+esc(s.notes)+'</div>':'')+
-      '<div class="job-foot" style="background:none;border:none;padding:10px 0 0;"><button onclick="editSub(\''+s.id+'\')">Edit</button><button onclick="delSub(\''+s.id+'\')" style="color:var(--red);">Remove</button></div></div>';
+    var initial=esc((((s.trade||'?')+'')[0])||'?');
+    return '<div style="background:#fff;border:1px solid #E1E8F0;border-radius:14px;padding:16px;display:flex;flex-direction:column;gap:8px;">'
+      +'<div style="display:flex;align-items:center;gap:12px;">'
+      +'<div style="width:42px;height:42px;border-radius:11px;background:linear-gradient(135deg,#2D7FF9,#5B9DFF);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-family:Sora,sans-serif;flex-shrink:0;">'+initial+'</div>'
+      +'<div style="min-width:0;"><div style="font-weight:700;color:#0A1628;font-family:Sora,sans-serif;">'+esc(s.name||'')+'</div><div style="font-size:13px;color:#5A6B7D;">'+esc(s.trade||'')+'</div></div></div>'
+      +'<div style="font-size:13px;color:#5A6B7D;">Job: '+esc(s.job||'Unassigned')+'</div>'
+      +(s.phone?'<div style="font-size:13px;color:#5A6B7D;">\ud83d\udcde '+esc(s.phone)+'</div>':'')
+      +(s.notes?'<div style="font-size:12.5px;color:#5A6B7D;">'+esc(s.notes)+'</div>':'')
+      +'<div style="display:flex;gap:8px;margin-top:4px;">'
+      +'<button type="button" onclick="sbOpenEdit(\''+s.id+'\')" style="flex:1;border:1px solid #E1E8F0;background:#fff;color:#2D7FF9;border-radius:8px;padding:8px;font-weight:600;font-size:13px;cursor:pointer;">Edit</button>'
+      +'<button type="button" onclick="sbDelete(\''+s.id+'\')" style="flex:1;border:1px solid #E1E8F0;background:#fff;color:#D32F2F;border-radius:8px;padding:8px;font-weight:600;font-size:13px;cursor:pointer;">Remove</button>'
+      +'</div></div>';
   }).join('');
+}
+function _sbEl(id){return document.getElementById(id);}
+function _sbShow(){var mb=_sbEl('sbMdl');if(mb)mb.style.display='flex';}
+function sbClose(){var mb=_sbEl('sbMdl');if(mb)mb.style.display='none';}
+function sbOpenAdd(){
+  if(_sbEl('sbId'))_sbEl('sbId').value='';
+  if(_sbEl('sbName'))_sbEl('sbName').value='';
+  if(_sbEl('sbPhone'))_sbEl('sbPhone').value='';
+  if(_sbEl('sbJob'))_sbEl('sbJob').value='';
+  if(_sbEl('sbNotes'))_sbEl('sbNotes').value='';
+  if(_sbEl('sbTrade'))_sbEl('sbTrade').value='Electrical';
+  if(_sbEl('sbTitle'))_sbEl('sbTitle').textContent='Add Subcontractor';
+  _sbShow();
+}
+function sbOpenEdit(id){
+  if(!Array.isArray(subs))return;
+  var s=null;for(var i=0;i<subs.length;i++){if(subs[i].id===id){s=subs[i];break;}}
+  if(!s)return;
+  if(_sbEl('sbId'))_sbEl('sbId').value=s.id;
+  if(_sbEl('sbName'))_sbEl('sbName').value=s.name||'';
+  if(_sbEl('sbTrade'))_sbEl('sbTrade').value=s.trade||'Electrical';
+  if(_sbEl('sbPhone'))_sbEl('sbPhone').value=s.phone||'';
+  if(_sbEl('sbJob'))_sbEl('sbJob').value=s.job||'';
+  if(_sbEl('sbNotes'))_sbEl('sbNotes').value=s.notes||'';
+  if(_sbEl('sbTitle'))_sbEl('sbTitle').textContent='Edit Subcontractor';
+  _sbShow();
+}
+function sbSave(){
+  var name=(_sbEl('sbName')?_sbEl('sbName').value:'').trim();
+  if(!name){alert('Enter a company or name.');return;}
+  if(!Array.isArray(subs))subs=[];
+  var id=_sbEl('sbId')?_sbEl('sbId').value:'';
+  var rec={name:name,
+    trade:_sbEl('sbTrade')?_sbEl('sbTrade').value:'Other',
+    phone:(_sbEl('sbPhone')?_sbEl('sbPhone').value:'').trim(),
+    job:(_sbEl('sbJob')?_sbEl('sbJob').value:'').trim(),
+    notes:(_sbEl('sbNotes')?_sbEl('sbNotes').value:'').trim()};
+  if(id){for(var i=0;i<subs.length;i++){if(subs[i].id===id){for(var k in rec){subs[i][k]=rec[k];}break;}}}
+  else{rec.id=(typeof uid==='function'?uid():'s'+Date.now());subs.push(rec);}
+  sbClose();
+  if(typeof renderSubs==='function')renderSubs();
+  if(typeof saveNow==='function'){saveNow();}else if(typeof save==='function'){save();}
+}
+function sbDelete(id){
+  if(!confirm('Remove this subcontractor?'))return;
+  subs=(Array.isArray(subs)?subs:[]).filter(function(x){return x.id!==id;});
+  if(typeof renderSubs==='function')renderSubs();
+  if(typeof saveNow==='function'){saveNow();}else if(typeof save==='function'){save();}
 }
 function openSubModal(){document.getElementById('subModalTitle').textContent='Add Subcontractor';['subId','subName','subPhone','subJob','subNotes'].forEach(function(i){document.getElementById(i).value='';});document.getElementById('subTrade').value='Electrical';openModal('subModal');}
 function editSub(id){var s=subs.find(function(x){return x.id===id;});if(!s)return;document.getElementById('subModalTitle').textContent='Edit Subcontractor';document.getElementById('subId').value=s.id;document.getElementById('subName').value=s.name;document.getElementById('subTrade').value=s.trade;document.getElementById('subPhone').value=s.phone||'';document.getElementById('subJob').value=s.job||'';document.getElementById('subNotes').value=s.notes||'';openModal('subModal');}
@@ -1741,5 +1797,22 @@ function startApp(){
 
 </script>
   <script src="/share.js" defer></script>
+
+<!-- Self-contained subcontractor modal (v2) -->
+<div id="sbMdl" style="display:none;position:fixed;inset:0;z-index:99999;background:rgba(10,22,40,0.6);align-items:flex-start;justify-content:center;padding:40px 16px;overflow-y:auto;">
+  <div style="background:#fff;border-radius:16px;max-width:440px;width:100%;padding:24px;box-shadow:0 20px 60px rgba(0,0,0,0.3);">
+    <h3 id="sbTitle" style="font-family:'Sora',sans-serif;margin:0 0 16px;color:#0A1628;font-size:20px;">Add Subcontractor</h3>
+    <input type="hidden" id="sbId">
+    <div style="margin-bottom:12px;"><label style="display:block;font-size:13px;font-weight:600;margin-bottom:5px;color:#0A1628;">Company / Name</label><input id="sbName" type="text" placeholder="e.g. Valley Electric" style="width:100%;border:1.5px solid #E1E8F0;border-radius:9px;padding:11px 13px;font-size:15px;box-sizing:border-box;outline:none;"></div>
+    <div style="margin-bottom:12px;"><label style="display:block;font-size:13px;font-weight:600;margin-bottom:5px;color:#0A1628;">Trade</label><select id="sbTrade" style="width:100%;border:1.5px solid #E1E8F0;border-radius:9px;padding:11px 13px;font-size:15px;box-sizing:border-box;outline:none;background:#fff;"><option>Electrical</option><option>Plumbing</option><option>Drywall</option><option>Painting</option><option>HVAC</option><option>Roofing</option><option>Concrete</option><option>Flooring</option><option>Landscaping</option><option>Other</option></select></div>
+    <div style="margin-bottom:12px;"><label style="display:block;font-size:13px;font-weight:600;margin-bottom:5px;color:#0A1628;">Contact Phone</label><input id="sbPhone" type="text" placeholder="(707) 555-0123" style="width:100%;border:1.5px solid #E1E8F0;border-radius:9px;padding:11px 13px;font-size:15px;box-sizing:border-box;outline:none;"></div>
+    <div style="margin-bottom:12px;"><label style="display:block;font-size:13px;font-weight:600;margin-bottom:5px;color:#0A1628;">Assigned To Job</label><input id="sbJob" type="text" placeholder="e.g. Sonoma Vista Residence" style="width:100%;border:1.5px solid #E1E8F0;border-radius:9px;padding:11px 13px;font-size:15px;box-sizing:border-box;outline:none;"></div>
+    <div style="margin-bottom:18px;"><label style="display:block;font-size:13px;font-weight:600;margin-bottom:5px;color:#0A1628;">Notes</label><textarea id="sbNotes" rows="2" placeholder="Scope, schedule, bid amount..." style="width:100%;border:1.5px solid #E1E8F0;border-radius:9px;padding:11px 13px;font-size:15px;box-sizing:border-box;outline:none;resize:vertical;"></textarea></div>
+    <div style="display:flex;gap:10px;justify-content:flex-end;">
+      <button type="button" onclick="sbClose()" style="border:1.5px solid #E1E8F0;background:#fff;color:#0A1628;border-radius:9px;padding:11px 20px;font-weight:600;font-size:15px;cursor:pointer;">Cancel</button>
+      <button type="button" onclick="sbSave()" style="border:none;background:#2D7FF9;color:#fff;border-radius:9px;padding:11px 24px;font-weight:700;font-size:15px;cursor:pointer;">Save</button>
+    </div>
+  </div>
+</div>
 </body>
 </html>
