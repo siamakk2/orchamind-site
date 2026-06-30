@@ -1,5 +1,5 @@
 // Orchamind Site Manager - offline app shell
-var CACHE='orcha-shell-v1';
+var CACHE='orcha-shell-v3';
 var SHELL=['/app','/demo.html'];
 self.addEventListener('install',function(e){
   self.skipWaiting();
