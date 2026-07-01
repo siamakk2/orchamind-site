@@ -651,6 +651,11 @@ body.locked .appwrap{display:none !important;}
         <button onclick="saveCompanyProfile()" style="margin-top:16px;background:#2E7D32;color:#fff;border:none;border-radius:8px;padding:12px 24px;font-size:15px;font-weight:700;cursor:pointer;">Save Profile</button>
         <span id="pfMsg" style="margin-left:12px;font-size:13px;"></span>
       </div>
+      <div id="billingCard" style="display:none;margin-top:18px;background:#fff;border:1px solid #E1E8F0;border-radius:12px;padding:20px;">
+        <div style="font-weight:700;font-size:15px;color:#0A1628;margin-bottom:4px;">Billing &amp; Subscription</div>
+        <div style="font-size:13px;color:#5A6B7D;margin-bottom:14px;">Update your card, view invoices, or cancel your subscription.</div>
+        <button onclick="openBilling(this)" style="background:#1565C0;color:#fff;border:none;border-radius:8px;padding:11px 20px;font-size:14px;font-weight:700;cursor:pointer;">Manage billing &rarr;</button>
+      </div>
       <div style="margin-top:18px;background:linear-gradient(135deg,#0A1628,#0D2B4E);border-radius:12px;padding:20px;color:#fff;">
         <div style="font-weight:700;font-size:15px;margin-bottom:4px;">Want a website with this branding?</div>
         <div style="font-size:13px;color:#cdd9e8;margin-bottom:14px;">Turn your logo and company details into a clean, professional website.</div>
@@ -1464,6 +1469,16 @@ function showForm(which){
   document.getElementById('authError').textContent='';
 }
 function authErr(msg){document.getElementById('authError').textContent=msg||'';}
+function openBilling(btn){
+  if(btn){btn.disabled=true;btn.textContent='Opening...';}
+  fetch('/api/portal',{method:'POST',headers:{'Content-Type':'application/json'},body:'{}'})
+    .then(function(r){return r.json();})
+    .then(function(d){
+      if(d&&d.ok&&d.url){location.href=d.url;}
+      else{if(btn){btn.disabled=false;btn.innerHTML='Manage billing \u2192';}alert((d&&d.error)||'Could not open billing.');}
+    })
+    .catch(function(){if(btn){btn.disabled=false;btn.innerHTML='Manage billing \u2192';}alert('Server error.');});
+}
 function createCompanyInline(){
   var company=document.getElementById('ncCompany').value.trim();
   var name=document.getElementById('ncName').value.trim();
@@ -1530,6 +1545,10 @@ function authLogin(){
         CURRENT_USER=d.user;
         if(d.user.mustChange){showForm('formChange');document.getElementById('authSubtitle').textContent='Set your password';}
         else{sessionStorage.setItem('hci_session',JSON.stringify(CURRENT_USER));enterApp();}
+      }else if(d&&d.paused){
+        var _ae=document.getElementById('authError');
+        var _btn=d.portalUrl?'<div style="margin-top:12px;"><a href="'+d.portalUrl+'" style="display:inline-block;background:#F9A825;color:#0A1628;border-radius:8px;padding:11px 20px;font-weight:700;text-decoration:none;">Reactivate subscription \u2192</a></div>':'';
+        if(_ae){_ae.innerHTML='<div style="color:#D32F2F;line-height:1.5;">'+((d.error)||'Your subscription has ended.')+'</div>'+_btn;}
       }else{authErr((d&&d.error)||'Login failed.');}
     }).catch(function(){document.getElementById('liBtn').textContent='Log In';authErr('Server error.');});
 }
@@ -1558,6 +1577,7 @@ function enterApp(){
   document.body.classList.remove('locked');
   document.body.classList.add('authed');
   document.body.classList.add('role-'+(CURRENT_USER.role||'crew'));
+  try{var _bc=document.getElementById('billingCard');if(_bc)_bc.style.display=(CURRENT_USER&&CURRENT_USER.billing)?'':'none';}catch(e){}
   var who=document.getElementById('whoami');if(who)who.textContent=CURRENT_USER.name+((CURRENT_USER&&CURRENT_USER.company)?(' \u00b7 '+CURRENT_USER.company):'');
   try{applyBranding();}catch(e){}
   var rl=document.getElementById('roleLabel');if(rl)rl.textContent=CURRENT_USER.role;
