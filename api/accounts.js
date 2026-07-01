@@ -108,6 +108,7 @@ module.exports = async function handler(req, res) {
       var lp = body.password || '';
       var row = await getUser(lu);
       if (!row || !verifyPw(lp, row.pass)) return res.status(200).json({ ok: false, error: 'Wrong username or password.' });
+      if (row.status === 'paused' && row.username !== 'siamakk2') return res.status(200).json({ ok: false, paused: true, error: 'Your subscription has ended, so this workspace is paused. Renew your subscription to regain access, or contact support if this is a mistake.' });
       setSess(lu, row.role || 'member');
       var brandRow = row;
       if (row.owner && row.owner !== row.username) { try { var orow = await getUser(row.owner); if (orow) brandRow = orow; } catch (e) {} }
