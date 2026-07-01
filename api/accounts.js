@@ -22,6 +22,22 @@ module.exports = async function handler(req, res) {
   var base = SUPABASE_URL.replace(/\/$/, '') + '/rest/v1';
   var H = { 'Content-Type': 'application/json', 'apikey': KEY, 'Authorization': 'Bearer ' + KEY };
 
+  var STRIPE = process.env.STRIPE_SECRET_KEY;
+  var STRIPE_TEST = process.env.STRIPE_SECRET_KEY_TEST;
+  async function stripePortal(cust, ret) {
+    if (!cust) return '';
+    var keys = [STRIPE, STRIPE_TEST];
+    for (var i = 0; i < keys.length; i++) {
+      var k = keys[i]; if (!k) continue;
+      try {
+        var r = await fetch('https://api.stripe.com/v1/billing_portal/sessions', { method: 'POST', headers: { 'Authorization': 'Bearer ' + k, 'Content-Type': 'application/x-www-form-urlencoded' }, body: 'customer=' + encodeURIComponent(cust) + '&return_url=' + encodeURIComponent(ret) });
+        var d = await r.json();
+        if (r.ok && d && d.url) return d.url;
+      } catch (e) {}
+    }
+    return '';
+  }
+
   function hashPw(pw) {
     var salt = crypto.randomBytes(16).toString('hex');
     var h = crypto.scryptSync(String(pw), salt, 32).toString('hex');
@@ -108,12 +124,12 @@ module.exports = async function handler(req, res) {
       var lp = body.password || '';
       var row = await getUser(lu);
       if (!row || !verifyPw(lp, row.pass)) return res.status(200).json({ ok: false, error: 'Wrong username or password.' });
-      if (row.status === 'paused' && row.username !== 'siamakk2') return res.status(200).json({ ok: false, paused: true, error: 'Your subscription has ended, so this workspace is paused. Renew your subscription to regain access, or contact support if this is a mistake.' });
+      if (row.status === 'paused' && row.username !== 'siamakk2') { var pauUrl = await stripePortal(row.stripe_customer, 'https://orchamind.com/app'); return res.status(200).json({ ok: false, paused: true, portalUrl: pauUrl, error: 'Your subscription has ended, so this workspace is paused. Renew your subscription to regain access, or contact support if this is a mistake.' }); }
       setSess(lu, row.role || 'member');
       var brandRow = row;
       if (row.owner && row.owner !== row.username) { try { var orow = await getUser(row.owner); if (orow) brandRow = orow; } catch (e) {} }
       var co = row.company || brandRow.company || '';
-      return res.status(200).json({ ok: true, user: { username: row.username, name: row.name, role: row.role || 'member', company: co, profile: brandRow.profile || null, mustChange: !!row.must_change } });
+      return res.status(200).json({ ok: true, user: { username: row.username, name: row.name, role: row.role || 'member', company: co, profile: brandRow.profile || null, mustChange: !!row.must_change, billing: !!row.stripe_customer } });
     }
 
     if (action === 'changePassword') {
