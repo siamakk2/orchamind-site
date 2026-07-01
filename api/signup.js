@@ -83,6 +83,25 @@ module.exports = async function handler(req, res) {
     var ins = await fetch(base + '/accounts', { method: 'POST', headers: H, body: JSON.stringify({ username: username, name: name, role: 'owner', owner: username, company: company, pass: hashPw(pass), must_change: false, stripe_session: sessionId, stripe_customer: custId, stripe_subscription: subId }) });
     if (!ins.ok) { var e = await ins.text(); return res.status(200).json({ ok: false, error: 'Could not create your workspace. ' + e.slice(0, 140) }); }
 
+    // Welcome email (best-effort; never blocks signup)
+    try {
+      var RESEND = process.env.RESEND_API_KEY;
+      var toEmail = (s.customer_details && s.customer_details.email) || s.customer_email || '';
+      if (RESEND && toEmail) {
+        var esc = function (x) { return String(x || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); };
+        var html = '<div style="font-family:Arial,Helvetica,sans-serif;max-width:520px;margin:0 auto;color:#0A1628;">'
+          + '<div style="background:#0A1628;padding:24px;border-radius:12px 12px 0 0;text-align:center;"><span style="color:#F9A825;font-size:22px;font-weight:bold;">Orchamind</span></div>'
+          + '<div style="background:#ffffff;border:1px solid #E1E8F0;border-top:none;padding:28px;border-radius:0 0 12px 12px;">'
+          + '<h1 style="font-size:20px;margin:0 0 12px;color:#0A1628;">Welcome aboard, ' + esc(name || 'there') + '!</h1>'
+          + '<p style="font-size:15px;line-height:1.6;color:#5A6B7D;margin:0 0 18px;">Your Orchamind workspace for <b style="color:#0A1628;">' + esc(company) + '</b> is ready. You can manage jobs, crews, hours, and materials just by talking to it.</p>'
+          + '<a href="https://orchamind.com/app" style="display:inline-block;background:#F9A825;color:#0A1628;text-decoration:none;font-weight:bold;padding:13px 26px;border-radius:8px;font-size:15px;">Open my dashboard &rarr;</a>'
+          + '<div style="margin:22px 0;padding:16px;background:#EEF3F8;border-radius:8px;font-size:14px;color:#0A1628;"><div style="margin-bottom:4px;"><b>Login page:</b> orchamind.com/app</div><div><b>Your username:</b> ' + esc(username) + '</div><div style="color:#5A6B7D;margin-top:6px;">(Use the password you chose when you signed up.)</div></div>'
+          + '<p style="font-size:14px;line-height:1.6;color:#5A6B7D;margin:0;">Your first 30 days are free. Any questions, just reply to this email.</p>'
+          + '</div><div style="text-align:center;padding:16px;font-size:12px;color:#9aa7b4;">Orchamind &middot; Built by Siamak Kalhor Consulting</div></div>';
+        await fetch('https://api.resend.com/emails', { method: 'POST', headers: { 'Authorization': 'Bearer ' + RESEND, 'Content-Type': 'application/json' }, body: JSON.stringify({ from: 'Orchamind <welcome@orchamind.com>', to: [toEmail], reply_to: 'siamakk2@gmail.com', subject: 'Welcome to Orchamind \u2014 your workspace is ready', html: html }) });
+      }
+    } catch (e) {}
+
     setSess(username, 'owner');
     return res.status(200).json({ ok: true, user: { username: username, name: name, role: 'owner', company: company } });
   } catch (e) {
