@@ -425,6 +425,7 @@ body.locked .appwrap{display:none !important;}
   <button class="tab active" data-tab="today"><svg class="ti" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9.5 12 3l9 6.5V21a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1z"/><path d="M9 22V12h6v10"/></svg>Home</button>
   <button class="tab" data-tab="jobs"><svg class="ti" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 7h20v13a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1z"/><path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>Jobs</button>
   <button class="tab" data-tab="estimates" data-mgronly><svg class="ti" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M9 13h6"/><path d="M9 17h6"/></svg>Estimates</button>
+  <button class="tab" data-tab="sketches"><svg class="ti" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3h7v7H3z"/><path d="M14 3h7v4h-7z"/><path d="M14 11h7v10h-7z"/><path d="M3 14h7v7H3z"/></svg>Plans</button>
   <button class="tab" data-tab="risks"><svg class="ti" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>Risk Radar</button>
   <button class="tab" data-tab="crew"><svg class="ti" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/></svg>Crew</button>
   <button class="tab" data-tab="hours"><svg class="ti" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>Hours</button>
@@ -553,6 +554,52 @@ body.locked .appwrap{display:none !important;}
     </div>
     <div id="estSummary" class="est-summary"></div>
     <div id="estList"></div>
+  </div>
+<style>
+.sk-note{background:#FFF7E6;border:1px solid #F3D28B;color:#7A5300;border-radius:12px;padding:12px 15px;font-size:12.8px;line-height:1.5;margin-bottom:16px;}
+.sk-note b{color:#6b4a00;}
+.sk-form{background:#fff;border:1px solid var(--line);border-radius:14px;padding:18px;margin-bottom:18px;}
+.sk-types{display:flex;flex-wrap:wrap;gap:8px;margin:2px 0 14px;}
+.sk-type{border:1.5px solid var(--line);background:#fff;color:var(--navy);border-radius:9px;padding:8px 13px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;}
+.sk-type.on{background:var(--blue);color:#fff;border-color:var(--blue);}
+.sk-preview{background:#fff;border:1px solid var(--line);border-radius:14px;padding:16px;min-height:120px;margin-bottom:18px;}
+.sk-preview svg{max-width:100%;height:auto;display:block;margin:0 auto;}
+.sk-ph{color:var(--muted);font-size:13.5px;text-align:center;padding:26px 0;}
+.sk-actbar{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px;}
+.sk-card{background:#fff;border:1px solid var(--line);border-radius:12px;padding:12px 15px;display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:10px;}
+.sk-card .t{font-weight:700;color:var(--navy);font-size:13.5px;}
+.sk-card .m{color:var(--muted);font-size:12.5px;flex:1;min-width:140px;}
+.sk-card button{background:rgba(21,101,192,.08);color:var(--blue);border:none;border-radius:7px;padding:6px 11px;font-size:12.5px;font-weight:600;cursor:pointer;font-family:inherit;}
+.sk-card button.danger{background:#FBE9E7;color:#C62828;}
+</style>
+  <div class="panel" id="panel-sketches">
+    <div class="panel-head"><h2>Plans &amp; Sketches</h2></div>
+    <div class="sk-note"><b>Concept tool.</b> These are labeled concept drawings to help you win the job and give your engineer or architect a head start &mdash; they are <b>not to-scale, engineered, or permit-ready</b>. For stamped structural, electrical, or plumbing plans, hand these to a licensed professional.</div>
+    <div class="sk-form">
+      <div class="field"><label>What kind of drawing?</label>
+        <div class="sk-types" id="skTypes">
+          <button type="button" class="sk-type on" data-type="floor">Floor plan</button>
+          <button type="button" class="sk-type" data-type="site">Site plan</button>
+          <button type="button" class="sk-type" data-type="electrical">Lighting &amp; outlets</button>
+          <button type="button" class="sk-type" data-type="oneline">One-line electrical</button>
+          <button type="button" class="sk-type" data-type="plumbing">Plumbing layout</button>
+          <button type="button" class="sk-type" data-type="framing">Framing concept</button>
+          <button type="button" class="sk-type" data-type="scope">Scope / zones</button>
+        </div>
+      </div>
+      <div class="field"><label>Pull details from a job (optional)</label><input type="text" id="skJob" list="skJobList" placeholder="Start typing a job name..." oninput="skJobPick()"><datalist id="skJobList"></datalist></div>
+      <div class="field"><label>Describe the job / space</label><textarea id="skDesc" rows="3" placeholder="e.g. Single-story 3-bed 2-bath, 1,600 sq ft. Open kitchen/living, laundry off hallway, 2-car garage."></textarea></div>
+      <div class="field"><label>Known dimensions / survey notes (optional)</label><input type="text" id="skDims" placeholder="e.g. 40ft x 40ft lot, ceiling 9ft, panel on east wall"></div>
+      <button class="btn" type="button" id="skGenBtn" onclick="generateSketch()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v4M12 18v4M4.9 4.9l2.8 2.8M16.3 16.3l2.8 2.8M2 12h4M18 12h4M4.9 19.1l2.8-2.8M16.3 7.7l2.8-2.8"/></svg>Generate concept drawing</button>
+    </div>
+    <div class="sk-preview" id="skPreview"><div class="sk-ph">Your concept drawing will appear here. Pick a type, describe the job, and tap Generate.</div></div>
+    <div class="sk-actbar" id="skActs" style="display:none;">
+      <button class="btn btn-ghost" type="button" onclick="printCurrentSketch()">Print / Save PDF</button>
+      <button class="btn btn-ghost" type="button" onclick="saveSketch()">Save to job</button>
+      <button class="btn btn-ghost" type="button" onclick="generateSketch()">Regenerate</button>
+    </div>
+    <div class="est-grp-h" style="margin-top:8px;">Saved drawings</div>
+    <div id="skList"></div>
   </div>
   <div class="panel" id="panel-risks">
     <div class="panel-head">
@@ -929,16 +976,17 @@ var estimates=[
   {id:'e1',kind:'estimate',number:'EST-0001',client:'The Bennetts',clientEmail:'',project:'Calistoga Pool & Deck',location:'Calistoga, CA',date:'2026-06-18',validUntil:'2026-07-18',status:'sent',taxRate:0,notes:'50% deposit to schedule. Balance on completion. Valid 30 days.',items:[{desc:'Excavation & grading',qty:1,unit:'ls',price:14500},{desc:'Gunite pool shell',qty:1,unit:'ls',price:38000},{desc:'Stamped concrete deck',qty:850,unit:'sqft',price:22},{desc:'Equipment & plumbing',qty:1,unit:'ls',price:16500}]},
   {id:'e2',kind:'invoice',number:'INV-0001',client:'M. Reynolds',clientEmail:'',project:'Valley View Estate',location:'Sonoma, CA',date:'2026-06-20',validUntil:'',status:'sent',taxRate:0,notes:'Net 15. Thank you.',items:[{desc:'Progress billing - finishing phase (draw 4)',qty:1,unit:'ls',price:62000}]}
 ];
+var sketches=[];
 var _saveTimer=null;
 function _acctKey(){return (typeof CURRENT_USER!=='undefined'&&CURRENT_USER&&CURRENT_USER.username)||'demo';}
 function dataKey(){return 'orcha_data_'+_acctKey();}
 function pendKey(){return 'orcha_pend_'+_acctKey();}
 var _pendingSync=false;
-function writeLocal(){try{localStorage.setItem(dataKey(),JSON.stringify({saved:true,jobs:jobs,crew:crew,hours:hours,subs:subs,estimates:estimates,_ts:Date.now()}));}catch(e){}}
+function writeLocal(){try{localStorage.setItem(dataKey(),JSON.stringify({saved:true,jobs:jobs,crew:crew,hours:hours,subs:subs,estimates:estimates,sketches:sketches,_ts:Date.now()}));}catch(e){}}
 function markPending(){_pendingSync=true;try{localStorage.setItem(pendKey(),'1');}catch(e){}updateSyncPill();}
 function markSynced(){_pendingSync=false;try{localStorage.removeItem(pendKey());}catch(e){}updateSyncPill();}
 function pushToServer(){
-  fetch('/api/data',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({data:{saved:true,jobs:jobs,crew:crew,hours:hours,subs:subs,estimates:estimates}})})
+  fetch('/api/data',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({data:{saved:true,jobs:jobs,crew:crew,hours:hours,subs:subs,estimates:estimates,sketches:sketches}})})
     .then(function(r){return r.json();})
     .then(function(o){if(o&&!o.error){_dbReady=true;markSynced();}else{markPending();}})
     .catch(function(){markPending();});
@@ -957,7 +1005,7 @@ function load(cb){
   // 1) OFFLINE-FIRST: recall unsynced flag + hydrate instantly from this device
   try{_pendingSync=(localStorage.getItem(pendKey())==='1');}catch(e){_pendingSync=false;}
   var localHad=false;
-  try{var ls=localStorage.getItem(dataKey());if(ls){var d=JSON.parse(ls);if(d&&d.saved){jobs=Array.isArray(d.jobs)?d.jobs:jobs;crew=Array.isArray(d.crew)?d.crew:crew;hours=Array.isArray(d.hours)?d.hours:hours;subs=Array.isArray(d.subs)?d.subs:subs;estimates=Array.isArray(d.estimates)?d.estimates:estimates;localHad=true;}}}catch(e){}
+  try{var ls=localStorage.getItem(dataKey());if(ls){var d=JSON.parse(ls);if(d&&d.saved){jobs=Array.isArray(d.jobs)?d.jobs:jobs;crew=Array.isArray(d.crew)?d.crew:crew;hours=Array.isArray(d.hours)?d.hours:hours;subs=Array.isArray(d.subs)?d.subs:subs;estimates=Array.isArray(d.estimates)?d.estimates:estimates;sketches=Array.isArray(d.sketches)?d.sketches:sketches;localHad=true;}}}catch(e){}
   // 2) reach the shared database, but NEVER block the app
   var timer=setTimeout(function(){updateSyncPill();finish();},3000);
   fetch('/api/data').then(function(r){return r.json();}).then(function(out){
@@ -971,6 +1019,7 @@ function load(cb){
       hours=Array.isArray(out.data.hours)?out.data.hours:[];
       subs=Array.isArray(out.data.subs)?out.data.subs:[];
       estimates=Array.isArray(out.data.estimates)?out.data.estimates:[];
+      sketches=Array.isArray(out.data.sketches)?out.data.sketches:[];
       _dbReady=true;writeLocal();
     }
     updateSyncPill();finish();
@@ -1322,6 +1371,7 @@ document.querySelectorAll('.tab').forEach(function(t){
     if(t.dataset.tab==='profile'){loadProfileForm();}
     if(t.dataset.tab==='reports'){renderReport();}
     if(t.dataset.tab==='estimates'){renderEstimates();}
+    if(t.dataset.tab==='sketches'){renderSketches();}
   });
 });
 // ====== MODALS ======
@@ -1331,7 +1381,7 @@ function _dl(fn,txt,mime){var b=new Blob([txt],{type:mime||'text/plain'});var u=
 function _csvCell(v){v=(v==null?'':String(v));if(/[",\n]/.test(v))v='"'+v.replace(/"/g,'""')+'"';return v;}
 function _csv(rows){if(!rows||!rows.length)return '';var cols=Object.keys(rows[0]);var out=cols.join(',')+'\n';rows.forEach(function(r){out+=cols.map(function(k){return _csvCell(r[k]);}).join(',')+'\n';});return out;}
 function _stamp(){return new Date().toISOString().split('T')[0];}
-function exportJSON(){var data={exportedAt:new Date().toISOString(),company:(CURRENT_USER&&CURRENT_USER.name)||'',jobs:jobs,crew:crew,hours:hours,subs:subs,estimates:estimates};_dl('orchamind-export-'+_stamp()+'.json',JSON.stringify(data,null,2),'application/json');}
+function exportJSON(){var data={exportedAt:new Date().toISOString(),company:(CURRENT_USER&&CURRENT_USER.name)||'',jobs:jobs,crew:crew,hours:hours,subs:subs,estimates:estimates,sketches:sketches};_dl('orchamind-export-'+_stamp()+'.json',JSON.stringify(data,null,2),'application/json');}
 function exportCSV(which){var map={jobs:jobs,crew:crew,hours:hours,subs:subs};var rows=map[which]||[];if(!rows.length){alert('Nothing to export there yet.');return;}_dl('orchamind-'+which+'-'+_stamp()+'.csv',_csv(rows),'text/csv');}
 function renderExportCounts(){var el=document.getElementById('exportCounts');if(!el)return;el.textContent=jobs.length+' projects \u00b7 '+hours.length+' timesheet entries \u00b7 '+crew.length+' crew \u00b7 '+subs.length+' subcontractors';}
 document.querySelectorAll('.modal-bg').forEach(function(m){m.addEventListener('click',function(e){if(e.target===m)closeModal(m.id);});});
@@ -1376,7 +1426,7 @@ function clearAllData(){
 
 // Explicit, non-debounced save that reports success/failure
 function saveNow(cb){
-  fetch('/api/data',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({data:{saved:true,jobs:jobs,crew:crew,hours:hours,subs:subs,estimates:estimates}})})
+  fetch('/api/data',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({data:{saved:true,jobs:jobs,crew:crew,hours:hours,subs:subs,estimates:estimates,sketches:sketches}})})
     .then(function(r){return r.json();})
     .then(function(o){var ok=o&&!o.error;if(ok)_dbReady=true;if(cb)cb(ok);})
     .catch(function(){if(cb)cb(false);});
@@ -2355,6 +2405,117 @@ ${e.notes?('<div class="notes">'+esc(e.notes)+'</div>'):''}
 </body></html>`;
   w.document.write(doc);w.document.close();w.focus();setTimeout(function(){try{w.print();}catch(err){}},350);
 }
+
+</script>
+<script>
+
+var _skType='floor';
+var _skTypeLabels={floor:'Concept floor plan',site:'Site plan',electrical:'Lighting & outlet layout',oneline:'One-line electrical',plumbing:'Plumbing fixture layout',framing:'Framing concept',scope:'Scope / zone diagram'};
+var _curSketchSvg='';
+(function(){
+  document.addEventListener('click',function(ev){
+    var tgt=ev.target;if(!tgt||!tgt.closest)return;
+    var b=tgt.closest('#skTypes .sk-type');
+    if(b){document.querySelectorAll('#skTypes .sk-type').forEach(function(x){x.classList.remove('on');});b.classList.add('on');_skType=b.getAttribute('data-type');return;}
+    var s=tgt.closest('#skList [data-sact]');
+    if(s){var id=s.getAttribute('data-id');var act=s.getAttribute('data-sact');
+      if(act==='open')reopenSketch(id);else if(act==='print')printSavedSketch(id);else if(act==='del')delSketch(id);}
+  });
+})();
+function skJobPick(){
+  var name=document.getElementById('skJob').value.trim();if(!name)return;
+  var j=(window.jobs||[]).find(function(x){return x.name===name;});if(!j)return;
+  var d=document.getElementById('skDesc');
+  var txt=j.name+(j.location?(' ('+j.location+')'):'');
+  if(j.notes)txt+=' - '+j.notes;
+  d.value=txt;
+}
+function _skPrompt(type){
+  var base='You are a technical illustrator producing a CONCEPT diagram (NOT an engineered or permit drawing). Return ONLY one valid <svg> element and nothing else: no markdown, no code fences, no commentary. Use viewBox="0 0 800 600" and do NOT set fixed pixel width or height so it scales. Clean black strokes on a white background, clear readable text labels (font-size 13-16), a short bold title near the top, and include this exact footer text near the bottom: "CONCEPT ONLY - NOT FOR CONSTRUCTION OR PERMIT". Keep it legible on a phone. ';
+  var m={
+    floor:'Draw a concept FLOOR PLAN: rooms as labeled rectangles with approximate dimensions, doors as small gaps or quarter-arcs, windows as thin double lines on exterior walls.',
+    site:'Draw a concept SITE PLAN: property boundary, house footprint, driveway, front/side setbacks labeled, and a small north arrow.',
+    electrical:'Draw a concept LIGHTING and OUTLET layout over a simple room outline. Use symbols: a small circle for a recessed light, a duplex symbol for an outlet, and S for a switch. Include a legend.',
+    oneline:'Draw a concept ONE-LINE ELECTRICAL diagram: utility service, meter, main panel with labeled branch breakers to circuits (kitchen, lighting, HVAC, etc). Simple boxes and connecting lines with labels.',
+    plumbing:'Draw a concept PLUMBING FIXTURE layout over a simple room outline: sink, toilet, tub or shower, water heater; show supply and drain runs schematically. Include a legend.',
+    framing:'Draw a concept FRAMING layout idea: joists or studs as evenly spaced parallel lines labeled with spacing (for example 16in OC), beams as thicker lines. Add a note that this is a concept for a licensed engineer to verify.',
+    scope:'Draw a concept SCOPE / ZONE diagram: outline the space and label zones or areas with the work happening in each, based on the description.'
+  };
+  return base+(m[type]||m.floor);
+}
+function generateSketch(){
+  var desc=document.getElementById('skDesc').value.trim();
+  var dims=document.getElementById('skDims').value.trim();
+  var prev=document.getElementById('skPreview');var btn=document.getElementById('skGenBtn');
+  if(!desc){prev.innerHTML='<div class="sk-ph">Describe the job or space first, then tap Generate.</div>';return;}
+  var old=btn.innerHTML;btn.disabled=true;btn.innerHTML='Drawing...';
+  prev.innerHTML='<div class="sk-ph"><div class="spinner" style="border-color:var(--line);border-top-color:var(--blue);margin:0 auto 10px;"></div>Drawing your '+esc(_skTypeLabels[_skType]||'concept')+'...</div>';
+  var sys=_skPrompt(_skType);
+  var user='Project / space: '+desc+'. Known dimensions or survey notes: '+(dims||'not provided')+'.';
+  callClaude(sys,user,function(text){
+    btn.disabled=false;btn.innerHTML=old;
+    var svg=_extractSvg(text);
+    if(!svg){prev.innerHTML='<div class="sk-ph">The AI did not return a usable drawing. Try adding a little more detail and Generate again.</div>';return;}
+    _curSketchSvg=svg;prev.innerHTML=svg;
+    document.getElementById('skActs').style.display='flex';
+  },function(err){btn.disabled=false;btn.innerHTML=old;prev.innerHTML='<div class="sk-ph">AI error: '+esc(err)+'</div>';});
+}
+function _extractSvg(text){
+  if(!text)return '';
+  var a=text.indexOf('<svg');var b=text.lastIndexOf('</svg>');
+  if(a<0||b<0)return '';
+  var svg=text.substring(a,b+6);
+  svg=svg.replace(/<script[\s\S]*?<\/script>/gi,'').replace(/\son\w+="[^"]*"/gi,'').replace(/\son\w+='[^']*'/gi,'').replace(/javascript:/gi,'');
+  return svg;
+}
+function _skWrapDoc(svg,title){
+  return `<!doctype html><html><head><meta charset="utf-8"><title>${esc(title)}</title>
+<style>body{font-family:Arial,Helvetica,sans-serif;margin:28px;color:#0A1628;}h2{color:#1565C0;margin:0 0 4px;}
+.sub{color:#5A6B7D;font-size:13px;margin-bottom:14px;}svg{max-width:100%;height:auto;border:1px solid #E1E8F0;border-radius:8px;}
+.disc{margin-top:16px;font-size:12px;color:#7A5300;background:#FFF7E6;border:1px solid #F3D28B;border-radius:8px;padding:10px 13px;}</style>
+</head><body><h2>${esc(title)}</h2><div class="sub">Prepared with Orchamind</div>${svg}
+<div class="disc"><b>Concept only - not for construction or permit.</b> Provide to a licensed engineer or architect for stamped, code-compliant plans.</div>
+</body></html>`;
+}
+function printCurrentSketch(){
+  if(!_curSketchSvg){alert('Generate a drawing first.');return;}
+  var w=window.open('','_blank');if(!w){alert('Please allow pop-ups to print or save the PDF.');return;}
+  w.document.write(_skWrapDoc(_curSketchSvg,_skTypeLabels[_skType]||'Concept drawing'));w.document.close();w.focus();
+  setTimeout(function(){try{w.print();}catch(e){}},350);
+}
+function saveSketch(){
+  if(!_curSketchSvg){alert('Generate a drawing first.');return;}
+  var rec={id:uid(),type:_skType,typeLabel:_skTypeLabels[_skType]||'Concept',job:document.getElementById('skJob').value.trim(),desc:document.getElementById('skDesc').value.trim(),svg:_curSketchSvg,date:(new Date().toISOString().split('T')[0])};
+  sketches.unshift(rec);save();renderSketches();
+  alert('Saved to your drawings.');
+}
+function renderSketches(){
+  var dl=document.getElementById('skJobList');if(dl){dl.innerHTML=(window.jobs||[]).map(function(j){return '<option value="'+esc(j.name)+'">';}).join('');}
+  var list=document.getElementById('skList');if(!list)return;
+  if(!sketches.length){list.innerHTML='<div style="color:var(--muted);font-size:13.5px;padding:6px 2px;">No saved drawings yet. Generate one above and tap Save to job.</div>';return;}
+  list.innerHTML=sketches.map(function(s){
+    return '<div class="sk-card"><div class="t">'+esc(s.typeLabel||'Concept')+'</div>'+
+      '<div class="m">'+esc(s.job||s.desc||'')+' &middot; '+esc(s.date||'')+'</div>'+
+      '<button data-sact="open" data-id="'+esc(s.id)+'">Open</button>'+
+      '<button data-sact="print" data-id="'+esc(s.id)+'">Print / PDF</button>'+
+      '<button class="danger" data-sact="del" data-id="'+esc(s.id)+'">Delete</button></div>';
+  }).join('');
+}
+function reopenSketch(id){
+  var s=sketches.find(function(x){return x.id===id;});if(!s)return;
+  _curSketchSvg=s.svg;_skType=s.type||'floor';
+  document.getElementById('skPreview').innerHTML=s.svg;
+  document.getElementById('skActs').style.display='flex';
+  document.querySelectorAll('#skTypes .sk-type').forEach(function(x){x.classList.toggle('on',x.getAttribute('data-type')===_skType);});
+  document.getElementById('skPreview').scrollIntoView({behavior:'smooth',block:'center'});
+}
+function printSavedSketch(id){
+  var s=sketches.find(function(x){return x.id===id;});if(!s)return;
+  var w=window.open('','_blank');if(!w){alert('Please allow pop-ups to print or save the PDF.');return;}
+  w.document.write(_skWrapDoc(s.svg,s.typeLabel||'Concept drawing'));w.document.close();w.focus();
+  setTimeout(function(){try{w.print();}catch(e){}},350);
+}
+function delSketch(id){if(!confirm('Delete this drawing?'))return;sketches=sketches.filter(function(x){return x.id!==id;});save();renderSketches();}
 
 </script>
 </body>
