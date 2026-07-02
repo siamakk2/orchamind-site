@@ -1076,13 +1076,13 @@ function buildContext(){
   return ctx;
 }
 
-function callClaude(systemPrompt, userMessage, cb, errCb){
+function callClaude(systemPrompt, userMessage, cb, errCb, maxTokens){
   fetch("/api/claude",{
     method:"POST",
     headers:{"Content-Type":"application/json"},
     body:JSON.stringify({
       model:"claude-sonnet-4-6",
-      max_tokens:1200,
+      max_tokens:maxTokens||1200,
       system:systemPrompt,
       messages:[{role:"user",content:userMessage}]
     })
@@ -2458,11 +2458,11 @@ function generateSketch(){
     if(!svg){prev.innerHTML='<div class="sk-ph">The AI did not return a usable drawing. Try adding a little more detail and Generate again.</div>';return;}
     _curSketchSvg=svg;prev.innerHTML=svg;
     document.getElementById('skActs').style.display='flex';
-  },function(err){btn.disabled=false;btn.innerHTML=old;prev.innerHTML='<div class="sk-ph">AI error: '+esc(err)+'</div>';});
+  },function(err){btn.disabled=false;btn.innerHTML=old;prev.innerHTML='<div class="sk-ph">AI error: '+esc(err)+'</div>';},4000);
 }
 function _extractSvg(text){
   if(!text)return '';
-  var a=text.indexOf('<svg');var b=text.lastIndexOf('</svg>');
+  text=text.replace(/```[a-z]*\n?/gi,'').replace(/```/g,'');var a=text.indexOf('<svg');var b=text.lastIndexOf('</svg>');
   if(a<0||b<0)return '';
   var svg=text.substring(a,b+6);
   svg=svg.replace(/<script[\s\S]*?<\/script>/gi,'').replace(/\son\w+="[^"]*"/gi,'').replace(/\son\w+='[^']*'/gi,'').replace(/javascript:/gi,'');
