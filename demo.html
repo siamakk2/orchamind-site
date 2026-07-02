@@ -2431,17 +2431,41 @@ function skJobPick(){
   d.value=txt;
 }
 function _skPrompt(type){
-  var base='You are a technical illustrator producing a CONCEPT diagram (NOT an engineered or permit drawing). Return ONLY one valid <svg> element and nothing else: no markdown, no code fences, no commentary. Use viewBox="0 0 800 600" and do NOT set fixed pixel width or height so it scales. Clean black strokes on a white background, clear readable text labels (font-size 13-16), a short bold title near the top, and include this exact footer text near the bottom: "CONCEPT ONLY - NOT FOR CONSTRUCTION OR PERMIT". Keep it legible on a phone. ';
+  var base='You are a technical illustrator. Design a CONCEPT diagram on an 800x600 canvas (x from 0 at left to 800 at right, y from 0 at top to 600 at bottom). Return ONLY a JSON object and nothing else - no markdown, no code fences, no words outside the JSON. Schema: {"title":"short title","shapes":[ ... ]}. Allowed shapes: {"t":"rect","x":num,"y":num,"w":num,"h":num,"label":"optional centered label"}; {"t":"line","x1":num,"y1":num,"x2":num,"y2":num}; {"t":"circle","x":num,"y":num,"r":num,"label":"optional"}; {"t":"text","x":num,"y":num,"s":"the text","size":num}. Rules: use 8 to 40 shapes, keep everything inside a 40px margin, keep the top 45px and bottom 45px clear, no overlapping text, all coordinates are numbers inside the canvas. ';
   var m={
-    floor:'Draw a concept FLOOR PLAN: rooms as labeled rectangles with approximate dimensions, doors as small gaps or quarter-arcs, windows as thin double lines on exterior walls.',
-    site:'Draw a concept SITE PLAN: property boundary, house footprint, driveway, front/side setbacks labeled, and a small north arrow.',
-    electrical:'Draw a concept LIGHTING and OUTLET layout over a simple room outline. Use symbols: a small circle for a recessed light, a duplex symbol for an outlet, and S for a switch. Include a legend.',
-    oneline:'Draw a concept ONE-LINE ELECTRICAL diagram: utility service, meter, main panel with labeled branch breakers to circuits (kitchen, lighting, HVAC, etc). Simple boxes and connecting lines with labels.',
-    plumbing:'Draw a concept PLUMBING FIXTURE layout over a simple room outline: sink, toilet, tub or shower, water heater; show supply and drain runs schematically. Include a legend.',
-    framing:'Draw a concept FRAMING layout idea: joists or studs as evenly spaced parallel lines labeled with spacing (for example 16in OC), beams as thicker lines. Add a note that this is a concept for a licensed engineer to verify.',
-    scope:'Draw a concept SCOPE / ZONE diagram: outline the space and label zones or areas with the work happening in each, based on the description.'
+    floor:'Draw a FLOOR PLAN: each room is a rect whose label includes an approximate size like "Kitchen 12x14". Show door openings as short line gaps and windows as short lines on outer walls. Arrange rooms to fill the canvas sensibly.',
+    site:'Draw a SITE PLAN: a large rect for the property boundary, a rect for the house footprint, a rect or lines for the driveway, text labels for front and side setbacks, and a small text "N" with a short line for a north arrow.',
+    electrical:'Draw a LIGHTING and OUTLET layout: one rect for the room, circles for recessed lights placed in a grid (label a couple), small rects near walls for outlets, text "S" for switches, and a small legend using text lines in a corner.',
+    oneline:'Draw a ONE-LINE ELECTRICAL diagram: rects for utility service, meter and main panel connected by lines, with several labeled lines to circuits (Kitchen, Lighting, HVAC, Laundry). Label each with text.',
+    plumbing:'Draw a PLUMBING FIXTURE layout: one rect for the room, small rects or circles for sink, toilet, tub or shower and water heater with text labels, and lines for supply and drain runs. Add a small text legend.',
+    framing:'Draw a FRAMING concept: an outer rect, evenly spaced parallel lines for joists or studs, and a text label like "2x10 joists @ 16in OC". Add a thicker beam line and a text note "Concept - verify with licensed engineer".',
+    scope:'Draw a SCOPE / ZONE diagram: rects for each zone or area with a label describing the work in that zone, based on the description.'
   };
   return base+(m[type]||m.floor);
+}
+function skRenderSVG(obj){
+  var W=800,H=600;
+  var p=['<svg viewBox="0 0 '+W+' '+H+'" xmlns="http://www.w3.org/2000/svg" font-family="Arial, Helvetica, sans-serif">'];
+  p.push('<rect x="0" y="0" width="'+W+'" height="'+H+'" fill="#ffffff"/>');
+  if(obj.title){p.push('<text x="'+(W/2)+'" y="30" text-anchor="middle" font-size="20" font-weight="bold" fill="#0A1628">'+esc(obj.title)+'</text>');}
+  (obj.shapes||[]).forEach(function(s){
+    if(!s||!s.t)return;
+    if(s.t==='rect'){
+      p.push('<rect x="'+estNum(s.x)+'" y="'+estNum(s.y)+'" width="'+estNum(s.w)+'" height="'+estNum(s.h)+'" fill="none" stroke="#0A1628" stroke-width="2"/>');
+      if(s.label){p.push('<text x="'+(estNum(s.x)+estNum(s.w)/2)+'" y="'+(estNum(s.y)+estNum(s.h)/2)+'" text-anchor="middle" dominant-baseline="middle" font-size="13" fill="#0A1628">'+esc(s.label)+'</text>');}
+    }else if(s.t==='line'){
+      p.push('<line x1="'+estNum(s.x1)+'" y1="'+estNum(s.y1)+'" x2="'+estNum(s.x2)+'" y2="'+estNum(s.y2)+'" stroke="#0A1628" stroke-width="2"/>');
+    }else if(s.t==='circle'){
+      var r=estNum(s.r)||7;
+      p.push('<circle cx="'+estNum(s.x)+'" cy="'+estNum(s.y)+'" r="'+r+'" fill="none" stroke="#0A1628" stroke-width="2"/>');
+      if(s.label){p.push('<text x="'+estNum(s.x)+'" y="'+(estNum(s.y)-r-4)+'" text-anchor="middle" font-size="12" fill="#0A1628">'+esc(s.label)+'</text>');}
+    }else if(s.t==='text'){
+      p.push('<text x="'+estNum(s.x)+'" y="'+estNum(s.y)+'" font-size="'+(estNum(s.size)||14)+'" fill="#0A1628">'+esc(s.s||'')+'</text>');
+    }
+  });
+  p.push('<text x="'+(W/2)+'" y="'+(H-16)+'" text-anchor="middle" font-size="12" fill="#B45309">CONCEPT ONLY - NOT FOR CONSTRUCTION OR PERMIT</text>');
+  p.push('</svg>');
+  return p.join('');
 }
 function generateSketch(){
   var desc=document.getElementById('skDesc').value.trim();
@@ -2454,8 +2478,9 @@ function generateSketch(){
   var user='Project / space: '+desc+'. Known dimensions or survey notes: '+(dims||'not provided')+'.';
   callClaude(sys,user,function(text){
     btn.disabled=false;btn.innerHTML=old;
-    var svg=_extractSvg(text);
-    if(!svg){prev.innerHTML='<div class="sk-ph">The AI did not return a usable drawing. Try adding a little more detail and Generate again.</div>';return;}
+    var obj=_estParseJSON(text);
+    var svg=(obj&&obj.shapes&&obj.shapes.length)?skRenderSVG(obj):'';
+    if(!svg){prev.innerHTML='<div class="sk-ph">The AI did not return a usable drawing. Try again, or add a little more detail.</div>';return;}
     _curSketchSvg=svg;prev.innerHTML=svg;
     document.getElementById('skActs').style.display='flex';
   },function(err){btn.disabled=false;btn.innerHTML=old;prev.innerHTML='<div class="sk-ph">AI error: '+esc(err)+'</div>';},4000);
