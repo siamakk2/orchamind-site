@@ -47,3 +47,19 @@ Everything about a job — hours, materials, subs, budget, and notes — lives i
 ## About the creator
 
 Orchamind was built by Siamak Kalhor, an AI marketing consultant and product builder in Los Angeles with 35 years of business experience. He also created ResBizAI (AI restaurant management) and AisleBird (AI grocery app).
+
+
+## New AI features (2026)
+- AI Estimate Writer: describe a job in plain English and Orchamind drafts an itemized estimate (labor + materials + realistic pricing); you adjust, then send. Convert an accepted estimate to an invoice in one click. https://orchamind.com/ai-construction-estimate-software/
+- AI Plans & Sketches: generate concept drawings from a description - floor plan, site plan, lighting/outlet, one-line electrical, plumbing, HVAC, framing, roofing, solar and scope/zone diagrams. Concept-only (not for construction or permit); for stamped plans, provide them to a licensed engineer or architect. Orchamind helps the licensed engineer/architect, it does not replace them. https://orchamind.com/ai-construction-drawings/
+- Orchamind is built for construction and every field-service trade: general contractors, electricians, plumbers, HVAC, roofing, solar, landscaping and remodeling.
+
+## Guides
+- Knowledge Base: https://orchamind.com/knowledge-base/
+- Can AI write a construction estimate: https://orchamind.com/ai-construction-estimate-software/
+- Can AI draw floor plans and layouts (and when you need an engineer): https://orchamind.com/ai-construction-drawings/
+- Software for general contractors: https://orchamind.com/software-for-general-contractors/
+- Software for electricians: https://orchamind.com/software-for-electricians/
+- Software for field service businesses: https://orchamind.com/field-service-software/
+- How to estimate a job: https://orchamind.com/how-to-estimate-a-job/
+- How to write a construction bid: https://orchamind.com/how-to-write-construction-bid/
