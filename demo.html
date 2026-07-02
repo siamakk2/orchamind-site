@@ -773,6 +773,12 @@ body.locked .appwrap{display:none !important;}
         <button onclick="saveCompanyProfile()" style="margin-top:16px;background:#2E7D32;color:#fff;border:none;border-radius:8px;padding:12px 24px;font-size:15px;font-weight:700;cursor:pointer;">Save Profile</button>
         <span id="pfMsg" style="margin-left:12px;font-size:13px;"></span>
       </div>
+      <div id="payCard" style="margin-top:18px;background:#fff;border:1px solid #E1E8F0;border-radius:12px;padding:20px;">
+        <div style="font-size:16px;color:#0A1628;font-weight:700;margin-bottom:6px;">Online Payments</div>
+        <p style="color:#5A6B7D;font-size:13.5px;margin:0 0 12px;line-height:1.55;">Let your clients pay invoices by card. Connect your bank through Stripe &mdash; payouts go straight to you, and it only takes a few minutes.</p>
+        <div id="payStatus" style="font-size:13px;color:#5A6B7D;margin-bottom:12px;">Checking status&hellip;</div>
+        <button id="payConnectBtn" onclick="connectPayments(this)" style="background:#1565C0;color:#fff;border:none;border-radius:8px;padding:11px 20px;font-size:14px;font-weight:700;cursor:pointer;">Set up online payments &rarr;</button>
+      </div>
       <div id="billingCard" style="display:none;margin-top:18px;background:#fff;border:1px solid #E1E8F0;border-radius:12px;padding:20px;">
         <div style="font-weight:700;font-size:15px;color:#0A1628;margin-bottom:4px;">Billing &amp; Subscription</div>
         <div style="font-size:13px;color:#5A6B7D;margin-bottom:14px;">Update your card, view invoices, or cancel your subscription.</div>
@@ -1427,6 +1433,7 @@ document.querySelectorAll('.tab').forEach(function(t){
     if(t.dataset.tab==='estimates'){renderEstimates();}
     if(t.dataset.tab==='sketches'){renderSketches();}
     if(t.dataset.tab==='log'){renderLog();}
+    if(t.dataset.tab==='profile'){checkPayStatus();}
   });
 });
 // ====== MODALS ======
@@ -1665,6 +1672,30 @@ function showForm(which){
   document.getElementById('authError').textContent='';
 }
 function authErr(msg){document.getElementById('authError').textContent=msg||'';}
+function checkPayStatus(){
+  var el=document.getElementById('payStatus'); var btn=document.getElementById('payConnectBtn');
+  if(!el) return;
+  el.textContent='Checking status\u2026';
+  fetch('/api/connect',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'status'})})
+    .then(function(r){return r.json();})
+    .then(function(d){
+      if(!d||!d.ok){ el.textContent=''; return; }
+      if(d.connected){ el.innerHTML='<span style="color:#1B8A4B;font-weight:700;">\u2713 Connected</span> \u2014 your clients can pay you by card.'; if(btn){btn.textContent='Manage payout account \u2192';} }
+      else if(d.started){ el.innerHTML='<span style="color:#B45309;font-weight:700;">Setup not finished</span> \u2014 complete it to accept payments.'; if(btn){btn.textContent='Finish setup \u2192';} }
+      else { el.textContent='Not connected yet. Set this up so clients can pay you online.'; if(btn){btn.textContent='Set up online payments \u2192';} }
+    })
+    .catch(function(){ el.textContent=''; });
+}
+function connectPayments(btn){
+  if(btn){btn.disabled=true;btn.textContent='Opening Stripe\u2026';}
+  fetch('/api/connect',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'onboard'})})
+    .then(function(r){return r.json();})
+    .then(function(d){
+      if(d&&d.ok&&d.url){ location.href=d.url; }
+      else { if(btn){btn.disabled=false;btn.textContent='Set up online payments \u2192';} alert((d&&d.error)||'Could not start setup.'); }
+    })
+    .catch(function(){ if(btn){btn.disabled=false;btn.textContent='Set up online payments \u2192';} alert('Server error.'); });
+}
 function openBilling(btn){
   if(btn){btn.disabled=true;btn.textContent='Opening...';}
   fetch('/api/portal',{method:'POST',headers:{'Content-Type':'application/json'},body:'{}'})
