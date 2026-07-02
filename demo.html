@@ -585,6 +585,11 @@ body.locked .appwrap{display:none !important;}
           <button type="button" class="sk-type" data-type="plumbing">Plumbing layout</button>
           <button type="button" class="sk-type" data-type="framing">Framing concept</button>
           <button type="button" class="sk-type" data-type="scope">Scope / zones</button>
+          <button type="button" class="sk-type" data-type="hvac">HVAC</button>
+          <button type="button" class="sk-type" data-type="roofing">Roofing</button>
+          <button type="button" class="sk-type" data-type="deck">Deck / patio</button>
+          <button type="button" class="sk-type" data-type="landscape">Landscape</button>
+          <button type="button" class="sk-type" data-type="solar">Solar</button>
         </div>
       </div>
       <div class="field"><label>Pull details from a job (optional)</label><input type="text" id="skJob" list="skJobList" placeholder="Start typing a job name..." oninput="skJobPick()"><datalist id="skJobList"></datalist></div>
@@ -2410,7 +2415,7 @@ ${e.notes?('<div class="notes">'+esc(e.notes)+'</div>'):''}
 <script>
 
 var _skType='floor';
-var _skTypeLabels={floor:'Concept floor plan',site:'Site plan',electrical:'Lighting & outlet layout',oneline:'One-line electrical',plumbing:'Plumbing fixture layout',framing:'Framing concept',scope:'Scope / zone diagram'};
+var _skTypeLabels={floor:'Concept floor plan',site:'Site plan',electrical:'Lighting & outlet layout',oneline:'One-line electrical',plumbing:'Plumbing fixture layout',framing:'Framing concept',scope:'Scope / zone diagram',hvac:'HVAC layout',roofing:'Roofing layout',deck:'Deck / patio plan',landscape:'Landscape plan',solar:'Solar panel layout'};
 var _curSketchSvg='';
 (function(){
   document.addEventListener('click',function(ev){
@@ -2431,7 +2436,7 @@ function skJobPick(){
   d.value=txt;
 }
 function _skPrompt(type){
-  var base='You are a technical illustrator. Design a CONCEPT diagram on an 800x600 canvas (x from 0 at left to 800 at right, y from 0 at top to 600 at bottom). Return ONLY a JSON object and nothing else - no markdown, no code fences, no words outside the JSON. Schema: {"title":"short title","shapes":[ ... ]}. Allowed shapes: {"t":"rect","x":num,"y":num,"w":num,"h":num,"label":"optional centered label"}; {"t":"line","x1":num,"y1":num,"x2":num,"y2":num}; {"t":"circle","x":num,"y":num,"r":num,"label":"optional"}; {"t":"text","x":num,"y":num,"s":"the text","size":num}. Rules: use 8 to 40 shapes, keep everything inside a 40px margin, keep the top 45px and bottom 45px clear, no overlapping text, all coordinates are numbers inside the canvas. ';
+  var base='You are a technical illustrator. Design a CONCEPT diagram on an 800x600 canvas (x from 0 at left to 800 at right, y from 0 at top to 600 at bottom). Return ONLY a JSON object and nothing else - no markdown, no code fences, no words outside the JSON. Schema: {"title":"short title","shapes":[ ... ]}. Allowed shapes: {"t":"rect","x":num,"y":num,"w":num,"h":num,"label":"optional centered label"}; {"t":"line","x1":num,"y1":num,"x2":num,"y2":num}; {"t":"circle","x":num,"y":num,"r":num,"label":"optional"}; {"t":"text","x":num,"y":num,"s":"the text","size":num}. Rules: use 8 to 40 shapes, keep everything inside a 40px margin, keep the top 45px and bottom 45px clear, no overlapping text, all coordinates are numbers inside the canvas. Output COMPACT, strictly valid JSON: double quotes only, NO trailing commas, NO comments, and no text outside the JSON. Use at most 24 shapes and keep labels short. ';
   var m={
     floor:'Draw a FLOOR PLAN: each room is a rect whose label includes an approximate size like "Kitchen 12x14". Show door openings as short line gaps and windows as short lines on outer walls. Arrange rooms to fill the canvas sensibly.',
     site:'Draw a SITE PLAN: a large rect for the property boundary, a rect for the house footprint, a rect or lines for the driveway, text labels for front and side setbacks, and a small text "N" with a short line for a north arrow.',
@@ -2439,10 +2444,16 @@ function _skPrompt(type){
     oneline:'Draw a ONE-LINE ELECTRICAL diagram: rects for utility service, meter and main panel connected by lines, with several labeled lines to circuits (Kitchen, Lighting, HVAC, Laundry). Label each with text.',
     plumbing:'Draw a PLUMBING FIXTURE layout: one rect for the room, small rects or circles for sink, toilet, tub or shower and water heater with text labels, and lines for supply and drain runs. Add a small text legend.',
     framing:'Draw a FRAMING concept: an outer rect, evenly spaced parallel lines for joists or studs, and a text label like "2x10 joists @ 16in OC". Add a thicker beam line and a text note "Concept - verify with licensed engineer".',
-    scope:'Draw a SCOPE / ZONE diagram: rects for each zone or area with a label describing the work in that zone, based on the description.'
+    scope:'Draw a SCOPE / ZONE diagram: rects for each zone or area with a label describing the work in that zone, based on the description.',
+    hvac:'Draw an HVAC layout: room outline rect, a rect for the air handler or furnace, small rects or circles for supply and return registers around the rooms, and lines for duct runs. Label the unit and a couple registers.',
+    roofing:'Draw a top-down ROOFING plan: roof outline, ridge lines, hip and valley lines, a slope arrow with text like "4:12", and labels for ridge, eave and valley.',
+    deck:'Draw a DECK or PATIO plan: an outer rect for the deck, evenly spaced parallel lines for decking boards, a rect for stairs, a thick line for the house edge, and a label like "16x20 deck".',
+    landscape:'Draw a LANDSCAPE plan: property rect, house footprint rect, circles for trees and shrubs, rects for planting beds and patio, lines for walkways, and short text labels.',
+    solar:'Draw a SOLAR panel layout on a roof: roof outline rect, a neat grid of small rects for panels, a rect for the inverter with a connecting line, and a label with panel count and orientation.'
   };
   return base+(m[type]||m.floor);
 }
+function _skParse(text){if(!text)return null;var t=text.replace(/```json/gi,'').replace(/```/g,'').trim();var a=t.indexOf('{');var b=t.lastIndexOf('}');if(a>=0&&b>a){t=t.substring(a,b+1);}t=t.replace(/,(\s*[}\]])/g,'$1');try{return JSON.parse(t);}catch(e){return null;}}
 function skRenderSVG(obj){
   var W=800,H=600;
   var p=['<svg viewBox="0 0 '+W+' '+H+'" xmlns="http://www.w3.org/2000/svg" font-family="Arial, Helvetica, sans-serif">'];
@@ -2478,12 +2489,12 @@ function generateSketch(){
   var user='Project / space: '+desc+'. Known dimensions or survey notes: '+(dims||'not provided')+'.';
   callClaude(sys,user,function(text){
     btn.disabled=false;btn.innerHTML=old;
-    var obj=_estParseJSON(text);
+    var obj=_skParse(text);
     var svg=(obj&&obj.shapes&&obj.shapes.length)?skRenderSVG(obj):'';
-    if(!svg){prev.innerHTML='<div class="sk-ph">The AI did not return a usable drawing. Try again, or add a little more detail.</div>';return;}
+    if(!svg){prev.innerHTML='<div class="sk-ph">The AI did not return a usable drawing. Try again, or add a little more detail.</div><pre style="white-space:pre-wrap;text-align:left;font-size:11px;max-height:150px;overflow:auto;background:#f4f8fd;padding:8px;border-radius:8px;margin-top:8px;color:#5A6B7D;">'+esc((text||'').slice(0,1200))+'</pre>';return;}
     _curSketchSvg=svg;prev.innerHTML=svg;
     document.getElementById('skActs').style.display='flex';
-  },function(err){btn.disabled=false;btn.innerHTML=old;prev.innerHTML='<div class="sk-ph">AI error: '+esc(err)+'</div>';},4000);
+  },function(err){btn.disabled=false;btn.innerHTML=old;prev.innerHTML='<div class="sk-ph">AI error: '+esc(err)+'</div>';},6000);
 }
 function _extractSvg(text){
   if(!text)return '';
