@@ -15,7 +15,7 @@ module.exports = async function handler(req, res) {
     if (!body || typeof body !== 'object') body = {};
 
     // Cap tokens hard for demo cost control
-    const maxTokens = Math.min(body.max_tokens || 800, 800);
+    const maxTokens = Math.min(body.max_tokens || 800, 4000);
     const messages = Array.isArray(body.messages) ? body.messages : [];
     const system = (body.system || '').toString().slice(0, 6000);
 
