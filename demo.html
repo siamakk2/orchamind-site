@@ -424,6 +424,7 @@ body.locked .appwrap{display:none !important;}
   <button class="side-talk" onclick="toggleVoiceCommand()" title="Log by voice"><svg viewBox="0 0 24 24" fill="none" stroke="#0A1628" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="2" width="6" height="12" rx="3"/><path d="M5 11a7 7 0 0 0 14 0"/><line x1="12" y1="18" x2="12" y2="22"/></svg><span>Tap to talk<small>Log by voice</small></span></button>
   <button class="tab active" data-tab="today"><svg class="ti" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9.5 12 3l9 6.5V21a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1z"/><path d="M9 22V12h6v10"/></svg>Home</button>
   <button class="tab" data-tab="jobs"><svg class="ti" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 7h20v13a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1z"/><path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>Jobs</button>
+  <button class="tab" data-tab="estimates" data-mgronly><svg class="ti" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M9 13h6"/><path d="M9 17h6"/></svg>Estimates</button>
   <button class="tab" data-tab="risks"><svg class="ti" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>Risk Radar</button>
   <button class="tab" data-tab="crew"><svg class="ti" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/></svg>Crew</button>
   <button class="tab" data-tab="hours"><svg class="ti" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>Hours</button>
@@ -507,6 +508,52 @@ body.locked .appwrap{display:none !important;}
   </div>
 
   <!-- RISK RADAR PANEL -->
+<style>
+.est-summary{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:18px;}
+.est-chip{background:#fff;border:1px solid var(--line);border-radius:12px;padding:14px 16px;}
+.est-chip .lbl{font-size:11px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.04em;}
+.est-chip .val{font-family:'Playfair Display',serif;font-size:22px;color:var(--navy);font-weight:700;margin-top:3px;}
+.est-card{background:#fff;border:1px solid var(--line);border-radius:12px;padding:14px 16px;display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-bottom:10px;}
+.est-card .num{font-weight:700;color:var(--blue);font-size:13px;min-width:78px;}
+.est-card .who{flex:1;min-width:150px;}
+.est-card .who b{color:var(--navy);}
+.est-card .who span{display:block;color:var(--muted);font-size:12.5px;}
+.est-card .amt{font-family:'Playfair Display',serif;font-size:18px;color:var(--navy);font-weight:700;}
+.est-badge{font-size:11px;font-weight:700;padding:3px 9px;border-radius:20px;text-transform:capitalize;}
+.est-badge.draft{background:#EEF3F8;color:#5A6B7D;}
+.est-badge.sent{background:#E3F0FF;color:#1565C0;}
+.est-badge.accepted{background:#E4F6EA;color:#1B8A4B;}
+.est-badge.declined{background:#FBE9E7;color:#C62828;}
+.est-badge.paid{background:#E4F6EA;color:#1B8A4B;}
+.est-acts{display:flex;gap:6px;flex-wrap:wrap;width:100%;margin-top:4px;}
+.est-acts button{background:rgba(21,101,192,.08);color:var(--blue);border:none;border-radius:7px;padding:6px 11px;font-size:12.5px;font-weight:600;cursor:pointer;font-family:inherit;}
+.est-acts button:hover{background:rgba(21,101,192,.16);}
+.est-acts button.danger{background:#FBE9E7;color:#C62828;}
+.est-grp-h{font-weight:700;color:var(--navy);margin:16px 0 8px;font-size:14px;}
+.li-wrap{overflow-x:auto;}
+.li-tbl{width:100%;border-collapse:collapse;margin:6px 0;min-width:520px;}
+.li-tbl th{text-align:left;font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;padding:4px 6px;}
+.li-tbl td{padding:3px 6px;vertical-align:middle;}
+.li-tbl input{width:100%;border:1.5px solid var(--line);border-radius:7px;padding:7px 8px;font-family:inherit;font-size:13px;color:var(--ink);}
+.li-tbl td.li-amt{font-weight:700;color:var(--navy);white-space:nowrap;}
+.li-tbl .li-qty,.li-tbl .li-price{max-width:92px;}.li-tbl .li-unit{max-width:72px;}
+.li-del{background:#FBE9E7;color:#C62828;border:none;border-radius:6px;width:28px;height:28px;font-size:17px;cursor:pointer;line-height:1;}
+.est-ai{background:#F4F8FD;border:1px dashed #B7D3F0;border-radius:12px;padding:14px;margin:8px 0 16px;}
+.est-ai textarea{width:100%;border:1.5px solid var(--line);border-radius:9px;padding:10px;font-family:inherit;font-size:14px;margin:6px 0 8px;}
+.est-ai-msg{font-size:12.5px;color:var(--muted);margin-top:6px;min-height:16px;}
+.est-totals{display:flex;justify-content:flex-end;align-items:flex-end;gap:16px;margin:6px 0 4px;flex-wrap:wrap;}
+.est-tot-lines{text-align:right;font-size:14px;color:var(--muted);}
+.est-tot-lines b{color:var(--navy);margin-left:10px;}
+.est-tot-lines .grand{font-size:17px;color:var(--navy);font-weight:700;margin-top:4px;border-top:1px solid var(--line);padding-top:6px;}
+</style>
+  <div class="panel" id="panel-estimates">
+    <div class="panel-head">
+      <h2>Estimates &amp; Invoices</h2>
+      <button class="btn" onclick="newEstimate()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>New Estimate</button>
+    </div>
+    <div id="estSummary" class="est-summary"></div>
+    <div id="estList"></div>
+  </div>
   <div class="panel" id="panel-risks">
     <div class="panel-head">
       <h2>Risk Radar</h2>
@@ -718,6 +765,44 @@ body.locked .appwrap{display:none !important;}
 
 
 <!-- MODALS -->
+<div class="modal-bg" id="estModal"><div class="modal" style="max-width:820px;">
+  <h3 id="estModalTitle">New Estimate</h3>
+  <input type="hidden" id="estId">
+  <div class="field-row">
+    <div class="field"><label>Client name</label><input type="text" id="estClient" placeholder="e.g. The Andersons"></div>
+    <div class="field"><label>Client email</label><input type="email" id="estEmail" placeholder="client@email.com"></div>
+  </div>
+  <div class="field-row">
+    <div class="field"><label>Project / Job</label><input type="text" id="estProject" list="estJobList" placeholder="e.g. Sonoma Vista Residence"><datalist id="estJobList"></datalist></div>
+    <div class="field"><label>Location</label><input type="text" id="estLocation" placeholder="e.g. Santa Rosa, CA"></div>
+  </div>
+  <div class="field-row">
+    <div class="field"><label>Date</label><input type="date" id="estDate"></div>
+    <div class="field"><label>Valid until</label><input type="date" id="estValid"></div>
+  </div>
+  <div class="est-ai">
+    <label style="font-weight:700;color:var(--navy);font-size:13px;">&#10024; Draft with AI</label>
+    <textarea id="estAiScope" rows="2" placeholder="Describe the job in plain words &mdash; e.g. 'Rewire a 2,000 sq ft home, 200A panel upgrade, 24 recessed lights, pull permit'"></textarea>
+    <button class="btn btn-ghost" type="button" id="estAiBtn" onclick="aiDraftEstimate()">&#10024; Generate line items</button>
+    <div id="estAiMsg" class="est-ai-msg"></div>
+  </div>
+  <div class="li-wrap">
+    <table class="li-tbl"><thead><tr><th>Description</th><th>Qty</th><th>Unit</th><th>Unit price</th><th>Amount</th><th></th></tr></thead><tbody id="estLines"></tbody></table>
+  </div>
+  <button class="btn btn-ghost" type="button" onclick="addEstLine()" style="margin:2px 0 10px;">+ Add line</button>
+  <div class="est-totals">
+    <div class="field" style="max-width:130px;"><label>Tax %</label><input type="number" id="estTax" min="0" step="0.1" value="0" oninput="recalcEst()"></div>
+    <div class="est-tot-lines">
+      <div>Subtotal <b id="estSub">$0</b></div>
+      <div>Tax <b id="estTaxAmt">$0</b></div>
+      <div class="grand">Total <b id="estTotal">$0</b></div>
+    </div>
+  </div>
+  <div class="field"><label>Notes / Terms</label><textarea id="estNotes" rows="2" placeholder="Payment terms, scope notes, exclusions..."></textarea></div>
+  <div class="field"><label>Status</label><select id="estStatus"><option value="draft">Draft</option><option value="sent">Sent</option><option value="accepted">Accepted</option><option value="declined">Declined</option></select></div>
+  <div class="modal-foot"><button class="btn btn-ghost" onclick="closeModal('estModal')">Cancel</button><button class="btn" onclick="saveEstimate()">Save</button></div>
+</div></div>
+
 <div class="modal-bg" id="jobModal"><div class="modal">
   <h3 id="jobModalTitle">New Job</h3>
   <input type="hidden" id="jobId">
@@ -840,16 +925,20 @@ var hours=[
   {id:'h4',name:'Steve Park',site:'Hillside ADU Project',date:'2026-06-21',amount:6}
 ];
 
+var estimates=[
+  {id:'e1',kind:'estimate',number:'EST-0001',client:'The Bennetts',clientEmail:'',project:'Calistoga Pool & Deck',location:'Calistoga, CA',date:'2026-06-18',validUntil:'2026-07-18',status:'sent',taxRate:0,notes:'50% deposit to schedule. Balance on completion. Valid 30 days.',items:[{desc:'Excavation & grading',qty:1,unit:'ls',price:14500},{desc:'Gunite pool shell',qty:1,unit:'ls',price:38000},{desc:'Stamped concrete deck',qty:850,unit:'sqft',price:22},{desc:'Equipment & plumbing',qty:1,unit:'ls',price:16500}]},
+  {id:'e2',kind:'invoice',number:'INV-0001',client:'M. Reynolds',clientEmail:'',project:'Valley View Estate',location:'Sonoma, CA',date:'2026-06-20',validUntil:'',status:'sent',taxRate:0,notes:'Net 15. Thank you.',items:[{desc:'Progress billing - finishing phase (draw 4)',qty:1,unit:'ls',price:62000}]}
+];
 var _saveTimer=null;
 function _acctKey(){return (typeof CURRENT_USER!=='undefined'&&CURRENT_USER&&CURRENT_USER.username)||'demo';}
 function dataKey(){return 'orcha_data_'+_acctKey();}
 function pendKey(){return 'orcha_pend_'+_acctKey();}
 var _pendingSync=false;
-function writeLocal(){try{localStorage.setItem(dataKey(),JSON.stringify({saved:true,jobs:jobs,crew:crew,hours:hours,subs:subs,_ts:Date.now()}));}catch(e){}}
+function writeLocal(){try{localStorage.setItem(dataKey(),JSON.stringify({saved:true,jobs:jobs,crew:crew,hours:hours,subs:subs,estimates:estimates,_ts:Date.now()}));}catch(e){}}
 function markPending(){_pendingSync=true;try{localStorage.setItem(pendKey(),'1');}catch(e){}updateSyncPill();}
 function markSynced(){_pendingSync=false;try{localStorage.removeItem(pendKey());}catch(e){}updateSyncPill();}
 function pushToServer(){
-  fetch('/api/data',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({data:{saved:true,jobs:jobs,crew:crew,hours:hours,subs:subs}})})
+  fetch('/api/data',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({data:{saved:true,jobs:jobs,crew:crew,hours:hours,subs:subs,estimates:estimates}})})
     .then(function(r){return r.json();})
     .then(function(o){if(o&&!o.error){_dbReady=true;markSynced();}else{markPending();}})
     .catch(function(){markPending();});
@@ -868,7 +957,7 @@ function load(cb){
   // 1) OFFLINE-FIRST: recall unsynced flag + hydrate instantly from this device
   try{_pendingSync=(localStorage.getItem(pendKey())==='1');}catch(e){_pendingSync=false;}
   var localHad=false;
-  try{var ls=localStorage.getItem(dataKey());if(ls){var d=JSON.parse(ls);if(d&&d.saved){jobs=Array.isArray(d.jobs)?d.jobs:jobs;crew=Array.isArray(d.crew)?d.crew:crew;hours=Array.isArray(d.hours)?d.hours:hours;subs=Array.isArray(d.subs)?d.subs:subs;localHad=true;}}}catch(e){}
+  try{var ls=localStorage.getItem(dataKey());if(ls){var d=JSON.parse(ls);if(d&&d.saved){jobs=Array.isArray(d.jobs)?d.jobs:jobs;crew=Array.isArray(d.crew)?d.crew:crew;hours=Array.isArray(d.hours)?d.hours:hours;subs=Array.isArray(d.subs)?d.subs:subs;estimates=Array.isArray(d.estimates)?d.estimates:estimates;localHad=true;}}}catch(e){}
   // 2) reach the shared database, but NEVER block the app
   var timer=setTimeout(function(){updateSyncPill();finish();},3000);
   fetch('/api/data').then(function(r){return r.json();}).then(function(out){
@@ -881,6 +970,7 @@ function load(cb){
       crew=Array.isArray(out.data.crew)?out.data.crew:[];
       hours=Array.isArray(out.data.hours)?out.data.hours:[];
       subs=Array.isArray(out.data.subs)?out.data.subs:[];
+      estimates=Array.isArray(out.data.estimates)?out.data.estimates:[];
       _dbReady=true;writeLocal();
     }
     updateSyncPill();finish();
@@ -1231,6 +1321,7 @@ document.querySelectorAll('.tab').forEach(function(t){
     if(t.dataset.tab==='admin'){loadUsers();}
     if(t.dataset.tab==='profile'){loadProfileForm();}
     if(t.dataset.tab==='reports'){renderReport();}
+    if(t.dataset.tab==='estimates'){renderEstimates();}
   });
 });
 // ====== MODALS ======
@@ -1240,7 +1331,7 @@ function _dl(fn,txt,mime){var b=new Blob([txt],{type:mime||'text/plain'});var u=
 function _csvCell(v){v=(v==null?'':String(v));if(/[",\n]/.test(v))v='"'+v.replace(/"/g,'""')+'"';return v;}
 function _csv(rows){if(!rows||!rows.length)return '';var cols=Object.keys(rows[0]);var out=cols.join(',')+'\n';rows.forEach(function(r){out+=cols.map(function(k){return _csvCell(r[k]);}).join(',')+'\n';});return out;}
 function _stamp(){return new Date().toISOString().split('T')[0];}
-function exportJSON(){var data={exportedAt:new Date().toISOString(),company:(CURRENT_USER&&CURRENT_USER.name)||'',jobs:jobs,crew:crew,hours:hours,subs:subs};_dl('orchamind-export-'+_stamp()+'.json',JSON.stringify(data,null,2),'application/json');}
+function exportJSON(){var data={exportedAt:new Date().toISOString(),company:(CURRENT_USER&&CURRENT_USER.name)||'',jobs:jobs,crew:crew,hours:hours,subs:subs,estimates:estimates};_dl('orchamind-export-'+_stamp()+'.json',JSON.stringify(data,null,2),'application/json');}
 function exportCSV(which){var map={jobs:jobs,crew:crew,hours:hours,subs:subs};var rows=map[which]||[];if(!rows.length){alert('Nothing to export there yet.');return;}_dl('orchamind-'+which+'-'+_stamp()+'.csv',_csv(rows),'text/csv');}
 function renderExportCounts(){var el=document.getElementById('exportCounts');if(!el)return;el.textContent=jobs.length+' projects \u00b7 '+hours.length+' timesheet entries \u00b7 '+crew.length+' crew \u00b7 '+subs.length+' subcontractors';}
 document.querySelectorAll('.modal-bg').forEach(function(m){m.addEventListener('click',function(e){if(e.target===m)closeModal(m.id);});});
@@ -1285,7 +1376,7 @@ function clearAllData(){
 
 // Explicit, non-debounced save that reports success/failure
 function saveNow(cb){
-  fetch('/api/data',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({data:{saved:true,jobs:jobs,crew:crew,hours:hours,subs:subs}})})
+  fetch('/api/data',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({data:{saved:true,jobs:jobs,crew:crew,hours:hours,subs:subs,estimates:estimates}})})
     .then(function(r){return r.json();})
     .then(function(o){var ok=o&&!o.error;if(ok)_dbReady=true;if(cb)cb(ok);})
     .catch(function(){if(cb)cb(false);});
@@ -2064,6 +2155,207 @@ function startApp(){
 function toggleSide(){var s=document.getElementById('appSide'),sc=document.getElementById('sideScrim');if(!s)return;if(s.classList.contains('open')){s.classList.remove('open');if(sc)sc.classList.remove('on');}else{s.classList.add('open');if(sc)sc.classList.add('on');}}
 function closeSide(){var s=document.getElementById('appSide'),sc=document.getElementById('sideScrim');if(s)s.classList.remove('open');if(sc)sc.classList.remove('on');}
 (function(){var s=document.getElementById('appSide');if(s){s.querySelectorAll('.tab').forEach(function(b){b.addEventListener('click',function(){if(window.innerWidth<=900){closeSide();}});});}})();
+</script>
+<script>
+
+function estNum(v){var n=parseFloat(v);return isNaN(n)?0:n;}
+function estMoney(n){n=estNum(n);var d=(n%1!==0)?2:0;return '$'+n.toLocaleString('en-US',{minimumFractionDigits:d,maximumFractionDigits:2});}
+function estTotals(e){var sub=0;(e.items||[]).forEach(function(it){sub+=estNum(it.qty)*estNum(it.price);});var tax=sub*(estNum(e.taxRate)/100);return {sub:sub,tax:tax,total:sub+tax};}
+function estNextNumber(kind){var pre=(kind==='invoice')?'INV':'EST';var max=0;(estimates||[]).forEach(function(e){if(e.kind===kind&&e.number){var m=/(\d+)\s*$/.exec(e.number);if(m){var v=parseInt(m[1],10);if(v>max)max=v;}}});return pre+'-'+String(max+1).padStart(4,'0');}
+
+function renderEstimates(){
+  var list=document.getElementById('estList');var sum=document.getElementById('estSummary');if(!list)return;
+  var dl=document.getElementById('estJobList');if(dl){dl.innerHTML=(window.jobs||[]).map(function(j){return '<option value="'+esc(j.name)+'">';}).join('');}
+  var ests=estimates.filter(function(e){return e.kind!=='invoice';});
+  var invs=estimates.filter(function(e){return e.kind==='invoice';});
+  var pipeline=0,won=0,outstanding=0,paid=0;
+  estimates.forEach(function(e){var tot=estTotals(e).total;
+    if(e.kind==='invoice'){if(e.status==='paid'){paid+=tot;}else{outstanding+=tot;}}
+    else{if(e.status==='accepted'){won+=tot;}else if(e.status==='draft'||e.status==='sent'){pipeline+=tot;}}
+  });
+  if(sum){sum.innerHTML=estChip('Pipeline',estMoney(pipeline),'Open estimates')+estChip('Won',estMoney(won),'Accepted')+estChip('Outstanding',estMoney(outstanding),'Unpaid invoices')+estChip('Collected',estMoney(paid),'Paid');}
+  var html='';
+  html+='<div class="est-grp-h">Estimates ('+ests.length+')</div>';
+  html+= ests.length? ests.map(estCard).join('') : '<div style="color:var(--muted);padding:8px 2px;font-size:13.5px;">No estimates yet. Tap New Estimate to create one.</div>';
+  html+='<div class="est-grp-h" style="margin-top:22px;">Invoices ('+invs.length+')</div>';
+  html+= invs.length? invs.map(estCard).join('') : '<div style="color:var(--muted);padding:8px 2px;font-size:13.5px;">No invoices yet. Accept an estimate and convert it to an invoice.</div>';
+  list.innerHTML=html;
+}
+function estChip(l,v,s){return '<div class="est-chip"><div class="lbl">'+esc(l)+'</div><div class="val">'+v+'</div><div style="font-size:11px;color:var(--muted);margin-top:2px;">'+esc(s)+'</div></div>';}
+function estCard(e){
+  var t=estTotals(e);var st=e.status||'draft';
+  var acts='<div class="est-acts">';
+  acts+='<button data-act="edit" data-id="'+esc(e.id)+'">Edit</button>';
+  acts+='<button data-act="pdf" data-id="'+esc(e.id)+'">PDF / Print</button>';
+  acts+='<button data-act="email" data-id="'+esc(e.id)+'">Email</button>';
+  if(e.kind!=='invoice'){
+    if(st!=='accepted'){acts+='<button data-act="accept" data-id="'+esc(e.id)+'">Mark accepted</button>';}
+    acts+='<button data-act="invoice" data-id="'+esc(e.id)+'">Convert to invoice</button>';
+  }else{
+    if(st!=='paid'){acts+='<button data-act="paid" data-id="'+esc(e.id)+'">Mark paid</button>';}
+  }
+  acts+='<button class="danger" data-act="del" data-id="'+esc(e.id)+'">Delete</button></div>';
+  return '<div class="est-card"><div class="num">'+esc(e.number||'')+'</div>'+
+    '<div class="who"><b>'+esc(e.client||'\u2014')+'</b><span>'+esc(e.project||'')+(e.location?(' \u00b7 '+esc(e.location)):'')+'</span></div>'+
+    '<div class="amt">'+estMoney(t.total)+'</div>'+
+    '<span class="est-badge '+esc(st)+'">'+esc(st)+'</span>'+acts+'</div>';
+}
+document.addEventListener('click',function(ev){
+  var tgt=ev.target;if(!tgt||!tgt.closest)return;
+  var b=tgt.closest('#estList [data-act]');if(!b)return;
+  var id=b.getAttribute('data-id');var act=b.getAttribute('data-act');
+  if(act==='edit')editEstimate(id);
+  else if(act==='pdf')printEstimate(id);
+  else if(act==='email')emailEstimate(id);
+  else if(act==='accept')setEstStatus(id,'accepted');
+  else if(act==='paid')setEstStatus(id,'paid');
+  else if(act==='invoice')convertToInvoice(id);
+  else if(act==='del')delEstimate(id);
+});
+
+function _estFill(e){
+  document.getElementById('estId').value=e.id||'';
+  document.getElementById('estClient').value=e.client||'';
+  document.getElementById('estEmail').value=e.clientEmail||'';
+  document.getElementById('estProject').value=e.project||'';
+  document.getElementById('estLocation').value=e.location||'';
+  document.getElementById('estDate').value=e.date||(new Date().toISOString().split('T')[0]);
+  document.getElementById('estValid').value=e.validUntil||'';
+  document.getElementById('estTax').value=e.taxRate||0;
+  document.getElementById('estNotes').value=e.notes||'';
+  document.getElementById('estStatus').value=e.status||'draft';
+  document.getElementById('estAiScope').value='';
+  document.getElementById('estAiMsg').textContent='';
+  document.getElementById('estLines').innerHTML='';
+  var items=(e.items&&e.items.length)?e.items:[{desc:'',qty:1,unit:'ea',price:0}];
+  items.forEach(function(it){addEstLine(it);});
+  recalcEst();
+}
+function newEstimate(){renderEstimates();_estFill({});document.getElementById('estModalTitle').textContent='New Estimate';openModal('estModal');}
+function editEstimate(id){var e=estimates.find(function(x){return x.id===id;});if(!e)return;renderEstimates();_estFill(e);document.getElementById('estModalTitle').textContent='Edit '+(e.kind==='invoice'?'Invoice ':'Estimate ')+(e.number||'');openModal('estModal');}
+function addEstLine(it){
+  it=it||{desc:'',qty:1,unit:'ea',price:0};
+  var tb=document.getElementById('estLines');var tr=document.createElement('tr');
+  function cell(cls,type,val){var td=document.createElement('td');var inp=document.createElement('input');inp.className=cls;if(type){inp.type=type;inp.step='any';}inp.value=val;inp.addEventListener('input',recalcEst);td.appendChild(inp);return td;}
+  tr.appendChild(cell('li-desc','',it.desc||''));
+  tr.appendChild(cell('li-qty','number',estNum(it.qty)));
+  tr.appendChild(cell('li-unit','',it.unit||'ea'));
+  tr.appendChild(cell('li-price','number',estNum(it.price)));
+  var amt=document.createElement('td');amt.className='li-amt';amt.textContent='$0';tr.appendChild(amt);
+  var dtd=document.createElement('td');var del=document.createElement('button');del.type='button';del.className='li-del';del.textContent='\u00d7';del.addEventListener('click',function(){tr.parentNode.removeChild(tr);recalcEst();});dtd.appendChild(del);tr.appendChild(dtd);
+  tb.appendChild(tr);recalcEst();
+}
+function recalcEst(){
+  var rows=document.querySelectorAll('#estLines tr');var sub=0;
+  rows.forEach(function(tr){var q=estNum(tr.querySelector('.li-qty').value);var p=estNum(tr.querySelector('.li-price').value);var amt=q*p;sub+=amt;tr.querySelector('.li-amt').textContent=estMoney(amt);});
+  var taxR=estNum(document.getElementById('estTax').value);var tax=sub*taxR/100;
+  document.getElementById('estSub').textContent=estMoney(sub);
+  document.getElementById('estTaxAmt').textContent=estMoney(tax);
+  document.getElementById('estTotal').textContent=estMoney(sub+tax);
+}
+function _estGather(){
+  var items=[];
+  document.querySelectorAll('#estLines tr').forEach(function(tr){
+    var desc=tr.querySelector('.li-desc').value.trim();
+    var qty=estNum(tr.querySelector('.li-qty').value);
+    var unit=tr.querySelector('.li-unit').value.trim();
+    var price=estNum(tr.querySelector('.li-price').value);
+    if(desc||price){items.push({desc:desc,qty:qty,unit:unit,price:price});}
+  });
+  return items;
+}
+function saveEstimate(){
+  var id=document.getElementById('estId').value;
+  var client=document.getElementById('estClient').value.trim();
+  if(!client){alert('Please enter a client name.');return;}
+  var items=_estGather();
+  if(!items.length){alert('Add at least one line item.');return;}
+  var data={client:client,clientEmail:document.getElementById('estEmail').value.trim(),project:document.getElementById('estProject').value.trim(),location:document.getElementById('estLocation').value.trim(),date:document.getElementById('estDate').value,validUntil:document.getElementById('estValid').value,taxRate:estNum(document.getElementById('estTax').value),notes:document.getElementById('estNotes').value.trim(),status:document.getElementById('estStatus').value,items:items};
+  if(id){var e=estimates.find(function(x){return x.id===id;});if(e){Object.assign(e,data);}}
+  else{data.id=uid();data.kind='estimate';data.number=estNextNumber('estimate');estimates.unshift(data);}
+  save();closeModal('estModal');renderEstimates();
+}
+function delEstimate(id){if(!confirm('Delete this document? This cannot be undone.'))return;estimates=estimates.filter(function(x){return x.id!==id;});save();renderEstimates();}
+function setEstStatus(id,st){var e=estimates.find(function(x){return x.id===id;});if(!e)return;e.status=st;save();renderEstimates();}
+function convertToInvoice(id){
+  var e=estimates.find(function(x){return x.id===id;});if(!e)return;
+  var inv={id:uid(),kind:'invoice',number:estNextNumber('invoice'),client:e.client,clientEmail:e.clientEmail,project:e.project,location:e.location,date:(new Date().toISOString().split('T')[0]),validUntil:'',status:'sent',taxRate:e.taxRate,notes:e.notes,createdFrom:e.id,items:(e.items||[]).map(function(it){return {desc:it.desc,qty:it.qty,unit:it.unit,price:it.price};})};
+  if(e.status!=='accepted')e.status='accepted';
+  estimates.unshift(inv);save();renderEstimates();
+  alert('Created '+inv.number+' from '+(e.number||'estimate')+'. You will find it under Invoices below.');
+}
+function emailEstimate(id){
+  var e=estimates.find(function(x){return x.id===id;});if(!e)return;
+  var NL=String.fromCharCode(10);var t=estTotals(e);var title=(e.kind==='invoice')?'Invoice':'Estimate';
+  var company=(CURRENT_USER&&CURRENT_USER.name)||'our team';
+  var parts=[];parts.push(title+' '+(e.number||'')+' from '+company);parts.push('');
+  if(e.project){parts.push('Project: '+e.project);parts.push('');}
+  (e.items||[]).forEach(function(it){parts.push('- '+it.desc+': '+estMoney(estNum(it.qty)*estNum(it.price)));});
+  parts.push('');parts.push('Total: '+estMoney(t.total));
+  if(e.notes){parts.push('');parts.push(e.notes);}
+  parts.push('');parts.push('Thank you.');
+  var subj=title+' '+(e.number||'')+' - '+(e.project||company);
+  window.location.href='mailto:'+encodeURIComponent(e.clientEmail||'')+'?subject='+encodeURIComponent(subj)+'&body='+encodeURIComponent(parts.join(NL));
+}
+function aiDraftEstimate(){
+  var scope=document.getElementById('estAiScope').value.trim();
+  var msg=document.getElementById('estAiMsg');var btn=document.getElementById('estAiBtn');
+  if(!scope){msg.textContent='Type a short job description first.';return;}
+  btn.disabled=true;var old=btn.innerHTML;btn.innerHTML='Thinking...';msg.textContent='Drafting line items with AI...';
+  var company=(CURRENT_USER&&CURRENT_USER.name)||'';
+  var sys='You are a senior construction cost estimator'+(company?(' for '+company):'')+'. Convert the job description into realistic itemized estimate line items using current California contractor pricing. Split labor and materials into separate lines where sensible, and include permit or fee lines if implied. Return ONLY a JSON object with no markdown, no code fences, and no commentary, in exactly this shape: {"items":[{"desc":"string","qty":number,"unit":"string","price":number}],"notes":"string"} where price is the dollar amount per unit.';
+  callClaude(sys,'Job description: '+scope,function(text){
+    btn.disabled=false;btn.innerHTML=old;
+    var obj=_estParseJSON(text);
+    if(!obj||!obj.items||!obj.items.length){msg.textContent='Could not read the AI draft - try rephrasing the description.';return;}
+    document.getElementById('estLines').innerHTML='';
+    obj.items.forEach(function(it){addEstLine({desc:it.desc||'',qty:estNum(it.qty)||1,unit:it.unit||'ea',price:estNum(it.price)});});
+    if(obj.notes&&!document.getElementById('estNotes').value.trim()){document.getElementById('estNotes').value=obj.notes;}
+    recalcEst();
+    msg.textContent='Drafted '+obj.items.length+' line items - review, adjust, then Save.';
+  },function(err){btn.disabled=false;btn.innerHTML=old;msg.textContent='AI error: '+err;});
+}
+function _estParseJSON(text){
+  if(!text)return null;
+  var t=text.replace(/```json/gi,'').replace(/```/g,'').trim();
+  var a=t.indexOf('{');var b=t.lastIndexOf('}');
+  if(a>=0&&b>a){t=t.substring(a,b+1);}
+  try{return JSON.parse(t);}catch(e){return null;}
+}
+function printEstimate(id){
+  var e=estimates.find(function(x){return x.id===id;});if(!e)return;
+  var t=estTotals(e);
+  var company=(CURRENT_USER&&CURRENT_USER.name)||'Your Company';
+  var title=(e.kind==='invoice')?'INVOICE':'ESTIMATE';
+  var rows=(e.items||[]).map(function(it){return '<tr><td>'+esc(it.desc)+'</td><td class="c">'+estNum(it.qty)+'</td><td class="c">'+esc(it.unit||'')+'</td><td class="r">'+estMoney(it.price)+'</td><td class="r">'+estMoney(estNum(it.qty)*estNum(it.price))+'</td></tr>';}).join('');
+  var taxRow=(estNum(e.taxRate)>0)?('<tr><td class="r" colspan="4">Tax ('+estNum(e.taxRate)+'%)</td><td class="r">'+estMoney(t.tax)+'</td></tr>'):'';
+  var w=window.open('','_blank');
+  if(!w){alert('Please allow pop-ups to print or save the PDF.');return;}
+  var doc=`<!doctype html><html><head><meta charset="utf-8"><title>${title} ${esc(e.number||'')}</title>
+<style>
+*{box-sizing:border-box;}body{font-family:Arial,Helvetica,sans-serif;color:#0A1628;margin:40px;}
+.hd{display:flex;justify-content:space-between;align-items:flex-start;border-bottom:3px solid #1565C0;padding-bottom:16px;margin-bottom:20px;}
+.co{font-size:20px;font-weight:700;color:#1565C0;}.meta{font-size:13px;color:#5A6B7D;margin-top:4px;}
+h1{font-size:26px;margin:0;}.to{margin:16px 0;font-size:13.5px;}.to b{color:#0A1628;}
+table{width:100%;border-collapse:collapse;margin-top:10px;font-size:13px;}
+th{background:#EEF3F8;text-align:left;padding:9px 10px;font-size:11px;text-transform:uppercase;letter-spacing:.04em;}
+td{padding:9px 10px;border-bottom:1px solid #E1E8F0;}td.c{text-align:center;}td.r{text-align:right;}
+tfoot td{border:none;font-weight:700;}.grand td{font-size:16px;color:#1565C0;border-top:2px solid #1565C0;}
+.notes{margin-top:20px;font-size:12.5px;color:#5A6B7D;white-space:pre-wrap;border-top:1px solid #E1E8F0;padding-top:12px;}
+.ft{margin-top:28px;font-size:11px;color:#9aa7b4;text-align:center;}
+</style></head><body>
+<div class="hd"><div><div class="co">${esc(company)}</div><div class="meta">${title}</div></div>
+<div style="text-align:right;"><h1>${title}</h1><div class="meta">${esc(e.number||'')}<br>Date: ${esc(e.date||'')}${e.validUntil?('<br>Valid until: '+esc(e.validUntil)):''}</div></div></div>
+<div class="to"><b>Bill to:</b><br>${esc(e.client||'')}${e.location?('<br>'+esc(e.location)):''}${e.clientEmail?('<br>'+esc(e.clientEmail)):''}${e.project?('<br>Project: '+esc(e.project)):''}</div>
+<table><thead><tr><th>Description</th><th class="c">Qty</th><th class="c">Unit</th><th class="r">Unit price</th><th class="r">Amount</th></tr></thead>
+<tbody>${rows}</tbody>
+<tfoot><tr><td class="r" colspan="4">Subtotal</td><td class="r">${estMoney(t.sub)}</td></tr>${taxRow}<tr class="grand"><td class="r" colspan="4">Total</td><td class="r">${estMoney(t.total)}</td></tr></tfoot></table>
+${e.notes?('<div class="notes">'+esc(e.notes)+'</div>'):''}
+<div class="ft">Generated by Orchamind</div>
+</body></html>`;
+  w.document.write(doc);w.document.close();w.focus();setTimeout(function(){try{w.print();}catch(err){}},350);
+}
+
 </script>
 </body>
 </html>
