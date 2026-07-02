@@ -8,7 +8,7 @@ module.exports = async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ ok: false, error: 'Method not allowed' });
 
   var STRIPE = process.env.STRIPE_SECRET_KEY_TEST || process.env.STRIPE_SECRET_KEY;
-  var SVC = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  var SVC = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SECRET_KEY || process.env.SUPABASE_SERVICE_KEY;
   var SUPABASE_URL = 'https://yqbprvyhzugdmavvurqb.supabase.co';
   if (!STRIPE) return res.status(200).json({ ok: false, error: 'Payments not configured (missing Stripe key).' });
   if (!SVC) return res.status(200).json({ ok: false, error: 'Server not configured.' });
