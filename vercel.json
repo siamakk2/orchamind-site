@@ -1,6 +1,10 @@
 {
   "rewrites": [
     {
+      "source": "/demo",
+      "destination": "/demo.html"
+    },
+    {
       "source": "/app",
       "destination": "/demo.html"
     },
@@ -10,14 +14,6 @@
     },
     {
       "source": "/proposal",
-      "destination": "/proposal.html"
-    },
-    {
-      "source": "/knowledge-base",
-      "destination": "/proposal.html"
-    },
-    {
-      "source": "/knowledge",
       "destination": "/proposal.html"
     },
     {
