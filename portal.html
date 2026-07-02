@@ -1,0 +1,95 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>Project Portal | Orchamind</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Sora:wght@500;600;700&family=Outfit:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--navy:#0A1628;--blue:#1565C0;--amber:#F9A825;--bg:#EEF3F8;--ink:#0A1628;--muted:#5A6B7D;--line:#E1E8F0}
+body{background:var(--bg);color:var(--ink);font-family:'Outfit',system-ui,sans-serif;line-height:1.6;min-height:100vh}
+.top{background:var(--navy);padding:16px 20px;display:flex;align-items:center;gap:10px}
+.top .mark{width:30px;height:30px;border-radius:8px;background:linear-gradient(135deg,var(--blue),#5B9DFF);display:flex;align-items:center;justify-content:center}
+.top .mark svg{width:18px;height:18px}
+.top b{color:#fff;font-family:'Sora',sans-serif;font-size:17px}
+.wrap{max-width:720px;margin:0 auto;padding:28px 18px 60px}
+.card{background:#fff;border:1px solid var(--line);border-radius:16px;padding:26px;box-shadow:0 2px 16px rgba(10,22,40,.05)}
+h1{font-family:'Playfair Display',serif;font-size:26px;color:var(--navy);margin-bottom:6px}
+.sub{color:var(--muted);font-size:14px;margin-bottom:20px}
+label{display:block;font-size:13px;font-weight:600;color:var(--navy);margin:12px 0 6px}
+input{width:100%;border:1.5px solid var(--line);border-radius:10px;padding:12px 14px;font-family:inherit;font-size:15px;color:var(--ink);outline:none}
+input:focus{border-color:var(--blue)}
+.btn{width:100%;margin-top:18px;background:var(--blue);color:#fff;border:none;border-radius:11px;padding:14px;font-family:inherit;font-size:15px;font-weight:600;cursor:pointer}
+.btn:hover{background:#0d4fa0}
+.err{color:#C62828;font-size:13px;margin-top:12px;min-height:16px}
+.badge{display:inline-block;font-size:12px;font-weight:700;padding:4px 12px;border-radius:20px;background:#E3F0FF;color:var(--blue);text-transform:capitalize}
+.prog-lbl{display:flex;justify-content:space-between;font-size:13px;color:var(--muted);margin:16px 0 6px}
+.track{height:12px;background:var(--line);border-radius:8px;overflow:hidden}
+.fill{height:100%;background:linear-gradient(90deg,var(--blue),#5B9DFF);border-radius:8px}
+.meta{color:var(--muted);font-size:14px;margin-top:14px}
+.upd{background:#fff;border:1px solid var(--line);border-radius:14px;padding:16px;margin-bottom:12px}
+.upd .d{font-size:12.5px;color:var(--muted);font-weight:600}
+.upd .n{margin-top:6px;color:#3a4a5a;white-space:pre-wrap}
+.gal{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+.gal img{width:110px;height:110px;object-fit:cover;border-radius:10px;border:1px solid var(--line);cursor:pointer}
+.h2{font-family:'Sora',sans-serif;font-size:16px;color:var(--navy);margin:26px 0 12px;font-weight:700}
+.signout{color:var(--muted);font-size:13px;text-align:center;margin-top:24px;cursor:pointer}
+.signout:hover{color:var(--blue)}
+.foot{text-align:center;color:var(--muted);font-size:12px;margin-top:30px}
+.foot a{color:var(--blue);text-decoration:none}
+</style></head><body>
+<div class="top"><span class="mark"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12h4l3 8 4-16 3 8h4"/></svg></span><b>Orchamind</b></div>
+<div class="wrap">
+  <div id="login" class="card">
+    <h1>Your Project Portal</h1>
+    <div class="sub">Enter your email and the access code your contractor gave you to follow your project's progress and photos.</div>
+    <label>Email</label><input type="email" id="pEmail" placeholder="you@email.com" autocomplete="email">
+    <label>Access code</label><input type="text" id="pCode" placeholder="e.g. K7R2QP" autocapitalize="characters" autocomplete="off">
+    <button class="btn" id="pBtn" onclick="viewProject()">View my project</button>
+    <div class="err" id="pErr"></div>
+  </div>
+  <div id="project" style="display:none;"></div>
+  <div class="foot">Powered by <a href="/">Orchamind</a></div>
+</div>
+<script>
+function esc(s){return String(s==null?'':s).replace(/[&<>"]/g,function(m){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[m];});}
+function fmtDate(d){ if(!d)return''; try{ var dt=new Date(d+'T00:00:00'); return dt.toLocaleDateString('en-US',{month:'long',day:'numeric',year:'numeric'}); }catch(e){ return d; } }
+function cap(s){ s=String(s||''); return s.charAt(0).toUpperCase()+s.slice(1); }
+function viewProject(){
+  var email=document.getElementById('pEmail').value.trim();
+  var code=document.getElementById('pCode').value.trim();
+  var err=document.getElementById('pErr'); var btn=document.getElementById('pBtn');
+  if(!code){ err.textContent='Please enter your access code.'; return; }
+  err.textContent=''; var old=btn.textContent; btn.disabled=true; btn.textContent='Loading...';
+  fetch('/api/clientportal',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'view',code:code,email:email})})
+    .then(function(r){return r.json();})
+    .then(function(d){
+      btn.disabled=false; btn.textContent=old;
+      if(!d||!d.ok){ err.textContent=(d&&d.error)||'Could not open your project.'; return; }
+      try{ sessionStorage.setItem('orcha_portal', JSON.stringify({code:code,email:email})); }catch(e){}
+      render(d.project);
+    })
+    .catch(function(e){ btn.disabled=false; btn.textContent=old; err.textContent=e.message; });
+}
+function render(p){
+  document.getElementById('login').style.display='none';
+  var el=document.getElementById('project'); el.style.display='block';
+  var updates=(p.updates||[]).map(function(u){
+    var g=(u.photos||[]).map(function(ph){ return '<img src="'+esc(ph.url)+'" alt="" onclick="window.open(this.src)">'; }).join('');
+    return '<div class="upd"><div class="d">'+esc(fmtDate(u.date))+'</div>'+(u.note?('<div class="n">'+esc(u.note)+'</div>'):'')+(g?('<div class="gal">'+g+'</div>'):'')+'</div>';
+  }).join('');
+  el.innerHTML='<div class="card">'+
+    (p.company?('<div class="sub" style="margin-bottom:4px;">'+esc(p.company)+'</div>'):'')+
+    '<h1>'+esc(p.name)+'</h1>'+
+    '<span class="badge">'+esc(cap(p.status))+'</span>'+
+    '<div class="prog-lbl"><span>Progress</span><b>'+(p.progress||0)+'%</b></div><div class="track"><div class="fill" style="width:'+(p.progress||0)+'%"></div></div>'+
+    (p.location?('<div class="meta">'+esc(p.location)+'</div>'):'')+
+    '</div>'+
+    '<div class="h2">Updates</div>'+
+    (updates||'<div class="upd" style="color:var(--muted);">No updates posted yet. Check back soon.</div>')+
+    '<div class="signout" onclick="signout()">Sign out</div>';
+}
+function signout(){ try{ sessionStorage.removeItem('orcha_portal'); }catch(e){} location.reload(); }
+(function(){ try{ var s=JSON.parse(sessionStorage.getItem('orcha_portal')||'null'); if(s&&s.code){ document.getElementById('pEmail').value=s.email||''; document.getElementById('pCode').value=s.code; viewProject(); } }catch(e){} })();
+</script>
+</body></html>
