@@ -426,6 +426,7 @@ body.locked .appwrap{display:none !important;}
   <button class="tab" data-tab="jobs"><svg class="ti" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 7h20v13a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1z"/><path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>Jobs</button>
   <button class="tab" data-tab="estimates" data-mgronly><svg class="ti" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M9 13h6"/><path d="M9 17h6"/></svg>Estimates</button>
   <button class="tab" data-tab="sketches"><svg class="ti" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3h7v7H3z"/><path d="M14 3h7v4h-7z"/><path d="M14 11h7v10h-7z"/><path d="M3 14h7v7H3z"/></svg>Plans</button>
+  <button class="tab" data-tab="log"><svg class="ti" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>Site Log</button>
   <button class="tab" data-tab="risks"><svg class="ti" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>Risk Radar</button>
   <button class="tab" data-tab="crew"><svg class="ti" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/></svg>Crew</button>
   <button class="tab" data-tab="hours"><svg class="ti" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>Hours</button>
@@ -605,6 +606,28 @@ body.locked .appwrap{display:none !important;}
     </div>
     <div class="est-grp-h" style="margin-top:8px;">Saved drawings</div>
     <div id="skList"></div>
+  </div>
+<style>
+.log-entry{background:#fff;border:1px solid var(--line);border-radius:14px;padding:14px 16px;margin-bottom:12px;}
+.log-head{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;}
+.log-head b{color:var(--navy);}
+.log-date{display:block;color:var(--muted);font-size:12.5px;margin-top:2px;}
+.log-del{background:#FBE9E7;color:#C62828;border:none;border-radius:7px;padding:5px 10px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;flex-shrink:0;}
+.log-note{margin-top:8px;color:#3a4a5a;font-size:14px;line-height:1.55;white-space:pre-wrap;}
+.log-gallery{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px;}
+.log-photo{width:96px;height:96px;object-fit:cover;border-radius:9px;border:1px solid var(--line);cursor:pointer;}
+.log-thumb{position:relative;display:inline-block;margin:4px;}
+.log-thumb img{width:80px;height:80px;object-fit:cover;border-radius:8px;border:1px solid var(--line);}
+.log-thumb-x{position:absolute;top:-8px;right:-8px;width:22px;height:22px;border-radius:50%;background:#C62828;color:#fff;border:none;cursor:pointer;font-size:14px;line-height:1;}
+.log-up-msg{font-size:12.5px;color:var(--muted);margin-top:6px;min-height:16px;}
+</style>
+  <div class="panel" id="panel-log">
+    <div class="panel-head">
+      <h2>Site Log</h2>
+      <button class="btn" onclick="newLog()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>New Entry</button>
+    </div>
+    <p style="color:var(--muted);font-size:13.5px;margin:-4px 0 16px;">Log what happened on site &mdash; a quick note and photos, attached to the job. Great for progress records and protecting yourself in disputes.</p>
+    <div id="logList"></div>
   </div>
   <div class="panel" id="panel-risks">
     <div class="panel-head">
@@ -855,6 +878,15 @@ body.locked .appwrap{display:none !important;}
   <div class="modal-foot"><button class="btn btn-ghost" onclick="closeModal('estModal')">Cancel</button><button class="btn" onclick="saveEstimate()">Save</button></div>
 </div></div>
 
+<div class="modal-bg" id="logModal"><div class="modal" style="max-width:600px;">
+  <h3>New Site Log Entry</h3>
+  <div class="field"><label>Job</label><input type="text" id="logJob" list="logJobList" placeholder="Start typing a job name..."><datalist id="logJobList"></datalist></div>
+  <div class="field"><label>Date</label><input type="date" id="logDate"></div>
+  <div class="field"><label>Note &mdash; what happened on site</label><textarea id="logNote" rows="3" placeholder="e.g. Framing 60% done, windows delivered, inspection Tuesday"></textarea></div>
+  <div class="field"><label>Photos</label><input type="file" id="logFiles" accept="image/*" multiple onchange="addLogPhotos(this)"><div class="log-up-msg" id="logUpMsg"></div><div id="logThumbs" style="margin-top:6px;"></div></div>
+  <div class="modal-foot"><button class="btn btn-ghost" onclick="closeModal('logModal')">Cancel</button><button class="btn" onclick="saveLog()">Save entry</button></div>
+</div></div>
+
 <div class="modal-bg" id="jobModal"><div class="modal">
   <h3 id="jobModalTitle">New Job</h3>
   <input type="hidden" id="jobId">
@@ -982,16 +1014,17 @@ var estimates=[
   {id:'e2',kind:'invoice',number:'INV-0001',client:'M. Reynolds',clientEmail:'',project:'Valley View Estate',location:'Sonoma, CA',date:'2026-06-20',validUntil:'',status:'sent',taxRate:0,notes:'Net 15. Thank you.',items:[{desc:'Progress billing - finishing phase (draw 4)',qty:1,unit:'ls',price:62000}]}
 ];
 var sketches=[];
+var logs=[{id:'l1',job:'Sonoma Vista Residence',date:'2026-06-22',note:'Framing 60% complete on the north wall. Windows delivered and staged in the garage. Framing inspection confirmed for next Tuesday.',photos:[],author:'Demo'}];
 var _saveTimer=null;
 function _acctKey(){return (typeof CURRENT_USER!=='undefined'&&CURRENT_USER&&CURRENT_USER.username)||'demo';}
 function dataKey(){return 'orcha_data_'+_acctKey();}
 function pendKey(){return 'orcha_pend_'+_acctKey();}
 var _pendingSync=false;
-function writeLocal(){try{localStorage.setItem(dataKey(),JSON.stringify({saved:true,jobs:jobs,crew:crew,hours:hours,subs:subs,estimates:estimates,sketches:sketches,_ts:Date.now()}));}catch(e){}}
+function writeLocal(){try{localStorage.setItem(dataKey(),JSON.stringify({saved:true,jobs:jobs,crew:crew,hours:hours,subs:subs,estimates:estimates,sketches:sketches,logs:logs,_ts:Date.now()}));}catch(e){}}
 function markPending(){_pendingSync=true;try{localStorage.setItem(pendKey(),'1');}catch(e){}updateSyncPill();}
 function markSynced(){_pendingSync=false;try{localStorage.removeItem(pendKey());}catch(e){}updateSyncPill();}
 function pushToServer(){
-  fetch('/api/data',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({data:{saved:true,jobs:jobs,crew:crew,hours:hours,subs:subs,estimates:estimates,sketches:sketches}})})
+  fetch('/api/data',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({data:{saved:true,jobs:jobs,crew:crew,hours:hours,subs:subs,estimates:estimates,sketches:sketches,logs:logs}})})
     .then(function(r){return r.json();})
     .then(function(o){if(o&&!o.error){_dbReady=true;markSynced();}else{markPending();}})
     .catch(function(){markPending();});
@@ -1010,7 +1043,7 @@ function load(cb){
   // 1) OFFLINE-FIRST: recall unsynced flag + hydrate instantly from this device
   try{_pendingSync=(localStorage.getItem(pendKey())==='1');}catch(e){_pendingSync=false;}
   var localHad=false;
-  try{var ls=localStorage.getItem(dataKey());if(ls){var d=JSON.parse(ls);if(d&&d.saved){jobs=Array.isArray(d.jobs)?d.jobs:jobs;crew=Array.isArray(d.crew)?d.crew:crew;hours=Array.isArray(d.hours)?d.hours:hours;subs=Array.isArray(d.subs)?d.subs:subs;estimates=Array.isArray(d.estimates)?d.estimates:estimates;sketches=Array.isArray(d.sketches)?d.sketches:sketches;localHad=true;}}}catch(e){}
+  try{var ls=localStorage.getItem(dataKey());if(ls){var d=JSON.parse(ls);if(d&&d.saved){jobs=Array.isArray(d.jobs)?d.jobs:jobs;crew=Array.isArray(d.crew)?d.crew:crew;hours=Array.isArray(d.hours)?d.hours:hours;subs=Array.isArray(d.subs)?d.subs:subs;estimates=Array.isArray(d.estimates)?d.estimates:estimates;sketches=Array.isArray(d.sketches)?d.sketches:sketches;logs=Array.isArray(d.logs)?d.logs:logs;localHad=true;}}}catch(e){}
   // 2) reach the shared database, but NEVER block the app
   var timer=setTimeout(function(){updateSyncPill();finish();},3000);
   fetch('/api/data').then(function(r){return r.json();}).then(function(out){
@@ -1025,6 +1058,7 @@ function load(cb){
       subs=Array.isArray(out.data.subs)?out.data.subs:[];
       estimates=Array.isArray(out.data.estimates)?out.data.estimates:[];
       sketches=Array.isArray(out.data.sketches)?out.data.sketches:[];
+      logs=Array.isArray(out.data.logs)?out.data.logs:[];
       _dbReady=true;writeLocal();
     }
     updateSyncPill();finish();
@@ -1377,6 +1411,7 @@ document.querySelectorAll('.tab').forEach(function(t){
     if(t.dataset.tab==='reports'){renderReport();}
     if(t.dataset.tab==='estimates'){renderEstimates();}
     if(t.dataset.tab==='sketches'){renderSketches();}
+    if(t.dataset.tab==='log'){renderLog();}
   });
 });
 // ====== MODALS ======
@@ -1386,7 +1421,7 @@ function _dl(fn,txt,mime){var b=new Blob([txt],{type:mime||'text/plain'});var u=
 function _csvCell(v){v=(v==null?'':String(v));if(/[",\n]/.test(v))v='"'+v.replace(/"/g,'""')+'"';return v;}
 function _csv(rows){if(!rows||!rows.length)return '';var cols=Object.keys(rows[0]);var out=cols.join(',')+'\n';rows.forEach(function(r){out+=cols.map(function(k){return _csvCell(r[k]);}).join(',')+'\n';});return out;}
 function _stamp(){return new Date().toISOString().split('T')[0];}
-function exportJSON(){var data={exportedAt:new Date().toISOString(),company:(CURRENT_USER&&CURRENT_USER.name)||'',jobs:jobs,crew:crew,hours:hours,subs:subs,estimates:estimates,sketches:sketches};_dl('orchamind-export-'+_stamp()+'.json',JSON.stringify(data,null,2),'application/json');}
+function exportJSON(){var data={exportedAt:new Date().toISOString(),company:(CURRENT_USER&&CURRENT_USER.name)||'',jobs:jobs,crew:crew,hours:hours,subs:subs,estimates:estimates,sketches:sketches,logs:logs};_dl('orchamind-export-'+_stamp()+'.json',JSON.stringify(data,null,2),'application/json');}
 function exportCSV(which){var map={jobs:jobs,crew:crew,hours:hours,subs:subs};var rows=map[which]||[];if(!rows.length){alert('Nothing to export there yet.');return;}_dl('orchamind-'+which+'-'+_stamp()+'.csv',_csv(rows),'text/csv');}
 function renderExportCounts(){var el=document.getElementById('exportCounts');if(!el)return;el.textContent=jobs.length+' projects \u00b7 '+hours.length+' timesheet entries \u00b7 '+crew.length+' crew \u00b7 '+subs.length+' subcontractors';}
 document.querySelectorAll('.modal-bg').forEach(function(m){m.addEventListener('click',function(e){if(e.target===m)closeModal(m.id);});});
@@ -1431,7 +1466,7 @@ function clearAllData(){
 
 // Explicit, non-debounced save that reports success/failure
 function saveNow(cb){
-  fetch('/api/data',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({data:{saved:true,jobs:jobs,crew:crew,hours:hours,subs:subs,estimates:estimates,sketches:sketches}})})
+  fetch('/api/data',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({data:{saved:true,jobs:jobs,crew:crew,hours:hours,subs:subs,estimates:estimates,sketches:sketches,logs:logs}})})
     .then(function(r){return r.json();})
     .then(function(o){var ok=o&&!o.error;if(ok)_dbReady=true;if(cb)cb(ok);})
     .catch(function(){if(cb)cb(false);});
@@ -2552,6 +2587,92 @@ function printSavedSketch(id){
   setTimeout(function(){try{w.print();}catch(e){}},350);
 }
 function delSketch(id){if(!confirm('Delete this drawing?'))return;sketches=sketches.filter(function(x){return x.id!==id;});save();renderSketches();}
+
+</script>
+<script>
+
+window._logPhotos = window._logPhotos || [];
+(function(){
+  document.addEventListener('click',function(ev){
+    var t=ev.target; if(!t||!t.closest) return;
+    var rm=t.closest('#logThumbs [data-rm]');
+    if(rm){ var i=parseInt(rm.getAttribute('data-rm'),10); if(!isNaN(i)){ window._logPhotos.splice(i,1); renderLogThumbs(); } return; }
+    var op=t.closest('#logList [data-open]');
+    if(op){ var u=op.getAttribute('data-open'); if(u) window.open(u,'_blank'); return; }
+    var dl=t.closest('#logList [data-dellog]');
+    if(dl){ delLog(dl.getAttribute('data-dellog')); return; }
+  });
+})();
+function newLog(){
+  window._logPhotos=[];
+  document.getElementById('logJob').value='';
+  document.getElementById('logDate').value=(new Date().toISOString().split('T')[0]);
+  document.getElementById('logNote').value='';
+  document.getElementById('logThumbs').innerHTML='';
+  document.getElementById('logUpMsg').textContent='';
+  var dl=document.getElementById('logJobList'); if(dl){ dl.innerHTML=(window.jobs||[]).map(function(j){return '<option value="'+esc(j.name)+'">';}).join(''); }
+  openModal('logModal');
+}
+function compressLogImage(file,cb){
+  try{
+    var img=new Image(); var url=URL.createObjectURL(file);
+    img.onload=function(){
+      var W=img.naturalWidth||img.width, H=img.naturalHeight||img.height, M=1280;
+      if(W>M||H>M){ if(W>=H){ H=Math.round(H*M/W); W=M; } else { W=Math.round(W*M/H); H=M; } }
+      var c=document.createElement('canvas'); c.width=W; c.height=H;
+      c.getContext('2d').drawImage(img,0,0,W,H);
+      var q=0.8, out=c.toDataURL('image/jpeg',q);
+      while(out.length>900000 && q>0.4){ q-=0.1; out=c.toDataURL('image/jpeg',q); }
+      URL.revokeObjectURL(url); cb(out);
+    };
+    img.onerror=function(){ try{URL.revokeObjectURL(url);}catch(e){} cb(null); };
+    img.src=url;
+  }catch(e){ cb(null); }
+}
+function uploadLogPhoto(dataUrl,name,job,cb,err){
+  fetch('/api/upload',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({dataUrl:dataUrl,name:name,job:job})})
+    .then(function(r){return r.json();})
+    .then(function(d){ if(d&&d.ok&&d.url){cb(d.url);} else {err&&err((d&&d.error)||'upload failed');} })
+    .catch(function(e){ err&&err(e.message); });
+}
+function addLogPhotos(input){
+  var files=input.files; if(!files||!files.length) return;
+  var job=document.getElementById('logJob').value.trim()||'general';
+  var msg=document.getElementById('logUpMsg');
+  var total=files.length, done=0, failed=0, lastErr='';
+  msg.textContent='Uploading '+total+' photo'+(total>1?'s':'')+'...';
+  function finish(){ input.value=''; if(failed){ msg.textContent=failed+' of '+total+' could not upload'+(lastErr?(' ('+lastErr+')'):'')+'. The rest are attached.'; } else { msg.textContent='Photo'+(total>1?'s':'')+' attached.'; } }
+  Array.prototype.forEach.call(files,function(f){
+    if(!/^image\//.test(f.type||'')){ done++; failed++; lastErr='not an image'; if(done===total)finish(); return; }
+    compressLogImage(f,function(dataUrl){
+      if(!dataUrl){ done++; failed++; lastErr='could not read'; if(done===total)finish(); return; }
+      uploadLogPhoto(dataUrl,f.name,job,function(url){
+        window._logPhotos.push({url:url,name:f.name}); renderLogThumbs(); done++; if(done===total)finish();
+      },function(e){ done++; failed++; lastErr=e; if(done===total)finish(); });
+    });
+  });
+}
+function renderLogThumbs(){
+  var el=document.getElementById('logThumbs'); if(!el) return;
+  el.innerHTML=window._logPhotos.map(function(p,i){ return '<div class="log-thumb"><img src="'+esc(p.url)+'" alt=""><button type="button" class="log-thumb-x" data-rm="'+i+'">&times;</button></div>'; }).join('');
+}
+function saveLog(){
+  var job=document.getElementById('logJob').value.trim();
+  var date=document.getElementById('logDate').value;
+  var note=document.getElementById('logNote').value.trim();
+  if(!job && !note && !window._logPhotos.length){ alert('Add a job, a note, or a photo first.'); return; }
+  var rec={id:uid(),job:job,date:date||(new Date().toISOString().split('T')[0]),note:note,photos:window._logPhotos.slice(),author:(CURRENT_USER&&CURRENT_USER.name)||''};
+  logs.unshift(rec); save(); window._logPhotos=[]; closeModal('logModal'); renderLog();
+}
+function renderLog(){
+  var el=document.getElementById('logList'); if(!el) return;
+  if(!logs.length){ el.innerHTML='<div style="color:var(--muted);font-size:13.5px;padding:6px 2px;">No site log entries yet. Tap New Entry to add photos and notes from the job.</div>'; return; }
+  el.innerHTML=logs.map(function(L){
+    var photos=(L.photos||[]).map(function(p){ return '<img class="log-photo" src="'+esc(p.url)+'" alt="" data-open="'+esc(p.url)+'">'; }).join('');
+    return '<div class="log-entry"><div class="log-head"><div><b>'+esc(L.job||'General')+'</b><span class="log-date">'+esc(fmtDate(L.date)||L.date||'')+(L.author?(' \u00b7 '+esc(L.author)):'')+'</span></div><button class="log-del" data-dellog="'+esc(L.id)+'">Delete</button></div>'+(L.note?('<div class="log-note">'+esc(L.note)+'</div>'):'')+(photos?('<div class="log-gallery">'+photos+'</div>'):'')+'</div>';
+  }).join('');
+}
+function delLog(id){ if(!confirm('Delete this log entry?')) return; logs=logs.filter(function(x){return x.id!==id;}); save(); renderLog(); }
 
 </script>
 </body>
