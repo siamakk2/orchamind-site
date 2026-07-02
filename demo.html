@@ -878,6 +878,12 @@ body.locked .appwrap{display:none !important;}
   <div class="modal-foot"><button class="btn btn-ghost" onclick="closeModal('estModal')">Cancel</button><button class="btn" onclick="saveEstimate()">Save</button></div>
 </div></div>
 
+<div class="modal-bg" id="jobLogModal"><div class="modal" style="max-width:640px;">
+  <h3>Photos &amp; Log &mdash; <span id="jobLogTitle"></span></h3>
+  <div id="jobLogBody" style="max-height:60vh;overflow:auto;"></div>
+  <div class="modal-foot"><button class="btn btn-ghost" onclick="closeModal('jobLogModal')">Close</button><button class="btn" onclick="newLogForJob()">Add photo or note</button></div>
+</div></div>
+
 <div class="modal-bg" id="logModal"><div class="modal" style="max-width:600px;">
   <h3>New Site Log Entry</h3>
   <div class="field"><label>Job</label><input type="text" id="logJob" list="logJobList" placeholder="Start typing a job name..."><datalist id="logJobList"></datalist></div>
@@ -1330,7 +1336,7 @@ function renderJobs(){
       '<div class="job-body"><div class="job-progress-lbl"><span>Progress</span><b>'+j.progress+'%</b></div><div class="progress-track"><div class="progress-fill" style="width:'+j.progress+'%"></div></div>'+
       ((j.budget&&!(typeof isCrew==='function'&&isCrew()))?'<div class="job-budget"><div class="job-progress-lbl" style="margin-top:10px;"><span>Budget &middot; $'+(j.spent/1000).toFixed(0)+'k / $'+(j.budget/1000).toFixed(0)+'k</span><b style="color:'+bcolor+'">'+bp+'%</b></div><div class="budget-bar"><div class="budget-fill" style="width:'+Math.min(100,bp)+'%;background:'+bcolor+'"></div></div></div>':'')+
       '<div class="job-meta"><div><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>'+esc(j.location)+'</div><div><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>'+j.crew+' crew</div>'+(j.date?'<div><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/></svg>'+(d!==null&&d<0?Math.abs(d)+'d over':d+'d')+'</div>':'')+'</div></div>'+
-      '<div class="job-foot"><button class="ai-btn" onclick="analyzeJob(\''+j.id+'\')">AI Analyze</button>'+qbBtn+'<button onclick="draftClientUpdate(\''+j.id+'\')">Client Update</button><button onclick="editJob(\''+j.id+'\')">Edit</button><button onclick="delJob(\''+j.id+'\')" style="color:var(--red);">Delete</button></div></div>';
+      '<div class="job-foot"><button class="ai-btn" onclick="analyzeJob(\''+j.id+'\')">AI Analyze</button>'+qbBtn+'<button onclick="openJobLog(\''+j.id+'\')">Photos &amp; Log ('+((window.logs||[]).filter(function(x){return x.jobId===j.id||x.job===j.name;}).length)+')</button><button onclick="draftClientUpdate(\''+j.id+'\')">Client Update</button><button onclick="editJob(\''+j.id+'\')">Edit</button><button onclick="delJob(\''+j.id+'\')" style="color:var(--red);">Delete</button></div></div>';
   }).join('');
 }
 function renderCrew(){
@@ -2597,14 +2603,40 @@ window._logPhotos = window._logPhotos || [];
     var t=ev.target; if(!t||!t.closest) return;
     var rm=t.closest('#logThumbs [data-rm]');
     if(rm){ var i=parseInt(rm.getAttribute('data-rm'),10); if(!isNaN(i)){ window._logPhotos.splice(i,1); renderLogThumbs(); } return; }
-    var op=t.closest('#logList [data-open]');
+    var op=t.closest('[data-open]');
     if(op){ var u=op.getAttribute('data-open'); if(u) window.open(u,'_blank'); return; }
-    var dl=t.closest('#logList [data-dellog]');
+    var dl=t.closest('[data-dellog]');
     if(dl){ delLog(dl.getAttribute('data-dellog')); return; }
   });
 })();
+function _logEntryHtml(L){
+  var photos=(L.photos||[]).map(function(p){ return '<img class="log-photo" src="'+esc(p.url)+'" alt="" data-open="'+esc(p.url)+'">'; }).join('');
+  return '<div class="log-entry"><div class="log-head"><div><b>'+esc(L.job||'General')+'</b><span class="log-date">'+esc(fmtDate(L.date)||L.date||'')+(L.author?(' \u00b7 '+esc(L.author)):'')+'</span></div><button class="log-del" data-dellog="'+esc(L.id)+'">Delete</button></div>'+(L.note?('<div class="log-note">'+esc(L.note)+'</div>'):'')+(photos?('<div class="log-gallery">'+photos+'</div>'):'')+'</div>';
+}
+function openJobLog(id){
+  var j=(window.jobs||[]).find(function(x){return x.id===id;}); if(!j) return;
+  window._jobLogCtx={id:j.id,name:j.name};
+  document.getElementById('jobLogTitle').textContent=j.name;
+  renderJobLog();
+  openModal('jobLogModal');
+}
+function renderJobLog(){
+  var ctx=window._jobLogCtx; if(!ctx) return;
+  var el=document.getElementById('jobLogBody'); if(!el) return;
+  var mine=logs.filter(function(x){return x.jobId===ctx.id||x.job===ctx.name;});
+  if(!mine.length){ el.innerHTML='<div style="color:var(--muted);font-size:13.5px;padding:6px 2px;">No photos or notes yet for this job. Tap Add photo or note below.</div>'; return; }
+  el.innerHTML=mine.map(_logEntryHtml).join('');
+}
+function newLogForJob(){
+  var ctx=window._jobLogCtx; if(!ctx) return;
+  closeModal('jobLogModal');
+  newLog();
+  document.getElementById('logJob').value=ctx.name;
+  window._logJobId=ctx.id;
+  window._logReturnToJob=true;
+}
 function newLog(){
-  window._logPhotos=[];
+  window._logPhotos=[]; window._logJobId=''; window._logReturnToJob=false;
   document.getElementById('logJob').value='';
   document.getElementById('logDate').value=(new Date().toISOString().split('T')[0]);
   document.getElementById('logNote').value='';
@@ -2661,8 +2693,12 @@ function saveLog(){
   var date=document.getElementById('logDate').value;
   var note=document.getElementById('logNote').value.trim();
   if(!job && !note && !window._logPhotos.length){ alert('Add a job, a note, or a photo first.'); return; }
-  var rec={id:uid(),job:job,date:date||(new Date().toISOString().split('T')[0]),note:note,photos:window._logPhotos.slice(),author:(CURRENT_USER&&CURRENT_USER.name)||''};
-  logs.unshift(rec); save(); window._logPhotos=[]; closeModal('logModal'); renderLog();
+  var jobId=window._logJobId||'';
+  if(!jobId && job){ var jb=(window.jobs||[]).find(function(x){return x.name===job;}); if(jb) jobId=jb.id; }
+  var rec={id:uid(),job:job,jobId:jobId,date:date||(new Date().toISOString().split('T')[0]),note:note,photos:window._logPhotos.slice(),author:(CURRENT_USER&&CURRENT_USER.name)||''};
+  logs.unshift(rec); save(); window._logPhotos=[]; window._logJobId='';
+  closeModal('logModal');
+  if(window._logReturnToJob && window._jobLogCtx){ window._logReturnToJob=false; openJobLog(window._jobLogCtx.id); } else { renderLog(); }
 }
 function renderLog(){
   var el=document.getElementById('logList'); if(!el) return;
@@ -2672,7 +2708,7 @@ function renderLog(){
     return '<div class="log-entry"><div class="log-head"><div><b>'+esc(L.job||'General')+'</b><span class="log-date">'+esc(fmtDate(L.date)||L.date||'')+(L.author?(' \u00b7 '+esc(L.author)):'')+'</span></div><button class="log-del" data-dellog="'+esc(L.id)+'">Delete</button></div>'+(L.note?('<div class="log-note">'+esc(L.note)+'</div>'):'')+(photos?('<div class="log-gallery">'+photos+'</div>'):'')+'</div>';
   }).join('');
 }
-function delLog(id){ if(!confirm('Delete this log entry?')) return; logs=logs.filter(function(x){return x.id!==id;}); save(); renderLog(); }
+function delLog(id){ if(!confirm('Delete this log entry?')) return; logs=logs.filter(function(x){return x.id!==id;}); save(); renderLog(); var jm=document.getElementById('jobLogModal'); if(jm&&jm.classList.contains('show')&&window._jobLogCtx){ renderJobLog(); } }
 
 </script>
 </body>
