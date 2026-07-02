@@ -878,6 +878,15 @@ body.locked .appwrap{display:none !important;}
   <div class="modal-foot"><button class="btn btn-ghost" onclick="closeModal('estModal')">Cancel</button><button class="btn" onclick="saveEstimate()">Save</button></div>
 </div></div>
 
+<div class="modal-bg" id="clientPortalModal"><div class="modal" style="max-width:540px;">
+  <h3>Client Portal &mdash; <span id="cpJobName"></span></h3>
+  <p style="color:var(--muted);font-size:13px;margin-bottom:14px;">Give your client a private link to follow this project &mdash; progress, photos and your site-log updates. They can't see budgets, costs or your other jobs.</p>
+  <div class="field"><label>Client email (optional &mdash; adds a check)</label><input type="email" id="cpEmail" placeholder="client@email.com"></div>
+  <div id="cpMsg" style="font-size:12.5px;color:#C62828;min-height:16px;"></div>
+  <div id="cpResult" style="display:none;background:#F4F8FD;border:1px solid var(--line);border-radius:12px;padding:14px;margin-top:4px;"></div>
+  <div class="modal-foot"><button class="btn btn-ghost" onclick="closeModal('clientPortalModal')">Close</button><button class="btn" id="cpBtn" onclick="createClientPortal()">Create / show access</button></div>
+</div></div>
+
 <div class="modal-bg" id="jobLogModal"><div class="modal" style="max-width:640px;">
   <h3>Photos &amp; Log &mdash; <span id="jobLogTitle"></span></h3>
   <div id="jobLogBody" style="max-height:60vh;overflow:auto;"></div>
@@ -1336,7 +1345,7 @@ function renderJobs(){
       '<div class="job-body"><div class="job-progress-lbl"><span>Progress</span><b>'+j.progress+'%</b></div><div class="progress-track"><div class="progress-fill" style="width:'+j.progress+'%"></div></div>'+
       ((j.budget&&!(typeof isCrew==='function'&&isCrew()))?'<div class="job-budget"><div class="job-progress-lbl" style="margin-top:10px;"><span>Budget &middot; $'+(j.spent/1000).toFixed(0)+'k / $'+(j.budget/1000).toFixed(0)+'k</span><b style="color:'+bcolor+'">'+bp+'%</b></div><div class="budget-bar"><div class="budget-fill" style="width:'+Math.min(100,bp)+'%;background:'+bcolor+'"></div></div></div>':'')+
       '<div class="job-meta"><div><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>'+esc(j.location)+'</div><div><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>'+j.crew+' crew</div>'+(j.date?'<div><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/></svg>'+(d!==null&&d<0?Math.abs(d)+'d over':d+'d')+'</div>':'')+'</div></div>'+
-      '<div class="job-foot"><button class="ai-btn" onclick="analyzeJob(\''+j.id+'\')">AI Analyze</button>'+qbBtn+'<button onclick="openJobLog(\''+j.id+'\')">Photos &amp; Log ('+((window.logs||[]).filter(function(x){return x.jobId===j.id||x.job===j.name;}).length)+')</button><button onclick="draftClientUpdate(\''+j.id+'\')">Client Update</button><button onclick="editJob(\''+j.id+'\')">Edit</button><button onclick="delJob(\''+j.id+'\')" style="color:var(--red);">Delete</button></div></div>';
+      '<div class="job-foot"><button class="ai-btn" onclick="analyzeJob(\''+j.id+'\')">AI Analyze</button>'+qbBtn+'<button onclick="openJobLog(\''+j.id+'\')">Photos &amp; Log ('+((window.logs||[]).filter(function(x){return x.jobId===j.id||x.job===j.name;}).length)+')</button><button onclick="openClientPortal(\''+j.id+'\')">Client Portal</button><button onclick="draftClientUpdate(\''+j.id+'\')">Client Update</button><button onclick="editJob(\''+j.id+'\')">Edit</button><button onclick="delJob(\''+j.id+'\')" style="color:var(--red);">Delete</button></div></div>';
   }).join('');
 }
 function renderCrew(){
@@ -2612,6 +2621,40 @@ window._logPhotos = window._logPhotos || [];
 function _logEntryHtml(L){
   var photos=(L.photos||[]).map(function(p){ return '<img class="log-photo" src="'+esc(p.url)+'" alt="" data-open="'+esc(p.url)+'">'; }).join('');
   return '<div class="log-entry"><div class="log-head"><div><b>'+esc(L.job||'General')+'</b><span class="log-date">'+esc(fmtDate(L.date)||L.date||'')+(L.author?(' \u00b7 '+esc(L.author)):'')+'</span></div><button class="log-del" data-dellog="'+esc(L.id)+'">Delete</button></div>'+(L.note?('<div class="log-note">'+esc(L.note)+'</div>'):'')+(photos?('<div class="log-gallery">'+photos+'</div>'):'')+'</div>';
+}
+function openClientPortal(id){
+  var j=(window.jobs||[]).find(function(x){return x.id===id;}); if(!j) return;
+  window._cpJob=j;
+  document.getElementById('cpJobName').textContent=j.name;
+  document.getElementById('cpEmail').value='';
+  document.getElementById('cpMsg').textContent='';
+  var box=document.getElementById('cpResult'); box.style.display='none'; box.innerHTML='';
+  openModal('clientPortalModal');
+}
+function createClientPortal(){
+  var j=window._cpJob; if(!j) return;
+  var email=document.getElementById('cpEmail').value.trim();
+  var msg=document.getElementById('cpMsg'); msg.textContent='';
+  var btn=document.getElementById('cpBtn'); var old=btn.textContent; btn.disabled=true; btn.textContent='Creating...';
+  fetch('/api/clientportal',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'create',jobId:j.id,email:email})})
+    .then(function(r){return r.json();})
+    .then(function(d){
+      btn.disabled=false; btn.textContent=old;
+      if(!d||!d.ok){ msg.textContent=(d&&d.error)||'Could not create access.'; return; }
+      var link=d.url, code=d.code;
+      var share='Follow your project on our portal: '+link+' -- '+(email?('Email: '+email+' -- '):'')+'Access code: '+code;
+      var box=document.getElementById('cpResult'); box.style.display='block';
+      var row=function(k,v){ return '<div style="display:flex;gap:10px;align-items:baseline;padding:7px 0;border-bottom:1px solid var(--line);"><span style="width:52px;color:var(--muted);font-size:12px;flex-shrink:0;">'+k+'</span><b style="word-break:break-all;color:var(--navy);">'+v+'</b></div>'; };
+      box.innerHTML='<div style="font-size:13px;color:var(--muted);margin-bottom:8px;">Share these with your client. They open the link, enter their email'+(email?'':' (any email)')+', and this code:</div>'+
+        row('Link',esc(link))+ (email?row('Email',esc(email)):'') + row('Code','<span style="letter-spacing:2px;">'+esc(code)+'</span>')+
+        '<button class="btn" style="margin-top:12px;" onclick="cpCopy(this)" data-share="'+esc(share)+'">Copy message to send</button>';
+    })
+    .catch(function(e){ btn.disabled=false; btn.textContent=old; msg.textContent=e.message; });
+}
+function cpCopy(btn){
+  var s=btn.getAttribute('data-share')||'';
+  try{ navigator.clipboard.writeText(s).then(function(){ btn.textContent='Copied!'; setTimeout(function(){btn.textContent='Copy message to send';},1500); },function(){ btn.textContent='Copy failed - select manually'; }); }
+  catch(e){ btn.textContent='Copy failed - select manually'; }
 }
 function openJobLog(id){
   var j=(window.jobs||[]).find(function(x){return x.id===id;}); if(!j) return;
