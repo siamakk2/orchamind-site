@@ -2436,7 +2436,7 @@ function skJobPick(){
   d.value=txt;
 }
 function _skPrompt(type){
-  var base='You are a technical illustrator. Design a CONCEPT diagram on an 800x600 canvas (x from 0 at left to 800 at right, y from 0 at top to 600 at bottom). Return ONLY a JSON object and nothing else - no markdown, no code fences, no words outside the JSON. Schema: {"title":"short title","shapes":[ ... ]}. Allowed shapes: {"t":"rect","x":num,"y":num,"w":num,"h":num,"label":"optional centered label"}; {"t":"line","x1":num,"y1":num,"x2":num,"y2":num}; {"t":"circle","x":num,"y":num,"r":num,"label":"optional"}; {"t":"text","x":num,"y":num,"s":"the text","size":num}. Rules: use 8 to 40 shapes, keep everything inside a 40px margin, keep the top 45px and bottom 45px clear, no overlapping text, all coordinates are numbers inside the canvas. Output COMPACT, strictly valid JSON: double quotes only, NO trailing commas, NO comments, and no text outside the JSON. Use at most 24 shapes and keep labels short. ';
+  var base='You are a technical illustrator. Design a CONCEPT diagram on an 800x600 canvas (x from 0 at left to 800 at right, y from 0 at top to 600 at bottom). Return ONLY a JSON object and nothing else - no markdown, no code fences, no words outside the JSON. Schema: {"title":"short title","shapes":[ ... ]}. Allowed shapes: {"t":"rect","x":num,"y":num,"w":num,"h":num,"label":"optional centered label"}; {"t":"line","x1":num,"y1":num,"x2":num,"y2":num}; {"t":"circle","x":num,"y":num,"r":num,"label":"optional"}; {"t":"text","x":num,"y":num,"s":"the text","size":num}. Rules: use 8 to 40 shapes, keep everything inside a 40px margin, keep the top 45px and bottom 45px clear, no overlapping text, all coordinates are numbers inside the canvas. Output COMPACT, strictly valid JSON: double quotes only, NO trailing commas, NO comments, and no text outside the JSON. Use at most 24 shapes and keep labels short. All coordinate values must be plain numbers with NO quotes around them. ';
   var m={
     floor:'Draw a FLOOR PLAN: each room is a rect whose label includes an approximate size like "Kitchen 12x14". Show door openings as short line gaps and windows as short lines on outer walls. Arrange rooms to fill the canvas sensibly.',
     site:'Draw a SITE PLAN: a large rect for the property boundary, a rect for the house footprint, a rect or lines for the driveway, text labels for front and side setbacks, and a small text "N" with a short line for a north arrow.',
@@ -2453,7 +2453,7 @@ function _skPrompt(type){
   };
   return base+(m[type]||m.floor);
 }
-function _skParse(text){if(!text)return null;var t=text.replace(/```json/gi,'').replace(/```/g,'').trim();var a=t.indexOf('{');var b=t.lastIndexOf('}');if(a>=0&&b>a){t=t.substring(a,b+1);}t=t.replace(/,(\s*[}\]])/g,'$1');try{return JSON.parse(t);}catch(e){return null;}}
+function _skParse(text){if(!text)return null;var t=text.replace(/```json/gi,'').replace(/```/g,'').trim();var a=t.indexOf('{');var b=t.lastIndexOf('}');if(a>=0&&b>a){t=t.substring(a,b+1);}var tries=[t,t.replace(/,(\s*[}\]])/g,'$1'),t.replace(/(\d)\s*"(\s*[,}\]])/g,'$1$2').replace(/,(\s*[}\]])/g,'$1')];for(var i=0;i<tries.length;i++){try{return JSON.parse(tries[i]);}catch(e){}}try{var title='';var mt=t.match(/"title"\s*:\s*"([^"]*)"/);if(mt)title=mt[1];var shapes=[];var re=/\{[^{}]*\}/g;var mm;while((mm=re.exec(t))){var s=mm[0].replace(/(\d)\s*"(\s*[,}\]])/g,'$1$2').replace(/,(\s*[}\]])/g,'$1');try{shapes.push(JSON.parse(s));}catch(e2){}}if(shapes.length)return {title:title,shapes:shapes};}catch(e3){}return null;}
 function skRenderSVG(obj){
   var W=800,H=600;
   var p=['<svg viewBox="0 0 '+W+' '+H+'" xmlns="http://www.w3.org/2000/svg" font-family="Arial, Helvetica, sans-serif">'];
@@ -2491,7 +2491,7 @@ function generateSketch(){
     btn.disabled=false;btn.innerHTML=old;
     var obj=_skParse(text);
     var svg=(obj&&obj.shapes&&obj.shapes.length)?skRenderSVG(obj):'';
-    if(!svg){prev.innerHTML='<div class="sk-ph">The AI did not return a usable drawing. Try again, or add a little more detail.</div><pre style="white-space:pre-wrap;text-align:left;font-size:11px;max-height:150px;overflow:auto;background:#f4f8fd;padding:8px;border-radius:8px;margin-top:8px;color:#5A6B7D;">'+esc((text||'').slice(0,1200))+'</pre>';return;}
+    if(!svg){prev.innerHTML='<div class="sk-ph">The AI did not return a usable drawing. Try again, or add a little more detail.</div><pre style="white-space:pre-wrap;text-align:left;font-size:11px;max-height:150px;overflow:auto;background:#f4f8fd;padding:8px;border-radius:8px;margin-top:8px;color:#5A6B7D;">'+esc((text||'').slice(0,3000))+'</pre>';return;}
     _curSketchSvg=svg;prev.innerHTML=svg;
     document.getElementById('skActs').style.display='flex';
   },function(err){btn.disabled=false;btn.innerHTML=old;prev.innerHTML='<div class="sk-ph">AI error: '+esc(err)+'</div>';},6000);
