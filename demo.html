@@ -2253,7 +2253,7 @@ function renderActivity(events, counts){
   if(!events.length){ feed.innerHTML='<div style="color:#9aa7b4;font-size:13px;padding:8px 2px;">No activity yet. Logins, signups, quote requests, and errors show up here as they happen.</div>'; return; }
   feed.innerHTML=events.map(function(e){ return '<div style="display:flex;align-items:center;gap:10px;padding:9px 4px;border-bottom:1px solid #F0F3F7;"><span style="font-size:16px;width:22px;text-align:center;">'+_actIcon(e.type)+'</span><span style="flex:1;color:#0A1628;font-size:13.5px;">'+esc(e.detail||e.type)+(e.username?(' <span style="color:#9aa7b4;">\u00b7 '+esc(e.username)+'</span>'):'')+'</span><span style="color:#9aa7b4;font-size:12px;white-space:nowrap;">'+_actAgo(e.ts)+'</span></div>'; }).join('');
 }
-setInterval(function(){ try{ if(typeof isAdmin==='function' && isAdmin() && document.getElementById('actFeed')){ loadActivity(); } }catch(e){} }, 25000);
+setInterval(function(){ try{ if(typeof isAdmin==='function' && isAdmin() && document.getElementById('actFeed')){ loadActivity(); if(typeof loadSupport==='function') loadSupport(); } }catch(e){} }, 25000);
 function editUserOpen(username){
   var u=(window._adminUsers||[]).find(function(x){return x.username===username;}); if(!u) return;
   window._editUser=username; var pf=u.profile||{};
@@ -2287,7 +2287,8 @@ function renderAdmin(){
     '<div class="cost-stat"><div class="lbl">Contractors</div><div class="val">'+companies+'</div></div>'+
     '<div class="cost-stat"><div class="lbl">Paying</div><div class="val" style="color:#1B8A4B;">'+paying+'</div></div>'+
     '<div class="cost-stat"><div class="lbl">Est. MRR</div><div class="val">$'+mrr.toLocaleString()+'</div></div>'+
-    '<div class="cost-stat"><div class="lbl">Paused</div><div class="val" style="color:'+(paused?'#C62828':'#5A6B7D')+';">'+paused+'</div></div>'; }
+    '<div class="cost-stat"><div class="lbl">Paused</div><div class="val" style="color:'+(paused?'#C62828':'#5A6B7D')+';">'+paused+'</div></div>'+
+    '<div class="cost-stat"><div class="lbl">Open tickets</div><div class="val" id="mTickets" style="color:'+((window._supOpen||0)?'#C62828':'#5A6B7D')+';">'+(window._supOpen||0)+'</div></div>'; }
   var qi=document.getElementById('adminSearch'); var q=qi?qi.value.trim().toLowerCase():'';
   var list=q?users.filter(function(u){return ((u.company||'')+' '+(u.name||'')+' '+(u.username||'')).toLowerCase().indexOf(q)>=0;}):users;
   var t=document.getElementById('usersTable'); if(!t) return;
@@ -3686,7 +3687,10 @@ function openCustomer(name){
   <div class="modal-foot"><button class="btn btn-ghost" onclick="closeModal('ownerEditModal')">Cancel</button><button class="btn" onclick="saveUserEdit()">Save changes</button></div>
 </div></div>
 <style>
-#floatMic{position:fixed;right:18px;bottom:calc(18px + env(safe-area-inset-bottom));z-index:9000;width:62px;height:62px;border-radius:50%;border:none;background:linear-gradient(135deg,#1565C0,#0A1628);color:#fff;box-shadow:0 10px 26px rgba(21,101,192,.42);cursor:pointer;display:none;align-items:center;justify-content:center;transition:transform .15s;}
+#floatMic{position:fixed;right:18px;bottom:calc(20px + env(safe-area-inset-bottom));z-index:9000;width:76px;height:76px;border-radius:50%;border:3px solid rgba(255,255,255,.92);background:linear-gradient(135deg,#1E7BE0,#0A1628);color:#fff;box-shadow:0 12px 30px rgba(21,101,192,.5);cursor:pointer;display:none;align-items:center;justify-content:center;transition:transform .15s;animation:fmpulse2 2.6s infinite;}
+#floatMic svg{width:34px !important;height:34px !important;}
+#floatMic::before{content:'Talk to me';position:absolute;right:calc(100% + 12px);top:50%;transform:translateY(-50%);background:#0A1628;color:#fff;padding:7px 13px;border-radius:20px;font-size:13px;font-weight:700;white-space:nowrap;box-shadow:0 6px 16px rgba(10,22,40,.28);font-family:'Outfit',sans-serif;pointer-events:none;}
+@keyframes fmpulse2{0%{box-shadow:0 12px 30px rgba(21,101,192,.5),0 0 0 0 rgba(30,123,224,.5)}70%{box-shadow:0 12px 30px rgba(21,101,192,.5),0 0 0 16px rgba(30,123,224,0)}100%{box-shadow:0 12px 30px rgba(21,101,192,.5),0 0 0 0 rgba(30,123,224,0)}}
 #floatMic:hover{transform:scale(1.06);}
 #floatMic svg{width:27px;height:27px;}
 #floatMic.listening{background:linear-gradient(135deg,#F9A825,#E85D04);animation:fmpulse 1.2s infinite;}
@@ -3756,6 +3760,7 @@ function supTicketSend(){
 }
 function loadSupport(){ fetch('/api/support',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'list'})}).then(function(r){return r.json();}).then(function(d){ if(d&&d.ok){ renderSupport(d.tickets||[], d.open||0); } }).catch(function(){}); }
 function renderSupport(tix, open){
+  window._supOpen=open; var _mt=document.getElementById('mTickets'); if(_mt){ _mt.textContent=open; _mt.style.color=open?'#C62828':'#5A6B7D'; }
   var c=document.getElementById('supCount'); if(c) c.textContent=open?('\u00b7 '+open+' open'):'';
   var f=document.getElementById('supFeed'); if(!f) return;
   if(!tix.length){ f.innerHTML='<div style="color:#9aa7b4;font-size:13px;padding:6px 2px;">No support messages yet.</div>'; return; }
