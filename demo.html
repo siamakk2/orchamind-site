@@ -2244,6 +2244,27 @@ function renderActivity(events, counts){
   feed.innerHTML=events.map(function(e){ return '<div style="display:flex;align-items:center;gap:10px;padding:9px 4px;border-bottom:1px solid #F0F3F7;"><span style="font-size:16px;width:22px;text-align:center;">'+_actIcon(e.type)+'</span><span style="flex:1;color:#0A1628;font-size:13.5px;">'+esc(e.detail||e.type)+(e.username?(' <span style="color:#9aa7b4;">\u00b7 '+esc(e.username)+'</span>'):'')+'</span><span style="color:#9aa7b4;font-size:12px;white-space:nowrap;">'+_actAgo(e.ts)+'</span></div>'; }).join('');
 }
 setInterval(function(){ try{ if(typeof isAdmin==='function' && isAdmin() && document.getElementById('actFeed')){ loadActivity(); } }catch(e){} }, 25000);
+function editUserOpen(username){
+  var u=(window._adminUsers||[]).find(function(x){return x.username===username;}); if(!u) return;
+  window._editUser=username; var pf=u.profile||{};
+  document.getElementById('oeTitle').textContent='Edit '+(u.company||u.name||username);
+  document.getElementById('oeCompany').value=u.company||'';
+  document.getElementById('oeName').value=u.name||'';
+  document.getElementById('oePhone').value=pf.phone||'';
+  document.getElementById('oeEmail').value=pf.email||'';
+  document.getElementById('oeWebsite').value=pf.website||'';
+  document.getElementById('oeAddress').value=pf.address||'';
+  document.getElementById('oeMsg').textContent='';
+  openModal('ownerEditModal');
+}
+function saveUserEdit(){
+  var username=window._editUser; if(!username) return;
+  var payload={action:'adminEditUser',username:username,company:document.getElementById('oeCompany').value.trim(),name:document.getElementById('oeName').value.trim(),profile:{phone:document.getElementById('oePhone').value.trim(),email:document.getElementById('oeEmail').value.trim(),website:document.getElementById('oeWebsite').value.trim(),address:document.getElementById('oeAddress').value.trim()}};
+  var msg=document.getElementById('oeMsg'); msg.style.color='#5A6B7D'; msg.textContent='Saving\u2026';
+  fetch('/api/accounts',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)})
+    .then(function(r){return r.json();}).then(function(d){ if(d&&d.ok){ msg.style.color='#1B8A4B'; msg.textContent='Saved.'; loadUsers(); setTimeout(function(){closeModal('ownerEditModal');},700); } else { msg.style.color='#C62828'; msg.textContent=(d&&d.error)||'Could not save.'; } })
+    .catch(function(){ msg.style.color='#C62828'; msg.textContent='Server error.'; });
+}
 function renderAdmin(){
   var users=(window._adminUsers||[]).filter(function(u){return u.username!=='siamakk2';});
   var owners=users.filter(function(u){return (u.role||'')==='owner';});
@@ -2273,7 +2294,7 @@ function renderAdmin(){
       var pauseBtn=isP
         ?'<button onclick="setUserStatus(\''+u.username+'\',\'active\')" style="font-size:12px;border:1px solid #1B8A4B;background:#fff;color:#1B8A4B;border-radius:6px;padding:4px 9px;cursor:pointer;margin-right:5px;">Reactivate</button>'
         :'<button onclick="setUserStatus(\''+u.username+'\',\'paused\')" style="font-size:12px;border:1px solid #E1E8F0;background:#fff;color:#B45309;border-radius:6px;padding:4px 9px;cursor:pointer;margin-right:5px;">Pause</button>';
-      acts=pauseBtn+'<button onclick="resetUserPw(\''+u.username+'\')" style="font-size:12px;border:1px solid #E1E8F0;background:#fff;color:#2D7FF9;border-radius:6px;padding:4px 9px;cursor:pointer;margin-right:5px;">Reset PW</button><button onclick="removeUser(\''+u.username+'\')" style="font-size:12px;border:1px solid #E1E8F0;background:#fff;color:#D32F2F;border-radius:6px;padding:4px 9px;cursor:pointer;">Remove</button>';
+      acts='<button onclick="editUserOpen(\''+u.username+'\')" style="font-size:12px;border:1px solid #E1E8F0;background:#fff;color:#0A1628;border-radius:6px;padding:4px 9px;cursor:pointer;margin-right:5px;">Edit</button>'+pauseBtn+'<button onclick="resetUserPw(\''+u.username+'\')" style="font-size:12px;border:1px solid #E1E8F0;background:#fff;color:#2D7FF9;border-radius:6px;padding:4px 9px;cursor:pointer;margin-right:5px;">Reset PW</button><button onclick="removeUser(\''+u.username+'\')" style="font-size:12px;border:1px solid #E1E8F0;background:#fff;color:#D32F2F;border-radius:6px;padding:4px 9px;cursor:pointer;">Remove</button>';
     }
     return '<div class="hours-row"><div style="font-weight:700;color:#0A1628;">'+esc(u.company||'\u2014')+'<br><span style="font-weight:400;font-size:11px;color:#9aa7b4;">'+esc(u.name||'')+'</span></div><div>'+esc(u.username)+flags+created+'<br>'+pay+'</div><div>'+badge+'</div><div>'+acts+'</div></div>';
   }).join('');
@@ -3642,5 +3663,16 @@ function openCustomer(name){
 (function(){ document.addEventListener('click',function(ev){ var t=ev.target; if(!t||!t.closest) return; var c=t.closest('#custBody [data-cust]'); if(c){ openCustomer(c.getAttribute('data-cust')); } }); })();
 
 </script>
+<div class="modal-bg" id="ownerEditModal"><div class="modal">
+  <h3 id="oeTitle">Edit account</h3>
+  <p style="color:#5A6B7D;font-size:13px;margin:-4px 0 12px;">Update this contractor's details — changes apply to their account and branding right away.</p>
+  <div class="field"><label>Company name</label><input type="text" id="oeCompany"></div>
+  <div class="field"><label>Owner name</label><input type="text" id="oeName"></div>
+  <div class="field-row"><div class="field"><label>Phone</label><input type="text" id="oePhone"></div><div class="field"><label>Email</label><input type="email" id="oeEmail"></div></div>
+  <div class="field"><label>Website</label><input type="text" id="oeWebsite" placeholder="https://"></div>
+  <div class="field"><label>Address</label><input type="text" id="oeAddress"></div>
+  <div id="oeMsg" style="font-size:13px;margin-top:6px;min-height:16px;"></div>
+  <div class="modal-foot"><button class="btn btn-ghost" onclick="closeModal('ownerEditModal')">Cancel</button><button class="btn" onclick="saveUserEdit()">Save changes</button></div>
+</div></div>
 </body>
 </html>
