@@ -429,6 +429,7 @@ body.locked .appwrap{display:none !important;}
   <button class="tab" data-tab="log"><svg class="ti" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>Site Log</button>
   <button class="tab" data-tab="schedule"><svg class="ti" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>Schedule</button>
   <button class="tab" data-tab="changes" data-mgronly><svg class="ti" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M9 15l2 2 4-4"/></svg>Changes</button>
+  <button class="tab" data-tab="costs" data-mgronly><svg class="ti" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>Costs &amp; Profit</button>
   <button class="tab" data-tab="risks"><svg class="ti" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>Risk Radar</button>
   <button class="tab" data-tab="crew"><svg class="ti" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/></svg>Crew</button>
   <button class="tab" data-tab="hours"><svg class="ti" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>Hours</button>
@@ -685,6 +686,35 @@ body.locked .appwrap{display:none !important;}
     </div>
     <p style="color:var(--muted);font-size:13.5px;margin:-4px 0 16px;">When a job's scope changes, document the added work and cost and send it to the client. They approve it in their portal &mdash; protecting you from disputes.</p>
     <div id="coList"></div>
+  </div>
+<style>
+.cost-summary{display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:10px;margin-bottom:18px;}
+.cost-stat{background:#fff;border:1px solid var(--line);border-radius:12px;padding:14px;}
+.cost-stat .lbl{font-size:11px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.04em;}
+.cost-stat .val{font-family:'Playfair Display',serif;font-size:22px;color:var(--navy);font-weight:700;margin-top:3px;}
+.cost-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:12px;}
+.cost-card{background:#fff;border:1px solid var(--line);border-radius:12px;padding:14px 16px;}
+.cost-h{display:flex;justify-content:space-between;align-items:baseline;gap:8px;margin-bottom:8px;}
+.cost-h b{color:var(--navy);}
+.cost-margin{font-size:12px;font-weight:700;white-space:nowrap;}
+.cost-row{display:flex;justify-content:space-between;font-size:13px;color:var(--muted);padding:3px 0;}
+.cost-row b{color:var(--navy);}
+.cost-row.profit{border-top:1px solid var(--line);margin-top:4px;padding-top:6px;font-weight:700;}
+.exp-row{display:flex;align-items:center;gap:12px;background:#fff;border:1px solid var(--line);border-radius:10px;padding:10px 14px;margin-bottom:8px;}
+.exp-b{flex:1;min-width:0;}
+.exp-b b{color:var(--navy);font-size:13.5px;}
+.exp-b span{display:block;color:var(--muted);font-size:12px;}
+.exp-amt{font-weight:700;color:var(--navy);white-space:nowrap;}
+.exp-acts button{background:none;border:none;color:var(--muted);cursor:pointer;font-size:12px;padding:2px 4px;font-family:inherit;}
+.exp-acts button:hover{color:var(--blue);}
+</style>
+  <div class="panel" id="panel-costs">
+    <div class="panel-head">
+      <h2>Costs &amp; Profit</h2>
+      <button class="btn" onclick="newExpense()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Add Expense</button>
+    </div>
+    <p style="color:var(--muted);font-size:13.5px;margin:-4px 0 16px;">Log what each job costs and see your real profit &mdash; revenue (from invoices or budget) minus costs, per job and overall.</p>
+    <div id="costsBody"></div>
   </div>
   <div class="panel" id="panel-risks">
     <div class="panel-head">
@@ -1001,6 +1031,22 @@ body.locked .appwrap{display:none !important;}
   <div class="modal-foot"><button class="btn btn-ghost" onclick="closeModal('coModal')">Cancel</button><button class="btn" onclick="saveCO()">Save</button></div>
 </div></div>
 
+<div class="modal-bg" id="expModal"><div class="modal">
+  <h3 id="expModalTitle">Add Expense</h3>
+  <input type="hidden" id="expId">
+  <div class="field-row">
+    <div class="field"><label>Job</label><select id="expJob"></select></div>
+    <div class="field"><label>Date</label><input type="date" id="expDate"></div>
+  </div>
+  <div class="field-row">
+    <div class="field"><label>Category</label><select id="expCat"><option>Materials</option><option>Labor</option><option>Subcontractor</option><option>Equipment</option><option>Permit / Fees</option><option>Other</option></select></div>
+    <div class="field"><label>Amount</label><input type="number" id="expAmount" step="any" placeholder="0"></div>
+  </div>
+  <div class="field"><label>Vendor / paid to</label><input type="text" id="expVendor" placeholder="e.g. Home Depot"></div>
+  <div class="field"><label>Note (optional)</label><input type="text" id="expNote" placeholder="What it was for"></div>
+  <div class="modal-foot"><button class="btn btn-ghost" onclick="closeModal('expModal')">Cancel</button><button class="btn" onclick="saveExpense()">Save</button></div>
+</div></div>
+
 <div class="modal-bg" id="jobModal"><div class="modal">
   <h3 id="jobModalTitle">New Job</h3>
   <input type="hidden" id="jobId">
@@ -1130,17 +1176,18 @@ var estimates=[
 var sketches=[];
 var schedule=[];
 var changeOrders=[{id:'co1',number:'CO-0001',jobName:'Hillside Addition',jobId:'',date:'2026-06-25',title:'Upgrade to quartz countertops',desc:'Client requested quartz instead of laminate in the kitchen and primary bath.',items:[{desc:'Quartz material (kitchen + bath)',qty:1,price:4200},{desc:'Additional fabrication & install labor',qty:1,price:1400}],status:'sent'}];
+var expenses=[{id:'x1',jobName:'Hillside Addition',jobId:'',date:'2026-06-20',category:'Materials',vendor:'ABC Lumber',amount:8400,note:'Framing lumber package'},{id:'x2',jobName:'Hillside Addition',jobId:'',date:'2026-06-24',category:'Subcontractor',vendor:'Napa Electric',amount:5200,note:'Electrical rough-in'}];
 var logs=[{id:'l1',job:'Sonoma Vista Residence',date:'2026-06-22',note:'Framing 60% complete on the north wall. Windows delivered and staged in the garage. Framing inspection confirmed for next Tuesday.',photos:[],author:'Demo'}];
 var _saveTimer=null;
 function _acctKey(){return (typeof CURRENT_USER!=='undefined'&&CURRENT_USER&&CURRENT_USER.username)||'demo';}
 function dataKey(){return 'orcha_data_'+_acctKey();}
 function pendKey(){return 'orcha_pend_'+_acctKey();}
 var _pendingSync=false;
-function writeLocal(){try{localStorage.setItem(dataKey(),JSON.stringify({saved:true,jobs:jobs,crew:crew,hours:hours,subs:subs,estimates:estimates,sketches:sketches,logs:logs,schedule:schedule,changeOrders:changeOrders,_ts:Date.now()}));}catch(e){}}
+function writeLocal(){try{localStorage.setItem(dataKey(),JSON.stringify({saved:true,jobs:jobs,crew:crew,hours:hours,subs:subs,estimates:estimates,sketches:sketches,logs:logs,schedule:schedule,changeOrders:changeOrders,expenses:expenses,_ts:Date.now()}));}catch(e){}}
 function markPending(){_pendingSync=true;try{localStorage.setItem(pendKey(),'1');}catch(e){}updateSyncPill();}
 function markSynced(){_pendingSync=false;try{localStorage.removeItem(pendKey());}catch(e){}updateSyncPill();}
 function pushToServer(){
-  fetch('/api/data',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({data:{saved:true,jobs:jobs,crew:crew,hours:hours,subs:subs,estimates:estimates,sketches:sketches,logs:logs,schedule:schedule,changeOrders:changeOrders}})})
+  fetch('/api/data',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({data:{saved:true,jobs:jobs,crew:crew,hours:hours,subs:subs,estimates:estimates,sketches:sketches,logs:logs,schedule:schedule,changeOrders:changeOrders,expenses:expenses}})})
     .then(function(r){return r.json();})
     .then(function(o){if(o&&!o.error){_dbReady=true;markSynced();}else{markPending();}})
     .catch(function(){markPending();});
@@ -1159,7 +1206,7 @@ function load(cb){
   // 1) OFFLINE-FIRST: recall unsynced flag + hydrate instantly from this device
   try{_pendingSync=(localStorage.getItem(pendKey())==='1');}catch(e){_pendingSync=false;}
   var localHad=false;
-  try{var ls=localStorage.getItem(dataKey());if(ls){var d=JSON.parse(ls);if(d&&d.saved){jobs=Array.isArray(d.jobs)?d.jobs:jobs;crew=Array.isArray(d.crew)?d.crew:crew;hours=Array.isArray(d.hours)?d.hours:hours;subs=Array.isArray(d.subs)?d.subs:subs;estimates=Array.isArray(d.estimates)?d.estimates:estimates;sketches=Array.isArray(d.sketches)?d.sketches:sketches;logs=Array.isArray(d.logs)?d.logs:logs;schedule=Array.isArray(d.schedule)?d.schedule:schedule;changeOrders=Array.isArray(d.changeOrders)?d.changeOrders:changeOrders;localHad=true;}}}catch(e){}
+  try{var ls=localStorage.getItem(dataKey());if(ls){var d=JSON.parse(ls);if(d&&d.saved){jobs=Array.isArray(d.jobs)?d.jobs:jobs;crew=Array.isArray(d.crew)?d.crew:crew;hours=Array.isArray(d.hours)?d.hours:hours;subs=Array.isArray(d.subs)?d.subs:subs;estimates=Array.isArray(d.estimates)?d.estimates:estimates;sketches=Array.isArray(d.sketches)?d.sketches:sketches;logs=Array.isArray(d.logs)?d.logs:logs;schedule=Array.isArray(d.schedule)?d.schedule:schedule;changeOrders=Array.isArray(d.changeOrders)?d.changeOrders:changeOrders;expenses=Array.isArray(d.expenses)?d.expenses:expenses;localHad=true;}}}catch(e){}
   // 2) reach the shared database, but NEVER block the app
   var timer=setTimeout(function(){updateSyncPill();finish();},3000);
   fetch('/api/data').then(function(r){return r.json();}).then(function(out){
@@ -1177,6 +1224,7 @@ function load(cb){
       logs=Array.isArray(out.data.logs)?out.data.logs:[];
       schedule=Array.isArray(out.data.schedule)?out.data.schedule:[];
       changeOrders=Array.isArray(out.data.changeOrders)?out.data.changeOrders:[];
+      expenses=Array.isArray(out.data.expenses)?out.data.expenses:[];
       _dbReady=true;writeLocal();
     }
     updateSyncPill();finish();
@@ -1532,6 +1580,7 @@ document.querySelectorAll('.tab').forEach(function(t){
     if(t.dataset.tab==='log'){renderLog();}
     if(t.dataset.tab==='schedule'){renderSchedule();}
     if(t.dataset.tab==='changes'){renderChangeOrders();}
+    if(t.dataset.tab==='costs'){renderCosts();}
     if(t.dataset.tab==='profile'){checkPayStatus();}
   });
 });
@@ -1542,7 +1591,7 @@ function _dl(fn,txt,mime){var b=new Blob([txt],{type:mime||'text/plain'});var u=
 function _csvCell(v){v=(v==null?'':String(v));if(/[",\n]/.test(v))v='"'+v.replace(/"/g,'""')+'"';return v;}
 function _csv(rows){if(!rows||!rows.length)return '';var cols=Object.keys(rows[0]);var out=cols.join(',')+'\n';rows.forEach(function(r){out+=cols.map(function(k){return _csvCell(r[k]);}).join(',')+'\n';});return out;}
 function _stamp(){return new Date().toISOString().split('T')[0];}
-function exportJSON(){var data={exportedAt:new Date().toISOString(),company:(CURRENT_USER&&CURRENT_USER.name)||'',jobs:jobs,crew:crew,hours:hours,subs:subs,estimates:estimates,sketches:sketches,logs:logs,schedule:schedule,changeOrders:changeOrders};_dl('orchamind-export-'+_stamp()+'.json',JSON.stringify(data,null,2),'application/json');}
+function exportJSON(){var data={exportedAt:new Date().toISOString(),company:(CURRENT_USER&&CURRENT_USER.name)||'',jobs:jobs,crew:crew,hours:hours,subs:subs,estimates:estimates,sketches:sketches,logs:logs,schedule:schedule,changeOrders:changeOrders,expenses:expenses};_dl('orchamind-export-'+_stamp()+'.json',JSON.stringify(data,null,2),'application/json');}
 function exportCSV(which){var map={jobs:jobs,crew:crew,hours:hours,subs:subs};var rows=map[which]||[];if(!rows.length){alert('Nothing to export there yet.');return;}_dl('orchamind-'+which+'-'+_stamp()+'.csv',_csv(rows),'text/csv');}
 function renderExportCounts(){var el=document.getElementById('exportCounts');if(!el)return;el.textContent=jobs.length+' projects \u00b7 '+hours.length+' timesheet entries \u00b7 '+crew.length+' crew \u00b7 '+subs.length+' subcontractors';}
 document.querySelectorAll('.modal-bg').forEach(function(m){m.addEventListener('click',function(e){if(e.target===m)closeModal(m.id);});});
@@ -1587,7 +1636,7 @@ function clearAllData(){
 
 // Explicit, non-debounced save that reports success/failure
 function saveNow(cb){
-  fetch('/api/data',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({data:{saved:true,jobs:jobs,crew:crew,hours:hours,subs:subs,estimates:estimates,sketches:sketches,logs:logs,schedule:schedule,changeOrders:changeOrders}})})
+  fetch('/api/data',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({data:{saved:true,jobs:jobs,crew:crew,hours:hours,subs:subs,estimates:estimates,sketches:sketches,logs:logs,schedule:schedule,changeOrders:changeOrders,expenses:expenses}})})
     .then(function(r){return r.json();})
     .then(function(o){var ok=o&&!o.error;if(ok)_dbReady=true;if(cb)cb(ok);})
     .catch(function(){if(cb)cb(false);});
@@ -3143,6 +3192,82 @@ ${c.desc?('<p style="font-size:13px;color:#3a4a5a;margin-top:12px;">'+esc(c.desc
   var s=t.closest('#coList [data-cosend]'); if(s){ sendCO(s.getAttribute('data-cosend')); return; }
   var a=t.closest('#coList [data-coapp]'); if(a){ setCoStatus(a.getAttribute('data-coapp'),'approved'); return; }
   var d=t.closest('#coList [data-codel]'); if(d){ delCO(d.getAttribute('data-codel')); return; }
+}); })();
+
+</script>
+<script>
+
+function _expJobRevenue(job){
+  var inv=(window.estimates||[]).filter(function(e){return e.kind==='invoice' && e.project===job.name;});
+  if(inv.length){ var s=0; inv.forEach(function(e){ s+=estTotals(e).total; }); return s; }
+  return estNum(job.budget);
+}
+function _expJobCosts(job){ var s=0; (window.expenses||[]).forEach(function(x){ if(x.jobId===job.id||x.jobName===job.name){ s+=estNum(x.amount); } }); return s; }
+function renderCosts(){
+  var host=document.getElementById('costsBody'); if(!host) return;
+  var jobs=(window.jobs||[]); var totRev=0,totCost=0;
+  var cards=jobs.map(function(j){
+    var rev=_expJobRevenue(j); var cost=_expJobCosts(j); var prof=rev-cost; var margin=rev>0?(prof/rev*100):0;
+    totRev+=rev; totCost+=cost;
+    var mc=prof<0?'#C62828':(margin<10?'#B45309':'#1B8A4B');
+    return '<div class="cost-card"><div class="cost-h"><b>'+esc(j.name)+'</b><span class="cost-margin" style="color:'+mc+';">'+(rev>0?(Math.round(margin)+'% margin'):'\u2014')+'</span></div>'+
+      '<div class="cost-row"><span>Revenue</span><b>'+estMoney(rev)+'</b></div>'+
+      '<div class="cost-row"><span>Costs</span><b>'+estMoney(cost)+'</b></div>'+
+      '<div class="cost-row profit"><span>Profit</span><b style="color:'+mc+';">'+estMoney(prof)+'</b></div></div>';
+  }).join('');
+  var totProf=totRev-totCost; var totMargin=totRev>0?(totProf/totRev*100):0;
+  var pc=totProf<0?'#C62828':'#1B8A4B';
+  var summary='<div class="cost-summary">'+
+    '<div class="cost-stat"><div class="lbl">Revenue</div><div class="val">'+estMoney(totRev)+'</div></div>'+
+    '<div class="cost-stat"><div class="lbl">Costs</div><div class="val">'+estMoney(totCost)+'</div></div>'+
+    '<div class="cost-stat"><div class="lbl">Profit</div><div class="val" style="color:'+pc+';">'+estMoney(totProf)+'</div></div>'+
+    '<div class="cost-stat"><div class="lbl">Margin</div><div class="val">'+(totRev>0?(Math.round(totMargin)+'%'):'\u2014')+'</div></div></div>';
+  var exp=(window.expenses||[]).slice().sort(function(a,b){return (b.date||'').localeCompare(a.date||'');});
+  var expHtml=exp.length? exp.map(function(x){
+    return '<div class="exp-row"><div class="exp-b"><b>'+esc(x.vendor||x.category||'Expense')+'</b><span>'+esc(x.jobName||'')+' \u00b7 '+esc(x.category||'')+' \u00b7 '+esc(fmtDate(x.date)||x.date||'')+(x.note?(' \u00b7 '+esc(x.note)):'')+'</span></div><div class="exp-amt">'+estMoney(x.amount)+'</div><div class="exp-acts"><button data-expedit="'+esc(x.id)+'">Edit</button><button data-expdel="'+esc(x.id)+'">\u2715</button></div></div>';
+  }).join('') : '<div style="color:var(--muted);font-size:13px;padding:6px 2px;">No expenses logged yet. Tap Add Expense to start tracking job costs.</div>';
+  host.innerHTML=summary+(cards?('<div class="cost-grid">'+cards+'</div>'):'<div style="color:var(--muted);font-size:13px;margin-bottom:12px;">Add jobs to see per-job profitability.</div>')+'<div class="est-grp-h" style="margin-top:22px;">Expenses</div>'+expHtml;
+}
+function _expFillJobs(sel,val){ if(!sel) return; sel.innerHTML='<option value="">Select a job\u2026</option>'+(window.jobs||[]).map(function(j){return '<option value="'+esc(j.name)+'">'+esc(j.name)+'</option>';}).join(''); if(val){ var has=false; for(var o=0;o<sel.options.length;o++){ if(sel.options[o].value===val){has=true;break;} } if(!has){ var op=document.createElement('option'); op.value=val; op.textContent=val; sel.appendChild(op); } sel.value=val; } else { sel.value=''; } }
+function newExpense(){
+  document.getElementById('expModalTitle').textContent='Add Expense';
+  document.getElementById('expId').value='';
+  _expFillJobs(document.getElementById('expJob'),'');
+  document.getElementById('expDate').value=(new Date().toISOString().split('T')[0]);
+  document.getElementById('expCat').value='Materials';
+  document.getElementById('expAmount').value='';
+  document.getElementById('expVendor').value='';
+  document.getElementById('expNote').value='';
+  openModal('expModal');
+}
+function editExpense(id){
+  var x=(window.expenses||[]).find(function(e){return e.id===id;}); if(!x) return;
+  document.getElementById('expModalTitle').textContent='Edit Expense';
+  document.getElementById('expId').value=x.id;
+  _expFillJobs(document.getElementById('expJob'),x.jobName||'');
+  document.getElementById('expDate').value=x.date||'';
+  document.getElementById('expCat').value=x.category||'Materials';
+  document.getElementById('expAmount').value=x.amount||'';
+  document.getElementById('expVendor').value=x.vendor||'';
+  document.getElementById('expNote').value=x.note||'';
+  openModal('expModal');
+}
+function saveExpense(){
+  var job=document.getElementById('expJob').value.trim();
+  var amt=estNum(document.getElementById('expAmount').value);
+  if(!job){ alert('Pick a job.'); return; }
+  if(!amt){ alert('Enter an amount.'); return; }
+  var id=document.getElementById('expId').value;
+  var jb=(window.jobs||[]).find(function(j){return j.name===job;});
+  var data={jobName:job,jobId:jb?jb.id:'',date:document.getElementById('expDate').value,category:document.getElementById('expCat').value,amount:amt,vendor:document.getElementById('expVendor').value.trim(),note:document.getElementById('expNote').value.trim()};
+  if(id){ var x=(window.expenses||[]).find(function(e){return e.id===id;}); if(x) Object.assign(x,data); }
+  else { data.id=uid(); expenses.unshift(data); }
+  save(); closeModal('expModal'); renderCosts();
+}
+function delExpense(id){ if(!confirm('Delete this expense?')) return; expenses=expenses.filter(function(e){return e.id!==id;}); save(); renderCosts(); }
+(function(){ document.addEventListener('click',function(ev){ var t=ev.target; if(!t||!t.closest) return;
+  var e=t.closest('#costsBody [data-expedit]'); if(e){ editExpense(e.getAttribute('data-expedit')); return; }
+  var d=t.closest('#costsBody [data-expdel]'); if(d){ delExpense(d.getAttribute('data-expdel')); return; }
 }); })();
 
 </script>
