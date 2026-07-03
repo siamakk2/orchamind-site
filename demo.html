@@ -971,6 +971,13 @@ body.locked .appwrap{display:none !important;}
       <div id="actChips" style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px;"></div>
       <div id="actFeed"></div>
     </div>
+    <div style="background:#fff;border:1px solid #E1E8F0;border-radius:14px;padding:18px 20px;margin-bottom:18px;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+        <h3 style="margin:0;color:#0A1628;font-size:16px;font-family:'Playfair Display',serif;">Support tickets <span id="supCount" style="font-size:12px;color:#C62828;font-weight:700;"></span></h3>
+        <button onclick="loadSupport()" style="font-size:12px;border:1px solid #E1E8F0;background:#fff;color:#1565C0;border-radius:7px;padding:6px 12px;cursor:pointer;">&#8635; Refresh</button>
+      </div>
+      <div id="supFeed"></div>
+    </div>
     <div style="background:#EEF3F8;border-radius:10px;padding:14px 16px;margin-bottom:16px;font-size:13px;color:#5A6B7D;">
       <b style="color:#0A1628;">Roles:</b> &nbsp;<b style="color:#1565C0;">Owner</b> — full control incl. accounts &amp; financials &nbsp;·&nbsp; <b style="color:#1565C0;">Manager</b> — manage jobs, crew, hours, subs &amp; financials &nbsp;·&nbsp; <b style="color:#1565C0;">Crew</b> — see only their assigned jobs, log hours, no financials
     </div>
@@ -2097,6 +2104,7 @@ function logout(){
 
 function enterApp(){
   document.getElementById('authWrap').style.display='none';
+  try{ var _fm=document.getElementById('floatMic'); if(_fm) _fm.style.display='flex'; var _fs=document.getElementById('floatSupport'); if(_fs && window.CURRENT_USER && CURRENT_USER.username!=='siamakk2') _fs.style.display='flex'; }catch(e){}
   try{ if(CURRENT_USER && CURRENT_USER.role!=='demo' && CURRENT_USER.username!=='demo'){ var _db=document.getElementById('demoBanner'); if(_db) _db.style.display='none'; } }catch(e){}
   document.body.classList.remove('locked');
   document.body.classList.add('authed');
@@ -2302,6 +2310,7 @@ function renderAdmin(){
   }).join('');
   t.innerHTML=rows;
   if(typeof loadActivity==='function') loadActivity();
+  if(typeof loadSupport==='function') loadSupport();
 }
 function filterAdmin(){ renderAdmin(); }
 function setUserStatus(username,status){
@@ -3696,6 +3705,66 @@ function globalVoice(){
     }, 320);
   }catch(e){}
 }
+</script>
+<style>
+#floatSupport{position:fixed;left:18px;bottom:calc(18px + env(safe-area-inset-bottom));z-index:9000;width:54px;height:54px;border-radius:50%;background:#fff;color:#1565C0;border:1px solid #E1E8F0;box-shadow:0 8px 22px rgba(10,22,40,.18);cursor:pointer;display:none;align-items:center;justify-content:center;}
+#floatSupport svg{width:24px;height:24px;}
+#supportPanel{position:fixed;left:18px;bottom:84px;z-index:9500;width:344px;max-width:calc(100vw - 36px);height:470px;max-height:calc(100vh - 130px);background:#fff;border:1px solid #E1E8F0;border-radius:16px;box-shadow:0 22px 64px rgba(10,22,40,.32);display:none;flex-direction:column;overflow:hidden;}
+.sup-head{background:#0A1628;color:#fff;padding:13px 16px;font-weight:700;display:flex;justify-content:space-between;align-items:center;font-family:'Playfair Display',serif;}
+.sup-x{background:none;border:none;color:#fff;font-size:24px;cursor:pointer;line-height:1;padding:0 2px;}
+.sup-body{flex:1;overflow-y:auto;padding:14px;display:flex;flex-direction:column;gap:8px;background:#F7FAFD;}
+.sup-msg{max-width:86%;padding:9px 12px;border-radius:13px;font-size:13.5px;line-height:1.5;white-space:pre-wrap;}
+.sup-bot{background:#fff;border:1px solid #E1E8F0;color:#0A1628;align-self:flex-start;border-bottom-left-radius:3px;}
+.sup-user{background:#1565C0;color:#fff;align-self:flex-end;border-bottom-right-radius:3px;}
+.sup-foot{display:flex;gap:6px;padding:10px 12px;border-top:1px solid #E1E8F0;}
+.sup-foot input{flex:1;border:1px solid #E1E8F0;border-radius:8px;padding:9px 11px;font-size:13.5px;font-family:inherit;outline:none;}
+.sup-send-btn{background:#1565C0;color:#fff;border:none;border-radius:8px;padding:8px 14px;font-weight:600;font-size:13px;cursor:pointer;font-family:inherit;}
+.sup-human{margin:0;padding:10px 12px;background:#FFF7ED;border:none;border-top:1px solid #F0E4D0;color:#B45309;font-weight:700;font-size:12.5px;cursor:pointer;width:100%;text-align:center;font-family:inherit;}
+@media(max-width:520px){ #supportPanel{right:10px;left:10px;width:auto;bottom:80px;height:72vh;} }
+</style>
+<button id="floatSupport" onclick="openSupport()" title="Support" aria-label="Support"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></button>
+<div id="supportPanel">
+  <div class="sup-head"><span>Support</span><button class="sup-x" onclick="closeSupport()">&times;</button></div>
+  <div id="supBody" class="sup-body"></div>
+  <div id="supTicketWrap" style="display:none;padding:10px 12px;border-top:1px solid #E1E8F0;background:#F7FAFD;">
+    <textarea id="supTicketMsg" rows="2" placeholder="Describe your issue for our team..." style="width:100%;border:1px solid #E1E8F0;border-radius:8px;padding:8px;font-family:inherit;font-size:13px;box-sizing:border-box;"></textarea>
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-top:6px;"><span id="supTicketStatus" style="font-size:12px;min-height:14px;"></span><button onclick="supTicketSend()" class="sup-send-btn">Send to team</button></div>
+  </div>
+  <div class="sup-foot"><input id="supInp" placeholder="Ask a question..." onkeydown="if(event.key==='Enter'){supSend();}"><button onclick="supSend()" class="sup-send-btn">Send</button></div>
+  <button class="sup-human" onclick="supHuman()">Message our team &rarr;</button>
+</div>
+<script>
+function openSupport(){ var m=document.getElementById('supportPanel'); if(!m) return; m.style.display='flex'; if(!window._supInit){ window._supInit=true; supBot("Hi! I'm the Orchamind assistant \u2014 ask me anything about using the app: jobs, invoices, scheduling, leads, and more. Need a person? Tap \u201cMessage our team.\u201d"); } var i=document.getElementById('supInp'); if(i) setTimeout(function(){i.focus();},120); }
+function closeSupport(){ var m=document.getElementById('supportPanel'); if(m) m.style.display='none'; }
+function supBot(t){ var b=document.getElementById('supBody'); if(!b) return; var d=document.createElement('div'); d.className='sup-msg sup-bot'; d.textContent=t; b.appendChild(d); b.scrollTop=b.scrollHeight; }
+function supUser(t){ var b=document.getElementById('supBody'); if(!b) return; var d=document.createElement('div'); d.className='sup-msg sup-user'; d.textContent=t; b.appendChild(d); b.scrollTop=b.scrollHeight; }
+function supSend(){
+  var i=document.getElementById('supInp'); var t=(i.value||'').trim(); if(!t) return; i.value='';
+  supUser(t);
+  var b=document.getElementById('supBody'); var typing=document.createElement('div'); typing.className='sup-msg sup-bot'; typing.textContent='\u2026'; b.appendChild(typing); b.scrollTop=b.scrollHeight;
+  var sys="You are Orchamind's friendly, concise support assistant. Orchamind is an all-in-one mobile app for contractors: jobs, leads, quote-request links, estimates and invoices, scheduling, site logs and photos, change orders, crew and hours, costs and profit, a client portal, and a voice AI assistant. Answer the user's question helpfully in 2-5 sentences, and be specific about where to tap. If it is a billing or account problem you cannot solve, tell them to tap \u201cMessage our team\u201d to reach a human.";
+  try{ callClaude(sys, t, function(ans){ if(typing.parentNode)typing.remove(); supBot(String(ans||'').trim()||"Sorry, I couldn't answer that \u2014 tap \u201cMessage our team\u201d and we'll help."); }, function(){ if(typing.parentNode)typing.remove(); supBot("I'm having trouble right now. Tap \u201cMessage our team\u201d and a person will help."); }, 400); }
+  catch(e){ if(typing.parentNode)typing.remove(); supBot("Tap \u201cMessage our team\u201d and a person will help."); }
+}
+function supHuman(){ var w=document.getElementById('supTicketWrap'); if(w){ w.style.display='block'; var t=document.getElementById('supTicketMsg'); if(t) t.focus(); } }
+function supTicketSend(){
+  var ta=document.getElementById('supTicketMsg'); var t=(ta.value||'').trim(); if(!t) return;
+  var st=document.getElementById('supTicketStatus'); st.style.color='#5A6B7D'; st.textContent='Sending\u2026';
+  fetch('/api/support',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'create',message:t,company:(window.CURRENT_USER&&CURRENT_USER.company)||''})})
+    .then(function(r){return r.json();}).then(function(d){ if(d&&d.ok){ st.style.color='#1B8A4B'; st.textContent='Sent! Our team will follow up.'; ta.value=''; supBot("\u2705 Your message was sent to our team. We'll get back to you soon."); setTimeout(function(){var w=document.getElementById('supTicketWrap'); if(w)w.style.display='none'; st.textContent='';},2600); } else { st.style.color='#C62828'; st.textContent=(d&&d.error)||'Could not send.'; } })
+    .catch(function(){ st.style.color='#C62828'; st.textContent='Server error.'; });
+}
+function loadSupport(){ fetch('/api/support',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'list'})}).then(function(r){return r.json();}).then(function(d){ if(d&&d.ok){ renderSupport(d.tickets||[], d.open||0); } }).catch(function(){}); }
+function renderSupport(tix, open){
+  var c=document.getElementById('supCount'); if(c) c.textContent=open?('\u00b7 '+open+' open'):'';
+  var f=document.getElementById('supFeed'); if(!f) return;
+  if(!tix.length){ f.innerHTML='<div style="color:#9aa7b4;font-size:13px;padding:6px 2px;">No support messages yet.</div>'; return; }
+  f.innerHTML=tix.map(function(t){ var resolved=(t.status==='resolved'); return '<div style="border:1px solid #E1E8F0;border-radius:10px;padding:12px 14px;margin-bottom:8px;background:'+(resolved?'#F6FAF7':'#FFFDF6')+';">'+
+    '<div style="display:flex;justify-content:space-between;gap:8px;align-items:center;margin-bottom:6px;"><b style="color:#0A1628;font-size:13.5px;">'+esc(t.company||t.username||'Contractor')+'</b><span style="font-size:11px;color:#9aa7b4;">'+((typeof _actAgo==='function')?_actAgo(t.ts):'')+'</span></div>'+
+    '<div style="color:#3a4a5a;font-size:13.5px;white-space:pre-wrap;">'+esc(t.message||'')+'</div>'+
+    '<div style="margin-top:9px;">'+(resolved?'<span style="font-size:11px;color:#1B8A4B;font-weight:700;">\u2713 Resolved</span>':'<button onclick="resolveTicket(\''+esc(t.id)+'\')" style="font-size:12px;border:1px solid #1B8A4B;background:#fff;color:#1B8A4B;border-radius:6px;padding:4px 10px;cursor:pointer;">Mark resolved</button>')+'</div></div>'; }).join('');
+}
+function resolveTicket(id){ fetch('/api/support',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'resolve',id:id,status:'resolved'})}).then(function(r){return r.json();}).then(function(d){ if(d&&d.ok){ loadSupport(); } else { alert((d&&d.error)||'Could not update.'); } }).catch(function(){}); }
 </script>
 </body>
 </html>
