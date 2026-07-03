@@ -2310,8 +2310,6 @@ function renderAdmin(){
     return '<div class="hours-row"><div style="font-weight:700;color:#0A1628;">'+esc(u.company||'\u2014')+'<br><span style="font-weight:400;font-size:11px;color:#9aa7b4;">'+esc(u.name||'')+'</span></div><div>'+esc(u.username)+flags+created+'<br>'+pay+'</div><div>'+badge+'</div><div>'+acts+'</div></div>';
   }).join('');
   t.innerHTML=rows;
-  if(typeof loadActivity==='function') loadActivity();
-  if(typeof loadSupport==='function') loadSupport();
 }
 function filterAdmin(){ renderAdmin(); }
 function setUserStatus(username,status){
@@ -2324,7 +2322,9 @@ function setUserStatus(username,status){
 function loadUsers(){
   if(!isAdmin())return;
   fetch('/api/accounts',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'list',callerRole:CURRENT_USER.role})})
-    .then(function(r){return r.json();}).then(function(d){if(d&&d.ok){window._adminUsers=d.users; renderAdmin();}});
+    .then(function(r){return r.json();}).then(function(d){if(d&&d.ok){window._adminUsers=d.users; renderAdmin();}else{var _t=document.getElementById('usersTable'); if(_t)_t.innerHTML='<div style="color:#C62828;font-size:13px;padding:8px 2px;">Could not load contractors: '+esc((d&&d.error)||'unknown error')+'</div>';}}).catch(function(){});
+  if(typeof loadActivity==='function') loadActivity();
+  if(typeof loadSupport==='function') loadSupport();
 }
 function forgotPw(){
   var u=prompt('Enter your username. Your owner or manager will be notified to reset your password.');
