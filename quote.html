@@ -1,0 +1,85 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>Request a Quote</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Sora:wght@600;700&family=Outfit:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--navy:#0A1628;--blue:#1565C0;--amber:#F9A825;--bg:#EEF3F8;--ink:#0A1628;--muted:#5A6B7D;--line:#E1E8F0}
+body{background:var(--bg);color:var(--ink);font-family:'Outfit',system-ui,sans-serif;line-height:1.6;min-height:100vh}
+.top{background:var(--navy);padding:20px;text-align:center}
+.top .co{color:#fff;font-family:'Sora',sans-serif;font-size:20px;font-weight:700}
+.top .tag{color:#9db3cc;font-size:13px;margin-top:2px}
+.wrap{max-width:600px;margin:0 auto;padding:26px 18px 50px}
+.card{background:#fff;border:1px solid var(--line);border-radius:16px;padding:26px;box-shadow:0 2px 16px rgba(10,22,40,.05)}
+h1{font-family:'Playfair Display',serif;font-size:25px;color:var(--navy);margin-bottom:6px}
+.sub{color:var(--muted);font-size:14px;margin-bottom:20px}
+label{display:block;font-size:13px;font-weight:600;color:var(--navy);margin:14px 0 6px}
+input,select,textarea{width:100%;border:1.5px solid var(--line);border-radius:10px;padding:12px 14px;font-family:inherit;font-size:15px;color:var(--ink);outline:none;background:#fff}
+input:focus,select,textarea:focus{border-color:var(--blue)}
+textarea{resize:vertical;min-height:90px}
+.hp{position:absolute;left:-9999px;width:1px;height:1px;overflow:hidden}
+.btn{width:100%;margin-top:20px;background:var(--blue);color:#fff;border:none;border-radius:11px;padding:15px;font-family:inherit;font-size:15px;font-weight:700;cursor:pointer}
+.btn:hover{background:#0d4fa0}
+.btn:disabled{opacity:.6}
+.err{color:#C62828;font-size:13px;margin-top:12px;min-height:16px}
+.thanks{text-align:center;padding:20px 6px}
+.thanks .chk{width:64px;height:64px;border-radius:50%;background:#E4F6EA;color:#1B8A4B;display:flex;align-items:center;justify-content:center;margin:0 auto 16px;font-size:32px}
+.thanks h2{font-family:'Playfair Display',serif;font-size:22px;color:var(--navy);margin-bottom:8px}
+.thanks p{color:var(--muted);font-size:14px}
+.foot{text-align:center;color:var(--muted);font-size:12px;margin-top:22px}
+.foot a{color:var(--blue);text-decoration:none}
+.req{color:#C62828}
+</style></head><body>
+<div class="top"><div class="co" id="coName">Request a Quote</div><div class="tag">Free, no-obligation estimate</div></div>
+<div class="wrap">
+  <div class="card" id="formCard">
+    <h1>Tell us about your project</h1>
+    <div class="sub">Fill this out and we'll get back to you shortly with next steps.</div>
+    <label>Your name <span class="req">*</span></label><input type="text" id="qName" autocomplete="name">
+    <div style="display:flex;gap:12px;flex-wrap:wrap"><div style="flex:1;min-width:180px"><label>Phone</label><input type="tel" id="qPhone" autocomplete="tel"></div><div style="flex:1;min-width:180px"><label>Email</label><input type="email" id="qEmail" autocomplete="email"></div></div>
+    <label>What do you need done?</label>
+    <select id="qService">
+      <option value="">Choose a project type…</option>
+      <option>Kitchen remodel</option><option>Bathroom remodel</option><option>Home addition</option>
+      <option>Deck / patio</option><option>Roofing</option><option>Electrical</option>
+      <option>Plumbing</option><option>Flooring</option><option>Painting</option>
+      <option>General repair</option><option>Other</option>
+    </select>
+    <label>Project details</label><textarea id="qNotes" placeholder="Tell us what you're planning, your timeline, and anything else that helps us quote it."></textarea>
+    <input type="text" id="qHp" class="hp" tabindex="-1" autocomplete="off" aria-hidden="true">
+    <button class="btn" id="qBtn" onclick="submitQuote()">Request my quote</button>
+    <div class="err" id="qErr"></div>
+  </div>
+  <div class="card" id="thanksCard" style="display:none">
+    <div class="thanks"><div class="chk">✓</div><h2>Thank you!</h2><p id="thanksMsg">Your request has been sent. We'll be in touch shortly.</p></div>
+  </div>
+  <div class="foot">Powered by <a href="https://orchamind.com">Orchamind</a></div>
+</div>
+<script>
+function qp(k){ try{ return new URLSearchParams(location.search).get(k)||''; }catch(e){ return ''; } }
+var C=qp('c');
+(function(){
+  if(!C){ document.getElementById('coName').textContent='Request a Quote'; return; }
+  fetch('/api/lead-intake?c='+encodeURIComponent(C)).then(function(r){return r.json();}).then(function(d){
+    if(d&&d.ok&&d.company){ document.getElementById('coName').textContent=d.company; document.title='Request a Quote · '+d.company; }
+  }).catch(function(){});
+})();
+function submitQuote(){
+  var name=document.getElementById('qName').value.trim();
+  var err=document.getElementById('qErr'); var btn=document.getElementById('qBtn');
+  if(!name){ err.textContent='Please enter your name.'; return; }
+  if(!C){ err.textContent='This link looks invalid. Please contact the company directly.'; return; }
+  err.textContent=''; btn.disabled=true; btn.textContent='Sending…';
+  var payload={ c:C, name:name, phone:document.getElementById('qPhone').value.trim(), email:document.getElementById('qEmail').value.trim(), service:document.getElementById('qService').value, notes:document.getElementById('qNotes').value.trim(), hp:document.getElementById('qHp').value };
+  fetch('/api/lead-intake',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)})
+    .then(function(r){return r.json();})
+    .then(function(d){
+      if(d&&d.ok){ var co=document.getElementById('coName').textContent; document.getElementById('thanksMsg').textContent=(co&&co!=='Request a Quote')?(co+' will be in touch shortly.'):'Your request has been sent. We\u2019ll be in touch shortly.'; document.getElementById('formCard').style.display='none'; document.getElementById('thanksCard').style.display='block'; window.scrollTo(0,0); }
+      else { btn.disabled=false; btn.textContent='Request my quote'; err.textContent=(d&&d.error)||'Could not send. Please try again.'; }
+    })
+    .catch(function(e){ btn.disabled=false; btn.textContent='Request my quote'; err.textContent='Could not send. Please try again.'; });
+}
+</script>
+</body></html>
