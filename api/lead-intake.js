@@ -55,6 +55,7 @@ module.exports = async function handler(req, res) {
         var ins = await fetch(rest + '/app_data', { method: 'POST', headers: Object.assign({}, H, { 'Prefer': 'return=minimal' }), body: JSON.stringify({ username: c2, data: { leads: [lead] }, updated_at: new Date().toISOString() }) });
         if (!ins.ok) return res.status(200).json({ ok: false, error: 'Could not submit. Please try again.' });
       }
+      try { await fetch(rest + '/activity_log', { method: 'POST', headers: Object.assign({}, H, { 'Prefer': 'return=minimal' }), body: JSON.stringify({ type: 'lead', username: c2, detail: name + ' requested a quote' }) }); } catch (e) {}
       return res.status(200).json({ ok: true });
     }
 
