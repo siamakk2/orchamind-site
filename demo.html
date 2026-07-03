@@ -350,6 +350,22 @@ body.locked .appwrap{display:none !important;}
 .hjob-empty{color:var(--muted);font-size:13.5px;padding:8px 2px;}
 @media(max-width:1024px){.home-grid{grid-template-columns:1fr;}}
 </style>
+<style id="mobile-ux-pass">
+@media (max-width:768px){
+  /* Stop iOS auto-zoom: any focusable field must be >=16px */
+  input, select, textarea, .field input, .field select, .field textarea { font-size:16px !important; }
+  /* Comfortable, thumb-friendly tap targets (Apple/Material minimum) */
+  .btn, .btn-export { min-height:46px; padding-top:12px !important; padding-bottom:12px !important; }
+  select, textarea, input:not([type=checkbox]):not([type=radio]) { min-height:46px; }
+  .tab { min-height:46px; }
+  /* Long forms/lists scroll cleanly inside modals on a phone */
+  .modal { max-height:88vh; overflow-y:auto; -webkit-overflow-scrolling:touch; }
+  /* Small inline action buttons (Edit/Pause/etc.) stay tappable */
+  .lead-acts button, .hours-row button, .cost-row button { min-height:38px; }
+  /* No accidental sideways scroll on phones */
+  html, body { max-width:100%; overflow-x:hidden; }
+}
+</style>
 </head>
 <body class="locked">
 <div id="demoBanner" style="position:relative;z-index:1;background:linear-gradient(90deg,#0A1628,#1565C0);color:#fff;padding:10px 16px;display:flex;align-items:center;justify-content:center;gap:16px;flex-wrap:wrap;font-family:'Outfit',sans-serif;font-size:14px;box-shadow:0 2px 12px rgba(0,0,0,0.2);">
