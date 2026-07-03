@@ -647,12 +647,28 @@ body.locked .appwrap{display:none !important;}
 .sch-item .acts button:hover{color:var(--blue);}
 .sch-due{font-size:12.5px;color:#B45309;background:#FFF7E6;border-radius:8px;padding:6px 9px;margin-bottom:6px;font-weight:600;}
 .sch-empty{color:var(--muted);font-size:12.5px;padding:2px;}
+.sch-badge{font-size:10.5px;font-weight:700;padding:2px 8px;border-radius:20px;}
+.sch-hi{font-size:10.5px;font-weight:700;color:#C62828;background:#FBE9E7;padding:2px 7px;border-radius:20px;}
+.sch-crew-box{display:flex;flex-wrap:wrap;gap:6px;}
+.sch-chip{border:1.5px solid var(--line);background:#fff;color:var(--navy);border-radius:20px;padding:6px 12px;font-size:12.5px;font-weight:600;cursor:pointer;font-family:inherit;}
+.sch-chip.on{background:var(--blue);color:#fff;border-color:var(--blue);}
+.sch-up-h{font-weight:700;color:var(--navy);font-size:12px;text-transform:uppercase;letter-spacing:.04em;margin:2px 0 8px;}
+.sch-up{display:flex;gap:12px;align-items:center;background:#fff;border:1px solid var(--line);border-radius:10px;padding:10px 12px;margin-bottom:8px;cursor:pointer;}
+.sch-up:hover{border-color:var(--blue);}
+.sch-up-d{text-align:center;min-width:44px;}
+.sch-up-d b{display:block;color:var(--blue);font-size:13px;}
+.sch-up-d span{font-size:11px;color:var(--muted);text-transform:uppercase;}
+.sch-up-b{flex:1;}
+.sch-up-b b{color:var(--navy);font-size:14px;}
+.sch-up-b span{display:block;color:var(--muted);font-size:12px;margin-top:2px;}
+.sch-up-empty{color:var(--muted);font-size:13px;background:#fff;border:1px dashed var(--line);border-radius:10px;padding:14px;margin-bottom:16px;line-height:1.5;}
 </style>
   <div class="panel" id="panel-schedule">
     <div class="panel-head">
       <h2>Schedule</h2>
       <button class="btn" onclick="newSchedule()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Schedule Job</button>
     </div>
+    <div id="schUpcoming"></div>
     <div class="sch-nav">
       <button onclick="schWeek(-1)">&lsaquo; Prev</button>
       <div id="schRange"></div>
@@ -940,16 +956,22 @@ body.locked .appwrap{display:none !important;}
   <div class="modal-foot"><button class="btn btn-ghost" onclick="closeModal('logModal')">Cancel</button><button class="btn" onclick="saveLog()">Save entry</button></div>
 </div></div>
 
-<div class="modal-bg" id="schModal"><div class="modal">
-  <h3>Schedule Job</h3>
+<div class="modal-bg" id="schModal"><div class="modal" style="max-width:560px;">
+  <h3 id="schModalTitle">Schedule Job</h3>
   <input type="hidden" id="schId">
-  <div class="field"><label>Job</label><input type="text" id="schJob" list="schJobList" placeholder="Job name"><datalist id="schJobList"></datalist></div>
+  <div class="field"><label>Job</label><input type="text" id="schJob" list="schJobList" placeholder="Job name" onchange="schJobPick()"><datalist id="schJobList"></datalist></div>
   <div class="field-row">
     <div class="field"><label>Date</label><input type="date" id="schDate"></div>
-    <div class="field"><label>Time (optional)</label><input type="text" id="schTime" placeholder="e.g. 8:00 AM"></div>
+    <div class="field"><label>Status</label><select id="schStatus"><option>Scheduled</option><option>In progress</option><option>Completed</option></select></div>
   </div>
-  <div class="field"><label>Crew (optional)</label><input type="text" id="schCrew" list="schCrewList" placeholder="Who is on it"><datalist id="schCrewList"></datalist></div>
-  <div class="field"><label>Note (optional)</label><textarea id="schNote" rows="2" placeholder="Details..."></textarea></div>
+  <div class="field-row">
+    <div class="field"><label>Start time</label><input type="text" id="schStart" placeholder="8:00 AM"></div>
+    <div class="field"><label>End time</label><input type="text" id="schEnd" placeholder="12:00 PM"></div>
+  </div>
+  <div class="field"><label>Location / job site</label><input type="text" id="schLoc" placeholder="Address or site"></div>
+  <div class="field"><label>Crew on this job</label><div id="schCrewBox" class="sch-crew-box"></div><input type="text" id="schCrewOther" placeholder="+ add others (comma separated)" style="margin-top:8px;"></div>
+  <div class="field"><label>Priority</label><select id="schPriority"><option>Normal</option><option>High</option></select></div>
+  <div class="field"><label>Notes / scope</label><textarea id="schNote" rows="3" placeholder="Scope, materials, access notes, anything the crew should know..."></textarea></div>
   <div class="modal-foot"><button class="btn btn-ghost" onclick="closeModal('schModal')">Cancel</button><button class="btn" onclick="saveSchedule()">Save</button></div>
 </div></div>
 
@@ -2836,73 +2858,128 @@ function delLog(id){ if(!confirm('Delete this log entry?')) return; logs=logs.fi
 <script>
 
 var _schWeekStart=null;
+var _schCrewSel=[];
 function _schYmd(dt){ return dt.getFullYear()+'-'+String(dt.getMonth()+1).padStart(2,'0')+'-'+String(dt.getDate()).padStart(2,'0'); }
 function _schMonday(dt){ var d=new Date(dt.getFullYear(),dt.getMonth(),dt.getDate()); var k=(d.getDay()+6)%7; d.setDate(d.getDate()-k); return d; }
-function _schFmt(dt){ return dt.toLocaleDateString('en-US',{month:'short',day:'numeric'}); }
+function _schShort(dt){ return dt.toLocaleDateString('en-US',{month:'short',day:'numeric'}); }
+function _schCrewArr(s){ if(Array.isArray(s.crew)) return s.crew; if(typeof s.crew==='string'&&s.crew) return s.crew.split(',').map(function(x){return x.trim();}).filter(Boolean); return []; }
+function _schTimeStr(s){ if(s.start&&s.end) return s.start+' - '+s.end; return s.start||s.time||''; }
 function schToday(){ _schWeekStart=_schMonday(new Date()); renderSchedule(); }
 function schWeek(n){ if(!_schWeekStart)_schWeekStart=_schMonday(new Date()); _schWeekStart=new Date(_schWeekStart.getFullYear(),_schWeekStart.getMonth(),_schWeekStart.getDate()+7*n); renderSchedule(); }
+function schGoTo(ds){ var dt=new Date(ds+'T00:00:00'); _schWeekStart=_schMonday(dt); renderSchedule(); var w=document.getElementById('schWeek'); if(w)w.scrollIntoView({behavior:'smooth',block:'start'}); }
+function _schBadge(st){ st=st||'Scheduled'; var c=st==='Completed'?'#1B8A4B':(st==='In progress'?'#1565C0':'#5A6B7D'); var b=st==='Completed'?'#E4F6EA':(st==='In progress'?'#E3F0FF':'#EEF3F8'); return '<span class="sch-badge" style="background:'+b+';color:'+c+';">'+esc(st)+'</span>'; }
+function _schCard(s){
+  var crew=_schCrewArr(s); var t=_schTimeStr(s);
+  return '<div class="sch-item"><div class="t">'+esc(t||'\u2014')+'</div><div class="b"><b>'+esc(s.jobName||'Job')+'</b>'+
+    (s.priority==='High'?' <span class="sch-hi">High</span>':'')+' '+_schBadge(s.status)+
+    (s.location?'<span>\ud83d\udccd '+esc(s.location)+'</span>':'')+
+    (crew.length?'<span>\ud83d\udc77 '+esc(crew.join(', '))+'</span>':'')+
+    (s.note?'<span>'+esc(s.note)+'</span>':'')+
+    '</div><div class="acts"><button data-sedit="'+esc(s.id)+'">Edit</button><button data-sdel="'+esc(s.id)+'">\u2715</button></div></div>';
+}
+function renderUpcoming(){
+  var host=document.getElementById('schUpcoming'); if(!host) return;
+  var todayStr=_schYmd(new Date());
+  var up=(window.schedule||[]).filter(function(s){return (s.date||'')>=todayStr && s.status!=='Completed';}).sort(function(a,b){return (a.date+(a.start||'')).localeCompare(b.date+(b.start||''));});
+  if(!up.length){ host.innerHTML='<div class="sch-up-empty">No upcoming jobs scheduled yet. Tap "Schedule Job" to add one - it will show up here and on the week calendar below.</div>'; return; }
+  var rows=up.slice(0,12).map(function(s){
+    var dt=new Date(s.date+'T00:00:00'); var crew=_schCrewArr(s);
+    return '<div class="sch-up" data-sgoto="'+esc(s.date)+'"><div class="sch-up-d"><b>'+_schShort(dt)+'</b><span>'+dt.toLocaleDateString('en-US',{weekday:'short'})+'</span></div>'+
+      '<div class="sch-up-b"><b>'+esc(s.jobName||'Job')+'</b> '+_schBadge(s.status)+'<span>'+esc(_schTimeStr(s))+(crew.length?(' \u00b7 \ud83d\udc77 '+esc(crew.join(', '))):'')+'</span></div></div>';
+  }).join('');
+  host.innerHTML='<div class="sch-up-h">Upcoming</div>'+rows;
+}
 function renderSchedule(){
+  renderUpcoming();
   var host=document.getElementById('schWeek'); if(!host) return;
   if(!_schWeekStart)_schWeekStart=_schMonday(new Date());
   var todayStr=_schYmd(new Date());
   var end=new Date(_schWeekStart.getFullYear(),_schWeekStart.getMonth(),_schWeekStart.getDate()+6);
-  var rng=document.getElementById('schRange'); if(rng) rng.textContent=_schFmt(_schWeekStart)+' \u2013 '+_schFmt(end);
+  var rng=document.getElementById('schRange'); if(rng) rng.textContent=_schShort(_schWeekStart)+' \u2013 '+_schShort(end);
   var dows=['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
   var html='';
   for(var i=0;i<7;i++){
     var dt=new Date(_schWeekStart.getFullYear(),_schWeekStart.getMonth(),_schWeekStart.getDate()+i);
     var ds=_schYmd(dt);
-    var ents=(window.schedule||[]).filter(function(s){return s.date===ds;}).sort(function(a,b){return (a.time||'').localeCompare(b.time||'');});
+    var ents=(window.schedule||[]).filter(function(s){return s.date===ds;}).sort(function(a,b){return (a.start||a.time||'').localeCompare(b.start||b.time||'');});
     var due=(window.jobs||[]).filter(function(j){return j.date===ds;});
     var inner='';
     due.forEach(function(j){ inner+='<div class="sch-due">\u25b2 Due: '+esc(j.name)+'</div>'; });
-    ents.forEach(function(s){
-      inner+='<div class="sch-item"><div class="t">'+esc(s.time||'\u2014')+'</div><div class="b"><b>'+esc(s.jobName||'Job')+'</b>'+(s.crew?'<span>\ud83d\udc77 '+esc(s.crew)+'</span>':'')+(s.note?'<span>'+esc(s.note)+'</span>':'')+'</div><div class="acts"><button data-sedit="'+esc(s.id)+'">Edit</button><button data-sdel="'+esc(s.id)+'">\u2715</button></div></div>';
-    });
+    ents.forEach(function(s){ inner+=_schCard(s); });
     if(!inner) inner='<div class="sch-empty">No jobs scheduled.</div>';
-    html+='<div class="sch-day'+(ds===todayStr?' today':'')+'"><div class="sch-day-h">'+dows[i]+' \u00b7 '+_schFmt(dt)+'</div>'+inner+'</div>';
+    html+='<div class="sch-day'+(ds===todayStr?' today':'')+'"><div class="sch-day-h">'+dows[i]+' \u00b7 '+_schShort(dt)+'</div>'+inner+'</div>';
   }
   host.innerHTML=html;
 }
+function _schRenderCrew(selected){
+  _schCrewSel=selected||[];
+  var box=document.getElementById('schCrewBox'); if(!box) return;
+  var crew=(window.crew||[]);
+  if(!crew.length){ box.innerHTML='<span class="sch-empty">No crew added yet - add crew in the Crew tab, or type names below.</span>'; return; }
+  box.innerHTML=crew.map(function(c){ var on=_schCrewSel.indexOf(c.name)>=0; return '<button type="button" class="sch-chip'+(on?' on':'')+'" data-crew="'+esc(c.name)+'">'+esc(c.name)+'</button>'; }).join('');
+}
+function schJobPick(){
+  var name=document.getElementById('schJob').value.trim();
+  var j=(window.jobs||[]).find(function(x){return x.name===name;});
+  if(j){ var loc=document.getElementById('schLoc'); if(loc&&!loc.value) loc.value=j.location||''; }
+}
 function newSchedule(){
+  document.getElementById('schModalTitle').textContent='Schedule Job';
   document.getElementById('schId').value='';
   document.getElementById('schJob').value='';
   document.getElementById('schDate').value=_schYmd(new Date());
-  document.getElementById('schTime').value='';
-  document.getElementById('schCrew').value='';
+  document.getElementById('schStatus').value='Scheduled';
+  document.getElementById('schStart').value='';
+  document.getElementById('schEnd').value='';
+  document.getElementById('schLoc').value='';
+  document.getElementById('schPriority').value='Normal';
+  document.getElementById('schCrewOther').value='';
   document.getElementById('schNote').value='';
   var jl=document.getElementById('schJobList'); if(jl) jl.innerHTML=(window.jobs||[]).map(function(j){return '<option value="'+esc(j.name)+'">';}).join('');
-  var cl=document.getElementById('schCrewList'); if(cl) cl.innerHTML=(window.crew||[]).map(function(c){return '<option value="'+esc(c.name)+'">';}).join('');
+  _schRenderCrew([]);
   openModal('schModal');
 }
 function editSchedule(id){
   var s=(window.schedule||[]).find(function(x){return x.id===id;}); if(!s) return;
   newSchedule();
+  document.getElementById('schModalTitle').textContent='Edit Scheduled Job';
   document.getElementById('schId').value=s.id;
   document.getElementById('schJob').value=s.jobName||'';
   document.getElementById('schDate').value=s.date||'';
-  document.getElementById('schTime').value=s.time||'';
-  document.getElementById('schCrew').value=s.crew||'';
+  document.getElementById('schStatus').value=s.status||'Scheduled';
+  document.getElementById('schStart').value=s.start||s.time||'';
+  document.getElementById('schEnd').value=s.end||'';
+  document.getElementById('schLoc').value=s.location||'';
+  document.getElementById('schPriority').value=s.priority||'Normal';
   document.getElementById('schNote').value=s.note||'';
+  var arr=_schCrewArr(s); var known=(window.crew||[]).map(function(c){return c.name;});
+  var inList=arr.filter(function(n){return known.indexOf(n)>=0;});
+  var others=arr.filter(function(n){return known.indexOf(n)<0;});
+  _schRenderCrew(inList);
+  document.getElementById('schCrewOther').value=others.join(', ');
 }
 function saveSchedule(){
   var job=document.getElementById('schJob').value.trim();
   var date=document.getElementById('schDate').value;
   if(!job){ alert('Pick or type a job.'); return; }
   if(!date){ alert('Pick a date.'); return; }
+  var crew=_schCrewSel.slice();
+  var other=document.getElementById('schCrewOther').value.trim();
+  if(other) other.split(',').forEach(function(x){ x=x.trim(); if(x&&crew.indexOf(x)<0) crew.push(x); });
   var id=document.getElementById('schId').value;
   var jb=(window.jobs||[]).find(function(j){return j.name===job;});
-  var data={jobName:job,jobId:jb?jb.id:'',date:date,time:document.getElementById('schTime').value.trim(),crew:document.getElementById('schCrew').value.trim(),note:document.getElementById('schNote').value.trim()};
+  var data={jobName:job,jobId:jb?jb.id:'',date:date,start:document.getElementById('schStart').value.trim(),end:document.getElementById('schEnd').value.trim(),location:document.getElementById('schLoc').value.trim(),crew:crew,status:document.getElementById('schStatus').value,priority:document.getElementById('schPriority').value,note:document.getElementById('schNote').value.trim()};
   if(id){ var s=(window.schedule||[]).find(function(x){return x.id===id;}); if(s) Object.assign(s,data); }
   else { data.id=uid(); schedule.unshift(data); }
-  save(); closeModal('schModal'); renderSchedule();
+  save(); closeModal('schModal'); schGoTo(date);
 }
 function delSchedule(id){ if(!confirm('Remove this scheduled job?')) return; schedule=schedule.filter(function(x){return x.id!==id;}); save(); renderSchedule(); }
 (function(){ document.addEventListener('click',function(ev){ var t=ev.target; if(!t||!t.closest) return;
+  var chip=t.closest('#schCrewBox .sch-chip'); if(chip){ var nm=chip.getAttribute('data-crew'); var k=_schCrewSel.indexOf(nm); if(k>=0)_schCrewSel.splice(k,1); else _schCrewSel.push(nm); chip.classList.toggle('on'); return; }
   var e=t.closest('#schWeek [data-sedit]'); if(e){ editSchedule(e.getAttribute('data-sedit')); return; }
   var d=t.closest('#schWeek [data-sdel]'); if(d){ delSchedule(d.getAttribute('data-sdel')); return; }
+  var g=t.closest('#schUpcoming [data-sgoto]'); if(g){ schGoTo(g.getAttribute('data-sgoto')); return; }
 }); })();
-
 </script>
 </body>
 </html>
