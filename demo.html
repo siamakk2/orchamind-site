@@ -2362,9 +2362,13 @@ function resetUserPw(username){
     }).catch(function(){alert('Server error \u2014 try again.');});
 }
 function removeUser(username){
-  if(!confirm('Remove '+username+'\'s account? They will no longer be able to log in.'))return;
-  fetch('/api/accounts',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'remove',callerRole:CURRENT_USER.role,username:username})})
-    .then(function(r){return r.json();}).then(function(d){if(d&&d.ok){loadUsers();}else{alert((d&&d.error)||'Could not remove.');}});
+  var u=(window._adminUsers||[]).find(function(x){return x.username===username;});
+  var target=(u&&u.company)?u.company:username;
+  var typed=prompt('\u26a0\ufe0f PERMANENT DELETE\n\nThis erases EVERYTHING for "'+target+'" \u2014 their login, all jobs, leads, estimates, invoices and portal links. This cannot be undone.\n\nType the name exactly to confirm:\n'+target);
+  if(typed===null) return;
+  if(typed.trim().toLowerCase()!==String(target).trim().toLowerCase()){ alert('That did not match "'+target+'". Nothing was deleted.'); return; }
+  fetch('/api/accounts',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'remove',callerRole:CURRENT_USER.role,username:username,confirmName:typed.trim()})})
+    .then(function(r){return r.json();}).then(function(d){if(d&&d.ok){alert('"'+target+'" and all of its data were permanently deleted.');loadUsers();}else{alert((d&&d.error)||'Could not delete.');}});
 }
 function changeUserRole(username){
   var role=prompt('Set role for '+username+' — type: owner, manager, or crew');
