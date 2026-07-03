@@ -885,6 +885,15 @@ body.locked .appwrap{display:none !important;}
         <button onclick="saveCompanyProfile()" style="margin-top:16px;background:#2E7D32;color:#fff;border:none;border-radius:8px;padding:12px 24px;font-size:15px;font-weight:700;cursor:pointer;">Save Profile</button>
         <span id="pfMsg" style="margin-left:12px;font-size:13px;"></span>
       </div>
+      <div id="quoteCard" style="margin-top:18px;background:#fff;border:1px solid #E1E8F0;border-radius:12px;padding:20px;">
+        <div style="font-size:16px;color:#0A1628;font-weight:700;margin-bottom:6px;">Your quote-request link</div>
+        <p style="color:#5A6B7D;font-size:13.5px;margin:0 0 12px;line-height:1.55;">Share this link, or add it to your website, so homeowners can request a quote. Every request lands in your Leads pipeline automatically.</p>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
+          <input id="quoteLink" readonly value="" style="flex:1;min-width:200px;border:1px solid #E1E8F0;border-radius:8px;padding:10px 12px;font-size:13px;color:#0A1628;background:#F7FAFD;">
+          <button class="btn" onclick="copyQuoteLink(this)">Copy link</button>
+        </div>
+        <p style="color:#8090A0;font-size:12px;margin-top:8px;">Have your own website? Point a &ldquo;Request a Quote&rdquo; button at this link.</p>
+      </div>
       <div id="payCard" style="margin-top:18px;background:#fff;border:1px solid #E1E8F0;border-radius:12px;padding:20px;">
         <div style="font-size:16px;color:#0A1628;font-weight:700;margin-bottom:6px;">Online Payments</div>
         <p style="color:#5A6B7D;font-size:13.5px;margin:0 0 12px;line-height:1.55;">Let your clients pay invoices by card. Connect your bank through Stripe &mdash; payouts go straight to you, and it only takes a few minutes.</p>
@@ -1628,7 +1637,7 @@ document.querySelectorAll('.tab').forEach(function(t){
     if(t.dataset.tab==='changes'){renderChangeOrders();}
     if(t.dataset.tab==='costs'){renderCosts();}
     if(t.dataset.tab==='leads'){renderLeads();}
-    if(t.dataset.tab==='profile'){checkPayStatus();}
+    if(t.dataset.tab==='profile'){checkPayStatus(); setQuoteLink();}
   });
 });
 // ====== MODALS ======
@@ -1867,6 +1876,9 @@ function showForm(which){
   document.getElementById('authError').textContent='';
 }
 function authErr(msg){document.getElementById('authError').textContent=msg||'';}
+function setQuoteLink(){ var el=document.getElementById('quoteLink'); if(el&&window.CURRENT_USER&&CURRENT_USER.username){ el.value='https://orchamind.com/quote?c='+CURRENT_USER.username; } }
+function copyQuoteLink(btn){ var el=document.getElementById('quoteLink'); if(!el) return; try{ el.select(); navigator.clipboard.writeText(el.value).then(function(){ var o=btn.textContent; btn.textContent='Copied!'; setTimeout(function(){btn.textContent=o;},1500); }); }catch(e){} }
+function refreshLeads(){ fetch('/api/data').then(function(r){return r.json();}).then(function(out){ if(out&&out.data&&Array.isArray(out.data.leads)){ leads=out.data.leads; renderLeads(); } }).catch(function(){}); }
 function checkPayStatus(){
   var el=document.getElementById('payStatus'); var btn=document.getElementById('payConnectBtn');
   if(!el) return;
@@ -3326,7 +3338,7 @@ function renderLeads(){
   var leads=(window.leads||[]); var openVal=0,wonVal=0;
   leads.forEach(function(l){ var v=estNum(l.value); if(l.stage==='won')wonVal+=v; else if(l.stage!=='lost')openVal+=v; });
   var active=leads.filter(function(l){return l.stage!=='won'&&l.stage!=='lost';}).length;
-  var summary='<div class="cost-summary"><div class="cost-stat"><div class="lbl">Open pipeline</div><div class="val">'+estMoney(openVal)+'</div></div><div class="cost-stat"><div class="lbl">Won</div><div class="val" style="color:#1B8A4B;">'+estMoney(wonVal)+'</div></div><div class="cost-stat"><div class="lbl">Active leads</div><div class="val">'+active+'</div></div></div>';
+  var summary='<div style="text-align:right;margin-bottom:6px;"><button class="btn btn-ghost" onclick="refreshLeads()" style="font-size:12px;padding:6px 12px;">&#8635; Refresh</button></div><div class="cost-summary"><div class="cost-stat"><div class="lbl">Open pipeline</div><div class="val">'+estMoney(openVal)+'</div></div><div class="cost-stat"><div class="lbl">Won</div><div class="val" style="color:#1B8A4B;">'+estMoney(wonVal)+'</div></div><div class="cost-stat"><div class="lbl">Active leads</div><div class="val">'+active+'</div></div></div>';
   if(!leads.length){ host.innerHTML=summary+'<div style="color:var(--muted);font-size:13.5px;padding:6px 2px;">No leads yet. Tap New Lead to add your first prospect.</div>'; return; }
   var body='';
   _LEAD_STG.forEach(function(s){
