@@ -129,6 +129,7 @@ module.exports = async function handler(req, res) {
       var brandRow = row;
       if (row.owner && row.owner !== row.username) { try { var orow = await getUser(row.owner); if (orow) brandRow = orow; } catch (e) {} }
       var co = row.company || brandRow.company || '';
+      try { await sbFetch(base + '/activity_log', { method: 'POST', headers: H, body: JSON.stringify({ type: 'login', username: row.username, detail: (row.company || row.name || row.username) + ' logged in' }) }); } catch (e) {}
       return res.status(200).json({ ok: true, user: { username: row.username, name: row.name, role: row.role || 'member', company: co, profile: brandRow.profile || null, mustChange: !!row.must_change, billing: !!row.stripe_customer } });
     }
 
@@ -231,6 +232,7 @@ module.exports = async function handler(req, res) {
       if (cex) return res.status(200).json({ ok: false, error: 'That username is already taken — pick another.' });
       var ci = await sbFetch(base + '/accounts', { method: 'POST', headers: H, body: JSON.stringify({ username: cu2, name: cn, role: 'owner', owner: cu2, company: cc, pass: hashPw(cp), must_change: true }) });
       if (!ci.ok) { var ce = await ci.text(); return res.status(200).json({ ok: false, error: 'Could not create company. ' + ce.slice(0, 140) }); }
+      try { await sbFetch(base + '/activity_log', { method: 'POST', headers: H, body: JSON.stringify({ type: 'signup', username: cu2, detail: 'New company created: ' + cc }) }); } catch (e) {}
       return res.status(200).json({ ok: true, company: cc, username: cu2 });
     }
 
