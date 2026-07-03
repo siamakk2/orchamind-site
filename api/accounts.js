@@ -233,7 +233,28 @@ module.exports = async function handler(req, res) {
       var ci = await sbFetch(base + '/accounts', { method: 'POST', headers: H, body: JSON.stringify({ username: cu2, name: cn, role: 'owner', owner: cu2, company: cc, pass: hashPw(cp), must_change: true }) });
       if (!ci.ok) { var ce = await ci.text(); return res.status(200).json({ ok: false, error: 'Could not create company. ' + ce.slice(0, 140) }); }
       try { await sbFetch(base + '/activity_log', { method: 'POST', headers: H, body: JSON.stringify({ type: 'signup', username: cu2, detail: 'New company created: ' + cc }) }); } catch (e) {}
-      return res.status(200).json({ ok: true, company: cc, username: cu2 });
+      var _emailed = false;
+      try {
+        var RESEND = process.env.RESEND_API_KEY;
+        var toEmail = String(body.email || '').trim();
+        if (RESEND && toEmail) {
+          var _esc = function (x) { return String(x || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); };
+          var whtml = '<div style="font-family:Arial,Helvetica,sans-serif;max-width:520px;margin:0 auto;color:#0A1628;">'
+            + '<div style="background:#0A1628;padding:24px;border-radius:12px 12px 0 0;text-align:center;"><span style="color:#F9A825;font-size:22px;font-weight:bold;">Orchamind</span></div>'
+            + '<div style="background:#ffffff;border:1px solid #E1E8F0;border-top:none;padding:28px;border-radius:0 0 12px 12px;">'
+            + '<h1 style="font-size:20px;margin:0 0 12px;color:#0A1628;">Welcome to Orchamind, ' + _esc(cn || 'there') + '!</h1>'
+            + '<p style="font-size:15px;line-height:1.6;color:#5A6B7D;margin:0 0 18px;">Your workspace for <b style="color:#0A1628;">' + _esc(cc) + '</b> is ready \u2014 manage jobs, estimates, crews and invoices just by talking to it.</p>'
+            + '<div style="background:#F7FAFD;border:1px solid #E1E8F0;border-radius:10px;padding:16px 18px;margin:0 0 20px;">'
+            + '<div style="font-size:13px;color:#5A6B7D;margin-bottom:10px;font-weight:700;">Your login details</div>'
+            + '<div style="font-size:14px;color:#0A1628;line-height:1.9;"><b>Website:</b> orchamind.com/app<br><b>Username:</b> ' + _esc(cu2) + '<br><b>Temporary password:</b> ' + _esc(cp) + '</div></div>'
+            + '<a href="https://orchamind.com/app" style="display:inline-block;background:#F9A825;color:#0A1628;text-decoration:none;font-weight:bold;padding:13px 26px;border-radius:8px;font-size:15px;">Log in &amp; get started &rarr;</a>'
+            + '<p style="font-size:13px;line-height:1.6;color:#8090A0;margin:20px 0 0;">For your security you\u2019ll set your own password the first time you log in. Questions? Just reply to this email.</p>'
+            + '</div></div>';
+          var er = await fetch('https://api.resend.com/emails', { method: 'POST', headers: { 'Authorization': 'Bearer ' + RESEND, 'Content-Type': 'application/json' }, body: JSON.stringify({ from: 'Orchamind <welcome@orchamind.com>', to: [toEmail], reply_to: 'siamakk2@gmail.com', subject: 'Welcome to Orchamind \u2014 your ' + cc + ' workspace is ready', html: whtml }) });
+          _emailed = er.ok;
+        }
+      } catch (e) {}
+      return res.status(200).json({ ok: true, company: cc, username: cu2, emailed: _emailed });
     }
 
     if (action === 'setStatus') {
