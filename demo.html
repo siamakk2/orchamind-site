@@ -428,6 +428,7 @@ body.locked .appwrap{display:none !important;}
   <button class="tab" data-tab="sketches"><svg class="ti" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3h7v7H3z"/><path d="M14 3h7v4h-7z"/><path d="M14 11h7v10h-7z"/><path d="M3 14h7v7H3z"/></svg>Plans</button>
   <button class="tab" data-tab="log"><svg class="ti" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>Site Log</button>
   <button class="tab" data-tab="schedule"><svg class="ti" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>Schedule</button>
+  <button class="tab" data-tab="changes" data-mgronly><svg class="ti" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M9 15l2 2 4-4"/></svg>Changes</button>
   <button class="tab" data-tab="risks"><svg class="ti" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>Risk Radar</button>
   <button class="tab" data-tab="crew"><svg class="ti" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/></svg>Crew</button>
   <button class="tab" data-tab="hours"><svg class="ti" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>Hours</button>
@@ -676,6 +677,14 @@ body.locked .appwrap{display:none !important;}
       <button onclick="schWeek(1)">Next &rsaquo;</button>
     </div>
     <div id="schWeek"></div>
+  </div>
+  <div class="panel" id="panel-changes">
+    <div class="panel-head">
+      <h2>Change Orders</h2>
+      <button class="btn" onclick="newCO()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>New Change Order</button>
+    </div>
+    <p style="color:var(--muted);font-size:13.5px;margin:-4px 0 16px;">When a job's scope changes, document the added work and cost and send it to the client. They approve it in their portal &mdash; protecting you from disputes.</p>
+    <div id="coList"></div>
   </div>
   <div class="panel" id="panel-risks">
     <div class="panel-head">
@@ -975,6 +984,22 @@ body.locked .appwrap{display:none !important;}
   <div class="modal-foot"><button class="btn btn-ghost" onclick="closeModal('schModal')">Cancel</button><button class="btn" onclick="saveSchedule()">Save</button></div>
 </div></div>
 
+<div class="modal-bg" id="coModal"><div class="modal" style="max-width:720px;">
+  <h3 id="coModalTitle">New Change Order</h3>
+  <input type="hidden" id="coId">
+  <div class="field-row">
+    <div class="field"><label>Job</label><input type="text" id="coJob" list="coJobList" placeholder="Job name" onchange="coJobPick()"><datalist id="coJobList"></datalist></div>
+    <div class="field"><label>Date</label><input type="date" id="coDate"></div>
+  </div>
+  <div class="field"><label>Title</label><input type="text" id="coTitle" placeholder="e.g. Add recessed lighting in kitchen"></div>
+  <div class="field"><label>Reason / description of change</label><textarea id="coDesc" rows="2" placeholder="Why the change, what is involved, any schedule impact..."></textarea></div>
+  <div class="li-wrap"><table class="li-tbl"><thead><tr><th>Added / changed work</th><th>Qty</th><th>Unit price</th><th>Amount</th><th></th></tr></thead><tbody id="coLines"></tbody></table></div>
+  <button class="btn btn-ghost" type="button" onclick="addCoLine()" style="margin:2px 0 10px;">+ Add line</button>
+  <div class="est-totals"><div class="est-tot-lines"><div class="grand">Change total <b id="coTotal">$0</b></div></div></div>
+  <div class="field"><label>Status</label><select id="coStatus"><option value="draft">Draft</option><option value="sent">Sent to client</option><option value="approved">Approved</option><option value="declined">Declined</option></select></div>
+  <div class="modal-foot"><button class="btn btn-ghost" onclick="closeModal('coModal')">Cancel</button><button class="btn" onclick="saveCO()">Save</button></div>
+</div></div>
+
 <div class="modal-bg" id="jobModal"><div class="modal">
   <h3 id="jobModalTitle">New Job</h3>
   <input type="hidden" id="jobId">
@@ -1103,17 +1128,18 @@ var estimates=[
 ];
 var sketches=[];
 var schedule=[];
+var changeOrders=[{id:'co1',number:'CO-0001',jobName:'Hillside Addition',jobId:'',date:'2026-06-25',title:'Upgrade to quartz countertops',desc:'Client requested quartz instead of laminate in the kitchen and primary bath.',items:[{desc:'Quartz material (kitchen + bath)',qty:1,price:4200},{desc:'Additional fabrication & install labor',qty:1,price:1400}],status:'sent'}];
 var logs=[{id:'l1',job:'Sonoma Vista Residence',date:'2026-06-22',note:'Framing 60% complete on the north wall. Windows delivered and staged in the garage. Framing inspection confirmed for next Tuesday.',photos:[],author:'Demo'}];
 var _saveTimer=null;
 function _acctKey(){return (typeof CURRENT_USER!=='undefined'&&CURRENT_USER&&CURRENT_USER.username)||'demo';}
 function dataKey(){return 'orcha_data_'+_acctKey();}
 function pendKey(){return 'orcha_pend_'+_acctKey();}
 var _pendingSync=false;
-function writeLocal(){try{localStorage.setItem(dataKey(),JSON.stringify({saved:true,jobs:jobs,crew:crew,hours:hours,subs:subs,estimates:estimates,sketches:sketches,logs:logs,schedule:schedule,_ts:Date.now()}));}catch(e){}}
+function writeLocal(){try{localStorage.setItem(dataKey(),JSON.stringify({saved:true,jobs:jobs,crew:crew,hours:hours,subs:subs,estimates:estimates,sketches:sketches,logs:logs,schedule:schedule,changeOrders:changeOrders,_ts:Date.now()}));}catch(e){}}
 function markPending(){_pendingSync=true;try{localStorage.setItem(pendKey(),'1');}catch(e){}updateSyncPill();}
 function markSynced(){_pendingSync=false;try{localStorage.removeItem(pendKey());}catch(e){}updateSyncPill();}
 function pushToServer(){
-  fetch('/api/data',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({data:{saved:true,jobs:jobs,crew:crew,hours:hours,subs:subs,estimates:estimates,sketches:sketches,logs:logs,schedule:schedule}})})
+  fetch('/api/data',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({data:{saved:true,jobs:jobs,crew:crew,hours:hours,subs:subs,estimates:estimates,sketches:sketches,logs:logs,schedule:schedule,changeOrders:changeOrders}})})
     .then(function(r){return r.json();})
     .then(function(o){if(o&&!o.error){_dbReady=true;markSynced();}else{markPending();}})
     .catch(function(){markPending();});
@@ -1132,7 +1158,7 @@ function load(cb){
   // 1) OFFLINE-FIRST: recall unsynced flag + hydrate instantly from this device
   try{_pendingSync=(localStorage.getItem(pendKey())==='1');}catch(e){_pendingSync=false;}
   var localHad=false;
-  try{var ls=localStorage.getItem(dataKey());if(ls){var d=JSON.parse(ls);if(d&&d.saved){jobs=Array.isArray(d.jobs)?d.jobs:jobs;crew=Array.isArray(d.crew)?d.crew:crew;hours=Array.isArray(d.hours)?d.hours:hours;subs=Array.isArray(d.subs)?d.subs:subs;estimates=Array.isArray(d.estimates)?d.estimates:estimates;sketches=Array.isArray(d.sketches)?d.sketches:sketches;logs=Array.isArray(d.logs)?d.logs:logs;schedule=Array.isArray(d.schedule)?d.schedule:schedule;localHad=true;}}}catch(e){}
+  try{var ls=localStorage.getItem(dataKey());if(ls){var d=JSON.parse(ls);if(d&&d.saved){jobs=Array.isArray(d.jobs)?d.jobs:jobs;crew=Array.isArray(d.crew)?d.crew:crew;hours=Array.isArray(d.hours)?d.hours:hours;subs=Array.isArray(d.subs)?d.subs:subs;estimates=Array.isArray(d.estimates)?d.estimates:estimates;sketches=Array.isArray(d.sketches)?d.sketches:sketches;logs=Array.isArray(d.logs)?d.logs:logs;schedule=Array.isArray(d.schedule)?d.schedule:schedule;changeOrders=Array.isArray(d.changeOrders)?d.changeOrders:changeOrders;localHad=true;}}}catch(e){}
   // 2) reach the shared database, but NEVER block the app
   var timer=setTimeout(function(){updateSyncPill();finish();},3000);
   fetch('/api/data').then(function(r){return r.json();}).then(function(out){
@@ -1149,6 +1175,7 @@ function load(cb){
       sketches=Array.isArray(out.data.sketches)?out.data.sketches:[];
       logs=Array.isArray(out.data.logs)?out.data.logs:[];
       schedule=Array.isArray(out.data.schedule)?out.data.schedule:[];
+      changeOrders=Array.isArray(out.data.changeOrders)?out.data.changeOrders:[];
       _dbReady=true;writeLocal();
     }
     updateSyncPill();finish();
@@ -1503,6 +1530,7 @@ document.querySelectorAll('.tab').forEach(function(t){
     if(t.dataset.tab==='sketches'){renderSketches();}
     if(t.dataset.tab==='log'){renderLog();}
     if(t.dataset.tab==='schedule'){renderSchedule();}
+    if(t.dataset.tab==='changes'){renderChangeOrders();}
     if(t.dataset.tab==='profile'){checkPayStatus();}
   });
 });
@@ -1513,7 +1541,7 @@ function _dl(fn,txt,mime){var b=new Blob([txt],{type:mime||'text/plain'});var u=
 function _csvCell(v){v=(v==null?'':String(v));if(/[",\n]/.test(v))v='"'+v.replace(/"/g,'""')+'"';return v;}
 function _csv(rows){if(!rows||!rows.length)return '';var cols=Object.keys(rows[0]);var out=cols.join(',')+'\n';rows.forEach(function(r){out+=cols.map(function(k){return _csvCell(r[k]);}).join(',')+'\n';});return out;}
 function _stamp(){return new Date().toISOString().split('T')[0];}
-function exportJSON(){var data={exportedAt:new Date().toISOString(),company:(CURRENT_USER&&CURRENT_USER.name)||'',jobs:jobs,crew:crew,hours:hours,subs:subs,estimates:estimates,sketches:sketches,logs:logs,schedule:schedule};_dl('orchamind-export-'+_stamp()+'.json',JSON.stringify(data,null,2),'application/json');}
+function exportJSON(){var data={exportedAt:new Date().toISOString(),company:(CURRENT_USER&&CURRENT_USER.name)||'',jobs:jobs,crew:crew,hours:hours,subs:subs,estimates:estimates,sketches:sketches,logs:logs,schedule:schedule,changeOrders:changeOrders};_dl('orchamind-export-'+_stamp()+'.json',JSON.stringify(data,null,2),'application/json');}
 function exportCSV(which){var map={jobs:jobs,crew:crew,hours:hours,subs:subs};var rows=map[which]||[];if(!rows.length){alert('Nothing to export there yet.');return;}_dl('orchamind-'+which+'-'+_stamp()+'.csv',_csv(rows),'text/csv');}
 function renderExportCounts(){var el=document.getElementById('exportCounts');if(!el)return;el.textContent=jobs.length+' projects \u00b7 '+hours.length+' timesheet entries \u00b7 '+crew.length+' crew \u00b7 '+subs.length+' subcontractors';}
 document.querySelectorAll('.modal-bg').forEach(function(m){m.addEventListener('click',function(e){if(e.target===m)closeModal(m.id);});});
@@ -1558,7 +1586,7 @@ function clearAllData(){
 
 // Explicit, non-debounced save that reports success/failure
 function saveNow(cb){
-  fetch('/api/data',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({data:{saved:true,jobs:jobs,crew:crew,hours:hours,subs:subs,estimates:estimates,sketches:sketches,logs:logs,schedule:schedule}})})
+  fetch('/api/data',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({data:{saved:true,jobs:jobs,crew:crew,hours:hours,subs:subs,estimates:estimates,sketches:sketches,logs:logs,schedule:schedule,changeOrders:changeOrders}})})
     .then(function(r){return r.json();})
     .then(function(o){var ok=o&&!o.error;if(ok)_dbReady=true;if(cb)cb(ok);})
     .catch(function(){if(cb)cb(false);});
@@ -2980,6 +3008,114 @@ function delSchedule(id){ if(!confirm('Remove this scheduled job?')) return; sch
   var d=t.closest('#schWeek [data-sdel]'); if(d){ delSchedule(d.getAttribute('data-sdel')); return; }
   var g=t.closest('#schUpcoming [data-sgoto]'); if(g){ schGoTo(g.getAttribute('data-sgoto')); return; }
 }); })();
+</script>
+<script>
+
+function coNextNum(){ var mx=0; (window.changeOrders||[]).forEach(function(c){ var m=/(\d+)\s*$/.exec(c.number||''); if(m){ var v=parseInt(m[1],10); if(v>mx)mx=v; } }); return 'CO-'+String(mx+1).padStart(4,'0'); }
+function coTotals(c){ var s=0; (c.items||[]).forEach(function(it){ s+=estNum(it.qty)*estNum(it.price); }); return s; }
+function _coBadge(st){ st=st||'draft'; var map={draft:['#EEF3F8','#5A6B7D'],sent:['#E3F0FF','#1565C0'],approved:['#E4F6EA','#1B8A4B'],declined:['#FBE9E7','#C62828']}; var c=map[st]||map.draft; return '<span class="est-badge" style="background:'+c[0]+';color:'+c[1]+';">'+esc(st)+'</span>'; }
+function renderChangeOrders(){
+  var list=document.getElementById('coList'); if(!list) return;
+  var dl=document.getElementById('coJobList'); if(dl) dl.innerHTML=(window.jobs||[]).map(function(j){return '<option value="'+esc(j.name)+'">';}).join('');
+  if(!changeOrders.length){ list.innerHTML='<div style="color:var(--muted);font-size:13.5px;padding:6px 2px;">No change orders yet. Tap New Change Order when a job\u2019s scope changes.</div>'; return; }
+  list.innerHTML=changeOrders.map(function(c){
+    var t=coTotals(c);
+    var acts='<div class="est-acts">';
+    acts+='<button data-coedit="'+esc(c.id)+'">Edit</button>';
+    acts+='<button data-coprint="'+esc(c.id)+'">PDF / Print</button>';
+    if(c.status!=='sent'&&c.status!=='approved'){ acts+='<button data-cosend="'+esc(c.id)+'">Send to client</button>'; }
+    if(c.status!=='approved'){ acts+='<button data-coapp="'+esc(c.id)+'">Mark approved</button>'; }
+    acts+='<button class="danger" data-codel="'+esc(c.id)+'">Delete</button></div>';
+    var who=(c.status==='approved'&&c.approvedBy)?('<span style="color:#1B8A4B;font-size:12px;"> \u2713 Approved by '+esc(c.approvedBy)+'</span>'):'';
+    return '<div class="est-card"><div class="num">'+esc(c.number||'')+'</div>'+
+      '<div class="who"><b>'+esc(c.title||'Change order')+'</b><span>'+esc(c.jobName||'')+who+'</span></div>'+
+      '<div class="amt">'+estMoney(t)+'</div>'+_coBadge(c.status)+acts+'</div>';
+  }).join('');
+}
+function coJobPick(){ /* reserved for future autofill */ }
+function addCoLine(it){
+  it=it||{desc:'',qty:1,price:0};
+  var tb=document.getElementById('coLines'); var tr=document.createElement('tr');
+  function cell(cls,type,val){ var td=document.createElement('td'); var inp=document.createElement('input'); inp.className=cls; if(type){inp.type=type;inp.step='any';} inp.value=val; inp.addEventListener('input',recalcCo); td.appendChild(inp); return td; }
+  tr.appendChild(cell('co-desc','',it.desc||''));
+  tr.appendChild(cell('co-qty li-qty','number',estNum(it.qty)));
+  tr.appendChild(cell('co-price li-price','number',estNum(it.price)));
+  var amt=document.createElement('td'); amt.className='li-amt'; amt.textContent='$0'; tr.appendChild(amt);
+  var dtd=document.createElement('td'); var del=document.createElement('button'); del.type='button'; del.className='li-del'; del.textContent='\u00d7'; del.addEventListener('click',function(){ tr.parentNode.removeChild(tr); recalcCo(); }); dtd.appendChild(del); tr.appendChild(dtd);
+  tb.appendChild(tr); recalcCo();
+}
+function recalcCo(){
+  var rows=document.querySelectorAll('#coLines tr'); var s=0;
+  rows.forEach(function(tr){ var q=estNum(tr.querySelector('.co-qty').value); var p=estNum(tr.querySelector('.co-price').value); var a=q*p; s+=a; tr.querySelector('.li-amt').textContent=estMoney(a); });
+  document.getElementById('coTotal').textContent=estMoney(s);
+}
+function _coGather(){ var items=[]; document.querySelectorAll('#coLines tr').forEach(function(tr){ var d=tr.querySelector('.co-desc').value.trim(); var q=estNum(tr.querySelector('.co-qty').value); var p=estNum(tr.querySelector('.co-price').value); if(d||p){ items.push({desc:d,qty:q,price:p}); } }); return items; }
+function newCO(){
+  document.getElementById('coModalTitle').textContent='New Change Order';
+  document.getElementById('coId').value='';
+  document.getElementById('coJob').value='';
+  document.getElementById('coDate').value=(new Date().toISOString().split('T')[0]);
+  document.getElementById('coTitle').value='';
+  document.getElementById('coDesc').value='';
+  document.getElementById('coStatus').value='draft';
+  document.getElementById('coLines').innerHTML='';
+  var dl=document.getElementById('coJobList'); if(dl) dl.innerHTML=(window.jobs||[]).map(function(j){return '<option value="'+esc(j.name)+'">';}).join('');
+  addCoLine({desc:'',qty:1,price:0});
+  openModal('coModal');
+}
+function editCO(id){
+  var c=(window.changeOrders||[]).find(function(x){return x.id===id;}); if(!c) return;
+  newCO();
+  document.getElementById('coModalTitle').textContent='Edit '+(c.number||'Change Order');
+  document.getElementById('coId').value=c.id;
+  document.getElementById('coJob').value=c.jobName||'';
+  document.getElementById('coDate').value=c.date||'';
+  document.getElementById('coTitle').value=c.title||'';
+  document.getElementById('coDesc').value=c.desc||'';
+  document.getElementById('coStatus').value=c.status||'draft';
+  document.getElementById('coLines').innerHTML='';
+  var items=(c.items&&c.items.length)?c.items:[{desc:'',qty:1,price:0}];
+  items.forEach(function(it){ addCoLine(it); });
+}
+function saveCO(){
+  var job=document.getElementById('coJob').value.trim();
+  var title=document.getElementById('coTitle').value.trim();
+  if(!job){ alert('Pick or type a job.'); return; }
+  if(!title){ alert('Give the change order a title.'); return; }
+  var id=document.getElementById('coId').value;
+  var jb=(window.jobs||[]).find(function(j){return j.name===job;});
+  var data={jobName:job,jobId:jb?jb.id:'',date:document.getElementById('coDate').value,title:title,desc:document.getElementById('coDesc').value.trim(),status:document.getElementById('coStatus').value,items:_coGather()};
+  if(id){ var c=(window.changeOrders||[]).find(function(x){return x.id===id;}); if(c) Object.assign(c,data); }
+  else { data.id=uid(); data.number=coNextNum(); changeOrders.unshift(data); }
+  save(); closeModal('coModal'); renderChangeOrders();
+}
+function delCO(id){ if(!confirm('Delete this change order?')) return; changeOrders=changeOrders.filter(function(x){return x.id!==id;}); save(); renderChangeOrders(); }
+function setCoStatus(id,st){ var c=(window.changeOrders||[]).find(function(x){return x.id===id;}); if(!c) return; c.status=st; save(); renderChangeOrders(); }
+function sendCO(id){ setCoStatus(id,'sent'); alert('Marked as sent. Your client will see this change order in their portal (same link and code as the project) and can approve or decline it.'); }
+function printCO(id){
+  var c=(window.changeOrders||[]).find(function(x){return x.id===id;}); if(!c) return;
+  var company=(CURRENT_USER&&CURRENT_USER.name)||'Your Company'; var t=coTotals(c);
+  var rows=(c.items||[]).map(function(it){ return '<tr><td>'+esc(it.desc)+'</td><td class="c">'+estNum(it.qty)+'</td><td class="r">'+estMoney(it.price)+'</td><td class="r">'+estMoney(estNum(it.qty)*estNum(it.price))+'</td></tr>'; }).join('');
+  var w=window.open('','_blank'); if(!w){ alert('Please allow pop-ups to print.'); return; }
+  var doc=`<!doctype html><html><head><meta charset="utf-8"><title>${esc(c.number||'Change Order')}</title>
+<style>*{box-sizing:border-box}body{font-family:Arial,Helvetica,sans-serif;color:#0A1628;margin:40px}.hd{display:flex;justify-content:space-between;border-bottom:3px solid #1565C0;padding-bottom:16px;margin-bottom:18px}.co{font-size:20px;font-weight:700;color:#1565C0}h1{font-size:24px;margin:0}.meta{font-size:13px;color:#5A6B7D}table{width:100%;border-collapse:collapse;margin-top:12px;font-size:13px}th{background:#EEF3F8;text-align:left;padding:9px}td{padding:9px;border-bottom:1px solid #E1E8F0}td.c{text-align:center}td.r{text-align:right}tfoot td{font-weight:700;border:none}.grand td{font-size:16px;color:#1565C0;border-top:2px solid #1565C0}.sig{margin-top:40px;display:flex;gap:40px}.sig div{flex:1;border-top:1px solid #0A1628;padding-top:6px;font-size:12px;color:#5A6B7D}</style></head><body>
+<div class="hd"><div><div class="co">${esc(company)}</div><div class="meta">CHANGE ORDER</div></div><div style="text-align:right"><h1>Change Order</h1><div class="meta">${esc(c.number||'')}<br>Date: ${esc(c.date||'')}</div></div></div>
+<div class="meta"><b>Project:</b> ${esc(c.jobName||'')}<br><b>Change:</b> ${esc(c.title||'')}</div>
+${c.desc?('<p style="font-size:13px;color:#3a4a5a;margin-top:12px;">'+esc(c.desc)+'</p>'):''}
+<table><thead><tr><th>Added / changed work</th><th class="c">Qty</th><th class="r">Unit price</th><th class="r">Amount</th></tr></thead><tbody>${rows}</tbody>
+<tfoot><tr class="grand"><td class="r" colspan="3">Change total</td><td class="r">${estMoney(t)}</td></tr></tfoot></table>
+<div class="sig"><div>Client approval / signature &nbsp; (Date: __________)</div><div>${esc(company)}</div></div>
+</body></html>`;
+  w.document.write(doc); w.document.close(); w.focus(); setTimeout(function(){ try{w.print();}catch(e){} },350);
+}
+(function(){ document.addEventListener('click',function(ev){ var t=ev.target; if(!t||!t.closest) return;
+  var b=t.closest('#coList [data-coedit]'); if(b){ editCO(b.getAttribute('data-coedit')); return; }
+  var p=t.closest('#coList [data-coprint]'); if(p){ printCO(p.getAttribute('data-coprint')); return; }
+  var s=t.closest('#coList [data-cosend]'); if(s){ sendCO(s.getAttribute('data-cosend')); return; }
+  var a=t.closest('#coList [data-coapp]'); if(a){ setCoStatus(a.getAttribute('data-coapp'),'approved'); return; }
+  var d=t.closest('#coList [data-codel]'); if(d){ delCO(d.getAttribute('data-codel')); return; }
+}); })();
+
 </script>
 </body>
 </html>
