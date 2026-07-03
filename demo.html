@@ -427,6 +427,7 @@ body.locked .appwrap{display:none !important;}
   <button class="tab" data-tab="estimates" data-mgronly><svg class="ti" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M9 13h6"/><path d="M9 17h6"/></svg>Estimates</button>
   <button class="tab" data-tab="sketches"><svg class="ti" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3h7v7H3z"/><path d="M14 3h7v4h-7z"/><path d="M14 11h7v10h-7z"/><path d="M3 14h7v7H3z"/></svg>Plans</button>
   <button class="tab" data-tab="log"><svg class="ti" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>Site Log</button>
+  <button class="tab" data-tab="schedule"><svg class="ti" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>Schedule</button>
   <button class="tab" data-tab="risks"><svg class="ti" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>Risk Radar</button>
   <button class="tab" data-tab="crew"><svg class="ti" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/></svg>Crew</button>
   <button class="tab" data-tab="hours"><svg class="ti" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>Hours</button>
@@ -628,6 +629,37 @@ body.locked .appwrap{display:none !important;}
     </div>
     <p style="color:var(--muted);font-size:13.5px;margin:-4px 0 16px;">Log what happened on site &mdash; a quick note and photos, attached to the job. Great for progress records and protecting yourself in disputes.</p>
     <div id="logList"></div>
+  </div>
+<style>
+.sch-nav{display:flex;align-items:center;gap:8px;margin-bottom:16px;flex-wrap:wrap;}
+.sch-nav button{background:#fff;border:1px solid var(--line);border-radius:8px;padding:8px 12px;font-size:13px;font-weight:600;color:var(--navy);cursor:pointer;font-family:inherit;}
+.sch-nav button:hover{border-color:var(--blue);}
+.sch-nav #schRange{font-weight:700;color:var(--navy);flex:1;min-width:130px;font-family:'Playfair Display',serif;font-size:16px;}
+.sch-day{background:#fff;border:1px solid var(--line);border-radius:12px;padding:12px 14px;margin-bottom:10px;}
+.sch-day.today{border-color:var(--blue);box-shadow:0 0 0 2px rgba(21,101,192,.12);}
+.sch-day-h{font-weight:700;color:var(--navy);font-size:13.5px;margin-bottom:8px;}
+.sch-item{display:flex;align-items:flex-start;gap:8px;padding:8px;border-radius:9px;background:#F4F8FD;margin-bottom:6px;}
+.sch-item .t{font-weight:700;color:var(--blue);font-size:12.5px;min-width:52px;}
+.sch-item .b{flex:1;}
+.sch-item .b b{color:var(--navy);font-size:13.5px;}
+.sch-item .b span{display:block;color:var(--muted);font-size:12px;}
+.sch-item .acts button{background:none;border:none;color:var(--muted);cursor:pointer;font-size:12px;padding:2px 4px;font-family:inherit;}
+.sch-item .acts button:hover{color:var(--blue);}
+.sch-due{font-size:12.5px;color:#B45309;background:#FFF7E6;border-radius:8px;padding:6px 9px;margin-bottom:6px;font-weight:600;}
+.sch-empty{color:var(--muted);font-size:12.5px;padding:2px;}
+</style>
+  <div class="panel" id="panel-schedule">
+    <div class="panel-head">
+      <h2>Schedule</h2>
+      <button class="btn" onclick="newSchedule()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Schedule Job</button>
+    </div>
+    <div class="sch-nav">
+      <button onclick="schWeek(-1)">&lsaquo; Prev</button>
+      <div id="schRange"></div>
+      <button onclick="schToday()">Today</button>
+      <button onclick="schWeek(1)">Next &rsaquo;</button>
+    </div>
+    <div id="schWeek"></div>
   </div>
   <div class="panel" id="panel-risks">
     <div class="panel-head">
@@ -908,6 +940,19 @@ body.locked .appwrap{display:none !important;}
   <div class="modal-foot"><button class="btn btn-ghost" onclick="closeModal('logModal')">Cancel</button><button class="btn" onclick="saveLog()">Save entry</button></div>
 </div></div>
 
+<div class="modal-bg" id="schModal"><div class="modal">
+  <h3>Schedule Job</h3>
+  <input type="hidden" id="schId">
+  <div class="field"><label>Job</label><input type="text" id="schJob" list="schJobList" placeholder="Job name"><datalist id="schJobList"></datalist></div>
+  <div class="field-row">
+    <div class="field"><label>Date</label><input type="date" id="schDate"></div>
+    <div class="field"><label>Time (optional)</label><input type="text" id="schTime" placeholder="e.g. 8:00 AM"></div>
+  </div>
+  <div class="field"><label>Crew (optional)</label><input type="text" id="schCrew" list="schCrewList" placeholder="Who is on it"><datalist id="schCrewList"></datalist></div>
+  <div class="field"><label>Note (optional)</label><textarea id="schNote" rows="2" placeholder="Details..."></textarea></div>
+  <div class="modal-foot"><button class="btn btn-ghost" onclick="closeModal('schModal')">Cancel</button><button class="btn" onclick="saveSchedule()">Save</button></div>
+</div></div>
+
 <div class="modal-bg" id="jobModal"><div class="modal">
   <h3 id="jobModalTitle">New Job</h3>
   <input type="hidden" id="jobId">
@@ -1035,17 +1080,18 @@ var estimates=[
   {id:'e2',kind:'invoice',number:'INV-0001',client:'M. Reynolds',clientEmail:'',project:'Valley View Estate',location:'Sonoma, CA',date:'2026-06-20',validUntil:'',status:'sent',taxRate:0,notes:'Net 15. Thank you.',items:[{desc:'Progress billing - finishing phase (draw 4)',qty:1,unit:'ls',price:62000}]}
 ];
 var sketches=[];
+var schedule=[];
 var logs=[{id:'l1',job:'Sonoma Vista Residence',date:'2026-06-22',note:'Framing 60% complete on the north wall. Windows delivered and staged in the garage. Framing inspection confirmed for next Tuesday.',photos:[],author:'Demo'}];
 var _saveTimer=null;
 function _acctKey(){return (typeof CURRENT_USER!=='undefined'&&CURRENT_USER&&CURRENT_USER.username)||'demo';}
 function dataKey(){return 'orcha_data_'+_acctKey();}
 function pendKey(){return 'orcha_pend_'+_acctKey();}
 var _pendingSync=false;
-function writeLocal(){try{localStorage.setItem(dataKey(),JSON.stringify({saved:true,jobs:jobs,crew:crew,hours:hours,subs:subs,estimates:estimates,sketches:sketches,logs:logs,_ts:Date.now()}));}catch(e){}}
+function writeLocal(){try{localStorage.setItem(dataKey(),JSON.stringify({saved:true,jobs:jobs,crew:crew,hours:hours,subs:subs,estimates:estimates,sketches:sketches,logs:logs,schedule:schedule,_ts:Date.now()}));}catch(e){}}
 function markPending(){_pendingSync=true;try{localStorage.setItem(pendKey(),'1');}catch(e){}updateSyncPill();}
 function markSynced(){_pendingSync=false;try{localStorage.removeItem(pendKey());}catch(e){}updateSyncPill();}
 function pushToServer(){
-  fetch('/api/data',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({data:{saved:true,jobs:jobs,crew:crew,hours:hours,subs:subs,estimates:estimates,sketches:sketches,logs:logs}})})
+  fetch('/api/data',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({data:{saved:true,jobs:jobs,crew:crew,hours:hours,subs:subs,estimates:estimates,sketches:sketches,logs:logs,schedule:schedule}})})
     .then(function(r){return r.json();})
     .then(function(o){if(o&&!o.error){_dbReady=true;markSynced();}else{markPending();}})
     .catch(function(){markPending();});
@@ -1064,7 +1110,7 @@ function load(cb){
   // 1) OFFLINE-FIRST: recall unsynced flag + hydrate instantly from this device
   try{_pendingSync=(localStorage.getItem(pendKey())==='1');}catch(e){_pendingSync=false;}
   var localHad=false;
-  try{var ls=localStorage.getItem(dataKey());if(ls){var d=JSON.parse(ls);if(d&&d.saved){jobs=Array.isArray(d.jobs)?d.jobs:jobs;crew=Array.isArray(d.crew)?d.crew:crew;hours=Array.isArray(d.hours)?d.hours:hours;subs=Array.isArray(d.subs)?d.subs:subs;estimates=Array.isArray(d.estimates)?d.estimates:estimates;sketches=Array.isArray(d.sketches)?d.sketches:sketches;logs=Array.isArray(d.logs)?d.logs:logs;localHad=true;}}}catch(e){}
+  try{var ls=localStorage.getItem(dataKey());if(ls){var d=JSON.parse(ls);if(d&&d.saved){jobs=Array.isArray(d.jobs)?d.jobs:jobs;crew=Array.isArray(d.crew)?d.crew:crew;hours=Array.isArray(d.hours)?d.hours:hours;subs=Array.isArray(d.subs)?d.subs:subs;estimates=Array.isArray(d.estimates)?d.estimates:estimates;sketches=Array.isArray(d.sketches)?d.sketches:sketches;logs=Array.isArray(d.logs)?d.logs:logs;schedule=Array.isArray(d.schedule)?d.schedule:schedule;localHad=true;}}}catch(e){}
   // 2) reach the shared database, but NEVER block the app
   var timer=setTimeout(function(){updateSyncPill();finish();},3000);
   fetch('/api/data').then(function(r){return r.json();}).then(function(out){
@@ -1080,6 +1126,7 @@ function load(cb){
       estimates=Array.isArray(out.data.estimates)?out.data.estimates:[];
       sketches=Array.isArray(out.data.sketches)?out.data.sketches:[];
       logs=Array.isArray(out.data.logs)?out.data.logs:[];
+      schedule=Array.isArray(out.data.schedule)?out.data.schedule:[];
       _dbReady=true;writeLocal();
     }
     updateSyncPill();finish();
@@ -1433,6 +1480,7 @@ document.querySelectorAll('.tab').forEach(function(t){
     if(t.dataset.tab==='estimates'){renderEstimates();}
     if(t.dataset.tab==='sketches'){renderSketches();}
     if(t.dataset.tab==='log'){renderLog();}
+    if(t.dataset.tab==='schedule'){renderSchedule();}
     if(t.dataset.tab==='profile'){checkPayStatus();}
   });
 });
@@ -1443,7 +1491,7 @@ function _dl(fn,txt,mime){var b=new Blob([txt],{type:mime||'text/plain'});var u=
 function _csvCell(v){v=(v==null?'':String(v));if(/[",\n]/.test(v))v='"'+v.replace(/"/g,'""')+'"';return v;}
 function _csv(rows){if(!rows||!rows.length)return '';var cols=Object.keys(rows[0]);var out=cols.join(',')+'\n';rows.forEach(function(r){out+=cols.map(function(k){return _csvCell(r[k]);}).join(',')+'\n';});return out;}
 function _stamp(){return new Date().toISOString().split('T')[0];}
-function exportJSON(){var data={exportedAt:new Date().toISOString(),company:(CURRENT_USER&&CURRENT_USER.name)||'',jobs:jobs,crew:crew,hours:hours,subs:subs,estimates:estimates,sketches:sketches,logs:logs};_dl('orchamind-export-'+_stamp()+'.json',JSON.stringify(data,null,2),'application/json');}
+function exportJSON(){var data={exportedAt:new Date().toISOString(),company:(CURRENT_USER&&CURRENT_USER.name)||'',jobs:jobs,crew:crew,hours:hours,subs:subs,estimates:estimates,sketches:sketches,logs:logs,schedule:schedule};_dl('orchamind-export-'+_stamp()+'.json',JSON.stringify(data,null,2),'application/json');}
 function exportCSV(which){var map={jobs:jobs,crew:crew,hours:hours,subs:subs};var rows=map[which]||[];if(!rows.length){alert('Nothing to export there yet.');return;}_dl('orchamind-'+which+'-'+_stamp()+'.csv',_csv(rows),'text/csv');}
 function renderExportCounts(){var el=document.getElementById('exportCounts');if(!el)return;el.textContent=jobs.length+' projects \u00b7 '+hours.length+' timesheet entries \u00b7 '+crew.length+' crew \u00b7 '+subs.length+' subcontractors';}
 document.querySelectorAll('.modal-bg').forEach(function(m){m.addEventListener('click',function(e){if(e.target===m)closeModal(m.id);});});
@@ -1488,7 +1536,7 @@ function clearAllData(){
 
 // Explicit, non-debounced save that reports success/failure
 function saveNow(cb){
-  fetch('/api/data',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({data:{saved:true,jobs:jobs,crew:crew,hours:hours,subs:subs,estimates:estimates,sketches:sketches,logs:logs}})})
+  fetch('/api/data',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({data:{saved:true,jobs:jobs,crew:crew,hours:hours,subs:subs,estimates:estimates,sketches:sketches,logs:logs,schedule:schedule}})})
     .then(function(r){return r.json();})
     .then(function(o){var ok=o&&!o.error;if(ok)_dbReady=true;if(cb)cb(ok);})
     .catch(function(){if(cb)cb(false);});
@@ -2783,6 +2831,77 @@ function renderLog(){
   }).join('');
 }
 function delLog(id){ if(!confirm('Delete this log entry?')) return; logs=logs.filter(function(x){return x.id!==id;}); save(); renderLog(); var jm=document.getElementById('jobLogModal'); if(jm&&jm.classList.contains('show')&&window._jobLogCtx){ renderJobLog(); } }
+
+</script>
+<script>
+
+var _schWeekStart=null;
+function _schYmd(dt){ return dt.getFullYear()+'-'+String(dt.getMonth()+1).padStart(2,'0')+'-'+String(dt.getDate()).padStart(2,'0'); }
+function _schMonday(dt){ var d=new Date(dt.getFullYear(),dt.getMonth(),dt.getDate()); var k=(d.getDay()+6)%7; d.setDate(d.getDate()-k); return d; }
+function _schFmt(dt){ return dt.toLocaleDateString('en-US',{month:'short',day:'numeric'}); }
+function schToday(){ _schWeekStart=_schMonday(new Date()); renderSchedule(); }
+function schWeek(n){ if(!_schWeekStart)_schWeekStart=_schMonday(new Date()); _schWeekStart=new Date(_schWeekStart.getFullYear(),_schWeekStart.getMonth(),_schWeekStart.getDate()+7*n); renderSchedule(); }
+function renderSchedule(){
+  var host=document.getElementById('schWeek'); if(!host) return;
+  if(!_schWeekStart)_schWeekStart=_schMonday(new Date());
+  var todayStr=_schYmd(new Date());
+  var end=new Date(_schWeekStart.getFullYear(),_schWeekStart.getMonth(),_schWeekStart.getDate()+6);
+  var rng=document.getElementById('schRange'); if(rng) rng.textContent=_schFmt(_schWeekStart)+' \u2013 '+_schFmt(end);
+  var dows=['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+  var html='';
+  for(var i=0;i<7;i++){
+    var dt=new Date(_schWeekStart.getFullYear(),_schWeekStart.getMonth(),_schWeekStart.getDate()+i);
+    var ds=_schYmd(dt);
+    var ents=(window.schedule||[]).filter(function(s){return s.date===ds;}).sort(function(a,b){return (a.time||'').localeCompare(b.time||'');});
+    var due=(window.jobs||[]).filter(function(j){return j.date===ds;});
+    var inner='';
+    due.forEach(function(j){ inner+='<div class="sch-due">\u25b2 Due: '+esc(j.name)+'</div>'; });
+    ents.forEach(function(s){
+      inner+='<div class="sch-item"><div class="t">'+esc(s.time||'\u2014')+'</div><div class="b"><b>'+esc(s.jobName||'Job')+'</b>'+(s.crew?'<span>\ud83d\udc77 '+esc(s.crew)+'</span>':'')+(s.note?'<span>'+esc(s.note)+'</span>':'')+'</div><div class="acts"><button data-sedit="'+esc(s.id)+'">Edit</button><button data-sdel="'+esc(s.id)+'">\u2715</button></div></div>';
+    });
+    if(!inner) inner='<div class="sch-empty">No jobs scheduled.</div>';
+    html+='<div class="sch-day'+(ds===todayStr?' today':'')+'"><div class="sch-day-h">'+dows[i]+' \u00b7 '+_schFmt(dt)+'</div>'+inner+'</div>';
+  }
+  host.innerHTML=html;
+}
+function newSchedule(){
+  document.getElementById('schId').value='';
+  document.getElementById('schJob').value='';
+  document.getElementById('schDate').value=_schYmd(new Date());
+  document.getElementById('schTime').value='';
+  document.getElementById('schCrew').value='';
+  document.getElementById('schNote').value='';
+  var jl=document.getElementById('schJobList'); if(jl) jl.innerHTML=(window.jobs||[]).map(function(j){return '<option value="'+esc(j.name)+'">';}).join('');
+  var cl=document.getElementById('schCrewList'); if(cl) cl.innerHTML=(window.crew||[]).map(function(c){return '<option value="'+esc(c.name)+'">';}).join('');
+  openModal('schModal');
+}
+function editSchedule(id){
+  var s=(window.schedule||[]).find(function(x){return x.id===id;}); if(!s) return;
+  newSchedule();
+  document.getElementById('schId').value=s.id;
+  document.getElementById('schJob').value=s.jobName||'';
+  document.getElementById('schDate').value=s.date||'';
+  document.getElementById('schTime').value=s.time||'';
+  document.getElementById('schCrew').value=s.crew||'';
+  document.getElementById('schNote').value=s.note||'';
+}
+function saveSchedule(){
+  var job=document.getElementById('schJob').value.trim();
+  var date=document.getElementById('schDate').value;
+  if(!job){ alert('Pick or type a job.'); return; }
+  if(!date){ alert('Pick a date.'); return; }
+  var id=document.getElementById('schId').value;
+  var jb=(window.jobs||[]).find(function(j){return j.name===job;});
+  var data={jobName:job,jobId:jb?jb.id:'',date:date,time:document.getElementById('schTime').value.trim(),crew:document.getElementById('schCrew').value.trim(),note:document.getElementById('schNote').value.trim()};
+  if(id){ var s=(window.schedule||[]).find(function(x){return x.id===id;}); if(s) Object.assign(s,data); }
+  else { data.id=uid(); schedule.unshift(data); }
+  save(); closeModal('schModal'); renderSchedule();
+}
+function delSchedule(id){ if(!confirm('Remove this scheduled job?')) return; schedule=schedule.filter(function(x){return x.id!==id;}); save(); renderSchedule(); }
+(function(){ document.addEventListener('click',function(ev){ var t=ev.target; if(!t||!t.closest) return;
+  var e=t.closest('#schWeek [data-sedit]'); if(e){ editSchedule(e.getAttribute('data-sedit')); return; }
+  var d=t.closest('#schWeek [data-sdel]'); if(d){ delSchedule(d.getAttribute('data-sdel')); return; }
+}); })();
 
 </script>
 </body>
