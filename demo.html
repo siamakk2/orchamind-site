@@ -943,6 +943,7 @@ body.locked .appwrap{display:none !important;}
     <div class="panel-head">
       <h2>Admin &mdash; All Companies</h2>
     </div>
+    <div id="adminMetrics" class="cost-summary" style="margin-bottom:16px;"></div>
     <div style="background:#EEF3F8;border-radius:10px;padding:14px 16px;margin-bottom:16px;font-size:13px;color:#5A6B7D;">
       <b style="color:#0A1628;">Roles:</b> &nbsp;<b style="color:#1565C0;">Owner</b> — full control incl. accounts &amp; financials &nbsp;·&nbsp; <b style="color:#1565C0;">Manager</b> — manage jobs, crew, hours, subs &amp; financials &nbsp;·&nbsp; <b style="color:#1565C0;">Crew</b> — see only their assigned jobs, log hours, no financials
     </div>
@@ -982,7 +983,8 @@ body.locked .appwrap{display:none !important;}
       <div id="npMsg" style="margin-top:10px;font-size:13px;min-height:18px;"></div>
     </div>
 
-    <h3 style="margin:0 0 10px;color:#0A1628;font-size:15px;">Current Team</h3>
+    <h3 style="margin:18px 0 10px;color:#0A1628;font-size:15px;">All Contractors &amp; Users</h3>
+    <input type="text" id="adminSearch" placeholder="Search by company, name, or username&hellip;" oninput="filterAdmin()" style="width:100%;border:1.5px solid #E1E8F0;border-radius:8px;padding:10px 12px;font-size:14px;box-sizing:border-box;margin-bottom:12px;">
     <div class="hours-table" id="usersTable"></div>
   </div>
   
@@ -2010,6 +2012,7 @@ function authLogin(){
       document.getElementById('liBtn').textContent='Log In';
       if(d&&d.ok){
         CURRENT_USER=d.user;
+        if(d.user&&d.user.paused){ showRenewWall(d.user); return; }
         if(d.user.mustChange){showForm('formChange');document.getElementById('authSubtitle').textContent='Set your password';}
         else{sessionStorage.setItem('hci_session',JSON.stringify(CURRENT_USER));enterApp();}
       }else if(d&&d.paused){
@@ -2153,10 +2156,65 @@ function saveSub(){var name=document.getElementById('subName').value.trim();if(!
 function delSub(id){if(confirm('Remove this subcontractor?')){subs=subs.filter(function(x){return x.id!==id;});renderSubs();saveNow();}}
 
 // ====== USER MANAGEMENT (Admin) ======
+function showRenewWall(user){
+  var co=(user&&user.company)||'Your workspace'; var portal=(user&&user.portalUrl)||'';
+  var wall=document.createElement('div'); wall.id='renewWall';
+  wall.style.cssText='position:fixed;inset:0;z-index:99999;background:#0A1628;color:#fff;display:flex;align-items:center;justify-content:center;padding:24px;';
+  wall.innerHTML='<div style="max-width:440px;text-align:center;font-family:Outfit,system-ui,sans-serif;">'+
+    '<div style="font-size:40px;margin-bottom:14px;">\u23f8\ufe0f</div>'+
+    '<div style="font-family:\'Playfair Display\',serif;font-size:26px;font-weight:700;margin-bottom:10px;">'+esc(co)+' is paused</div>'+
+    '<p style="color:#9db3cc;font-size:15px;line-height:1.6;margin-bottom:22px;">Your subscription has ended, so this workspace is read-only. Renew to pick up right where you left off \u2014 all your data is safe and waiting.</p>'+
+    (portal?('<a href="'+esc(portal)+'" style="display:inline-block;background:#F9A825;color:#0A1628;border-radius:10px;padding:14px 28px;font-weight:700;font-size:15px;text-decoration:none;">Renew subscription \u2192</a>'):'<div style="color:#9db3cc;font-size:13px;">Please contact support to renew.</div>')+
+    '<div style="margin-top:20px;"><a href="#" onclick="location.reload();return false;" style="color:#5B9DFF;font-size:13px;text-decoration:none;">Log out</a></div></div>';
+  document.body.appendChild(wall);
+}
+function renderAdmin(){
+  var users=(window._adminUsers||[]);
+  var owners=users.filter(function(u){return (u.role||'')==='owner';});
+  var companies=owners.length;
+  var paying=users.filter(function(u){return !!u.stripe_customer;}).length;
+  var paused=users.filter(function(u){return u.status==='paused';}).length;
+  var mrr=paying*500;
+  var mEl=document.getElementById('adminMetrics');
+  if(mEl){ mEl.innerHTML=
+    '<div class="cost-stat"><div class="lbl">Contractors</div><div class="val">'+companies+'</div></div>'+
+    '<div class="cost-stat"><div class="lbl">Paying</div><div class="val" style="color:#1B8A4B;">'+paying+'</div></div>'+
+    '<div class="cost-stat"><div class="lbl">Est. MRR</div><div class="val">$'+mrr.toLocaleString()+'</div></div>'+
+    '<div class="cost-stat"><div class="lbl">Paused</div><div class="val" style="color:'+(paused?'#C62828':'#5A6B7D')+';">'+paused+'</div></div>'; }
+  var qi=document.getElementById('adminSearch'); var q=qi?qi.value.trim().toLowerCase():'';
+  var list=q?users.filter(function(u){return ((u.company||'')+' '+(u.name||'')+' '+(u.username||'')).toLowerCase().indexOf(q)>=0;}):users;
+  var t=document.getElementById('usersTable'); if(!t) return;
+  var rows='<div class="hours-row head"><div>Company</div><div>Login</div><div>Status</div><div>Actions</div></div>';
+  rows+=list.map(function(u){
+    var self=(u.username==='siamakk2'); var isP=(u.status==='paused');
+    var pay=u.stripe_customer?'<span style="font-size:10.5px;color:#1B8A4B;font-weight:700;">PAYING</span>':'<span style="font-size:10.5px;color:#B45309;font-weight:700;">TRIAL</span>';
+    var badge='<span style="font-size:10.5px;font-weight:700;padding:2px 8px;border-radius:20px;background:'+(isP?'#FBE9E7':'#E4F6EA')+';color:'+(isP?'#C62828':'#1B8A4B')+';">'+(isP?'Paused':'Active')+'</span>';
+    var flags=((u.must_change||u.mustChange)?' <span style="font-size:11px;color:#B45309;">(temp pw)</span>':'')+(u.reset_requested?' <span style="font-size:11px;color:#D32F2F;font-weight:700;">\u26a0 reset</span>':'');
+    var created=u.created_at?(' <span style="font-size:11px;color:#9aa7b4;">since '+String(u.created_at).slice(0,10)+'</span>'):'';
+    var acts;
+    if(self){ acts='<span style="font-size:12px;color:#9aa7b4;">You (admin)</span>'; }
+    else {
+      var pauseBtn=isP
+        ?'<button onclick="setUserStatus(\''+u.username+'\',\'active\')" style="font-size:12px;border:1px solid #1B8A4B;background:#fff;color:#1B8A4B;border-radius:6px;padding:4px 9px;cursor:pointer;margin-right:5px;">Reactivate</button>'
+        :'<button onclick="setUserStatus(\''+u.username+'\',\'paused\')" style="font-size:12px;border:1px solid #E1E8F0;background:#fff;color:#B45309;border-radius:6px;padding:4px 9px;cursor:pointer;margin-right:5px;">Pause</button>';
+      acts=pauseBtn+'<button onclick="resetUserPw(\''+u.username+'\')" style="font-size:12px;border:1px solid #E1E8F0;background:#fff;color:#2D7FF9;border-radius:6px;padding:4px 9px;cursor:pointer;margin-right:5px;">Reset PW</button><button onclick="removeUser(\''+u.username+'\')" style="font-size:12px;border:1px solid #E1E8F0;background:#fff;color:#D32F2F;border-radius:6px;padding:4px 9px;cursor:pointer;">Remove</button>';
+    }
+    return '<div class="hours-row"><div style="font-weight:700;color:#0A1628;">'+esc(u.company||'\u2014')+'<br><span style="font-weight:400;font-size:11px;color:#9aa7b4;">'+esc(u.name||'')+'</span></div><div>'+esc(u.username)+flags+created+'<br>'+pay+'</div><div>'+badge+'</div><div>'+acts+'</div></div>';
+  }).join('');
+  t.innerHTML=rows;
+}
+function filterAdmin(){ renderAdmin(); }
+function setUserStatus(username,status){
+  var verb=(status==='paused')?'Pause':'Reactivate';
+  if(!confirm(verb+' '+username+'?'+(status==='paused'?' They will hit a read-only "renew to continue" screen when they log in.':' They will regain full access.'))) return;
+  fetch('/api/accounts',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'setStatus',username:username,status:status})})
+    .then(function(r){return r.json();}).then(function(d){ if(d&&d.ok){ loadUsers(); } else { alert((d&&d.error)||'Could not update.'); } })
+    .catch(function(){ alert('Server error.'); });
+}
 function loadUsers(){
   if(!isAdmin())return;
   fetch('/api/accounts',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'list',callerRole:CURRENT_USER.role})})
-    .then(function(r){return r.json();}).then(function(d){if(d&&d.ok){renderUsers(d.users);}});
+    .then(function(r){return r.json();}).then(function(d){if(d&&d.ok){window._adminUsers=d.users; renderAdmin();}});
 }
 function forgotPw(){
   var u=prompt('Enter your username. Your owner or manager will be notified to reset your password.');
