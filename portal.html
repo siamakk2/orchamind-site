@@ -37,6 +37,22 @@ input:focus{border-color:var(--blue)}
 .signout:hover{color:var(--blue)}
 .foot{text-align:center;color:var(--muted);font-size:12px;margin-top:30px}
 .foot a{color:var(--blue);text-decoration:none}
+.co-card{background:#fff;border:1px solid var(--line);border-radius:14px;padding:16px;margin-bottom:12px}
+.co-head{display:flex;justify-content:space-between;align-items:flex-start;gap:10px}
+.co-head b{color:var(--navy);font-size:15px}
+.co-num{display:block;color:var(--muted);font-size:12px}
+.co-tot{color:var(--navy);font-family:'Playfair Display',serif;font-size:18px;white-space:nowrap}
+.co-desc{color:#3a4a5a;font-size:13.5px;margin:8px 0}
+.co-li{display:flex;justify-content:space-between;gap:10px;font-size:13.5px;padding:5px 0;border-bottom:1px solid var(--line)}
+.co-li b{color:var(--navy)}
+.co-approve{margin-top:12px}
+.co-name{width:100%;border:1.5px solid var(--line);border-radius:9px;padding:10px 12px;font-size:14px;margin-bottom:8px;font-family:inherit}
+.co-btns{display:flex;gap:8px}
+.co-yes{flex:1;background:#15803d;color:#fff;border:none;border-radius:9px;padding:12px;font-weight:700;font-size:14px;cursor:pointer;font-family:inherit}
+.co-no{flex:1;background:#fff;color:#C62828;border:1.5px solid #f0c9c4;border-radius:9px;padding:12px;font-weight:700;font-size:14px;cursor:pointer;font-family:inherit}
+.co-done{margin-top:10px;font-weight:700;font-size:14px}
+.co-done.ok{color:#15803d}
+.co-done.no{color:#C62828}
 </style></head><body>
 <div class="top"><span class="mark"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12h4l3 8 4-16 3 8h4"/></svg></span><b>Orchamind</b></div>
 <div class="wrap">
@@ -55,6 +71,7 @@ input:focus{border-color:var(--blue)}
 function esc(s){return String(s==null?'':s).replace(/[&<>"]/g,function(m){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[m];});}
 function fmtDate(d){ if(!d)return''; try{ var dt=new Date(d+'T00:00:00'); return dt.toLocaleDateString('en-US',{month:'long',day:'numeric',year:'numeric'}); }catch(e){ return d; } }
 function cap(s){ s=String(s||''); return s.charAt(0).toUpperCase()+s.slice(1); }
+function money(n){ n=parseFloat(n)||0; return '$'+n.toLocaleString('en-US',{minimumFractionDigits:(n%1?2:0),maximumFractionDigits:2}); }
 function viewProject(){
   var email=document.getElementById('pEmail').value.trim();
   var code=document.getElementById('pCode').value.trim();
@@ -78,6 +95,20 @@ function render(p){
     var g=(u.photos||[]).map(function(ph){ return '<img src="'+esc(ph.url)+'" alt="" onclick="window.open(this.src)">'; }).join('');
     return '<div class="upd"><div class="d">'+esc(fmtDate(u.date))+'</div>'+(u.note?('<div class="n">'+esc(u.note)+'</div>'):'')+(g?('<div class="gal">'+g+'</div>'):'')+'</div>';
   }).join('');
+  var cos=(p.changeOrders||[]);
+  var coHtml='';
+  if(cos.length){
+    coHtml='<div class="h2">Change Orders</div>'+cos.map(function(c){
+      var items=(c.items||[]).map(function(it){ return '<div class="co-li"><span>'+esc(it.desc)+'</span><b>'+money((parseFloat(it.qty)||0)*(parseFloat(it.price)||0))+'</b></div>'; }).join('');
+      var head='<div class="co-head"><div><b>'+esc(c.title||'Change order')+'</b><span class="co-num">'+esc(c.number||'')+'</span></div><b class="co-tot">'+money(c.total)+'</b></div>';
+      var mid=(c.desc?'<p class="co-desc">'+esc(c.desc)+'</p>':'')+items;
+      var foot='';
+      if(c.status==='sent'){ foot='<div class="co-approve"><input type="text" class="co-name" id="con_'+esc(c.id)+'" placeholder="Type your name to approve"><div class="co-btns"><button class="co-yes" data-co-id="'+esc(c.id)+'" data-co-dec="approved">Approve</button><button class="co-no" data-co-id="'+esc(c.id)+'" data-co-dec="declined">Decline</button></div></div>'; }
+      else if(c.status==='approved'){ foot='<div class="co-done ok">\u2713 Approved'+(c.approvedBy?(' by '+esc(c.approvedBy)):'')+'</div>'; }
+      else if(c.status==='declined'){ foot='<div class="co-done no">Declined</div>'; }
+      return '<div class="co-card">'+head+mid+foot+'</div>';
+    }).join('');
+  }
   el.innerHTML='<div class="card">'+
     (p.company?('<div class="sub" style="margin-bottom:4px;">'+esc(p.company)+'</div>'):'')+
     '<h1>'+esc(p.name)+'</h1>'+
@@ -87,8 +118,19 @@ function render(p){
     '</div>'+
     '<div class="h2">Updates</div>'+
     (updates||'<div class="upd" style="color:var(--muted);">No updates posted yet. Check back soon.</div>')+
+    coHtml+
     '<div class="signout" onclick="signout()">Sign out</div>';
 }
+function coDecision(id, dec){
+  var nameEl=document.getElementById('con_'+id); var name=nameEl?nameEl.value.trim():'';
+  if(dec==='approved' && !name){ alert('Please type your name to approve.'); return; }
+  var code=document.getElementById('pCode').value.trim(); var email=document.getElementById('pEmail').value.trim();
+  fetch('/api/clientportal',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'co',code:code,email:email,coId:id,decision:dec,name:name})})
+    .then(function(r){return r.json();})
+    .then(function(d){ if(d&&d.ok){ viewProject(); } else { alert((d&&d.error)||'Could not save your decision.'); } })
+    .catch(function(e){ alert(e.message); });
+}
+document.addEventListener('click',function(ev){ var b=ev.target.closest?ev.target.closest('[data-co-dec]'):null; if(!b) return; coDecision(b.getAttribute('data-co-id'), b.getAttribute('data-co-dec')); });
 function signout(){ try{ sessionStorage.removeItem('orcha_portal'); }catch(e){} location.reload(); }
 (function(){ try{ var s=JSON.parse(sessionStorage.getItem('orcha_portal')||'null'); if(s&&s.code){ document.getElementById('pEmail').value=s.email||''; document.getElementById('pCode').value=s.code; viewProject(); } }catch(e){} })();
 </script>
