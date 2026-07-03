@@ -996,6 +996,7 @@ body.locked .appwrap{display:none !important;}
   <div class="li-wrap"><table class="li-tbl"><thead><tr><th>Added / changed work</th><th>Qty</th><th>Unit price</th><th>Amount</th><th></th></tr></thead><tbody id="coLines"></tbody></table></div>
   <button class="btn btn-ghost" type="button" onclick="addCoLine()" style="margin:2px 0 10px;">+ Add line</button>
   <div class="est-totals"><div class="est-tot-lines"><div class="grand">Change total <b id="coTotal">$0</b></div></div></div>
+  <div class="field"><label>Attach files or images (optional)</label><input type="file" id="coFiles" accept="image/*,application/pdf" multiple onchange="addCoFiles(this)"><div id="coFileMsg" class="log-up-msg"></div><div id="coFileThumbs" style="display:flex;flex-wrap:wrap;gap:6px;margin-top:6px;"></div></div>
   <div class="field"><label>Status</label><select id="coStatus"><option value="draft">Draft</option><option value="sent">Sent to client</option><option value="approved">Approved</option><option value="declined">Declined</option></select></div>
   <div class="modal-foot"><button class="btn btn-ghost" onclick="closeModal('coModal')">Cancel</button><button class="btn" onclick="saveCO()">Save</button></div>
 </div></div>
@@ -2777,6 +2778,7 @@ function createClientPortal(){
       box.innerHTML='<div style="font-size:13px;color:var(--muted);margin-bottom:8px;">Share these with your client. They open the link, enter their email'+(email?'':' (any email)')+', and this code:</div>'+
         row('Link',esc(link))+ (email?row('Email',esc(email)):'') + row('Code','<span style="letter-spacing:2px;">'+esc(code)+'</span>')+
         '<button class="btn" style="margin-top:12px;" onclick="cpCopy(this)" data-share="'+esc(share)+'">Copy message to send</button>';
+      try{ box.scrollIntoView({behavior:'smooth',block:'nearest'}); }catch(e){}
     })
     .catch(function(e){ btn.disabled=false; btn.textContent=old; msg.textContent=e.message; });
 }
@@ -3011,6 +3013,29 @@ function delSchedule(id){ if(!confirm('Remove this scheduled job?')) return; sch
 </script>
 <script>
 
+window._coFiles = window._coFiles || [];
+function addCoFiles(input){
+  var files=input.files; if(!files||!files.length) return;
+  var job=document.getElementById('coJob').value.trim()||'change-order';
+  var msg=document.getElementById('coFileMsg'); var total=files.length, done=0, failed=0;
+  msg.textContent='Uploading '+total+' file'+(total>1?'s':'')+'...';
+  function fin(){ input.value=''; msg.textContent=failed?(failed+' of '+total+' could not upload.'):'Attached.'; }
+  Array.prototype.forEach.call(files,function(f){
+    function up(dataUrl){ if(!dataUrl){ done++; failed++; if(done===total)fin(); return; }
+      uploadLogPhoto(dataUrl,f.name,job,function(url){ window._coFiles.push({url:url,name:f.name,type:f.type}); renderCoThumbs(); done++; if(done===total)fin(); }, function(e){ done++; failed++; if(done===total)fin(); msg.textContent='A file failed: '+e; }); }
+    if(/^image\//.test(f.type||'')){ compressLogImage(f,up); }
+    else if(f.type==='application/pdf'){ if(f.size>4000000){ done++; failed++; msg.textContent='PDF too large (max ~4MB): '+f.name; if(done===total)fin(); return; } var rd=new FileReader(); rd.onload=function(){ up(rd.result); }; rd.onerror=function(){ up(null); }; rd.readAsDataURL(f); }
+    else { done++; failed++; if(done===total)fin(); }
+  });
+}
+function renderCoThumbs(){
+  var el=document.getElementById('coFileThumbs'); if(!el) return;
+  el.innerHTML=(window._coFiles||[]).map(function(fi,i){
+    var isImg=/^image\//.test(fi.type||'')||/\.(jpg|jpeg|png|gif|webp)$/i.test(fi.url||'');
+    var inner=isImg?('<img src="'+esc(fi.url)+'" alt="">'):('<div style="width:80px;height:80px;border:1px solid var(--line);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:11px;text-align:center;padding:4px;color:var(--muted);background:#F4F8FD;">\ud83d\udcc4 PDF</div>');
+    return '<div class="log-thumb">'+inner+'<button type="button" class="log-thumb-x" data-cofrm="'+i+'">\u00d7</button></div>';
+  }).join('');
+}
 function coNextNum(){ var mx=0; (window.changeOrders||[]).forEach(function(c){ var m=/(\d+)\s*$/.exec(c.number||''); if(m){ var v=parseInt(m[1],10); if(v>mx)mx=v; } }); return 'CO-'+String(mx+1).padStart(4,'0'); }
 function coTotals(c){ var s=0; (c.items||[]).forEach(function(it){ s+=estNum(it.qty)*estNum(it.price); }); return s; }
 function _coBadge(st){ st=st||'draft'; var map={draft:['#EEF3F8','#5A6B7D'],sent:['#E3F0FF','#1565C0'],approved:['#E4F6EA','#1B8A4B'],declined:['#FBE9E7','#C62828']}; var c=map[st]||map.draft; return '<span class="est-badge" style="background:'+c[0]+';color:'+c[1]+';">'+esc(st)+'</span>'; }
@@ -3026,9 +3051,10 @@ function renderChangeOrders(){
     if(c.status!=='sent'&&c.status!=='approved'){ acts+='<button data-cosend="'+esc(c.id)+'">Send to client</button>'; }
     if(c.status!=='approved'){ acts+='<button data-coapp="'+esc(c.id)+'">Mark approved</button>'; }
     acts+='<button class="danger" data-codel="'+esc(c.id)+'">Delete</button></div>';
-    var who=(c.status==='approved'&&c.approvedBy)?('<span style="color:#1B8A4B;font-size:12px;"> \u2713 Approved by '+esc(c.approvedBy)+'</span>'):'';
+    var appd=(c.approvedAt?(' on '+(fmtDate(String(c.approvedAt).slice(0,10))||'')):'');
+    var who=(c.status==='approved'&&c.approvedBy)?('<span style="color:#1B8A4B;font-size:12px;"> \u2713 Approved by '+esc(c.approvedBy)+appd+'</span>'):'';
     return '<div class="est-card"><div class="num">'+esc(c.number||'')+'</div>'+
-      '<div class="who"><b>'+esc(c.title||'Change order')+'</b><span>'+esc(c.jobName||'')+who+'</span></div>'+
+      '<div class="who"><b>'+esc(c.title||'Change order')+'</b><span>'+esc(c.jobName||'')+(c.date?(' \u00b7 '+esc(fmtDate(c.date)||c.date)):'')+((c.files&&c.files.length)?(' \u00b7 \ud83d\udcce '+c.files.length):'')+who+'</span></div>'+
       '<div class="amt">'+estMoney(t)+'</div>'+_coBadge(c.status)+acts+'</div>';
   }).join('');
 }
@@ -3060,6 +3086,7 @@ function newCO(){
   document.getElementById('coStatus').value='draft';
   document.getElementById('coLines').innerHTML='';
   var dl=document.getElementById('coJobList'); if(dl) dl.innerHTML=(window.jobs||[]).map(function(j){return '<option value="'+esc(j.name)+'">';}).join('');
+  window._coFiles=[]; var _cfm=document.getElementById('coFileMsg'); if(_cfm)_cfm.textContent=''; renderCoThumbs();
   addCoLine({desc:'',qty:1,price:0});
   openModal('coModal');
 }
@@ -3076,6 +3103,7 @@ function editCO(id){
   document.getElementById('coLines').innerHTML='';
   var items=(c.items&&c.items.length)?c.items:[{desc:'',qty:1,price:0}];
   items.forEach(function(it){ addCoLine(it); });
+  window._coFiles=(c.files||[]).slice(); renderCoThumbs();
 }
 function saveCO(){
   var job=document.getElementById('coJob').value.trim();
@@ -3084,7 +3112,7 @@ function saveCO(){
   if(!title){ alert('Give the change order a title.'); return; }
   var id=document.getElementById('coId').value;
   var jb=(window.jobs||[]).find(function(j){return j.name===job;});
-  var data={jobName:job,jobId:jb?jb.id:'',date:document.getElementById('coDate').value,title:title,desc:document.getElementById('coDesc').value.trim(),status:document.getElementById('coStatus').value,items:_coGather()};
+  var data={jobName:job,jobId:jb?jb.id:'',date:document.getElementById('coDate').value,title:title,desc:document.getElementById('coDesc').value.trim(),status:document.getElementById('coStatus').value,items:_coGather(),files:(window._coFiles||[]).slice()};
   if(id){ var c=(window.changeOrders||[]).find(function(x){return x.id===id;}); if(c) Object.assign(c,data); }
   else { data.id=uid(); data.number=coNextNum(); changeOrders.unshift(data); }
   save(); closeModal('coModal'); renderChangeOrders();
@@ -3109,6 +3137,7 @@ ${c.desc?('<p style="font-size:13px;color:#3a4a5a;margin-top:12px;">'+esc(c.desc
   w.document.write(doc); w.document.close(); w.focus(); setTimeout(function(){ try{w.print();}catch(e){} },350);
 }
 (function(){ document.addEventListener('click',function(ev){ var t=ev.target; if(!t||!t.closest) return;
+  var fr=t.closest('#coFileThumbs [data-cofrm]'); if(fr){ var _fi=parseInt(fr.getAttribute('data-cofrm'),10); if(!isNaN(_fi)){ window._coFiles.splice(_fi,1); renderCoThumbs(); } return; }
   var b=t.closest('#coList [data-coedit]'); if(b){ editCO(b.getAttribute('data-coedit')); return; }
   var p=t.closest('#coList [data-coprint]'); if(p){ printCO(p.getAttribute('data-coprint')); return; }
   var s=t.closest('#coList [data-cosend]'); if(s){ sendCO(s.getAttribute('data-cosend')); return; }
