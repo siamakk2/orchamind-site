@@ -61,6 +61,15 @@ module.exports = async function handler(req, res) {
     if (custId) {
       await fetch(base + '/accounts?stripe_customer=eq.' + encodeURIComponent(custId), { method: 'PATCH', headers: H, body: patch });
     }
+    try {
+      var _q = subId ? ('stripe_subscription=eq.' + encodeURIComponent(subId)) : ('stripe_customer=eq.' + encodeURIComponent(custId));
+      var _ar = await fetch(base + '/accounts?' + _q + '&select=username,company,name', { headers: H });
+      var _aa = await _ar.json();
+      var _who = (Array.isArray(_aa) && _aa[0]) ? (_aa[0].company || _aa[0].name || _aa[0].username) : (custId || subId);
+      var _un = (Array.isArray(_aa) && _aa[0]) ? _aa[0].username : '';
+      var _det = (newStatus === 'active') ? (_who + (status === 'trialing' ? ' started a free trial' : ' subscription active (paid)')) : (_who + ' subscription lapsed (' + status + ')');
+      await fetch(base + '/activity_log', { method: 'POST', headers: H, body: JSON.stringify({ type: 'payment', username: _un, detail: _det }) });
+    } catch (e) {}
     return res.status(200).json({ ok: true, status: newStatus });
   } catch (e) {
     // Always 200 so Stripe doesn't hammer retries; log the message in the body
