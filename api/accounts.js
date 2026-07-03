@@ -233,7 +233,7 @@ module.exports = async function handler(req, res) {
       var ci = await sbFetch(base + '/accounts', { method: 'POST', headers: H, body: JSON.stringify({ username: cu2, name: cn, role: 'owner', owner: cu2, company: cc, pass: hashPw(cp), must_change: true }) });
       if (!ci.ok) { var ce = await ci.text(); return res.status(200).json({ ok: false, error: 'Could not create company. ' + ce.slice(0, 140) }); }
       try { await sbFetch(base + '/activity_log', { method: 'POST', headers: H, body: JSON.stringify({ type: 'signup', username: cu2, detail: 'New company created: ' + cc }) }); } catch (e) {}
-      var _emailed = false;
+      var _emailed = false; var _emailErr = '';
       try {
         var RESEND = process.env.RESEND_API_KEY;
         var toEmail = String(body.email || '').trim();
@@ -252,9 +252,11 @@ module.exports = async function handler(req, res) {
             + '</div></div>';
           var er = await fetch('https://api.resend.com/emails', { method: 'POST', headers: { 'Authorization': 'Bearer ' + RESEND, 'Content-Type': 'application/json' }, body: JSON.stringify({ from: 'Orchamind <welcome@orchamind.com>', to: [toEmail], reply_to: 'siamakk2@gmail.com', subject: 'Welcome to Orchamind \u2014 your ' + cc + ' workspace is ready', html: whtml }) });
           _emailed = er.ok;
+          if (!er.ok) { try { var _et = await er.text(); _emailErr = _et.slice(0, 200); } catch (e3) { _emailErr = 'HTTP ' + er.status; } }
+        } else if (!RESEND) { _emailErr = 'RESEND_API_KEY is not set in this project'; } else if (!toEmail) { _emailErr = 'no email entered';
         }
       } catch (e) {}
-      return res.status(200).json({ ok: true, company: cc, username: cu2, emailed: _emailed });
+      return res.status(200).json({ ok: true, company: cc, username: cu2, emailed: _emailed, emailError: _emailErr });
     }
 
     if (action === 'setStatus') {
