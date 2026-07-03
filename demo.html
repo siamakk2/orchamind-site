@@ -294,7 +294,7 @@ body.locked .appwrap{display:none !important;}
 .side-scrim{position:fixed;inset:0;background:rgba(10,22,40,.5);z-index:94;display:none;}
 .side-scrim.on{display:block;}
 @media(max-width:900px){
-  #appSide{position:fixed;left:0;top:0;height:100vh;z-index:95;transform:translateX(-100%);transition:transform .25s ease;box-shadow:6px 0 30px rgba(0,0,0,.35);width:248px;flex-basis:248px;overflow-y:auto;}
+  #appSide{position:fixed;left:0;top:0;height:100vh;height:100dvh;z-index:95;transform:translateX(-100%);transition:transform .25s ease;box-shadow:6px 0 30px rgba(0,0,0,.35);width:248px;flex-basis:248px;overflow-y:auto;-webkit-overflow-scrolling:touch;padding-bottom:60px;}
   #appSide.open{transform:none;}
   .appburger{display:inline-flex;align-items:center;}
 }
@@ -2092,13 +2092,16 @@ function logout(){
 
 function enterApp(){
   document.getElementById('authWrap').style.display='none';
+  try{ if(CURRENT_USER && CURRENT_USER.role!=='demo' && CURRENT_USER.username!=='demo'){ var _db=document.getElementById('demoBanner'); if(_db) _db.style.display='none'; } }catch(e){}
   document.body.classList.remove('locked');
   document.body.classList.add('authed');
   document.body.classList.add('role-'+(CURRENT_USER.role||'crew'));
   try{var _bc=document.getElementById('billingCard');if(_bc)_bc.style.display=(CURRENT_USER&&CURRENT_USER.billing)?'':'none';}catch(e){}
-  var who=document.getElementById('whoami');if(who)who.textContent=CURRENT_USER.name+((CURRENT_USER&&CURRENT_USER.company)?(' \u00b7 '+CURRENT_USER.company):'');
+  var _adm=(CURRENT_USER&&CURRENT_USER.username==='siamakk2');
+  var who=document.getElementById('whoami');if(who)who.textContent=_adm?('Siamak \u00b7 Orchamind'):(CURRENT_USER.name+((CURRENT_USER&&CURRENT_USER.company)?(' \u00b7 '+CURRENT_USER.company):''));
+  try{ if(_adm){ var _dm=document.getElementById('demoBanner'); if(_dm) _dm.style.display='none'; } }catch(e){}
   try{applyBranding();}catch(e){}
-  var rl=document.getElementById('roleLabel');if(rl)rl.textContent=CURRENT_USER.role;
+  var rl=document.getElementById('roleLabel');if(rl)rl.textContent=(CURRENT_USER&&CURRENT_USER.username==='siamakk2')?'PLATFORM ADMIN':CURRENT_USER.role;
   applyRoleAccess();
   if(!window.__APP_STARTED){window.__APP_STARTED=true;startApp();}setTimeout(applyRoleAccess,300);
 }
