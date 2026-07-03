@@ -431,6 +431,7 @@ body.locked .appwrap{display:none !important;}
   <button class="tab" data-tab="changes" data-mgronly><svg class="ti" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M9 15l2 2 4-4"/></svg>Changes</button>
   <button class="tab" data-tab="costs" data-mgronly><svg class="ti" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>Costs &amp; Profit</button>
   <button class="tab" data-tab="leads" data-mgronly><svg class="ti" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>Leads</button>
+  <button class="tab" data-tab="customers" data-mgronly><svg class="ti" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>Customers</button>
   <button class="tab" data-tab="risks"><svg class="ti" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>Risk Radar</button>
   <button class="tab" data-tab="crew"><svg class="ti" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/></svg>Crew</button>
   <button class="tab" data-tab="hours"><svg class="ti" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>Hours</button>
@@ -740,6 +741,31 @@ body.locked .appwrap{display:none !important;}
     </div>
     <p style="color:var(--muted);font-size:13.5px;margin:-4px 0 16px;">Every prospect from first call to won. Move a lead through the stages, draft a follow-up with AI, and turn a won lead into a job in one tap.</p>
     <div id="leadsBody"></div>
+  </div>
+<style>
+.cust-search{width:100%;border:1.5px solid var(--line);border-radius:10px;padding:11px 14px;font-family:inherit;font-size:14px;color:var(--ink);margin-bottom:14px;outline:none;}
+.cust-search:focus{border-color:var(--blue);}
+.cust-card{display:flex;align-items:center;gap:12px;background:#fff;border:1px solid var(--line);border-radius:12px;padding:12px 14px;margin-bottom:8px;cursor:pointer;transition:border-color .15s;}
+.cust-card:hover{border-color:var(--blue);}
+.cust-av{width:40px;height:40px;border-radius:50%;background:linear-gradient(135deg,var(--blue),#5B9DFF);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:17px;flex-shrink:0;}
+.cust-b{flex:1;min-width:0;}
+.cust-b b{color:var(--navy);font-size:14.5px;}
+.cust-b span{display:block;color:var(--muted);font-size:12.5px;}
+.cust-contact{color:#7d8a99 !important;font-size:12px !important;margin-top:1px;}
+.cust-chev{color:var(--muted);font-size:20px;}
+.cust-d-contact{display:flex;flex-wrap:wrap;gap:14px;margin-bottom:14px;}
+.cust-d-contact a{color:var(--blue);text-decoration:none;font-size:13.5px;font-weight:600;}
+.cust-sec{font-size:12px;font-weight:700;color:var(--navy);text-transform:uppercase;letter-spacing:.04em;margin:16px 0 8px;}
+.cust-item{display:flex;justify-content:space-between;gap:10px;padding:8px 0;border-bottom:1px solid var(--line);}
+.cust-item b{color:var(--navy);font-size:13.5px;}
+.cust-item span{color:var(--muted);font-size:12.5px;text-transform:capitalize;text-align:right;}
+.cust-empty{color:var(--muted);font-size:12.5px;padding:2px 0;}
+</style>
+  <div class="panel" id="panel-customers">
+    <div class="panel-head"><h2>Customers</h2></div>
+    <p style="color:var(--muted);font-size:13.5px;margin:-4px 0 14px;">Everyone you work with, pulled together automatically from your jobs and leads. Tap a customer to see their whole history.</p>
+    <input type="text" id="custSearch" class="cust-search" placeholder="Search customers…" oninput="renderCustomers()">
+    <div id="custBody"></div>
   </div>
   <div class="panel" id="panel-risks">
     <div class="panel-head">
@@ -1098,6 +1124,12 @@ body.locked .appwrap{display:none !important;}
   <p style="color:var(--muted);font-size:13px;margin-bottom:10px;">A ready-to-send message. Edit it, then copy or email.</p>
   <textarea id="leadAiText" rows="8" style="width:100%;"></textarea>
   <div class="modal-foot"><button class="btn btn-ghost" onclick="closeModal('leadAiModal')">Close</button><button class="btn" id="leadAiCopy" onclick="leadAiCopy()">Copy</button><button class="btn" onclick="leadAiEmail()">Email</button></div>
+</div></div>
+
+<div class="modal-bg" id="custModal"><div class="modal">
+  <h3 id="custDetailName"></h3>
+  <div id="custDetailBody"></div>
+  <div class="modal-foot"><button class="btn btn-ghost" onclick="closeModal('custModal')">Close</button></div>
 </div></div>
 
 <div class="modal-bg" id="jobModal"><div class="modal">
@@ -1637,6 +1669,7 @@ document.querySelectorAll('.tab').forEach(function(t){
     if(t.dataset.tab==='changes'){renderChangeOrders();}
     if(t.dataset.tab==='costs'){renderCosts();}
     if(t.dataset.tab==='leads'){renderLeads();}
+    if(t.dataset.tab==='customers'){renderCustomers();}
     if(t.dataset.tab==='profile'){checkPayStatus(); setQuoteLink();}
   });
 });
@@ -3423,6 +3456,51 @@ function leadAiEmail(){ var to=window._leadAiEmail||''; location.href='mailto:'+
     var d=t.closest('#leadsBody [data-leaddel]'); if(d){ delLead(d.getAttribute('data-leaddel')); return; }
   });
 })();
+
+</script>
+<script>
+
+function _custKey(s){ return String(s||'').trim().toLowerCase(); }
+function buildCustomers(){
+  var map={};
+  function ensure(name){ var k=_custKey(name); if(!k) return null; if(!map[k]) map[k]={name:String(name).trim(),phone:'',email:'',jobs:[],leads:[]}; return map[k]; }
+  (window.jobs||[]).forEach(function(j){ if(j.client){ var c=ensure(j.client); if(c) c.jobs.push(j); } });
+  (window.leads||[]).forEach(function(l){ var c=ensure(l.company||l.name); if(c){ c.leads.push(l); if(!c.phone&&l.phone)c.phone=l.phone; if(!c.email&&l.email)c.email=l.email; } });
+  return Object.keys(map).map(function(k){return map[k];}).sort(function(a,b){return a.name.localeCompare(b.name);});
+}
+function _custInvoiced(c){ var names=c.jobs.map(function(j){return j.name;}); var s=0; (window.estimates||[]).forEach(function(e){ if(e.kind==='invoice' && names.indexOf(e.project)>=0){ s+=estTotals(e).total; } }); return s; }
+function renderCustomers(){
+  var host=document.getElementById('custBody'); if(!host) return;
+  var qi=document.getElementById('custSearch'); var q=_custKey(qi?qi.value:'');
+  var all=buildCustomers();
+  if(!all.length){ host.innerHTML='<div style="color:var(--muted);font-size:13.5px;padding:6px 2px;">No customers yet. They appear here automatically as you add jobs and leads.</div>'; return; }
+  var list=q?all.filter(function(c){return _custKey(c.name).indexOf(q)>=0;}):all;
+  if(!list.length){ host.innerHTML='<div style="color:var(--muted);font-size:13px;padding:6px 2px;">No customers match your search.</div>'; return; }
+  host.innerHTML=list.map(function(c){
+    var inv=_custInvoiced(c);
+    var openLeads=c.leads.filter(function(l){return l.stage!=='won'&&l.stage!=='lost';}).length;
+    var bits=[c.jobs.length+' job'+(c.jobs.length!==1?'s':'')];
+    if(inv) bits.push(estMoney(inv)+' invoiced');
+    if(openLeads) bits.push(openLeads+' open lead'+(openLeads!==1?'s':''));
+    var contact=(c.phone||c.email)?('<span class="cust-contact">'+[c.phone?esc(c.phone):'',c.email?esc(c.email):''].filter(Boolean).join('  \u00b7  ')+'</span>'):'';
+    return '<div class="cust-card" data-cust="'+esc(c.name)+'"><div class="cust-av">'+esc(String(c.name||'?').charAt(0).toUpperCase())+'</div><div class="cust-b"><b>'+esc(c.name)+'</b><span>'+esc(bits.join(' \u00b7 '))+'</span>'+contact+'</div><div class="cust-chev">\u203a</div></div>';
+  }).join('');
+}
+function openCustomer(name){
+  var c=buildCustomers().find(function(x){return x.name===name;}); if(!c) return;
+  document.getElementById('custDetailName').textContent=c.name;
+  var html='';
+  if(c.phone||c.email){ html+='<div class="cust-d-contact">'+(c.phone?('<a href="tel:'+esc(c.phone)+'">\ud83d\udcde '+esc(c.phone)+'</a>'):'')+(c.email?('<a href="mailto:'+esc(c.email)+'">\u2709\ufe0f '+esc(c.email)+'</a>'):'')+'</div>'; }
+  html+='<div class="cust-sec">Jobs ('+c.jobs.length+')</div>';
+  html+= c.jobs.length? c.jobs.map(function(j){ return '<div class="cust-item"><b>'+esc(j.name)+'</b><span>'+esc(j.status||'')+(estNum(j.budget)?(' \u00b7 '+estMoney(j.budget)):'')+'</span></div>'; }).join('') : '<div class="cust-empty">No jobs yet.</div>';
+  html+='<div class="cust-sec">Leads ('+c.leads.length+')</div>';
+  html+= c.leads.length? c.leads.map(function(l){ return '<div class="cust-item"><b>'+esc(l.service||'Lead')+'</b><span>'+esc(l.stage||'')+(estNum(l.value)?(' \u00b7 '+estMoney(l.value)):'')+'</span></div>'; }).join('') : '<div class="cust-empty">No leads.</div>';
+  var inv=_custInvoiced(c);
+  html+='<div class="cust-sec">Total invoiced</div><div class="cust-item"><b>'+estMoney(inv)+'</b><span>across '+c.jobs.length+' job'+(c.jobs.length!==1?'s':'')+'</span></div>';
+  document.getElementById('custDetailBody').innerHTML=html;
+  openModal('custModal');
+}
+(function(){ document.addEventListener('click',function(ev){ var t=ev.target; if(!t||!t.closest) return; var c=t.closest('#custBody [data-cust]'); if(c){ openCustomer(c.getAttribute('data-cust')); } }); })();
 
 </script>
 </body>
