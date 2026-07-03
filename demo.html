@@ -617,7 +617,7 @@ body.locked .appwrap{display:none !important;}
           <button type="button" class="sk-type" data-type="solar">Solar</button>
         </div>
       </div>
-      <div class="field"><label>Pull details from a job (optional)</label><input type="text" id="skJob" list="skJobList" placeholder="Start typing a job name..." oninput="skJobPick()"><datalist id="skJobList"></datalist></div>
+      <div class="field"><label>Pull details from a job (optional)</label><select id="skJob" onchange="skJobPick()"></select></div>
       <div class="field"><label>Describe the job / space</label><textarea id="skDesc" rows="3" placeholder="e.g. Single-story 3-bed 2-bath, 1,600 sq ft. Open kitchen/living, laundry off hallway, 2-car garage."></textarea></div>
       <div class="field"><label>Known dimensions / survey notes (optional)</label><input type="text" id="skDims" placeholder="e.g. 40ft x 40ft lot, ceiling 9ft, panel on east wall"></div>
       <button class="btn" type="button" id="skGenBtn" onclick="generateSketch()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v4M12 18v4M4.9 4.9l2.8 2.8M16.3 16.3l2.8 2.8M2 12h4M18 12h4M4.9 19.1l2.8-2.8M16.3 7.7l2.8-2.8"/></svg>Generate concept drawing</button>
@@ -1078,7 +1078,7 @@ body.locked .appwrap{display:none !important;}
 
 <div class="modal-bg" id="logModal"><div class="modal" style="max-width:600px;">
   <h3>New Site Log Entry</h3>
-  <div class="field"><label>Job</label><input type="text" id="logJob" list="logJobList" placeholder="Start typing a job name..."><datalist id="logJobList"></datalist></div>
+  <div class="field"><label>Job</label><select id="logJob"></select></div>
   <div class="field"><label>Date</label><input type="date" id="logDate"></div>
   <div class="field"><label>Note &mdash; what happened on site</label><textarea id="logNote" rows="3" placeholder="e.g. Framing 60% done, windows delivered, inspection Tuesday"></textarea></div>
   <div class="field"><label>Photos</label><input type="file" id="logFiles" accept="image/*" multiple onchange="addLogPhotos(this)"><div class="log-up-msg" id="logUpMsg"></div><div id="logThumbs" style="margin-top:6px;"></div></div>
@@ -1088,7 +1088,7 @@ body.locked .appwrap{display:none !important;}
 <div class="modal-bg" id="schModal"><div class="modal" style="max-width:560px;">
   <h3 id="schModalTitle">Schedule Job</h3>
   <input type="hidden" id="schId">
-  <div class="field"><label>Job</label><input type="text" id="schJob" list="schJobList" placeholder="Job name" onchange="schJobPick()"><datalist id="schJobList"></datalist></div>
+  <div class="field"><label>Job</label><select id="schJob" onchange="schJobPick()"></select></div>
   <div class="field-row">
     <div class="field"><label>Date</label><input type="date" id="schDate"></div>
     <div class="field"><label>Status</label><select id="schStatus"><option>Scheduled</option><option>In progress</option><option>Completed</option></select></div>
@@ -2986,7 +2986,7 @@ function saveSketch(){
   alert('Saved to your drawings.');
 }
 function renderSketches(){
-  var dl=document.getElementById('skJobList');if(dl){dl.innerHTML=(window.jobs||[]).map(function(j){return '<option value="'+esc(j.name)+'">';}).join('');}
+  var dl=document.getElementById('skJob');if(dl){dl.innerHTML='<option value="">Select a job (optional)...</option>'+(window.jobs||[]).map(function(j){return '<option value="'+esc(j.name)+'">'+esc(j.name)+'</option>';}).join('');}
   var list=document.getElementById('skList');if(!list)return;
   if(!sketches.length){list.innerHTML='<div style="color:var(--muted);font-size:13.5px;padding:6px 2px;">No saved drawings yet. Generate one above and tap Save to job.</div>';return;}
   list.innerHTML=sketches.map(function(s){
@@ -3096,7 +3096,7 @@ function newLog(){
   document.getElementById('logNote').value='';
   document.getElementById('logThumbs').innerHTML='';
   document.getElementById('logUpMsg').textContent='';
-  var dl=document.getElementById('logJobList'); if(dl){ dl.innerHTML=(window.jobs||[]).map(function(j){return '<option value="'+esc(j.name)+'">';}).join(''); }
+  var dl=document.getElementById('logJob'); if(dl){ dl.innerHTML='<option value="">Select a job...</option>'+(window.jobs||[]).map(function(j){return '<option value="'+esc(j.name)+'">'+esc(j.name)+'</option>';}).join(''); }
   openModal('logModal');
 }
 function compressLogImage(file,cb){
@@ -3245,7 +3245,7 @@ function newSchedule(){
   document.getElementById('schPriority').value='Normal';
   document.getElementById('schCrewOther').value='';
   document.getElementById('schNote').value='';
-  var jl=document.getElementById('schJobList'); if(jl) jl.innerHTML=(window.jobs||[]).map(function(j){return '<option value="'+esc(j.name)+'">';}).join('');
+  var jl=document.getElementById('schJob'); if(jl) jl.innerHTML='<option value="">Select a job...</option>'+(window.jobs||[]).map(function(j){return '<option value="'+esc(j.name)+'">'+esc(j.name)+'</option>';}).join('');
   _schRenderCrew([]);
   openModal('schModal');
 }
