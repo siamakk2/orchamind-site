@@ -157,7 +157,7 @@ module.exports = async function handler(req, res) {
 
     if (action === 'list') {
       if (!isAdmin) return res.status(200).json({ ok: false, error: 'Admin only.' });
-      var r3 = await sbFetch(base + '/accounts?select=username,name,role,company,owner,must_change,reset_requested,status,stripe_customer,created_at&order=created_at.asc', { headers: H });
+      var r3 = await sbFetch(base + '/accounts?select=username,name,role,company,owner,must_change,reset_requested,status,stripe_customer,created_at,profile&order=created_at.asc', { headers: H });
       var a3 = await r3.json();
       return res.status(200).json({ ok: true, users: Array.isArray(a3) ? a3 : [] });
     }
@@ -276,6 +276,28 @@ module.exports = async function handler(req, res) {
       var pr2 = await sbFetch(base + '/accounts?username=eq.' + encodeURIComponent(su), { method: 'PATCH', headers: H, body: JSON.stringify({ status: newStatus }) });
       if (!pr2.ok) { var pe2 = await pr2.text(); return res.status(200).json({ ok: false, error: 'Could not update status. ' + pe2.slice(0,120) }); }
       return res.status(200).json({ ok: true, status: newStatus });
+    }
+
+    if (action === 'adminEditUser') {
+      if (!isAdmin) return res.status(200).json({ ok: false, error: 'Admin only.' });
+      var eu = String(body.username || '').trim().toLowerCase();
+      if (!eu) return res.status(200).json({ ok: false, error: 'Missing account.' });
+      var erow = await getUser(eu);
+      if (!erow) return res.status(200).json({ ok: false, error: 'No such account.' });
+      var patch = {};
+      if (typeof body.company === 'string') patch.company = body.company.trim();
+      if (typeof body.name === 'string') patch.name = body.name.trim();
+      if (body.profile && typeof body.profile === 'object') {
+        var cur = erow.profile || {};
+        var pf = body.profile;
+        function pick(k){ return String((pf[k] != null ? pf[k] : cur[k]) || ''); }
+        patch.profile = { logo: pick('logo'), phone: pick('phone'), email: pick('email'), address: pick('address'), license: pick('license'), website: pick('website') };
+      }
+      if (!Object.keys(patch).length) return res.status(200).json({ ok: false, error: 'Nothing to update.' });
+      var epr = await sbFetch(base + '/accounts?username=eq.' + encodeURIComponent(eu), { method: 'PATCH', headers: H, body: JSON.stringify(patch) });
+      if (!epr.ok) { var eer = await epr.text(); return res.status(200).json({ ok: false, error: 'Could not save. ' + eer.slice(0,140) }); }
+      try { await sbFetch(base + '/activity_log', { method: 'POST', headers: H, body: JSON.stringify({ type: 'login', username: eu, detail: 'Admin edited account: ' + (patch.company || erow.company || eu) }) }); } catch (e) {}
+      return res.status(200).json({ ok: true });
     }
 
     return res.status(200).json({ ok: false, error: 'Unknown action.' });
