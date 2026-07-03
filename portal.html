@@ -53,6 +53,9 @@ input:focus{border-color:var(--blue)}
 .co-done{margin-top:10px;font-weight:700;font-size:14px}
 .co-done.ok{color:#15803d}
 .co-done.no{color:#C62828}
+.co-files{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+.co-file-img{width:92px;height:92px;object-fit:cover;border-radius:9px;border:1px solid var(--line)}
+.co-file-link{display:inline-flex;align-items:center;gap:4px;background:#F4F8FD;border:1px solid var(--line);border-radius:8px;padding:8px 12px;font-size:13px;color:var(--blue);text-decoration:none}
 </style></head><body>
 <div class="top"><span class="mark"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12h4l3 8 4-16 3 8h4"/></svg></span><b>Orchamind</b></div>
 <div class="wrap">
@@ -100,11 +103,13 @@ function render(p){
   if(cos.length){
     coHtml='<div class="h2">Change Orders</div>'+cos.map(function(c){
       var items=(c.items||[]).map(function(it){ return '<div class="co-li"><span>'+esc(it.desc)+'</span><b>'+money((parseFloat(it.qty)||0)*(parseFloat(it.price)||0))+'</b></div>'; }).join('');
-      var head='<div class="co-head"><div><b>'+esc(c.title||'Change order')+'</b><span class="co-num">'+esc(c.number||'')+'</span></div><b class="co-tot">'+money(c.total)+'</b></div>';
-      var mid=(c.desc?'<p class="co-desc">'+esc(c.desc)+'</p>':'')+items;
+      var files=(c.files||[]).map(function(f){ var isImg=/^image\//.test(f.type||'')||/\.(jpg|jpeg|png|gif|webp)$/i.test(f.url||''); return isImg?('<a href="'+esc(f.url)+'" target="_blank"><img class="co-file-img" src="'+esc(f.url)+'" alt=""></a>'):('<a class="co-file-link" href="'+esc(f.url)+'" target="_blank">\ud83d\udcc4 '+esc(f.name||'file')+'</a>'); }).join('');
+      var filesHtml=files?('<div class="co-files">'+files+'</div>'):'';
+      var head='<div class="co-head"><div><b>'+esc(c.title||'Change order')+'</b><span class="co-num">'+esc(c.number||'')+(c.date?(' \u00b7 '+esc(fmtDate(c.date))):'')+'</span></div><b class="co-tot">'+money(c.total)+'</b></div>';
+      var mid=(c.desc?'<p class="co-desc">'+esc(c.desc)+'</p>':'')+items+filesHtml;
       var foot='';
       if(c.status==='sent'){ foot='<div class="co-approve"><input type="text" class="co-name" id="con_'+esc(c.id)+'" placeholder="Type your name to approve"><div class="co-btns"><button class="co-yes" data-co-id="'+esc(c.id)+'" data-co-dec="approved">Approve</button><button class="co-no" data-co-id="'+esc(c.id)+'" data-co-dec="declined">Decline</button></div></div>'; }
-      else if(c.status==='approved'){ foot='<div class="co-done ok">\u2713 Approved'+(c.approvedBy?(' by '+esc(c.approvedBy)):'')+'</div>'; }
+      else if(c.status==='approved'){ foot='<div class="co-done ok">\u2713 Approved'+(c.approvedBy?(' by '+esc(c.approvedBy)):'')+(c.approvedAt?(' on '+esc(fmtDate(String(c.approvedAt).slice(0,10)))):'')+'</div>'; }
       else if(c.status==='declined'){ foot='<div class="co-done no">Declined</div>'; }
       return '<div class="co-card">'+head+mid+foot+'</div>';
     }).join('');
