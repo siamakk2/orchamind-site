@@ -988,7 +988,7 @@ body.locked .appwrap{display:none !important;}
   <h3 id="coModalTitle">New Change Order</h3>
   <input type="hidden" id="coId">
   <div class="field-row">
-    <div class="field"><label>Job</label><input type="text" id="coJob" list="coJobList" placeholder="Job name" onchange="coJobPick()"><datalist id="coJobList"></datalist></div>
+    <div class="field"><label>Job</label><select id="coJob" onchange="coJobPick()"></select></div>
     <div class="field"><label>Date</label><input type="date" id="coDate"></div>
   </div>
   <div class="field"><label>Title</label><input type="text" id="coTitle" placeholder="e.g. Add recessed lighting in kitchen"></div>
@@ -3041,7 +3041,7 @@ function coTotals(c){ var s=0; (c.items||[]).forEach(function(it){ s+=estNum(it.
 function _coBadge(st){ st=st||'draft'; var map={draft:['#EEF3F8','#5A6B7D'],sent:['#E3F0FF','#1565C0'],approved:['#E4F6EA','#1B8A4B'],declined:['#FBE9E7','#C62828']}; var c=map[st]||map.draft; return '<span class="est-badge" style="background:'+c[0]+';color:'+c[1]+';">'+esc(st)+'</span>'; }
 function renderChangeOrders(){
   var list=document.getElementById('coList'); if(!list) return;
-  var dl=document.getElementById('coJobList'); if(dl) dl.innerHTML=(window.jobs||[]).map(function(j){return '<option value="'+esc(j.name)+'">';}).join('');
+  var _jsel=document.getElementById('coJob'); if(_jsel){ _jsel.innerHTML='<option value="">Select a job\u2026</option>'+(window.jobs||[]).map(function(j){return '<option value="'+esc(j.name)+'">'+esc(j.name)+'</option>';}).join(''); }
   if(!changeOrders.length){ list.innerHTML='<div style="color:var(--muted);font-size:13.5px;padding:6px 2px;">No change orders yet. Tap New Change Order when a job\u2019s scope changes.</div>'; return; }
   list.innerHTML=changeOrders.map(function(c){
     var t=coTotals(c);
@@ -3085,7 +3085,7 @@ function newCO(){
   document.getElementById('coDesc').value='';
   document.getElementById('coStatus').value='draft';
   document.getElementById('coLines').innerHTML='';
-  var dl=document.getElementById('coJobList'); if(dl) dl.innerHTML=(window.jobs||[]).map(function(j){return '<option value="'+esc(j.name)+'">';}).join('');
+  var _jsel=document.getElementById('coJob'); if(_jsel){ _jsel.innerHTML='<option value="">Select a job\u2026</option>'+(window.jobs||[]).map(function(j){return '<option value="'+esc(j.name)+'">'+esc(j.name)+'</option>';}).join(''); }
   window._coFiles=[]; var _cfm=document.getElementById('coFileMsg'); if(_cfm)_cfm.textContent=''; renderCoThumbs();
   addCoLine({desc:'',qty:1,price:0});
   openModal('coModal');
@@ -3095,7 +3095,7 @@ function editCO(id){
   newCO();
   document.getElementById('coModalTitle').textContent='Edit '+(c.number||'Change Order');
   document.getElementById('coId').value=c.id;
-  document.getElementById('coJob').value=c.jobName||'';
+  var _js=document.getElementById('coJob'); var _nm=c.jobName||''; if(_nm){ var _has=false; for(var _o=0;_o<_js.options.length;_o++){ if(_js.options[_o].value===_nm){_has=true;break;} } if(!_has){ var _op=document.createElement('option'); _op.value=_nm; _op.textContent=_nm; _js.appendChild(_op); } } _js.value=_nm;
   document.getElementById('coDate').value=c.date||'';
   document.getElementById('coTitle').value=c.title||'';
   document.getElementById('coDesc').value=c.desc||'';
