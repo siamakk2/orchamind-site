@@ -2011,7 +2011,7 @@ function createCompanyInline(){
     .then(function(r){return r.json();}).then(function(d){
       if(d&&d.ok){
         msg.style.color='#2E7D32';
-        var _emd=(d.emailed)?(' A welcome email with their login was sent to <b>'+esc(email)+'</b>.'):(email?' <span style="color:#B45309;">(Could not send the welcome email \u2014 check the address; you can share the login manually.)</span>':' Add an email next time to auto-send the welcome letter.');
+        var _emd=(d.emailed)?(' A welcome email with their login was sent to <b>'+esc(email)+'</b>.'):(email?' <span style="color:#B45309;">(Welcome email did not send \u2014 reason: '+esc(d.emailError||'unknown')+'. You can share the login manually.)</span>':' Add an email next time to auto-send the welcome letter.');
         msg.innerHTML='\u2713 '+esc(company)+' created.'+_emd+' Login: <b>orchamind.com/app</b> \u00b7 username <b>'+esc(user)+'</b> \u00b7 the temporary password you set.';
         document.getElementById('ncCompany').value='';document.getElementById('ncName').value='';document.getElementById('ncUser').value='';document.getElementById('ncPass').value='';document.getElementById('ncEmail').value='';
         if(typeof loadUsers==='function') loadUsers();
