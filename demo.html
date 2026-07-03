@@ -2014,6 +2014,7 @@ function createCompanyInline(){
         var _emd=(d.emailed)?(' A welcome email with their login was sent to <b>'+esc(email)+'</b>.'):(email?' <span style="color:#B45309;">(Could not send the welcome email \u2014 check the address; you can share the login manually.)</span>':' Add an email next time to auto-send the welcome letter.');
         msg.innerHTML='\u2713 '+esc(company)+' created.'+_emd+' Login: <b>orchamind.com/app</b> \u00b7 username <b>'+esc(user)+'</b> \u00b7 the temporary password you set.';
         document.getElementById('ncCompany').value='';document.getElementById('ncName').value='';document.getElementById('ncUser').value='';document.getElementById('ncPass').value='';document.getElementById('ncEmail').value='';
+        if(typeof loadUsers==='function') loadUsers();
       }else{msg.style.color='#D32F2F';msg.textContent=(d&&d.error)||'Could not create company.';}
     }).catch(function(){msg.style.color='#D32F2F';msg.textContent='Server error.';});
 }
