@@ -124,7 +124,7 @@ module.exports = async function handler(req, res) {
       var lp = body.password || '';
       var row = await getUser(lu);
       if (!row || !verifyPw(lp, row.pass)) return res.status(200).json({ ok: false, error: 'Wrong username or password.' });
-      if (row.status === 'paused' && row.username !== 'siamakk2') { var pauUrl = await stripePortal(row.stripe_customer, 'https://orchamind.com/app'); return res.status(200).json({ ok: false, paused: true, portalUrl: pauUrl, error: 'Your subscription has ended, so this workspace is paused. Renew your subscription to regain access, or contact support if this is a mistake.' }); }
+      if (row.status === 'paused' && row.username !== 'siamakk2') { var pauUrl = await stripePortal(row.stripe_customer, 'https://orchamind.com/app'); return res.status(200).json({ ok: true, paused: true, user: { username: row.username, name: row.name, role: row.role || 'member', company: row.company || '', paused: true, portalUrl: pauUrl } }); }
       setSess(lu, row.role || 'member');
       var brandRow = row;
       if (row.owner && row.owner !== row.username) { try { var orow = await getUser(row.owner); if (orow) brandRow = orow; } catch (e) {} }
@@ -156,7 +156,7 @@ module.exports = async function handler(req, res) {
 
     if (action === 'list') {
       if (!isAdmin) return res.status(200).json({ ok: false, error: 'Admin only.' });
-      var r3 = await sbFetch(base + '/accounts?select=username,name,role,company,owner,must_change,reset_requested&order=created_at.asc', { headers: H });
+      var r3 = await sbFetch(base + '/accounts?select=username,name,role,company,owner,must_change,reset_requested,status,stripe_customer,created_at&order=created_at.asc', { headers: H });
       var a3 = await r3.json();
       return res.status(200).json({ ok: true, users: Array.isArray(a3) ? a3 : [] });
     }
@@ -232,6 +232,20 @@ module.exports = async function handler(req, res) {
       var ci = await sbFetch(base + '/accounts', { method: 'POST', headers: H, body: JSON.stringify({ username: cu2, name: cn, role: 'owner', owner: cu2, company: cc, pass: hashPw(cp), must_change: true }) });
       if (!ci.ok) { var ce = await ci.text(); return res.status(200).json({ ok: false, error: 'Could not create company. ' + ce.slice(0, 140) }); }
       return res.status(200).json({ ok: true, company: cc, username: cu2 });
+    }
+
+    if (action === 'setStatus') {
+      if (!isAdmin) return res.status(200).json({ ok: false, error: 'Admin only.' });
+      var su = String(body.username || '').trim().toLowerCase();
+      var newStatus = (body.status === 'paused') ? 'paused' : 'active';
+      if (!su) return res.status(200).json({ ok: false, error: 'Missing account.' });
+      if (su === ADMIN) return res.status(200).json({ ok: false, error: "You can't pause your own admin account." });
+      var sr = await sbFetch(base + '/accounts?username=eq.' + encodeURIComponent(su) + '&select=username', { headers: H });
+      var sa = await sr.json();
+      if (!Array.isArray(sa) || !sa[0]) return res.status(200).json({ ok: false, error: 'No such account.' });
+      var pr2 = await sbFetch(base + '/accounts?username=eq.' + encodeURIComponent(su), { method: 'PATCH', headers: H, body: JSON.stringify({ status: newStatus }) });
+      if (!pr2.ok) { var pe2 = await pr2.text(); return res.status(200).json({ ok: false, error: 'Could not update status. ' + pe2.slice(0,120) }); }
+      return res.status(200).json({ ok: true, status: newStatus });
     }
 
     return res.status(200).json({ ok: false, error: 'Unknown action.' });
