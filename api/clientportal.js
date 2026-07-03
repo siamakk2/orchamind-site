@@ -92,6 +92,13 @@ module.exports = async function handler(req, res) {
       var updates = logs.filter(function (L) { return L.jobId === g.job_id || L.job === job.name; })
         .map(function (L) { return { date: L.date, note: L.note, photos: (L.photos || []).map(function (p) { return { url: p.url }; }) }; });
 
+      var allCos = Array.isArray(data.changeOrders) ? data.changeOrders : [];
+      var cos = allCos.filter(function (c) { return (c.jobId === g.job_id || c.jobName === job.name) && (c.status === 'sent' || c.status === 'approved' || c.status === 'declined'); })
+        .map(function (c) {
+          var tot = 0; (c.items || []).forEach(function (it) { tot += (parseFloat(it.qty) || 0) * (parseFloat(it.price) || 0); });
+          return { id: c.id, number: c.number, title: c.title, desc: c.desc, status: c.status, approvedBy: c.approvedBy || '', total: tot, items: (c.items || []).map(function (it) { return { desc: it.desc, qty: it.qty, price: it.price }; }) };
+        });
+
       var company = '';
       try {
         var cr = await fetch(base + '/accounts?username=eq.' + encodeURIComponent(g.owner) + '&select=company,name', { headers: H });
@@ -99,7 +106,36 @@ module.exports = async function handler(req, res) {
         if (Array.isArray(ca) && ca[0]) company = ca[0].company || ca[0].name || '';
       } catch (e) {}
 
-      return res.status(200).json({ ok: true, project: { name: job.name, status: job.status, progress: job.progress || 0, location: job.location || '', date: job.date || '', client: job.client || '', company: company, updates: updates } });
+      return res.status(200).json({ ok: true, project: { name: job.name, status: job.status, progress: job.progress || 0, location: job.location || '', date: job.date || '', client: job.client || '', company: company, updates: updates, changeOrders: cos } });
+    }
+
+    if (action === 'co') {
+      var ccode = String(body.code || '').toUpperCase().replace(/[^A-Z0-9]/g, '');
+      var cemail = String(body.email || '').toLowerCase().trim();
+      var coId = String(body.coId || '');
+      var decision = (body.decision === 'approved') ? 'approved' : (body.decision === 'declined' ? 'declined' : '');
+      var signer = String(body.name || '').trim().slice(0, 80);
+      if (!ccode || !coId || !decision) return res.status(200).json({ ok: false, error: 'Missing information.' });
+      var gr = await fetch(base + '/portal_grants?code=eq.' + encodeURIComponent(ccode) + '&select=owner,job_id,email', { headers: H });
+      var ga = await gr.json();
+      var g2 = (Array.isArray(ga) && ga[0]) ? ga[0] : null;
+      if (!g2) return res.status(200).json({ ok: false, error: 'Access code not found.' });
+      if (g2.email && g2.email !== cemail) return res.status(200).json({ ok: false, error: 'That email does not match this code.' });
+      var dr2 = await fetch(base + '/app_data?username=eq.' + encodeURIComponent(g2.owner) + '&select=data', { headers: H });
+      var da2 = await dr2.json();
+      var data2 = (Array.isArray(da2) && da2[0] && da2[0].data) ? da2[0].data : null;
+      if (!data2 || !Array.isArray(data2.changeOrders)) return res.status(200).json({ ok: false, error: 'Change order not found.' });
+      var jobName2 = '';
+      var jobs2 = Array.isArray(data2.jobs) ? data2.jobs : [];
+      for (var k = 0; k < jobs2.length; k++) { if (jobs2[k].id === g2.job_id) { jobName2 = jobs2[k].name; break; } }
+      var found = null;
+      for (var jj = 0; jj < data2.changeOrders.length; jj++) { var cc = data2.changeOrders[jj]; if (cc.id === coId && (cc.jobId === g2.job_id || cc.jobName === jobName2)) { found = cc; break; } }
+      if (!found) return res.status(200).json({ ok: false, error: 'Change order not found.' });
+      if (found.status === 'approved') return res.status(200).json({ ok: false, error: 'This change order was already approved.' });
+      found.status = decision; found.approvedBy = signer || 'Client'; found.approvedAt = new Date().toISOString();
+      var upd = await fetch(base + '/app_data?username=eq.' + encodeURIComponent(g2.owner), { method: 'PATCH', headers: Object.assign({}, H, { 'Prefer': 'return=minimal' }), body: JSON.stringify({ data: data2 }) });
+      if (!upd.ok) return res.status(200).json({ ok: false, error: 'Could not save your decision. Please try again.' });
+      return res.status(200).json({ ok: true, status: decision });
     }
 
     return res.status(200).json({ ok: false, error: 'Unknown action.' });
