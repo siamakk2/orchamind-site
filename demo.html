@@ -962,6 +962,25 @@ body.locked .appwrap{display:none !important;}
     <div class="panel-head">
       <h2>Orchamind &mdash; Operator Console</h2>
     </div>
+    <style>
+.adv-chip{background:rgba(255,255,255,.14);color:#fff;border:none;border-radius:20px;padding:6px 12px;font-size:12px;cursor:pointer;font-family:inherit;font-weight:600;}
+.adv-chip:hover{background:rgba(255,255,255,.26);}
+</style>
+    <div style="background:linear-gradient(135deg,#0A1628,#16345c);border-radius:14px;padding:18px 20px;margin-bottom:16px;">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;"><span style="font-size:20px;">✨</span><h3 style="margin:0;font-size:16px;font-family:'Playfair Display',serif;color:#fff;">Ask Orchamind</h3></div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;">
+        <input id="advInp" placeholder="How many paying customers do we have?" onkeydown="if(event.key==='Enter'){askAdviser();}" style="flex:1;min-width:200px;border:none;border-radius:9px;padding:11px 13px;font-size:14px;font-family:inherit;outline:none;">
+        <button onclick="askAdviser()" style="background:#F9A825;color:#0A1628;border:none;border-radius:9px;padding:11px 22px;font-weight:700;font-size:14px;cursor:pointer;font-family:inherit;">Ask</button>
+      </div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:10px;">
+        <button class="adv-chip" onclick="askAdviser('How many paying customers do we have?')">Paying customers</button>
+        <button class="adv-chip" onclick="askAdviser('Who is on trial and has not converted to paying yet?')">Who is on trial</button>
+        <button class="adv-chip" onclick="askAdviser('What is our estimated MRR?')">MRR</button>
+        <button class="adv-chip" onclick="askAdviser('Are there any open support tickets I should look at?')">Open tickets</button>
+        <button class="adv-chip" onclick="askAdviser('Give me a quick health summary of the whole platform.')">Health summary</button>
+      </div>
+      <div id="advAnswer" style="display:none;margin-top:14px;background:rgba(255,255,255,.09);border-radius:10px;padding:14px 16px;font-size:14px;line-height:1.6;white-space:pre-wrap;color:#eaf1f8;"></div>
+    </div>
     <div id="adminMetrics" class="cost-summary" style="margin-bottom:16px;"></div>
     <div style="background:#fff;border:1px solid #E1E8F0;border-radius:14px;padding:18px 20px;margin-bottom:18px;">
       <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:12px;">
@@ -2274,6 +2293,32 @@ function saveUserEdit(){
   fetch('/api/accounts',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)})
     .then(function(r){return r.json();}).then(function(d){ if(d&&d.ok){ msg.style.color='#1B8A4B'; msg.textContent='Saved.'; loadUsers(); setTimeout(function(){closeModal('ownerEditModal');},700); } else { msg.style.color='#C62828'; msg.textContent=(d&&d.error)||'Could not save.'; } })
     .catch(function(){ msg.style.color='#C62828'; msg.textContent='Server error.'; });
+}
+function _adviserData(){
+  var u=(window._adminUsers||[]).filter(function(x){return x.username!=='siamakk2';});
+  var owners=u.filter(function(x){return (x.role||'')==='owner';});
+  var paying=u.filter(function(x){return !!x.stripe_customer;});
+  var paused=u.filter(function(x){return x.status==='paused';});
+  var lines=u.map(function(x){ return '- '+(x.company||x.name||x.username)+' | '+(((x.role||'')==='owner')?'owner':(x.role||'member'))+' | '+(x.stripe_customer?'PAYING':'trial')+' | '+(x.status==='paused'?'PAUSED':'active')+(x.created_at?(' | joined '+String(x.created_at).slice(0,10)):''); });
+  return 'PLATFORM SNAPSHOT (live, right now):\n'+
+    'Total contractor accounts: '+u.length+'\n'+
+    'Companies (owners): '+owners.length+'\n'+
+    'Paying subscribers: '+paying.length+'\n'+
+    'On trial / not paying: '+(u.length-paying.length)+'\n'+
+    'Paused accounts: '+paused.length+'\n'+
+    'Estimated MRR: $'+(paying.length*500)+' (assumes $500/mo per paying account)\n'+
+    'Open support tickets: '+(window._supOpen||0)+'\n\n'+
+    'CONTRACTOR LIST (company | role | paying? | status | joined):\n'+(lines.length?lines.join('\n'):'(none yet)');
+}
+function askAdviser(q){
+  var inp=document.getElementById('advInp');
+  var question=(typeof q==='string'?q:(inp?inp.value:'')).trim();
+  if(typeof q==='string' && inp) inp.value=q;
+  if(!question) return;
+  var ans=document.getElementById('advAnswer'); if(ans){ ans.style.display='block'; ans.textContent='Thinking\u2026'; }
+  var sys="You are Orchamind's operator analyst \u2014 a sharp, friendly business advisor for the platform owner, Siamak. Answer using ONLY the live platform data provided below. Lead with the specific numbers and company names that matter, keep it concise and practical, and if the data does not contain the answer, say so plainly. Never invent contractors or figures.\n\n"+_adviserData();
+  try{ callClaude(sys, question, function(a){ if(ans) ans.textContent=String(a||'').trim()||'No answer.'; }, function(){ if(ans) ans.textContent='Could not get an answer right now \u2014 please try again.'; }, 700); }
+  catch(e){ if(ans) ans.textContent='The adviser is unavailable right now.'; }
 }
 function renderAdmin(){
   var users=(window._adminUsers||[]).filter(function(u){return u.username!=='siamakk2';});
