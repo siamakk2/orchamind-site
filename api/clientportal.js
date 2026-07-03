@@ -96,7 +96,7 @@ module.exports = async function handler(req, res) {
       var cos = allCos.filter(function (c) { return (c.jobId === g.job_id || c.jobName === job.name) && (c.status === 'sent' || c.status === 'approved' || c.status === 'declined'); })
         .map(function (c) {
           var tot = 0; (c.items || []).forEach(function (it) { tot += (parseFloat(it.qty) || 0) * (parseFloat(it.price) || 0); });
-          return { id: c.id, number: c.number, title: c.title, desc: c.desc, status: c.status, approvedBy: c.approvedBy || '', total: tot, items: (c.items || []).map(function (it) { return { desc: it.desc, qty: it.qty, price: it.price }; }) };
+          return { id: c.id, number: c.number, title: c.title, desc: c.desc, status: c.status, approvedBy: c.approvedBy || '', approvedAt: c.approvedAt || '', date: c.date || '', total: tot, items: (c.items || []).map(function (it) { return { desc: it.desc, qty: it.qty, price: it.price }; }), files: (c.files || []).map(function (f) { return { url: f.url, name: f.name, type: f.type }; }) };
         });
 
       var company = '';
