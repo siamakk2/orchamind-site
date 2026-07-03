@@ -182,8 +182,13 @@ module.exports = async function handler(req, res) {
       if (sess.username === ru) return res.status(200).json({ ok: false, error: "You can't remove your own admin account." });
       var trow = await getUser(ru);
       if (!trow) return res.status(200).json({ ok: false, error: 'No such account.' });
+      var _cn = String(body.confirmName || '').trim().toLowerCase();
+      var _want = String(trow.company || trow.username || '').trim().toLowerCase();
+      if (_want && _cn !== _want) return res.status(200).json({ ok: false, error: 'Confirmation name did not match. Nothing was deleted.' });
       await sbFetch(base + '/accounts?username=eq.' + encodeURIComponent(ru), { method: 'DELETE', headers: H });
       await sbFetch(base + '/app_data?username=eq.' + encodeURIComponent(ru), { method: 'DELETE', headers: H });
+      try { await sbFetch(base + '/portal_grants?owner=eq.' + encodeURIComponent(ru), { method: 'DELETE', headers: H }); } catch (e) {}
+      try { await sbFetch(base + '/activity_log', { method: 'POST', headers: H, body: JSON.stringify({ type: 'signup', username: ru, detail: 'Account permanently deleted: ' + (trow.company || ru) }) }); } catch (e) {}
       return res.status(200).json({ ok: true });
     }
 
