@@ -410,7 +410,7 @@ body.locked .appwrap{display:none !important;}
     <div class="topbar-right">
       <span class="crew-badge">Site Manager AI</span><span style="font-size:9px;color:#9aa7b4;" title="version">v7-inline</span>
       <span style="font-size:12px;color:#5A6B7D;">Hi, <b id="whoami" style="color:#1565C0;">there</b> <span id="roleLabel" style="background:#EEF3F8;color:#5A6B7D;font-size:10px;padding:2px 7px;border-radius:10px;text-transform:uppercase;font-weight:700;margin-left:3px;"></span></span>
-      <button onclick="logout()" style="font-size:12px;color:#D32F2F;background:none;border:1px solid #E1E8F0;border-radius:7px;padding:5px 11px;cursor:pointer;font-family:inherit;font-weight:600;">Log Out</button>
+      <button onclick="globalVoice()" title="Talk to your site manager" style="font-size:12px;color:#1565C0;background:none;border:1px solid #E1E8F0;border-radius:7px;padding:5px 9px;cursor:pointer;margin-right:6px;vertical-align:middle;"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="2" width="6" height="12" rx="3"/><path d="M5 11a7 7 0 0 0 14 0"/><line x1="12" y1="18" x2="12" y2="22"/></svg></button><button onclick="logout()" style="font-size:12px;color:#D32F2F;background:none;border:1px solid #E1E8F0;border-radius:7px;padding:5px 11px;cursor:pointer;font-family:inherit;font-weight:600;">Log Out</button>
       <a href="https://orchamind-site.vercel.app" class="back-link">&larr; Back to Orchamind</a>
     </div>
   </div>
@@ -1838,6 +1838,7 @@ function updateMicUI(){
   var big=document.getElementById('voiceMicBig');var chat=document.getElementById('chatMic');
   if(big)big.classList.toggle('listening',_recogActive&&_recogTarget==='command');
   if(chat)chat.classList.toggle('listening',_recogActive&&_recogTarget==='chat');
+  var fm=document.getElementById('floatMic'); if(fm)fm.classList.toggle('listening',_recogActive&&_recogTarget==='command');
 }
 function _stopRecog(){if(_recog&&_recogActive){try{_recog.stop();}catch(e){}}_recogActive=false;updateMicUI();}
 
@@ -2106,6 +2107,7 @@ function enterApp(){
   try{ if(_adm){ var _dm=document.getElementById('demoBanner'); if(_dm) _dm.style.display='none'; } }catch(e){}
   try{applyBranding();}catch(e){}
   var rl=document.getElementById('roleLabel');if(rl)rl.textContent=(CURRENT_USER&&CURRENT_USER.username==='siamakk2')?'PLATFORM ADMIN':CURRENT_USER.role;
+  var _fm=document.getElementById('floatMic'); if(_fm)_fm.style.display='flex';
   applyRoleAccess();
   if(!window.__APP_STARTED){window.__APP_STARTED=true;startApp();}setTimeout(applyRoleAccess,300);
 }
@@ -3674,5 +3676,26 @@ function openCustomer(name){
   <div id="oeMsg" style="font-size:13px;margin-top:6px;min-height:16px;"></div>
   <div class="modal-foot"><button class="btn btn-ghost" onclick="closeModal('ownerEditModal')">Cancel</button><button class="btn" onclick="saveUserEdit()">Save changes</button></div>
 </div></div>
+<style>
+#floatMic{position:fixed;right:18px;bottom:calc(18px + env(safe-area-inset-bottom));z-index:9000;width:62px;height:62px;border-radius:50%;border:none;background:linear-gradient(135deg,#1565C0,#0A1628);color:#fff;box-shadow:0 10px 26px rgba(21,101,192,.42);cursor:pointer;display:none;align-items:center;justify-content:center;transition:transform .15s;}
+#floatMic:hover{transform:scale(1.06);}
+#floatMic svg{width:27px;height:27px;}
+#floatMic.listening{background:linear-gradient(135deg,#F9A825,#E85D04);animation:fmpulse 1.2s infinite;}
+@keyframes fmpulse{0%{box-shadow:0 0 0 0 rgba(249,168,37,.55)}70%{box-shadow:0 0 0 18px rgba(249,168,37,0)}100%{box-shadow:0 0 0 0 rgba(249,168,37,0)}}
+</style>
+<button id="floatMic" onclick="globalVoice()" title="Talk to your site manager" aria-label="Talk"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="2" width="6" height="12" rx="3"/><path d="M5 11a7 7 0 0 0 14 0"/><line x1="12" y1="18" x2="12" y2="22"/></svg></button>
+<script>
+function globalVoice(){
+  try{
+    var t=document.querySelector('.tab[data-tab="today"]');
+    if(t){ t.click(); }
+    setTimeout(function(){
+      var mic=document.getElementById('voiceMicBig');
+      if(mic){ try{ mic.scrollIntoView({behavior:'smooth',block:'center'}); }catch(e){} }
+      if(typeof toggleVoiceCommand==='function'){ toggleVoiceCommand(); }
+    }, 320);
+  }catch(e){}
+}
+</script>
 </body>
 </html>
