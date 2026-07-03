@@ -44,7 +44,7 @@ module.exports = async function handler(req, res) {
     var m = /^data:([^;]+);base64,(.*)$/.exec(dataUrl);
     if (!m) return res.status(200).json({ ok: false, error: 'Bad image data.' });
     var mime = m[1], b64 = m[2];
-    if (!/^image\//.test(mime)) return res.status(200).json({ ok: false, error: 'Only image files are allowed.' });
+    if (!/^image\//.test(mime) && mime !== 'application/pdf') return res.status(200).json({ ok: false, error: 'Only images or PDFs are allowed.' });
     var buf = Buffer.from(b64, 'base64');
     if (buf.length > 6 * 1024 * 1024) return res.status(200).json({ ok: false, error: 'Image too large. Please use a smaller photo.' });
 
