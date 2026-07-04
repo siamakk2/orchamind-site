@@ -216,7 +216,7 @@ module.exports = async function handler(req, res) {
     if (action === 'saveProfile') {
       if (!isOwner) return res.status(200).json({ ok: false, error: 'Owner only.' });
       var pf = body.profile || {};
-      var clean = { logo: String(pf.logo || ''), phone: String(pf.phone || ''), email: String(pf.email || ''), address: String(pf.address || ''), license: String(pf.license || ''), website: String(pf.website || '') };
+      var clean = { logo: String(pf.logo || ''), phone: String(pf.phone || ''), email: String(pf.email || ''), address: String(pf.address || ''), license: String(pf.license || ''), website: String(pf.website || ''), reviewLink: String(pf.reviewLink || '') };
       if (clean.logo.length > 900000) return res.status(200).json({ ok: false, error: 'Logo image is too large — please use a smaller one.' });
       var patch = { profile: clean };
       var pco = (body.company || '').trim();
@@ -291,7 +291,7 @@ module.exports = async function handler(req, res) {
         var cur = erow.profile || {};
         var pf = body.profile;
         function pick(k){ return String((pf[k] != null ? pf[k] : cur[k]) || ''); }
-        patch.profile = { logo: pick('logo'), phone: pick('phone'), email: pick('email'), address: pick('address'), license: pick('license'), website: pick('website') };
+        patch.profile = { logo: pick('logo'), phone: pick('phone'), email: pick('email'), address: pick('address'), license: pick('license'), website: pick('website'), reviewLink: pick('reviewLink') };
       }
       if (!Object.keys(patch).length) return res.status(200).json({ ok: false, error: 'Nothing to update.' });
       var epr = await sbFetch(base + '/accounts?username=eq.' + encodeURIComponent(eu), { method: 'PATCH', headers: H, body: JSON.stringify(patch) });
