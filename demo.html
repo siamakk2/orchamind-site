@@ -1423,7 +1423,7 @@ function load(cb){
       changeOrders=Array.isArray(out.data.changeOrders)?out.data.changeOrders:[];
       expenses=Array.isArray(out.data.expenses)?out.data.expenses:[];
       leads=Array.isArray(out.data.leads)?out.data.leads:[];
-      plans=Array.isArray(out.data.plans)?out.data.plans:[];
+      plans=Array.isArray(out.data.plans)?out.data.plans:plans;
       _dbReady=true;writeLocal();
     }
     updateSyncPill();finish();
