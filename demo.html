@@ -366,6 +366,12 @@ body.locked .appwrap{display:none !important;}
   html, body { max-width:100%; overflow-x:hidden; }
 }
 </style>
+<style id="app-tactile">
+/* Premium tactile feedback — every control presses in */
+button, .btn, .btn-ghost, .tab, select, [role="button"] { transition: transform .12s cubic-bezier(.34,1.56,.5,1), filter .12s ease, box-shadow .18s ease; }
+button:active, .btn:active, .btn-ghost:active, .tab:active, [role="button"]:active { transform: scale(.955); }
+.btn:active, .btn-ghost:active { filter: brightness(.95); }
+</style>
 </head>
 <body class="locked">
 <div id="demoBanner" style="position:relative;z-index:1;background:linear-gradient(90deg,#0A1628,#1565C0);color:#fff;padding:10px 16px;display:flex;align-items:center;justify-content:center;gap:16px;flex-wrap:wrap;font-family:'Outfit',sans-serif;font-size:14px;box-shadow:0 2px 12px rgba(0,0,0,0.2);">
