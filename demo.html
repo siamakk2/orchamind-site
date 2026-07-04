@@ -3734,13 +3734,27 @@ function sendReviewRequest(){
     .then(function(r){return r.json();}).then(function(d){ alert(d&&d.ok?('\u2713 Review request sent to '+cr.email):((d&&d.error)||'Could not send.')); })
     .catch(function(){ alert('Server error.'); });
 }
+function sendOnMyWay(){ _custNotify('otw'); }
+function sendApptReminder(){ var when=prompt('When is the appointment? (e.g. Tuesday at 2pm)'); if(when===null) return; _custNotify('appt', when.trim()); }
+function _custNotify(kind, when){
+  var cr=window._custReview||{}; if(!cr.email){ alert('This customer has no email on file.'); return; }
+  var pr=(CURRENT_USER&&CURRENT_USER.profile)||{};
+  var label=(kind==='otw')?('Send an on-my-way email to '+cr.email+'?'):('Send an appointment reminder to '+cr.email+'?');
+  if(!confirm(label)) return;
+  fetch('/api/remind',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({to:cr.email,clientName:cr.name,company:(CURRENT_USER&&CURRENT_USER.company)||'',kind:kind,when:when||'',contractorEmail:pr.email||'',contractorPhone:pr.phone||''})})
+    .then(function(r){return r.json();}).then(function(d){ alert(d&&d.ok?('\u2713 Sent to '+cr.email):((d&&d.error)||'Could not send.')); })
+    .catch(function(){ alert('Server error.'); });
+}
 function openCustomer(name){
   var c=buildCustomers().find(function(x){return x.name===name;}); if(!c) return;
   document.getElementById('custDetailName').textContent=c.name;
   var html='';
   if(c.phone||c.email){ html+='<div class="cust-d-contact">'+(c.phone?('<a href="tel:'+esc(c.phone)+'">\ud83d\udcde '+esc(c.phone)+'</a>'):'')+(c.email?('<a href="mailto:'+esc(c.email)+'">\u2709\ufe0f '+esc(c.email)+'</a>'):'')+'</div>'; }
   window._custReview={name:c.name||'',email:c.email||''};
-  if(c.email){ html+='<div style="margin:4px 0 2px;"><button onclick="sendReviewRequest()" style="background:#F9A825;color:#0A1628;border:none;border-radius:9px;padding:9px 15px;font-size:13px;font-weight:700;cursor:pointer;">\u2b50 Ask for a review</button></div>'; }
+  if(c.email){ html+='<div style="display:flex;gap:8px;flex-wrap:wrap;margin:6px 0 2px;">'+
+    '<button onclick="sendOnMyWay()" style="background:#2D7FF9;color:#fff;border:none;border-radius:9px;padding:9px 14px;font-size:13px;font-weight:700;cursor:pointer;">\ud83d\ude97 On my way</button>'+
+    '<button onclick="sendApptReminder()" style="background:#fff;color:#0A1628;border:1px solid #E1E8F0;border-radius:9px;padding:9px 14px;font-size:13px;font-weight:700;cursor:pointer;">\ud83d\udcc5 Reminder</button>'+
+    '<button onclick="sendReviewRequest()" style="background:#F9A825;color:#0A1628;border:none;border-radius:9px;padding:9px 14px;font-size:13px;font-weight:700;cursor:pointer;">\u2b50 Review</button></div>'; }
   html+='<div class="cust-sec">Jobs ('+c.jobs.length+')</div>';
   html+= c.jobs.length? c.jobs.map(function(j){ return '<div class="cust-item"><b>'+esc(j.name)+'</b><span>'+esc(j.status||'')+(estNum(j.budget)?(' \u00b7 '+estMoney(j.budget)):'')+'</span></div>'; }).join('') : '<div class="cust-empty">No jobs yet.</div>';
   html+='<div class="cust-sec">Leads ('+c.leads.length+')</div>';
