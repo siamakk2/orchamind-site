@@ -947,7 +947,7 @@ button:active, .btn:active, .btn-ghost:active, .tab:active, [role="button"]:acti
           <div><label style="display:block;font-size:12px;font-weight:600;color:#5A6B7D;margin-bottom:4px;">Phone</label><input id="pfPhone" style="width:100%;border:1.5px solid #E1E8F0;border-radius:8px;padding:10px;font-size:14px;box-sizing:border-box;" placeholder="(323) 555-0123"></div>
           <div><label style="display:block;font-size:12px;font-weight:600;color:#5A6B7D;margin-bottom:4px;">Email</label><input id="pfEmail" style="width:100%;border:1.5px solid #E1E8F0;border-radius:8px;padding:10px;font-size:14px;box-sizing:border-box;" placeholder="office@company.com"></div>
           <div style="grid-column:1/3;"><label style="display:block;font-size:12px;font-weight:600;color:#5A6B7D;margin-bottom:4px;">Address</label><input id="pfAddress" style="width:100%;border:1.5px solid #E1E8F0;border-radius:8px;padding:10px;font-size:14px;box-sizing:border-box;" placeholder="123 Main St, Los Angeles, CA"></div>
-          <div style="grid-column:1/3;"><label style="display:block;font-size:12px;font-weight:600;color:#5A6B7D;margin-bottom:4px;">Website (optional)</label><input id="pfWebsite" style="width:100%;border:1.5px solid #E1E8F0;border-radius:8px;padding:10px;font-size:14px;box-sizing:border-box;" placeholder="www.company.com"></div>
+          <div style="grid-column:1/3;"><label style="display:block;font-size:12px;font-weight:600;color:#5A6B7D;margin-bottom:4px;">Website (optional)</label><input id="pfWebsite" style="width:100%;border:1.5px solid #E1E8F0;border-radius:8px;padding:10px;font-size:14px;box-sizing:border-box;" placeholder="www.company.com"></div><div style="grid-column:1/3;"><label style="display:block;font-size:12px;font-weight:600;color:#5A6B7D;margin-bottom:4px;">Review link <span style="color:#8090A0;font-weight:400;">&mdash; your Google review URL, so you can ask customers for reviews</span></label><input id="pfReviewLink" style="width:100%;border:1.5px solid #E1E8F0;border-radius:8px;padding:10px;font-size:14px;box-sizing:border-box;" placeholder="https://g.page/r/your-review-link"></div>
         </div>
         <button onclick="saveCompanyProfile()" style="margin-top:16px;background:#2E7D32;color:#fff;border:none;border-radius:8px;padding:12px 24px;font-size:15px;font-weight:700;cursor:pointer;">Save Profile</button>
         <span id="pfMsg" style="margin-left:12px;font-size:13px;"></span>
@@ -1733,13 +1733,13 @@ function loadProfileForm(){
   PF_LOGO=pr.logo||'';
   var set=function(id,v){var el=document.getElementById(id); if(el)el.value=v||'';};
   set('pfCompany',(CURRENT_USER&&CURRENT_USER.company)||'');
-  set('pfLicense',pr.license);set('pfPhone',pr.phone);set('pfEmail',pr.email);set('pfAddress',pr.address);set('pfWebsite',pr.website);
+  set('pfLicense',pr.license);set('pfPhone',pr.phone);set('pfEmail',pr.email);set('pfAddress',pr.address);set('pfWebsite',pr.website);set('pfReviewLink',pr.reviewLink);
   var pv=document.getElementById('pfLogoPreview'); if(pv)pv.innerHTML=PF_LOGO?('<img src="'+PF_LOGO+'" style="width:100%;height:100%;object-fit:cover;">'):'No logo';
   var m=document.getElementById('pfMsg'); if(m)m.textContent='';
 }
 function saveCompanyProfile(){
   var g=function(id){var el=document.getElementById(id);return el?el.value.trim():'';};
-  var profile={logo:PF_LOGO,phone:g('pfPhone'),email:g('pfEmail'),address:g('pfAddress'),license:g('pfLicense'),website:g('pfWebsite')};
+  var profile={logo:PF_LOGO,phone:g('pfPhone'),email:g('pfEmail'),address:g('pfAddress'),license:g('pfLicense'),website:g('pfWebsite'),reviewLink:g('pfReviewLink')};
   var company=g('pfCompany');
   var m=document.getElementById('pfMsg'); if(m){m.style.color='#5A6B7D';m.textContent='Saving\u2026';}
   fetch('/api/accounts',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'saveProfile',company:company,profile:profile})})
@@ -3725,11 +3725,22 @@ function renderCustomers(){
     return '<div class="cust-card" data-cust="'+esc(c.name)+'"><div class="cust-av">'+esc(String(c.name||'?').charAt(0).toUpperCase())+'</div><div class="cust-b"><b>'+esc(c.name)+'</b><span>'+esc(bits.join(' \u00b7 '))+'</span>'+contact+'</div><div class="cust-chev">\u203a</div></div>';
   }).join('');
 }
+function sendReviewRequest(){
+  var cr=window._custReview||{}; if(!cr.email){ alert('This customer has no email on file.'); return; }
+  var rl=(CURRENT_USER&&CURRENT_USER.profile&&CURRENT_USER.profile.reviewLink)||'';
+  if(!rl){ alert('First add your Review link in Company Profile (Tools \u2192 Company Profile), then try again.'); return; }
+  if(!confirm('Send a review request email to '+cr.email+'?')) return;
+  fetch('/api/review-request',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({to:cr.email,clientName:cr.name,company:(CURRENT_USER&&CURRENT_USER.company)||'',reviewLink:rl,contractorEmail:(CURRENT_USER&&CURRENT_USER.profile&&CURRENT_USER.profile.email)||''})})
+    .then(function(r){return r.json();}).then(function(d){ alert(d&&d.ok?('\u2713 Review request sent to '+cr.email):((d&&d.error)||'Could not send.')); })
+    .catch(function(){ alert('Server error.'); });
+}
 function openCustomer(name){
   var c=buildCustomers().find(function(x){return x.name===name;}); if(!c) return;
   document.getElementById('custDetailName').textContent=c.name;
   var html='';
   if(c.phone||c.email){ html+='<div class="cust-d-contact">'+(c.phone?('<a href="tel:'+esc(c.phone)+'">\ud83d\udcde '+esc(c.phone)+'</a>'):'')+(c.email?('<a href="mailto:'+esc(c.email)+'">\u2709\ufe0f '+esc(c.email)+'</a>'):'')+'</div>'; }
+  window._custReview={name:c.name||'',email:c.email||''};
+  if(c.email){ html+='<div style="margin:4px 0 2px;"><button onclick="sendReviewRequest()" style="background:#F9A825;color:#0A1628;border:none;border-radius:9px;padding:9px 15px;font-size:13px;font-weight:700;cursor:pointer;">\u2b50 Ask for a review</button></div>'; }
   html+='<div class="cust-sec">Jobs ('+c.jobs.length+')</div>';
   html+= c.jobs.length? c.jobs.map(function(j){ return '<div class="cust-item"><b>'+esc(j.name)+'</b><span>'+esc(j.status||'')+(estNum(j.budget)?(' \u00b7 '+estMoney(j.budget)):'')+'</span></div>'; }).join('') : '<div class="cust-empty">No jobs yet.</div>';
   html+='<div class="cust-sec">Leads ('+c.leads.length+')</div>';
