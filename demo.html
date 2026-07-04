@@ -456,6 +456,7 @@ button:active, .btn:active, .btn-ghost:active, .tab:active, [role="button"]:acti
   <button class="tab" data-tab="log"><svg class="ti" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>Site Log</button>
   <button class="tab" data-tab="sketches"><svg class="ti" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3h7v7H3z"/><path d="M14 3h7v4h-7z"/><path d="M14 11h7v10h-7z"/><path d="M3 14h7v7H3z"/></svg>Plans</button>
   <button class="tab" data-tab="changes" data-mgronly><svg class="ti" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M9 15l2 2 4-4"/></svg>Changes</button>
+  <button class="tab" data-tab="plans" data-mgronly><svg class="ti" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 2.1l4 4-4 4"/><path d="M3 12v-1a4 4 0 0 1 4-4h14"/><path d="M7 21.9l-4-4 4-4"/><path d="M21 12v1a4 4 0 0 1-4 4H3"/></svg>Service Plans</button>
   <div class="nav-sec">Money</div>
   <button class="tab" data-tab="costs" data-mgronly><svg class="ti" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>Costs &amp; Profit</button>
   <button class="tab" data-tab="reports" data-mgronly><svg class="ti" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>Reports &amp; Money</button>
@@ -807,6 +808,27 @@ button:active, .btn:active, .btn-ghost:active, .tab:active, [role="button"]:acti
     <p style="color:var(--muted);font-size:13.5px;margin:-4px 0 14px;">Everyone you work with, pulled together automatically from your jobs and leads. Tap a customer to see their whole history.</p>
     <input type="text" id="custSearch" class="cust-search" placeholder="Search customers…" oninput="renderCustomers()">
     <div id="custBody"></div>
+  </div>
+<style>
+.plan-card{background:#fff;border:1px solid var(--line);border-radius:12px;padding:14px;margin-bottom:10px;}
+.plan-top{display:flex;justify-content:space-between;align-items:baseline;gap:8px;}
+.plan-top b{color:var(--navy);font-size:15px;}
+.plan-val{color:#1B8A4B;font-family:'Playfair Display',serif;font-size:16px;white-space:nowrap;}
+.plan-svc{color:var(--navy);font-size:13.5px;font-weight:600;margin-top:2px;}
+.plan-meta{color:var(--muted);font-size:12.5px;margin-top:4px;}
+.plan-notes{color:#3a4a5a;font-size:12.5px;margin-top:6px;background:#F4F8FD;border-radius:8px;padding:8px 10px;}
+.plan-acts{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px;}
+.plan-acts button{background:#fff;border:1px solid var(--line);border-radius:7px;padding:6px 10px;font-size:12px;font-weight:600;color:var(--navy);cursor:pointer;font-family:inherit;}
+.plan-acts button:hover{border-color:var(--blue);color:var(--blue);}
+.plan-acts .plan-go{background:#1B8A4B;color:#fff;border-color:#1B8A4B;}
+.plan-sec{font-weight:700;color:var(--navy);font-size:13px;text-transform:uppercase;letter-spacing:.04em;margin:16px 0 8px;}
+</style>
+  <div class="panel" id="panel-plans">
+    <div class="panel-head"><h2>Service Plans</h2>
+      <button class="btn" onclick="newPlan()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>New Plan</button>
+    </div>
+    <p style="color:var(--muted);font-size:13.5px;margin:-4px 0 16px;">Recurring work — maintenance agreements, repeat visits, service contracts. When a plan is due, it shows on your Home screen; tap "Create job" and Orchamind schedules the next visit automatically.</p>
+    <div id="plansBody"></div>
   </div>
   <div class="panel" id="panel-risks">
     <div class="panel-head">
@@ -1210,6 +1232,16 @@ button:active, .btn:active, .btn-ghost:active, .tab:active, [role="button"]:acti
   <div class="modal-foot"><button class="btn btn-ghost" onclick="closeModal('custModal')">Close</button></div>
 </div></div>
 
+<div class="modal-bg" id="planModal"><div class="modal">
+  <h3 id="planModalTitle">New Service Plan</h3>
+  <input type="hidden" id="planId">
+  <div class="field-row"><div class="field"><label>Client</label><input type="text" id="planClient"></div><div class="field"><label>Estimated value / visit</label><input type="number" id="planValue" step="any" placeholder="0"></div></div>
+  <div class="field"><label>Service</label><input type="text" id="planService" placeholder="e.g. Quarterly HVAC maintenance"></div>
+  <div class="field-row"><div class="field"><label>Repeats</label><select id="planEvery"><option value="weekly">Weekly</option><option value="monthly">Monthly</option><option value="quarterly">Quarterly</option><option value="yearly">Yearly</option></select></div><div class="field"><label>Next visit date</label><input type="date" id="planNext"></div></div>
+  <div class="field"><label>Notes</label><textarea id="planNotes" rows="2"></textarea></div>
+  <div class="modal-foot"><button class="btn btn-ghost" onclick="closeModal('planModal')">Cancel</button><button class="btn" onclick="savePlan()">Save</button></div>
+</div></div>
+
 <div class="modal-bg" id="jobModal"><div class="modal">
   <h3 id="jobModalTitle">New Job</h3>
   <input type="hidden" id="jobId">
@@ -1339,6 +1371,7 @@ var estimates=[
 var sketches=[];
 var schedule=[];
 var changeOrders=[{id:'co1',number:'CO-0001',jobName:'Hillside Addition',jobId:'',date:'2026-06-25',title:'Upgrade to quartz countertops',desc:'Client requested quartz instead of laminate in the kitchen and primary bath.',items:[{desc:'Quartz material (kitchen + bath)',qty:1,price:4200},{desc:'Additional fabrication & install labor',qty:1,price:1400}],status:'sent'}];
+var plans=[{id:'pl1',client:'Nguyen Rentals',service:'Quarterly HVAC maintenance',every:'quarterly',nextDate:'2026-07-01',value:450,notes:'4 units \u2014 filters + coil clean'},{id:'pl2',client:'Oak Street HOA',service:'Monthly common-area upkeep',every:'monthly',nextDate:'2026-07-20',value:900,notes:'Lighting, gutters, minor repairs'}];
 var leads=[{id:'ld1',name:'Karen Mitchell',company:'',phone:'(707) 555-0182',email:'karen.m@example.com',source:'Referral',service:'Master bath remodel',value:28000,stage:'quoted',notes:'Wants walk-in shower + heated floors. Sent estimate 6/28.',date:'2026-06-22'},{id:'ld2',name:'Dave Nguyen',company:'Nguyen Rentals',phone:'(707) 555-0143',email:'dave@nguyenrentals.com',source:'Website',service:'Kitchen refresh (rental unit)',value:14500,stage:'new',notes:'Needs it before new tenant Aug 1.',date:'2026-06-29'},{id:'ld3',name:'The Alvarez Family',company:'',phone:'(707) 555-0117',email:'alvarez@example.com',source:'Google',service:'Deck rebuild',value:9800,stage:'contacted',notes:'Texted back, interested.',date:'2026-06-27'}];
 var expenses=[{id:'x1',jobName:'Hillside Addition',jobId:'',date:'2026-06-20',category:'Materials',vendor:'ABC Lumber',amount:8400,note:'Framing lumber package'},{id:'x2',jobName:'Hillside Addition',jobId:'',date:'2026-06-24',category:'Subcontractor',vendor:'Napa Electric',amount:5200,note:'Electrical rough-in'}];
 var logs=[{id:'l1',job:'Sonoma Vista Residence',date:'2026-06-22',note:'Framing 60% complete on the north wall. Windows delivered and staged in the garage. Framing inspection confirmed for next Tuesday.',photos:[],author:'Demo'}];
@@ -1347,11 +1380,11 @@ function _acctKey(){return (typeof CURRENT_USER!=='undefined'&&CURRENT_USER&&CUR
 function dataKey(){return 'orcha_data_'+_acctKey();}
 function pendKey(){return 'orcha_pend_'+_acctKey();}
 var _pendingSync=false;
-function writeLocal(){try{localStorage.setItem(dataKey(),JSON.stringify({saved:true,jobs:jobs,crew:crew,hours:hours,subs:subs,estimates:estimates,sketches:sketches,logs:logs,schedule:schedule,changeOrders:changeOrders,expenses:expenses,leads:leads,_ts:Date.now()}));}catch(e){}}
+function writeLocal(){try{localStorage.setItem(dataKey(),JSON.stringify({saved:true,jobs:jobs,crew:crew,hours:hours,subs:subs,estimates:estimates,sketches:sketches,logs:logs,schedule:schedule,changeOrders:changeOrders,expenses:expenses,leads:leads,plans:plans,_ts:Date.now()}));}catch(e){}}
 function markPending(){_pendingSync=true;try{localStorage.setItem(pendKey(),'1');}catch(e){}updateSyncPill();}
 function markSynced(){_pendingSync=false;try{localStorage.removeItem(pendKey());}catch(e){}updateSyncPill();}
 function pushToServer(){
-  fetch('/api/data',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({data:{saved:true,jobs:jobs,crew:crew,hours:hours,subs:subs,estimates:estimates,sketches:sketches,logs:logs,schedule:schedule,changeOrders:changeOrders,expenses:expenses,leads:leads}})})
+  fetch('/api/data',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({data:{saved:true,jobs:jobs,crew:crew,hours:hours,subs:subs,estimates:estimates,sketches:sketches,logs:logs,schedule:schedule,changeOrders:changeOrders,expenses:expenses,leads:leads,plans:plans}})})
     .then(function(r){return r.json();})
     .then(function(o){if(o&&!o.error){_dbReady=true;markSynced();}else{markPending();}})
     .catch(function(){markPending();});
@@ -1370,7 +1403,7 @@ function load(cb){
   // 1) OFFLINE-FIRST: recall unsynced flag + hydrate instantly from this device
   try{_pendingSync=(localStorage.getItem(pendKey())==='1');}catch(e){_pendingSync=false;}
   var localHad=false;
-  try{var ls=localStorage.getItem(dataKey());if(ls){var d=JSON.parse(ls);if(d&&d.saved){jobs=Array.isArray(d.jobs)?d.jobs:jobs;crew=Array.isArray(d.crew)?d.crew:crew;hours=Array.isArray(d.hours)?d.hours:hours;subs=Array.isArray(d.subs)?d.subs:subs;estimates=Array.isArray(d.estimates)?d.estimates:estimates;sketches=Array.isArray(d.sketches)?d.sketches:sketches;logs=Array.isArray(d.logs)?d.logs:logs;schedule=Array.isArray(d.schedule)?d.schedule:schedule;changeOrders=Array.isArray(d.changeOrders)?d.changeOrders:changeOrders;expenses=Array.isArray(d.expenses)?d.expenses:expenses;leads=Array.isArray(d.leads)?d.leads:leads;localHad=true;}}}catch(e){}
+  try{var ls=localStorage.getItem(dataKey());if(ls){var d=JSON.parse(ls);if(d&&d.saved){jobs=Array.isArray(d.jobs)?d.jobs:jobs;crew=Array.isArray(d.crew)?d.crew:crew;hours=Array.isArray(d.hours)?d.hours:hours;subs=Array.isArray(d.subs)?d.subs:subs;estimates=Array.isArray(d.estimates)?d.estimates:estimates;sketches=Array.isArray(d.sketches)?d.sketches:sketches;logs=Array.isArray(d.logs)?d.logs:logs;schedule=Array.isArray(d.schedule)?d.schedule:schedule;changeOrders=Array.isArray(d.changeOrders)?d.changeOrders:changeOrders;expenses=Array.isArray(d.expenses)?d.expenses:expenses;leads=Array.isArray(d.leads)?d.leads:leads;plans=Array.isArray(d.plans)?d.plans:plans;localHad=true;}}}catch(e){}
   // 2) reach the shared database, but NEVER block the app
   var timer=setTimeout(function(){updateSyncPill();finish();},3000);
   fetch('/api/data').then(function(r){return r.json();}).then(function(out){
@@ -1390,6 +1423,7 @@ function load(cb){
       changeOrders=Array.isArray(out.data.changeOrders)?out.data.changeOrders:[];
       expenses=Array.isArray(out.data.expenses)?out.data.expenses:[];
       leads=Array.isArray(out.data.leads)?out.data.leads:[];
+      plans=Array.isArray(out.data.plans)?out.data.plans:[];
       _dbReady=true;writeLocal();
     }
     updateSyncPill();finish();
@@ -1637,6 +1671,7 @@ function renderAttention(){
   if(mgr){
     var coSent=(window.changeOrders||[]).filter(function(c){return c.status==='sent';});
     if(coSent.length) items.push({icon:'\ud83d\udcdd',txt:'<b>'+coSent.length+'</b> change order'+(coSent.length>1?'s':'')+' awaiting client approval',tab:'changes'});
+    try{ var duePlans=(window.plans||[]).filter(function(p){return (p.nextDate||'') && p.nextDate<=today;}); if(duePlans.length) items.push({icon:'🔁',txt:'<b>'+duePlans.length+'</b> recurring service'+(duePlans.length>1?'s':'')+' due',tab:'plans'}); }catch(x){}
     var leadsF=(window.leads||[]).filter(function(l){return l.stage==='new'||l.stage==='contacted';});
     if(leadsF.length) items.push({icon:'\u2728',txt:'<b>'+leadsF.length+'</b> lead'+(leadsF.length>1?'s':'')+' to follow up',tab:'leads'});
     var inv=(window.estimates||[]).filter(function(e){return e.kind==='invoice' && e.status!=='paid';});
@@ -1768,6 +1803,7 @@ document.querySelectorAll('.tab').forEach(function(t){
     if(t.dataset.tab==='changes'){renderChangeOrders();}
     if(t.dataset.tab==='costs'){renderCosts();}
     if(t.dataset.tab==='leads'){renderLeads();}
+    if(t.dataset.tab==='plans'){renderPlans();}
     if(t.dataset.tab==='customers'){renderCustomers();}
     if(t.dataset.tab==='profile'){checkPayStatus(); setQuoteLink();}
   });
@@ -1779,7 +1815,7 @@ function _dl(fn,txt,mime){var b=new Blob([txt],{type:mime||'text/plain'});var u=
 function _csvCell(v){v=(v==null?'':String(v));if(/[",\n]/.test(v))v='"'+v.replace(/"/g,'""')+'"';return v;}
 function _csv(rows){if(!rows||!rows.length)return '';var cols=Object.keys(rows[0]);var out=cols.join(',')+'\n';rows.forEach(function(r){out+=cols.map(function(k){return _csvCell(r[k]);}).join(',')+'\n';});return out;}
 function _stamp(){return new Date().toISOString().split('T')[0];}
-function exportJSON(){var data={exportedAt:new Date().toISOString(),company:(CURRENT_USER&&CURRENT_USER.name)||'',jobs:jobs,crew:crew,hours:hours,subs:subs,estimates:estimates,sketches:sketches,logs:logs,schedule:schedule,changeOrders:changeOrders,expenses:expenses,leads:leads};_dl('orchamind-export-'+_stamp()+'.json',JSON.stringify(data,null,2),'application/json');}
+function exportJSON(){var data={exportedAt:new Date().toISOString(),company:(CURRENT_USER&&CURRENT_USER.name)||'',jobs:jobs,crew:crew,hours:hours,subs:subs,estimates:estimates,sketches:sketches,logs:logs,schedule:schedule,changeOrders:changeOrders,expenses:expenses,leads:leads,plans:plans};_dl('orchamind-export-'+_stamp()+'.json',JSON.stringify(data,null,2),'application/json');}
 function exportCSV(which){var map={jobs:jobs,crew:crew,hours:hours,subs:subs};var rows=map[which]||[];if(!rows.length){alert('Nothing to export there yet.');return;}_dl('orchamind-'+which+'-'+_stamp()+'.csv',_csv(rows),'text/csv');}
 function renderExportCounts(){var el=document.getElementById('exportCounts');if(!el)return;el.textContent=jobs.length+' projects \u00b7 '+hours.length+' timesheet entries \u00b7 '+crew.length+' crew \u00b7 '+subs.length+' subcontractors';}
 document.querySelectorAll('.modal-bg').forEach(function(m){m.addEventListener('click',function(e){if(e.target===m)closeModal(m.id);});});
@@ -1824,7 +1860,7 @@ function clearAllData(){
 
 // Explicit, non-debounced save that reports success/failure
 function saveNow(cb){
-  fetch('/api/data',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({data:{saved:true,jobs:jobs,crew:crew,hours:hours,subs:subs,estimates:estimates,sketches:sketches,logs:logs,schedule:schedule,changeOrders:changeOrders,expenses:expenses,leads:leads}})})
+  fetch('/api/data',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({data:{saved:true,jobs:jobs,crew:crew,hours:hours,subs:subs,estimates:estimates,sketches:sketches,logs:logs,schedule:schedule,changeOrders:changeOrders,expenses:expenses,leads:leads,plans:plans}})})
     .then(function(r){return r.json();})
     .then(function(o){var ok=o&&!o.error;if(ok)_dbReady=true;if(cb)cb(ok);})
     .catch(function(){if(cb)cb(false);});
@@ -3862,6 +3898,78 @@ function renderSupport(tix, open){
     '<div style="margin-top:9px;">'+(resolved?'<span style="font-size:11px;color:#1B8A4B;font-weight:700;">\u2713 Resolved</span>':'<button onclick="resolveTicket(\''+esc(t.id)+'\')" style="font-size:12px;border:1px solid #1B8A4B;background:#fff;color:#1B8A4B;border-radius:6px;padding:4px 10px;cursor:pointer;">Mark resolved</button>')+'</div></div>'; }).join('');
 }
 function resolveTicket(id){ fetch('/api/support',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'resolve',id:id,status:'resolved'})}).then(function(r){return r.json();}).then(function(d){ if(d&&d.ok){ loadSupport(); } else { alert((d&&d.error)||'Could not update.'); } }).catch(function(){}); }
+</script>
+<script>
+
+function _planLabel(e){ return {weekly:'Weekly',monthly:'Monthly',quarterly:'Quarterly',yearly:'Yearly'}[e]||'Monthly'; }
+function _planNext(dateStr, every){
+  var d=new Date((dateStr||'')+'T00:00:00'); if(isNaN(d.getTime())) d=new Date();
+  if(every==='weekly') d.setDate(d.getDate()+7);
+  else if(every==='quarterly') d.setMonth(d.getMonth()+3);
+  else if(every==='yearly') d.setFullYear(d.getFullYear()+1);
+  else d.setMonth(d.getMonth()+1);
+  return d.toISOString().split('T')[0];
+}
+function renderPlans(){
+  var host=document.getElementById('plansBody'); if(!host) return;
+  var plans=(window.plans||[]); var today=new Date().toISOString().split('T')[0];
+  if(!plans.length){ host.innerHTML='<div style="color:var(--muted);font-size:13.5px;padding:6px 2px;">No service plans yet. Tap New Plan to set up recurring work \u2014 maintenance, repeat visits, contracts.</div>'; return; }
+  var due=plans.filter(function(p){return (p.nextDate||'') && p.nextDate<=today;});
+  var up=plans.filter(function(p){return !((p.nextDate||'') && p.nextDate<=today);}).sort(function(a,b){return (a.nextDate||'').localeCompare(b.nextDate||'');});
+  function card(p){
+    var isDue=(p.nextDate||'')&&p.nextDate<=today;
+    var badge='<span class="plan-due" style="background:'+(isDue?'#FBE9E7':'#EAF3FF')+';color:'+(isDue?'#C62828':'#1565C0')+';">'+(isDue?'Due now':('Next '+(p.nextDate||'\u2014')))+'</span>';
+    return '<div class="plan-card"><div class="plan-top"><div><b>'+esc(p.client||'Client')+'</b></div>'+(estNum(p.value)?('<b class="plan-val">'+estMoney(p.value)+'</b>'):'')+'</div>'+
+      (p.service?('<div class="plan-svc">'+esc(p.service)+'</div>'):'')+
+      '<div class="plan-meta">'+badge+' \u00b7 repeats '+_planLabel(p.every).toLowerCase()+'</div>'+
+      (p.notes?('<div class="plan-notes">'+esc(p.notes)+'</div>'):'')+
+      '<div class="plan-acts"><button class="plan-go" onclick="createJobFromPlan(\''+esc(p.id)+'\')">\u2795 Create job</button>'+
+      '<button onclick="editPlan(\''+esc(p.id)+'\')">Edit</button>'+
+      '<button onclick="delPlan(\''+esc(p.id)+'\')">\u2715</button></div></div>';
+  }
+  var body='';
+  if(due.length){ body+='<div class="plan-sec" style="color:#C62828;">Due now ('+due.length+')</div>'+due.map(card).join(''); }
+  body+='<div class="plan-sec">Upcoming ('+up.length+')</div>'+(up.length?up.map(card).join(''):'<div style="color:var(--muted);font-size:12.5px;">Nothing upcoming.</div>');
+  host.innerHTML=body;
+}
+function newPlan(){
+  document.getElementById('planModalTitle').textContent='New Service Plan';
+  ['planId','planClient','planValue','planService','planNotes'].forEach(function(i){document.getElementById(i).value='';});
+  document.getElementById('planEvery').value='monthly';
+  document.getElementById('planNext').value=new Date().toISOString().split('T')[0];
+  openModal('planModal');
+}
+function editPlan(id){
+  var p=(window.plans||[]).find(function(x){return x.id===id;}); if(!p) return;
+  document.getElementById('planModalTitle').textContent='Edit Service Plan';
+  document.getElementById('planId').value=p.id;
+  document.getElementById('planClient').value=p.client||'';
+  document.getElementById('planValue').value=p.value||'';
+  document.getElementById('planService').value=p.service||'';
+  document.getElementById('planEvery').value=p.every||'monthly';
+  document.getElementById('planNext').value=p.nextDate||'';
+  document.getElementById('planNotes').value=p.notes||'';
+  openModal('planModal');
+}
+function savePlan(){
+  var client=document.getElementById('planClient').value.trim();
+  if(!client){ alert('Enter a client.'); return; }
+  var id=document.getElementById('planId').value;
+  var data={client:client,value:estNum(document.getElementById('planValue').value),service:document.getElementById('planService').value.trim(),every:document.getElementById('planEvery').value,nextDate:document.getElementById('planNext').value,notes:document.getElementById('planNotes').value.trim()};
+  if(id){ var p=(window.plans||[]).find(function(x){return x.id===id;}); if(p) Object.assign(p,data); }
+  else { data.id=uid(); plans.unshift(data); }
+  save(); closeModal('planModal'); renderPlans();
+}
+function delPlan(id){ if(!confirm('Delete this service plan?')) return; plans=plans.filter(function(x){return x.id!==id;}); save(); renderPlans(); }
+function createJobFromPlan(id){
+  var p=(window.plans||[]).find(function(x){return x.id===id;}); if(!p) return;
+  var job={id:uid(),name:(p.service||'Service')+' \u2014 '+(p.client||''),client:p.client||'',location:'',status:'active',progress:0,crew:0,date:p.nextDate||'',budget:estNum(p.value),spent:0,notes:p.notes||''};
+  jobs.unshift(job);
+  p.nextDate=_planNext(p.nextDate||new Date().toISOString().split('T')[0], p.every);
+  save(); renderPlans(); try{ if(typeof renderJobs==='function') renderJobs(); }catch(e){}
+  alert('Created "'+job.name+'" in Jobs. Next visit set for '+p.nextDate+'.');
+}
+
 </script>
 </body>
 </html>
