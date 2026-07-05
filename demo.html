@@ -1,6 +1,11 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+<!-- Vercel Speed Insights -->
+<script>
+  window.si = window.si || function () { (window.siq = window.siq || []).push(arguments); };
+</script>
+<script defer src="/_vercel/speed-insights/script.js"></script>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Site Manager AI | Orchamind Demo</title>
@@ -3022,6 +3027,11 @@ function printEstimate(id){
   var w=window.open('','_blank');
   if(!w){alert('Please allow pop-ups to print or save the PDF.');return;}
   var doc=`<!doctype html><html><head><meta charset="utf-8"><title>${title} ${esc(e.number||'')}</title>
+<!-- Vercel Speed Insights -->
+<script>
+  window.si = window.si || function () { (window.siq = window.siq || []).push(arguments); };
+</script>
+<script defer src="/_vercel/speed-insights/script.js"></script>
 <style>
 *{box-sizing:border-box;}body{font-family:Arial,Helvetica,sans-serif;color:#0A1628;margin:40px;}
 .hd{display:flex;justify-content:space-between;align-items:flex-start;border-bottom:3px solid #1565C0;padding-bottom:16px;margin-bottom:20px;}
@@ -3141,6 +3151,11 @@ function _extractSvg(text){
 }
 function _skWrapDoc(svg,title){
   return `<!doctype html><html><head><meta charset="utf-8"><title>${esc(title)}</title>
+<!-- Vercel Speed Insights -->
+<script>
+  window.si = window.si || function () { (window.siq = window.siq || []).push(arguments); };
+</script>
+<script defer src="/_vercel/speed-insights/script.js"></script>
 <style>body{font-family:Arial,Helvetica,sans-serif;margin:28px;color:#0A1628;}h2{color:#1565C0;margin:0 0 4px;}
 .sub{color:#5A6B7D;font-size:13px;margin-bottom:14px;}svg{max-width:100%;height:auto;border:1px solid #E1E8F0;border-radius:8px;}
 .disc{margin-top:16px;font-size:12px;color:#7A5300;background:#FFF7E6;border:1px solid #F3D28B;border-radius:8px;padding:10px 13px;}</style>
@@ -3581,6 +3596,11 @@ function printCO(id){
   var rows=(c.items||[]).map(function(it){ return '<tr><td>'+esc(it.desc)+'</td><td class="c">'+estNum(it.qty)+'</td><td class="r">'+estMoney(it.price)+'</td><td class="r">'+estMoney(estNum(it.qty)*estNum(it.price))+'</td></tr>'; }).join('');
   var w=window.open('','_blank'); if(!w){ alert('Please allow pop-ups to print.'); return; }
   var doc=`<!doctype html><html><head><meta charset="utf-8"><title>${esc(c.number||'Change Order')}</title>
+<!-- Vercel Speed Insights -->
+<script>
+  window.si = window.si || function () { (window.siq = window.siq || []).push(arguments); };
+</script>
+<script defer src="/_vercel/speed-insights/script.js"></script>
 <style>*{box-sizing:border-box}body{font-family:Arial,Helvetica,sans-serif;color:#0A1628;margin:40px}.hd{display:flex;justify-content:space-between;border-bottom:3px solid #1565C0;padding-bottom:16px;margin-bottom:18px}.co{font-size:20px;font-weight:700;color:#1565C0}h1{font-size:24px;margin:0}.meta{font-size:13px;color:#5A6B7D}table{width:100%;border-collapse:collapse;margin-top:12px;font-size:13px}th{background:#EEF3F8;text-align:left;padding:9px}td{padding:9px;border-bottom:1px solid #E1E8F0}td.c{text-align:center}td.r{text-align:right}tfoot td{font-weight:700;border:none}.grand td{font-size:16px;color:#1565C0;border-top:2px solid #1565C0}.sig{margin-top:40px;display:flex;gap:40px}.sig div{flex:1;border-top:1px solid #0A1628;padding-top:6px;font-size:12px;color:#5A6B7D}</style></head><body>
 <div class="hd"><div><div class="co">${esc(company)}</div><div class="meta">CHANGE ORDER</div></div><div style="text-align:right"><h1>Change Order</h1><div class="meta">${esc(c.number||'')}<br>Date: ${esc(c.date||'')}</div></div></div>
 <div class="meta"><b>Project:</b> ${esc(c.jobName||'')}<br><b>Change:</b> ${esc(c.title||'')}</div>
