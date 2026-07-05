@@ -378,6 +378,15 @@ button:active, .btn:active, .btn-ghost:active, .tab:active, [role="button"]:acti
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="Orchamind">
+<style id="chat-ux">
+.chat-quickbar{display:flex;gap:7px;overflow-x:auto;padding:8px 2px 6px;-webkit-overflow-scrolling:touch;scrollbar-width:none;}
+.chat-quickbar::-webkit-scrollbar{display:none;}
+.chat-qchip{flex:0 0 auto;background:#fff;border:1.5px solid #BBD3F0;border-radius:20px;padding:8px 13px;font-size:12.5px;font-weight:600;color:var(--blue);cursor:pointer;white-space:nowrap;font-family:inherit;transition:background .12s,color .12s,transform .1s;}
+.chat-qchip:hover{background:var(--blue);color:#fff;border-color:var(--blue);}
+.chat-qchip:active{transform:scale(.95);}
+.type-cursor{display:inline-block;width:7px;height:14px;background:var(--blue);margin-left:1px;vertical-align:text-bottom;border-radius:1px;animation:typeBlink .8s steps(1) infinite;}
+@keyframes typeBlink{50%{opacity:0;}}
+</style>
 </head>
 <body class="locked">
 <div id="demoBanner" style="position:relative;z-index:1;background:linear-gradient(90deg,#0A1628,#1565C0);color:#fff;padding:10px 16px;display:flex;align-items:center;justify-content:center;gap:16px;flex-wrap:wrap;font-family:'Outfit',sans-serif;font-size:14px;box-shadow:0 2px 12px rgba(0,0,0,0.2);">
@@ -872,6 +881,7 @@ button:active, .btn:active, .btn-ghost:active, .tab:active, [role="button"]:acti
         </div>
         <div class="chat-dots" id="chatDots"><span></span><span></span><span></span></div>
       </div>
+      <div class="chat-quickbar"><button class="chat-qchip" data-q="What needs my attention today?">⚡ What needs attention?</button><button class="chat-qchip" data-q="Am I losing margin on any job? Check spent versus progress.">📊 Margin check</button><button class="chat-qchip" data-q="Who on my crew is free or underused this week?">👷 Who’s free?</button><button class="chat-qchip" data-q="Draft a short progress update I can send a client.">✉️ Draft update</button><button class="chat-qchip" data-q="What is overdue or behind schedule right now?">⏰ What’s behind?</button><button class="chat-qchip" data-q="Help me estimate a new job — ask me what you need to know.">🧮 Estimate a job</button></div>
       <div class="chat-foot">
         <button class="chat-mic" id="chatMic" onclick="toggleVoiceChat()" title="Speak your question"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z"/><path d="M19 10v2a7 7 0 01-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg></button>
         <input class="chat-inp" id="chatInp" type="text" placeholder="Ask or speak..." autocomplete="off">
@@ -1580,7 +1590,7 @@ function sendChat(q){
   var fullMsg=(convo?convo+'\n\n':'')+'Phil: '+msg;
   callClaude(sys,fullMsg,function(text){
     dots.style.display='none';
-    addChatMsg(text,'ai');
+    typeChatMsg(text);
     chatHistory.push({role:'user',text:msg});
     chatHistory.push({role:'ai',text:text});
   },function(err){
@@ -1594,6 +1604,23 @@ function addChatMsg(text,who){
   d.innerHTML='<div class="cmsg-b">'+(who==='ai'?mdToHtml(text):esc(text))+'</div>';
   msgs.insertBefore(d,dots);msgs.scrollTop=msgs.scrollHeight;if(who==='ai')speak(text);
 }
+function typeChatMsg(text){
+  var msgs=document.getElementById('chatMsgs');var dots=document.getElementById('chatDots');
+  var d=document.createElement('div');d.className='cmsg ai';
+  var b=document.createElement('div');b.className='cmsg-b';d.appendChild(b);
+  msgs.insertBefore(d,dots);
+  try{ if(typeof speak==='function') speak(text); }catch(e){}
+  var i=0, step=Math.max(2,Math.round(text.length/200)), done=false;
+  function finish(){ done=true; b.innerHTML=mdToHtml(text); msgs.scrollTop=msgs.scrollHeight; }
+  var timer=setInterval(function(){
+    i+=step;
+    if(i>=text.length){ clearInterval(timer); finish(); return; }
+    b.innerHTML=mdToHtml(text.slice(0,i))+'<span class="type-cursor"></span>';
+    msgs.scrollTop=msgs.scrollHeight;
+  },16);
+  d.addEventListener('click',function(){ if(!done){ clearInterval(timer); finish(); } });
+}
+if(!window._chatQchipWired){ window._chatQchipWired=true; document.addEventListener('click',function(e){ var b=e.target.closest&&e.target.closest('.chat-qchip'); if(b){ e.preventDefault(); sendChat(b.getAttribute('data-q')); } }); }
 
 // ====== PER-JOB AI ANALYSIS ======
 var lastAiOutput='';
