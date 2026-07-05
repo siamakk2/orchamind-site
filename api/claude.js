@@ -17,7 +17,7 @@ module.exports = async function handler(req, res) {
     // Cap tokens hard for demo cost control
     const maxTokens = Math.min(body.max_tokens || 800, 8000);
     const messages = Array.isArray(body.messages) ? body.messages : [];
-    const system = (body.system || '').toString().slice(0, 6000);
+    const system = (body.system || '').toString().slice(0, 12000);
 
     const r = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
