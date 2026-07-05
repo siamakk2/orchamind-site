@@ -1488,21 +1488,26 @@ function buildContext(){
 }
 
 function callClaude(systemPrompt, userMessage, cb, errCb, maxTokens){
-  fetch("/api/claude",{
-    method:"POST",
-    headers:{"Content-Type":"application/json"},
-    body:JSON.stringify({
-      model:"claude-sonnet-4-6",
-      max_tokens:maxTokens||1200,
-      system:systemPrompt,
-      messages:[{role:"user",content:userMessage}]
-    })
-  }).then(function(r){return r.json();}).then(function(data){
-    if(data&&data.error){errCb&&errCb(data.error);return;}
-    var text="";
-    if(data&&data.content){text=data.content.filter(function(b){return b.type==="text";}).map(function(b){return b.text;}).join("\n");}
-    if(text){cb(text);}else{errCb&&errCb("No response from AI");}
-  }).catch(function(e){errCb&&errCb(e.message);});
+  var mt=maxTokens||4000, acc="", tries=0;
+  function go(messages){
+    fetch("/api/claude",{
+      method:"POST",
+      headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({ model:"claude-sonnet-4-6", max_tokens:mt, system:systemPrompt, messages:messages })
+    }).then(function(r){return r.json();}).then(function(data){
+      if(data&&data.error){errCb&&errCb(data.error);return;}
+      var text="";
+      if(data&&data.content){text=data.content.filter(function(b){return b.type==="text";}).map(function(b){return b.text;}).join("\n");}
+      acc+=text;
+      if(data&&data.stop_reason==="max_tokens"&&tries<3&&text){
+        tries++;
+        go(messages.concat([{role:"assistant",content:text},{role:"user",content:"Continue your previous answer exactly where it left off. Do not repeat anything you already wrote."}]));
+      } else {
+        if(acc){cb(acc);}else{errCb&&errCb("No response from AI");}
+      }
+    }).catch(function(e){errCb&&errCb(e.message);});
+  }
+  go([{role:"user",content:userMessage}]);
 }
 
 function mdToHtml(t){
