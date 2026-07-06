@@ -475,6 +475,24 @@ button:active, .btn:active, .btn-ghost:active, .tab:active, [role="button"]:acti
 .sf-logrow button{border:1px solid var(--line,#e1e8f0);background:#fff;border-radius:7px;padding:6px 12px;font-size:12px;font-weight:600;cursor:pointer;color:var(--navy,#0A1628);margin-left:6px;}
 .sf-del{color:#D32F2F!important;}
 </style>
+<style id="pu-css">
+.pu-add{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px;}
+.pu-add input{border:1px solid var(--line,#e1e8f0);border-radius:8px;padding:9px 11px;font-size:13px;flex:1;min-width:140px;}
+.pu-prog{font-size:13px;color:var(--muted,#5A6B7D);margin-bottom:12px;}
+.pu-prog b{color:var(--navy,#0A1628);}
+.pu-bar{height:7px;background:var(--line,#e1e8f0);border-radius:4px;margin-top:5px;overflow:hidden;max-width:280px;}
+.pu-bar div{height:100%;background:#2E9B5B;}
+.pu-row{display:flex;align-items:center;gap:11px;background:#fff;border:1px solid var(--line,#e1e8f0);border-radius:9px;padding:10px 12px;margin-bottom:6px;}
+.pu-row.done{opacity:.65;}
+.pu-row.done .pu-desc{text-decoration:line-through;}
+.pu-check{width:24px;height:24px;border:2px solid #cbd5e1;border-radius:6px;background:#fff;cursor:pointer;color:#fff;font-weight:800;flex:none;font-size:13px;line-height:1;}
+.pu-row.done .pu-check{background:#2E9B5B;border-color:#2E9B5B;}
+.pu-body{flex:1;}
+.pu-desc{font-size:13.5px;color:var(--navy,#0A1628);font-weight:500;}
+.pu-loc{font-size:11.5px;color:var(--muted,#5A6B7D);margin-top:2px;}
+.pu-del{border:none;background:none;color:#C4CFDB;font-size:18px;cursor:pointer;padding:0 2px;}
+.pu-del:hover{color:#D32F2F;}
+</style>
 </head>
 <body class="locked">
 <div id="demoBanner" style="position:relative;z-index:1;background:linear-gradient(90deg,#0A1628,#1565C0);color:#fff;padding:10px 16px;display:flex;align-items:center;justify-content:center;gap:16px;flex-wrap:wrap;font-family:'Outfit',sans-serif;font-size:14px;box-shadow:0 2px 12px rgba(0,0,0,0.2);">
@@ -558,6 +576,7 @@ button:active, .btn:active, .btn-ghost:active, .tab:active, [role="button"]:acti
   <button class="tab" data-tab="pricebook"><svg class="ti" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>Pricebook</button>
       <button class="tab" data-tab="selections"><svg class="ti" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>Selections</button>
       <button class="tab" data-tab="safety"><svg class="ti" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="M9 12l2 2 4-4"/></svg>Safety</button>
+      <button class="tab" data-tab="punch"><svg class="ti" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3 8-8"/><path d="M20 12v6a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h9"/></svg>Punch List</button>
       <button class="tab" data-tab="dispatch"><svg class="ti" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>Dispatch</button>
       <button class="tab" data-tab="schedule"><svg class="ti" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>Schedule</button>
   <button class="tab" data-tab="log"><svg class="ti" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>Site Log</button>
@@ -835,6 +854,13 @@ button:active, .btn:active, .btn-ghost:active, .tab:active, [role="button"]:acti
     <div id="sfCurrent"></div>
     <div class="sf-log-h">Toolbox Talk Log</div>
     <div id="sfLog"></div>
+  </div>
+  <div class="panel" id="panel-punch">
+    <div class="panel-head"><h2>Punch List</h2><div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;"><select id="puJob" onchange="renderPunch()"></select><button class="btn" onclick="aiSuggestPunch()">✨ AI Suggest</button><button class="btn btn-ghost" onclick="printPunchList()">📄 Print</button></div></div>
+    <div class="pu-add"><input id="puDesc" placeholder="Item to fix — e.g. Touch up paint in hallway"><input id="puLoc" placeholder="Location / room" style="max-width:160px"><button class="btn" onclick="punchAdd()">Add</button></div>
+    <div id="puMsg" class="est-ai-msg"></div>
+    <div id="puProgress"></div>
+    <div id="puList"></div>
   </div>
   <div class="panel" id="panel-dispatch">
     <div class="panel-head"><h2>Dispatch Board</h2></div>
@@ -1500,6 +1526,7 @@ var selections=[
   {id:'sl2',jobId:'j1',jobName:'Sonoma Vista Residence',category:'Kitchen countertops',options:[{label:'Laminate',price:2200},{label:'Granite',price:5400},{label:'Quartz',price:6800}],chosen:'',status:'pending'}
 ];
 var safety=[{id:'sf1',date:'2026-06-20',jobId:'j4',jobName:'Calistoga Pool & Deck',topic:'Excavation & trenching safety',hazards:['Cave-in / soil collapse','Underground utilities','Heavy equipment near crew'],controls:['Slope or bench trenches deeper than 5 ft','Call 811 to locate utilities before digging','Keep crew clear of equipment swing radius'],keyPoints:['Never enter an unprotected trench','Use a spotter when backing equipment','Re-inspect the trench daily and after rain'],status:'logged'}];
+var punch=[{id:'pu1',jobId:'j2',jobName:'Valley View Estate',desc:'Touch up paint on north hallway wall',location:'Hallway',status:'open'},{id:'pu2',jobId:'j2',jobName:'Valley View Estate',desc:'Adjust master closet door — rubs at top',location:'Master bedroom',status:'open'},{id:'pu3',jobId:'j2',jobName:'Valley View Estate',desc:'Replace cracked switch plate',location:'Kitchen',status:'done'}];
 var crew=[
   {id:'c1',name:'Mike Torres',role:'Lead Framer',assign:'Sonoma Vista Residence',status:'on-site'},
   {id:'c2',name:'Danny Ruiz',role:'Carpenter',assign:'Valley View Estate',status:'on-site'},
@@ -1534,7 +1561,7 @@ function writeLocal(){try{localStorage.setItem(dataKey(),JSON.stringify({saved:t
 function markPending(){_pendingSync=true;try{localStorage.setItem(pendKey(),'1');}catch(e){}updateSyncPill();}
 function markSynced(){_pendingSync=false;try{localStorage.removeItem(pendKey());}catch(e){}updateSyncPill();}
 function pushToServer(){
-  fetch('/api/data',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({data:{saved:true,jobs:jobs,crew:crew,hours:hours,subs:subs,estimates:estimates,sketches:sketches,logs:logs,schedule:schedule,changeOrders:changeOrders,expenses:expenses,leads:leads,plans:plans,pricebook:pricebook,selections:selections,safety:safety}})})
+  fetch('/api/data',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({data:{saved:true,jobs:jobs,crew:crew,hours:hours,subs:subs,estimates:estimates,sketches:sketches,logs:logs,schedule:schedule,changeOrders:changeOrders,expenses:expenses,leads:leads,plans:plans,pricebook:pricebook,selections:selections,safety:safety,punch:punch}})})
     .then(function(r){return r.json();})
     .then(function(o){if(o&&!o.error){_dbReady=true;markSynced();}else{markPending();}})
     .catch(function(){markPending();});
@@ -1553,7 +1580,7 @@ function load(cb){
   // 1) OFFLINE-FIRST: recall unsynced flag + hydrate instantly from this device
   try{_pendingSync=(localStorage.getItem(pendKey())==='1');}catch(e){_pendingSync=false;}
   var localHad=false;
-  try{var ls=localStorage.getItem(dataKey());if(ls){var d=JSON.parse(ls);if(d&&d.saved){jobs=Array.isArray(d.jobs)?d.jobs:jobs;crew=Array.isArray(d.crew)?d.crew:crew;pricebook=Array.isArray(d.pricebook)?d.pricebook:pricebook;selections=Array.isArray(d.selections)?d.selections:selections;safety=Array.isArray(d.safety)?d.safety:safety;hours=Array.isArray(d.hours)?d.hours:hours;subs=Array.isArray(d.subs)?d.subs:subs;estimates=Array.isArray(d.estimates)?d.estimates:estimates;sketches=Array.isArray(d.sketches)?d.sketches:sketches;logs=Array.isArray(d.logs)?d.logs:logs;schedule=Array.isArray(d.schedule)?d.schedule:schedule;changeOrders=Array.isArray(d.changeOrders)?d.changeOrders:changeOrders;expenses=Array.isArray(d.expenses)?d.expenses:expenses;leads=Array.isArray(d.leads)?d.leads:leads;plans=(Array.isArray(d.plans)&&d.plans.length)?d.plans:plans;localHad=true;}}}catch(e){}
+  try{var ls=localStorage.getItem(dataKey());if(ls){var d=JSON.parse(ls);if(d&&d.saved){jobs=Array.isArray(d.jobs)?d.jobs:jobs;crew=Array.isArray(d.crew)?d.crew:crew;pricebook=Array.isArray(d.pricebook)?d.pricebook:pricebook;selections=Array.isArray(d.selections)?d.selections:selections;safety=Array.isArray(d.safety)?d.safety:safety;punch=Array.isArray(d.punch)?d.punch:punch;hours=Array.isArray(d.hours)?d.hours:hours;subs=Array.isArray(d.subs)?d.subs:subs;estimates=Array.isArray(d.estimates)?d.estimates:estimates;sketches=Array.isArray(d.sketches)?d.sketches:sketches;logs=Array.isArray(d.logs)?d.logs:logs;schedule=Array.isArray(d.schedule)?d.schedule:schedule;changeOrders=Array.isArray(d.changeOrders)?d.changeOrders:changeOrders;expenses=Array.isArray(d.expenses)?d.expenses:expenses;leads=Array.isArray(d.leads)?d.leads:leads;plans=(Array.isArray(d.plans)&&d.plans.length)?d.plans:plans;localHad=true;}}}catch(e){}
   // 2) reach the shared database, but NEVER block the app
   var timer=setTimeout(function(){updateSyncPill();finish();},3000);
   fetch('/api/data').then(function(r){return r.json();}).then(function(out){
@@ -1566,7 +1593,7 @@ function load(cb){
       crew=Array.isArray(out.data.crew)?out.data.crew:[];
       hours=Array.isArray(out.data.hours)?out.data.hours:[];
       subs=Array.isArray(out.data.subs)?out.data.subs:[];
-      estimates=Array.isArray(out.data.estimates)?out.data.estimates:[];pricebook=Array.isArray(out.data.pricebook)?out.data.pricebook:pricebook;selections=Array.isArray(out.data.selections)?out.data.selections:selections;safety=Array.isArray(out.data.safety)?out.data.safety:safety;
+      estimates=Array.isArray(out.data.estimates)?out.data.estimates:[];pricebook=Array.isArray(out.data.pricebook)?out.data.pricebook:pricebook;selections=Array.isArray(out.data.selections)?out.data.selections:selections;safety=Array.isArray(out.data.safety)?out.data.safety:safety;punch=Array.isArray(out.data.punch)?out.data.punch:punch;
       sketches=Array.isArray(out.data.sketches)?out.data.sketches:[];
       logs=Array.isArray(out.data.logs)?out.data.logs:[];
       schedule=Array.isArray(out.data.schedule)?out.data.schedule:[];
@@ -1973,6 +2000,7 @@ document.querySelectorAll('.tab').forEach(function(t){
     if(t.dataset.tab==='log'){renderLog();}
     if(t.dataset.tab==='schedule'){renderSchedule();}
     if(t.dataset.tab==='dispatch'){renderDispatch();}
+    if(t.dataset.tab==='punch'){renderPunch();}
     if(t.dataset.tab==='safety'){renderSafety();}
     if(t.dataset.tab==='pricebook'){renderPricebook();}
     if(t.dataset.tab==='selections'){renderSelections();}
@@ -1991,7 +2019,7 @@ function _dl(fn,txt,mime){var b=new Blob([txt],{type:mime||'text/plain'});var u=
 function _csvCell(v){v=(v==null?'':String(v));if(/[",\n]/.test(v))v='"'+v.replace(/"/g,'""')+'"';return v;}
 function _csv(rows){if(!rows||!rows.length)return '';var cols=Object.keys(rows[0]);var out=cols.join(',')+'\n';rows.forEach(function(r){out+=cols.map(function(k){return _csvCell(r[k]);}).join(',')+'\n';});return out;}
 function _stamp(){return new Date().toISOString().split('T')[0];}
-function exportJSON(){var data={exportedAt:new Date().toISOString(),company:(CURRENT_USER&&CURRENT_USER.name)||'',jobs:jobs,crew:crew,hours:hours,subs:subs,estimates:estimates,sketches:sketches,logs:logs,schedule:schedule,changeOrders:changeOrders,expenses:expenses,leads:leads,plans:plans,pricebook:pricebook,selections:selections,safety:safety};_dl('orchamind-export-'+_stamp()+'.json',JSON.stringify(data,null,2),'application/json');}
+function exportJSON(){var data={exportedAt:new Date().toISOString(),company:(CURRENT_USER&&CURRENT_USER.name)||'',jobs:jobs,crew:crew,hours:hours,subs:subs,estimates:estimates,sketches:sketches,logs:logs,schedule:schedule,changeOrders:changeOrders,expenses:expenses,leads:leads,plans:plans,pricebook:pricebook,selections:selections,safety:safety,punch:punch};_dl('orchamind-export-'+_stamp()+'.json',JSON.stringify(data,null,2),'application/json');}
 function exportCSV(which){var map={jobs:jobs,crew:crew,hours:hours,subs:subs};var rows=map[which]||[];if(!rows.length){alert('Nothing to export there yet.');return;}_dl('orchamind-'+which+'-'+_stamp()+'.csv',_csv(rows),'text/csv');}
 function renderExportCounts(){var el=document.getElementById('exportCounts');if(!el)return;el.textContent=jobs.length+' projects \u00b7 '+hours.length+' timesheet entries \u00b7 '+crew.length+' crew \u00b7 '+subs.length+' subcontractors';}
 document.querySelectorAll('.modal-bg').forEach(function(m){m.addEventListener('click',function(e){if(e.target===m)closeModal(m.id);});});
@@ -2036,7 +2064,7 @@ function clearAllData(){
 
 // Explicit, non-debounced save that reports success/failure
 function saveNow(cb){
-  fetch('/api/data',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({data:{saved:true,jobs:jobs,crew:crew,hours:hours,subs:subs,estimates:estimates,sketches:sketches,logs:logs,schedule:schedule,changeOrders:changeOrders,expenses:expenses,leads:leads,plans:plans,pricebook:pricebook,selections:selections,safety:safety}})})
+  fetch('/api/data',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({data:{saved:true,jobs:jobs,crew:crew,hours:hours,subs:subs,estimates:estimates,sketches:sketches,logs:logs,schedule:schedule,changeOrders:changeOrders,expenses:expenses,leads:leads,plans:plans,pricebook:pricebook,selections:selections,safety:safety,punch:punch}})})
     .then(function(r){return r.json();})
     .then(function(o){var ok=o&&!o.error;if(ok)_dbReady=true;if(cb)cb(ok);})
     .catch(function(){if(cb)cb(false);});
@@ -3763,6 +3791,57 @@ function printToolboxTalk(id){
    sec('Hazards',t.hazards)+sec('Controls / precautions',t.controls)+sec('Key talking points',t.keyPoints)+
    '<h3>Attendance &amp; sign-off</h3><table><thead><tr><th style="width:50%">Print name</th><th>Signature</th></tr></thead><tbody>'+signRows.replace(/<td>/g,'<td class="sig">')+'</tbody></table>'+
    '<div style="margin-top:16px;font-size:12.5px;">Supervisor: __________________________  Signature: __________________________</div>'+
+   '<div class="ft">Prepared by '+esc(company)+' \u00b7 powered by Orchamind</div></body></html>';
+  w.document.write(doc);w.document.close();w.focus();setTimeout(function(){try{w.print();}catch(e){}},400);
+}
+function _puJobId(){var el=document.getElementById('puJob');return el?el.value:'';}
+function renderPunch(){
+  var sel=document.getElementById('puJob');
+  if(sel){var cur=sel.value;sel.innerHTML=(window.jobs||[]).map(function(j){return '<option value="'+esc(j.id)+'">'+esc(j.name)+'</option>';}).join('');if(cur){sel.value=cur;}else if((window.jobs||[]).length){sel.value=window.jobs[0].id;}}
+  var jid=_puJobId();
+  var items=(window.punch||[]).filter(function(p){return p.jobId===jid;});
+  var done=items.filter(function(p){return p.status==='done';}).length;
+  var prog=document.getElementById('puProgress');
+  if(prog)prog.innerHTML=items.length?('<div class="pu-prog"><b>'+done+'</b> of <b>'+items.length+'</b> complete<div class="pu-bar"><div style="width:'+Math.round(done/items.length*100)+'%"></div></div></div>'):'';
+  var list=document.getElementById('puList');if(!list)return;
+  if(!items.length){list.innerHTML='<div class="pb-empty">No punch items for this job. Add one above, or tap \u2728 AI Suggest to generate a closeout punch list.</div>';return;}
+  list.innerHTML=items.map(function(p){return '<div class="pu-row'+(p.status==='done'?' done':'')+'"><button class="pu-check" onclick="punchToggle(\''+p.id+'\')">'+(p.status==='done'?'\u2713':'')+'</button><div class="pu-body"><div class="pu-desc">'+esc(p.desc)+'</div>'+(p.location?'<div class="pu-loc">'+esc(p.location)+'</div>':'')+'</div><button class="pu-del" onclick="punchDel(\''+p.id+'\')">\u00d7</button></div>';}).join('');
+}
+function punchAdd(){
+  var jid=_puJobId();var j=(window.jobs||[]).find(function(x){return x.id===jid;});
+  var desc=document.getElementById('puDesc').value.trim();if(!desc)return;
+  window.punch=window.punch||[];window.punch.push({id:uid(),jobId:jid,jobName:j?j.name:'',desc:desc,location:document.getElementById('puLoc').value.trim(),status:'open'});
+  save();document.getElementById('puDesc').value='';document.getElementById('puLoc').value='';renderPunch();
+}
+function punchToggle(id){var p=(window.punch||[]).find(function(x){return x.id===id;});if(!p)return;p.status=(p.status==='done'?'open':'done');save();renderPunch();}
+function punchDel(id){punch=(window.punch||[]).filter(function(x){return x.id!==id;});save();renderPunch();}
+function aiSuggestPunch(){
+  var jid=_puJobId();var j=(window.jobs||[]).find(function(x){return x.id===jid;});
+  var msg=document.getElementById('puMsg');
+  if(!j){if(msg)msg.textContent='Pick a job first.';return;}
+  if(msg)msg.textContent='Generating a closeout punch list with AI...';
+  var sys='You are a construction superintendent doing a final walkthrough. Generate a realistic closeout punch list of common deficiency and finish items to fix before final sign-off for the described project. Return ONLY JSON, no markdown or commentary: {"items":[{"desc":"string","location":"string"}]} with 8-15 concise, specific items.';
+  callClaude(sys,'Project: '+j.name+' ('+(j.location||'')+'), phase: '+(j.status||'')+'.',function(text){
+    var obj=_estParseJSON(text);
+    if(!obj||!obj.items||!obj.items.length){if(msg)msg.textContent='Could not generate - try again.';return;}
+    window.punch=window.punch||[];
+    obj.items.forEach(function(i){window.punch.push({id:uid(),jobId:j.id,jobName:j.name,desc:i.desc||'',location:i.location||'',status:'open'});});
+    save();renderPunch();if(msg)msg.textContent='Added '+obj.items.length+' punch items.';
+  },function(err){if(msg)msg.textContent='AI error: '+err;});
+}
+function printPunchList(){
+  var jid=_puJobId();var j=(window.jobs||[]).find(function(x){return x.id===jid;});
+  var items=(window.punch||[]).filter(function(p){return p.jobId===jid;});
+  if(!items.length){alert('No punch items to print for this job.');return;}
+  var company=(CURRENT_USER&&CURRENT_USER.name)||'Your Company';
+  var done=items.filter(function(p){return p.status==='done';}).length;
+  var rows=items.map(function(p,i){return '<tr class="'+(p.status==='done'?'d':'')+'"><td class="c">'+(i+1)+'</td><td>'+esc(p.desc)+'</td><td>'+esc(p.location||'')+'</td><td class="c">'+(p.status==='done'?'\u2713 Done':'\u2610')+'</td></tr>';}).join('');
+  var w=window.open('','_blank');if(!w){alert('Please allow pop-ups.');return;}
+  var doc='<!doctype html><html><head><meta charset="utf-8"><title>Punch List - '+esc(j?j.name:'')+'</title><style>*{box-sizing:border-box;}body{font-family:Arial,Helvetica,sans-serif;color:#0A1628;margin:34px;}.hd{border-bottom:3px solid #1565C0;padding-bottom:12px;margin-bottom:8px;display:flex;justify-content:space-between;align-items:flex-end;}.co{font-size:20px;font-weight:800;color:#1565C0;}.mt{font-size:12px;color:#5A6B7D;text-align:right;}h1{font-size:22px;margin:12px 0 2px;}.sub{color:#5A6B7D;font-size:13px;margin-bottom:14px;}table{width:100%;border-collapse:collapse;}th,td{border:1px solid #C9D4E0;padding:8px 10px;font-size:12.5px;text-align:left;}th{background:#EEF3F8;text-transform:uppercase;font-size:10.5px;letter-spacing:.04em;}td.c,th.c{text-align:center;width:44px;}tr.d td{color:#8A9AAC;}.ft{margin-top:20px;font-size:11px;color:#9aa7b4;text-align:center;}</style></head><body>'+
+   '<div class="hd"><div class="co">'+esc(company)+'</div><div class="mt">Punch List<br>Date: '+(new Date().toISOString().split("T")[0])+(j?('<br>Job: '+esc(j.name)):'')+'</div></div>'+
+   '<h1>Punch List</h1><div class="sub">'+done+' of '+items.length+' items complete'+(j&&j.client?(' \u00b7 '+esc(j.client)):'')+'</div>'+
+   '<table><thead><tr><th class="c">#</th><th>Item to correct</th><th>Location</th><th class="c">Status</th></tr></thead><tbody>'+rows+'</tbody></table>'+
+   '<div style="margin-top:20px;font-size:12.5px;">Completed by: __________________________  Accepted by (client): __________________________  Date: __________</div>'+
    '<div class="ft">Prepared by '+esc(company)+' \u00b7 powered by Orchamind</div></body></html>';
   w.document.write(doc);w.document.close();w.focus();setTimeout(function(){try{w.print();}catch(e){}},400);
 }
