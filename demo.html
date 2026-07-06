@@ -402,6 +402,25 @@ button:active, .btn:active, .btn-ghost:active, .tab:active, [role="button"]:acti
 .gbb-present{margin-top:12px;width:100%;padding:11px;border-radius:8px;border:1.5px solid #1565C0;background:#EAF2FD;color:#1565C0;font-weight:700;cursor:pointer;font-size:13px;}
 @media(max-width:560px){.gbb-tiers{grid-template-columns:1fr;}}
 </style>
+<style id="disp-css">
+.disp-summary{display:flex;gap:16px;flex-wrap:wrap;margin:2px 0 16px;font-size:12.5px;color:var(--muted,#5A6B7D);}
+.disp-stat b{color:var(--navy,#0A1628);font-size:15px;}
+.dp{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:5px;vertical-align:middle;}
+.dp.available{background:#8A9AAC;}.dp.enroute{background:#2D7FF9;}.dp.onsite{background:#F9A825;}.dp.done{background:#2E9B5B;}
+.disp-board{display:grid;grid-template-columns:repeat(auto-fill,minmax(228px,1fr));gap:12px;}
+.disp-col{background:var(--surface-2,#f4f7fa);border:1px solid var(--line,#e1e8f0);border-radius:12px;padding:10px;}
+.disp-col.available{background:#FFF6E4;border-color:#F5D48A;}
+.disp-col-h{display:flex;justify-content:space-between;align-items:center;gap:8px;font-weight:700;color:var(--navy,#0A1628);font-size:13px;margin-bottom:8px;padding:0 2px;}
+.disp-col-h span:last-child{background:var(--navy,#0A1628);color:#fff;border-radius:20px;padding:1px 9px;font-size:11px;flex:none;}
+.disp-card{background:#fff;border:1px solid var(--line,#e1e8f0);border-radius:10px;padding:11px;margin-bottom:8px;box-shadow:0 1px 4px rgba(10,22,40,.05);}
+.disp-job{font-weight:700;font-size:13.5px;color:var(--navy,#0A1628);}
+.disp-meta{font-size:11.5px;color:var(--muted,#5A6B7D);margin-top:2px;}
+.disp-pill{margin-top:8px;width:100%;border:none;border-radius:7px;padding:7px;font-weight:700;font-size:12px;cursor:pointer;color:#fff;}
+.disp-pill.available{background:#8A9AAC;}.disp-pill.enroute{background:#2D7FF9;}.disp-pill.onsite{background:#F9A825;color:#0A1628;}.disp-pill.done{background:#2E9B5B;}
+.disp-assign{margin-top:6px;width:100%;border:1px solid var(--line,#e1e8f0);border-radius:7px;padding:6px;font-size:12px;background:#fff;}
+.disp-empty{font-size:11.5px;color:#9aa7b4;padding:6px 2px;}
+.disp-empty-all{grid-column:1/-1;text-align:center;color:var(--muted,#5A6B7D);padding:34px;font-size:13.5px;}
+</style>
 </head>
 <body class="locked">
 <div id="demoBanner" style="position:relative;z-index:1;background:linear-gradient(90deg,#0A1628,#1565C0);color:#fff;padding:10px 16px;display:flex;align-items:center;justify-content:center;gap:16px;flex-wrap:wrap;font-family:'Outfit',sans-serif;font-size:14px;box-shadow:0 2px 12px rgba(0,0,0,0.2);">
@@ -482,7 +501,8 @@ button:active, .btn:active, .btn-ghost:active, .tab:active, [role="button"]:acti
   <button class="tab" data-tab="estimates" data-mgronly><svg class="ti" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M9 13h6"/><path d="M9 17h6"/></svg>Estimates</button>
   <div class="nav-sec">Work</div>
   <button class="tab" data-tab="jobs"><svg class="ti" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 7h20v13a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1z"/><path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>Jobs</button>
-  <button class="tab" data-tab="schedule"><svg class="ti" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>Schedule</button>
+  <button class="tab" data-tab="dispatch"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>Dispatch</button>
+      <button class="tab" data-tab="schedule"><svg class="ti" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>Schedule</button>
   <button class="tab" data-tab="log"><svg class="ti" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>Site Log</button>
   <button class="tab" data-tab="sketches"><svg class="ti" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3h7v7H3z"/><path d="M14 3h7v4h-7z"/><path d="M14 11h7v10h-7z"/><path d="M3 14h7v7H3z"/></svg>Plans</button>
   <button class="tab" data-tab="changes" data-mgronly><svg class="ti" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M9 15l2 2 4-4"/></svg>Changes</button>
@@ -740,6 +760,11 @@ button:active, .btn:active, .btn-ghost:active, .tab:active, [role="button"]:acti
 .sch-up-b span{display:block;color:var(--muted);font-size:12px;margin-top:2px;}
 .sch-up-empty{color:var(--muted);font-size:13px;background:#fff;border:1px dashed var(--line);border-radius:10px;padding:14px;margin-bottom:16px;line-height:1.5;}
 </style>
+  <div class="panel" id="panel-dispatch">
+    <div class="panel-head"><h2>Dispatch Board</h2></div>
+    <div id="dispSummary" class="disp-summary"></div>
+    <div id="dispBoard" class="disp-board"></div>
+  </div>
   <div class="panel" id="panel-schedule">
     <div class="panel-head">
       <h2>Schedule</h2>
@@ -1855,6 +1880,7 @@ document.querySelectorAll('.tab').forEach(function(t){
     if(t.dataset.tab==='sketches'){renderSketches();}
     if(t.dataset.tab==='log'){renderLog();}
     if(t.dataset.tab==='schedule'){renderSchedule();}
+    if(t.dataset.tab==='dispatch'){renderDispatch();}
     if(t.dataset.tab==='changes'){renderChangeOrders();}
     if(t.dataset.tab==='costs'){renderCosts();}
     if(t.dataset.tab==='leads'){renderLeads();}
@@ -3459,6 +3485,37 @@ function renderUpcoming(){
       '<div class="sch-up-b"><b>'+esc(s.jobName||'Job')+'</b> '+_schBadge(s.status)+'<span>'+esc(_schTimeStr(s))+(crew.length?(' \u00b7 \ud83d\udc77 '+esc(crew.join(', '))):'')+'</span></div></div>';
   }).join('');
   host.innerHTML='<div class="sch-up-h">Upcoming</div>'+rows;
+}
+var _DISP=[['available','Available'],['enroute','En route'],['onsite','On site'],['done','Done']];
+function _dispStatusOf(c){ if(c.dispatch)return c.dispatch; if(c.status==='on-site')return 'onsite'; return 'available'; }
+function _dispCycle(id){ var c=(window.crew||[]).find(function(x){return x.id===id;}); if(!c)return; var cur=_dispStatusOf(c); var i=_DISP.map(function(d){return d[0];}).indexOf(cur); c.dispatch=_DISP[(i+1)%_DISP.length][0]; save(); renderDispatch(); }
+function _dispReassign(id,job){ var c=(window.crew||[]).find(function(x){return x.id===id;}); if(!c)return; c.assign=job||''; save(); renderDispatch(); }
+function renderDispatch(){
+  var board=document.getElementById('dispBoard'); if(!board)return;
+  var crew=(window.crew||[]); var jobs=(window.jobs||[]);
+  var counts={available:0,enroute:0,onsite:0,done:0}; crew.forEach(function(c){counts[_dispStatusOf(c)]++;});
+  var sm=document.getElementById('dispSummary');
+  if(sm)sm.innerHTML='<div class="disp-stat"><b>'+crew.length+'</b> crew</div>'+_DISP.map(function(d){return '<div class="disp-stat"><span class="dp '+d[0]+'"></span>'+counts[d[0]]+' '+d[1]+'</div>';}).join('');
+  function jobSelect(c){
+    var opts='<option value=""'+((c.assign||'')?'':' selected')+'>\u2014 Available \u2014</option>';
+    jobs.forEach(function(j){ opts+='<option value="'+esc(j.name)+'"'+(((c.assign||'')===j.name)?' selected':'')+'>'+esc(j.name)+'</option>'; });
+    return opts;
+  }
+  function crewCard(c){
+    var st=_dispStatusOf(c); var stLbl=(_DISP.filter(function(d){return d[0]===st;})[0]||_DISP[0])[1];
+    return '<div class="disp-card"><div class="disp-job">'+esc(c.name)+'</div><div class="disp-meta">'+esc(c.role||'')+'</div>'+
+      '<button class="disp-pill '+st+'" onclick="_dispCycle(\''+c.id+'\')">'+stLbl+' \u2192</button>'+
+      '<select class="disp-assign" onchange="_dispReassign(\''+c.id+'\',this.value)">'+jobSelect(c)+'</select></div>';
+  }
+  var html='';
+  jobs.forEach(function(j){
+    var on=crew.filter(function(c){return (c.assign||'')===j.name;});
+    html+='<div class="disp-col"><div class="disp-col-h"><span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">'+esc(j.name)+'</span><span>'+on.length+'</span></div>'+(on.length?on.map(crewCard).join(''):'<div class="disp-empty">No crew assigned</div>')+'</div>';
+  });
+  var avail=crew.filter(function(c){return !(c.assign||'')||!jobs.some(function(j){return j.name===c.assign;});});
+  html+='<div class="disp-col available"><div class="disp-col-h"><span>Available</span><span>'+avail.length+'</span></div>'+(avail.length?avail.map(crewCard).join(''):'<div class="disp-empty">Everyone dispatched</div>')+'</div>';
+  if(!crew.length)html='<div class="disp-empty-all">No crew yet. Add crew in the Crew tab, then dispatch them to jobs here.</div>';
+  board.innerHTML=html;
 }
 function renderSchedule(){
   renderUpcoming();
