@@ -439,6 +439,24 @@ button:active, .btn:active, .btn-ghost:active, .tab:active, [role="button"]:acti
 .pbpick-item:hover{border-color:#2D7FF9;background:#F5F9FF;}
 .pbpick-item span{float:right;color:var(--muted,#5A6B7D);}
 </style>
+<style id="sel-css">
+#selJob{border:1px solid var(--line,#e1e8f0);border-radius:8px;padding:8px 10px;font-size:13px;max-width:210px;background:#fff;}
+.sel-card{background:#fff;border:1px solid var(--line,#e1e8f0);border-radius:12px;padding:14px;margin-bottom:12px;}
+.sel-h{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;gap:10px;}
+.sel-cat{font-weight:700;font-size:15px;color:var(--navy,#0A1628);}
+.sel-badge{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;padding:3px 10px;border-radius:20px;flex:none;}
+.sel-badge.pending{background:#FFF3D6;color:#B8860B;}
+.sel-badge.approved{background:#E4F6EC;color:#2E9B5B;}
+.sel-opts{display:flex;flex-direction:column;gap:7px;}
+.sel-opt{display:flex;justify-content:space-between;align-items:center;background:#F7FAFD;border:1.5px solid var(--line,#e1e8f0);border-radius:9px;padding:10px 13px;cursor:pointer;font-size:13.5px;color:var(--navy,#0A1628);text-align:left;width:100%;}
+.sel-opt span{font-weight:700;color:var(--muted,#5A6B7D);}
+.sel-opt.on{border-color:#2D7FF9;background:#EAF2FD;}
+.sel-opt.on span{color:#1565C0;}
+.sel-acts{display:flex;gap:8px;margin-top:11px;align-items:center;}
+.sel-acts button{border:1px solid var(--line,#e1e8f0);background:#fff;border-radius:8px;padding:8px 14px;font-size:12.5px;font-weight:600;cursor:pointer;color:var(--navy,#0A1628);}
+.sel-acts button:disabled{opacity:.5;cursor:not-allowed;}
+.sel-del{color:#D32F2F!important;margin-left:auto;}
+</style>
 </head>
 <body class="locked">
 <div id="demoBanner" style="position:relative;z-index:1;background:linear-gradient(90deg,#0A1628,#1565C0);color:#fff;padding:10px 16px;display:flex;align-items:center;justify-content:center;gap:16px;flex-wrap:wrap;font-family:'Outfit',sans-serif;font-size:14px;box-shadow:0 2px 12px rgba(0,0,0,0.2);">
@@ -520,6 +538,7 @@ button:active, .btn:active, .btn-ghost:active, .tab:active, [role="button"]:acti
   <div class="nav-sec">Work</div>
   <button class="tab" data-tab="jobs"><svg class="ti" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 7h20v13a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1z"/><path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>Jobs</button>
   <button class="tab" data-tab="pricebook"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>Pricebook</button>
+      <button class="tab" data-tab="selections"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>Selections</button>
       <button class="tab" data-tab="dispatch"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>Dispatch</button>
       <button class="tab" data-tab="schedule"><svg class="ti" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>Schedule</button>
   <button class="tab" data-tab="log"><svg class="ti" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>Site Log</button>
@@ -784,6 +803,11 @@ button:active, .btn:active, .btn-ghost:active, .tab:active, [role="button"]:acti
     <div class="pb-add"><input id="pbName" placeholder="Item / service"><input id="pbCat" placeholder="Category" list="pbCats"><input id="pbUnit" placeholder="Unit" style="max-width:110px"><input id="pbPrice" type="number" placeholder="Price" style="max-width:110px"><button class="btn" onclick="pbAdd()">Add</button><datalist id="pbCats"></datalist></div>
     <div id="pbMsg" class="est-ai-msg"></div>
     <div id="pbList"></div>
+  </div>
+  <div class="panel" id="panel-selections">
+    <div class="panel-head"><h2>Selections</h2><div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;"><select id="selJob" onchange="renderSelections()"></select><button class="btn" onclick="aiSuggestSelections()">✨ AI Suggest</button><button class="btn btn-ghost" onclick="printSelectionSheet()">📄 Client Sheet</button></div></div>
+    <div id="selMsg" class="est-ai-msg"></div>
+    <div id="selList"></div>
   </div>
   <div class="panel" id="panel-dispatch">
     <div class="panel-head"><h2>Dispatch Board</h2></div>
@@ -1444,6 +1468,10 @@ var pricebook=[
   {id:'pb7',category:'Permits',name:'Building permit',unit:'ea',price:450},
   {id:'pb8',category:'Materials',name:'Drywall (installed)',unit:'sqft',price:3.5}
 ];
+var selections=[
+  {id:'sl1',jobId:'j1',jobName:'Sonoma Vista Residence',category:'Flooring',options:[{label:'Luxury vinyl plank',price:6500},{label:'Engineered hardwood',price:11200},{label:'Porcelain tile',price:9800}],chosen:'Engineered hardwood',status:'approved'},
+  {id:'sl2',jobId:'j1',jobName:'Sonoma Vista Residence',category:'Kitchen countertops',options:[{label:'Laminate',price:2200},{label:'Granite',price:5400},{label:'Quartz',price:6800}],chosen:'',status:'pending'}
+];
 var crew=[
   {id:'c1',name:'Mike Torres',role:'Lead Framer',assign:'Sonoma Vista Residence',status:'on-site'},
   {id:'c2',name:'Danny Ruiz',role:'Carpenter',assign:'Valley View Estate',status:'on-site'},
@@ -1478,7 +1506,7 @@ function writeLocal(){try{localStorage.setItem(dataKey(),JSON.stringify({saved:t
 function markPending(){_pendingSync=true;try{localStorage.setItem(pendKey(),'1');}catch(e){}updateSyncPill();}
 function markSynced(){_pendingSync=false;try{localStorage.removeItem(pendKey());}catch(e){}updateSyncPill();}
 function pushToServer(){
-  fetch('/api/data',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({data:{saved:true,jobs:jobs,crew:crew,hours:hours,subs:subs,estimates:estimates,sketches:sketches,logs:logs,schedule:schedule,changeOrders:changeOrders,expenses:expenses,leads:leads,plans:plans,pricebook:pricebook}})})
+  fetch('/api/data',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({data:{saved:true,jobs:jobs,crew:crew,hours:hours,subs:subs,estimates:estimates,sketches:sketches,logs:logs,schedule:schedule,changeOrders:changeOrders,expenses:expenses,leads:leads,plans:plans,pricebook:pricebook,selections:selections}})})
     .then(function(r){return r.json();})
     .then(function(o){if(o&&!o.error){_dbReady=true;markSynced();}else{markPending();}})
     .catch(function(){markPending();});
@@ -1497,7 +1525,7 @@ function load(cb){
   // 1) OFFLINE-FIRST: recall unsynced flag + hydrate instantly from this device
   try{_pendingSync=(localStorage.getItem(pendKey())==='1');}catch(e){_pendingSync=false;}
   var localHad=false;
-  try{var ls=localStorage.getItem(dataKey());if(ls){var d=JSON.parse(ls);if(d&&d.saved){jobs=Array.isArray(d.jobs)?d.jobs:jobs;crew=Array.isArray(d.crew)?d.crew:crew;pricebook=Array.isArray(d.pricebook)?d.pricebook:pricebook;hours=Array.isArray(d.hours)?d.hours:hours;subs=Array.isArray(d.subs)?d.subs:subs;estimates=Array.isArray(d.estimates)?d.estimates:estimates;sketches=Array.isArray(d.sketches)?d.sketches:sketches;logs=Array.isArray(d.logs)?d.logs:logs;schedule=Array.isArray(d.schedule)?d.schedule:schedule;changeOrders=Array.isArray(d.changeOrders)?d.changeOrders:changeOrders;expenses=Array.isArray(d.expenses)?d.expenses:expenses;leads=Array.isArray(d.leads)?d.leads:leads;plans=(Array.isArray(d.plans)&&d.plans.length)?d.plans:plans;localHad=true;}}}catch(e){}
+  try{var ls=localStorage.getItem(dataKey());if(ls){var d=JSON.parse(ls);if(d&&d.saved){jobs=Array.isArray(d.jobs)?d.jobs:jobs;crew=Array.isArray(d.crew)?d.crew:crew;pricebook=Array.isArray(d.pricebook)?d.pricebook:pricebook;selections=Array.isArray(d.selections)?d.selections:selections;hours=Array.isArray(d.hours)?d.hours:hours;subs=Array.isArray(d.subs)?d.subs:subs;estimates=Array.isArray(d.estimates)?d.estimates:estimates;sketches=Array.isArray(d.sketches)?d.sketches:sketches;logs=Array.isArray(d.logs)?d.logs:logs;schedule=Array.isArray(d.schedule)?d.schedule:schedule;changeOrders=Array.isArray(d.changeOrders)?d.changeOrders:changeOrders;expenses=Array.isArray(d.expenses)?d.expenses:expenses;leads=Array.isArray(d.leads)?d.leads:leads;plans=(Array.isArray(d.plans)&&d.plans.length)?d.plans:plans;localHad=true;}}}catch(e){}
   // 2) reach the shared database, but NEVER block the app
   var timer=setTimeout(function(){updateSyncPill();finish();},3000);
   fetch('/api/data').then(function(r){return r.json();}).then(function(out){
@@ -1510,7 +1538,7 @@ function load(cb){
       crew=Array.isArray(out.data.crew)?out.data.crew:[];
       hours=Array.isArray(out.data.hours)?out.data.hours:[];
       subs=Array.isArray(out.data.subs)?out.data.subs:[];
-      estimates=Array.isArray(out.data.estimates)?out.data.estimates:[];pricebook=Array.isArray(out.data.pricebook)?out.data.pricebook:pricebook;
+      estimates=Array.isArray(out.data.estimates)?out.data.estimates:[];pricebook=Array.isArray(out.data.pricebook)?out.data.pricebook:pricebook;selections=Array.isArray(out.data.selections)?out.data.selections:selections;
       sketches=Array.isArray(out.data.sketches)?out.data.sketches:[];
       logs=Array.isArray(out.data.logs)?out.data.logs:[];
       schedule=Array.isArray(out.data.schedule)?out.data.schedule:[];
@@ -1918,6 +1946,7 @@ document.querySelectorAll('.tab').forEach(function(t){
     if(t.dataset.tab==='schedule'){renderSchedule();}
     if(t.dataset.tab==='dispatch'){renderDispatch();}
     if(t.dataset.tab==='pricebook'){renderPricebook();}
+    if(t.dataset.tab==='selections'){renderSelections();}
     if(t.dataset.tab==='changes'){renderChangeOrders();}
     if(t.dataset.tab==='costs'){renderCosts();}
     if(t.dataset.tab==='leads'){renderLeads();}
@@ -1933,7 +1962,7 @@ function _dl(fn,txt,mime){var b=new Blob([txt],{type:mime||'text/plain'});var u=
 function _csvCell(v){v=(v==null?'':String(v));if(/[",\n]/.test(v))v='"'+v.replace(/"/g,'""')+'"';return v;}
 function _csv(rows){if(!rows||!rows.length)return '';var cols=Object.keys(rows[0]);var out=cols.join(',')+'\n';rows.forEach(function(r){out+=cols.map(function(k){return _csvCell(r[k]);}).join(',')+'\n';});return out;}
 function _stamp(){return new Date().toISOString().split('T')[0];}
-function exportJSON(){var data={exportedAt:new Date().toISOString(),company:(CURRENT_USER&&CURRENT_USER.name)||'',jobs:jobs,crew:crew,hours:hours,subs:subs,estimates:estimates,sketches:sketches,logs:logs,schedule:schedule,changeOrders:changeOrders,expenses:expenses,leads:leads,plans:plans,pricebook:pricebook};_dl('orchamind-export-'+_stamp()+'.json',JSON.stringify(data,null,2),'application/json');}
+function exportJSON(){var data={exportedAt:new Date().toISOString(),company:(CURRENT_USER&&CURRENT_USER.name)||'',jobs:jobs,crew:crew,hours:hours,subs:subs,estimates:estimates,sketches:sketches,logs:logs,schedule:schedule,changeOrders:changeOrders,expenses:expenses,leads:leads,plans:plans,pricebook:pricebook,selections:selections};_dl('orchamind-export-'+_stamp()+'.json',JSON.stringify(data,null,2),'application/json');}
 function exportCSV(which){var map={jobs:jobs,crew:crew,hours:hours,subs:subs};var rows=map[which]||[];if(!rows.length){alert('Nothing to export there yet.');return;}_dl('orchamind-'+which+'-'+_stamp()+'.csv',_csv(rows),'text/csv');}
 function renderExportCounts(){var el=document.getElementById('exportCounts');if(!el)return;el.textContent=jobs.length+' projects \u00b7 '+hours.length+' timesheet entries \u00b7 '+crew.length+' crew \u00b7 '+subs.length+' subcontractors';}
 document.querySelectorAll('.modal-bg').forEach(function(m){m.addEventListener('click',function(e){if(e.target===m)closeModal(m.id);});});
@@ -1978,7 +2007,7 @@ function clearAllData(){
 
 // Explicit, non-debounced save that reports success/failure
 function saveNow(cb){
-  fetch('/api/data',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({data:{saved:true,jobs:jobs,crew:crew,hours:hours,subs:subs,estimates:estimates,sketches:sketches,logs:logs,schedule:schedule,changeOrders:changeOrders,expenses:expenses,leads:leads,plans:plans,pricebook:pricebook}})})
+  fetch('/api/data',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({data:{saved:true,jobs:jobs,crew:crew,hours:hours,subs:subs,estimates:estimates,sketches:sketches,logs:logs,schedule:schedule,changeOrders:changeOrders,expenses:expenses,leads:leads,plans:plans,pricebook:pricebook,selections:selections}})})
     .then(function(r){return r.json();})
     .then(function(o){var ok=o&&!o.error;if(ok)_dbReady=true;if(cb)cb(ok);})
     .catch(function(){if(cb)cb(false);});
@@ -3599,6 +3628,52 @@ function estFromPricebook(){
   c.innerHTML=html;
 }
 function estPbAdd(id){var i=(window.pricebook||[]).find(function(x){return x.id===id;});if(!i)return;addEstLine({desc:i.name,qty:1,unit:i.unit||'ea',price:i.price});recalcEst();}
+function _selJobId(){var el=document.getElementById('selJob');return el?el.value:'';}
+function renderSelections(){
+  var list=document.getElementById('selList');if(!list)return;
+  var sel=document.getElementById('selJob');
+  if(sel){var cur=sel.value;sel.innerHTML=(window.jobs||[]).map(function(j){return '<option value="'+esc(j.id)+'">'+esc(j.name)+'</option>';}).join('');if(cur){sel.value=cur;}else if((window.jobs||[]).length){sel.value=window.jobs[0].id;}}
+  var jid=_selJobId();
+  var items=(window.selections||[]).filter(function(s){return s.jobId===jid;});
+  if(!items.length){list.innerHTML='<div class="pb-empty">No selections for this job yet. Tap \u2728 AI Suggest to generate a selection sheet (flooring, countertops, fixtures\u2026) with options and prices.</div>';return;}
+  list.innerHTML=items.map(function(s){
+    var opts=(s.options||[]).map(function(o,oi){var on=(s.chosen===o.label);return '<button type="button" class="sel-opt'+(on?' on':'')+'" onclick="selChoose(\''+s.id+'\','+oi+')">'+esc(o.label)+'<span>'+estMoney(o.price)+'</span></button>';}).join('');
+    var badge='<span class="sel-badge '+(s.status||'pending')+'">'+(s.status==='approved'?'Approved':'Pending')+'</span>';
+    var acts=(s.status!=='approved')?('<button onclick="selApprove(\''+s.id+'\')"'+(s.chosen?'':' disabled')+'>Mark approved</button>'):('<button onclick="selUnapprove(\''+s.id+'\')">Reopen</button>');
+    return '<div class="sel-card"><div class="sel-h"><div class="sel-cat">'+esc(s.category)+'</div>'+badge+'</div><div class="sel-opts">'+opts+'</div><div class="sel-acts">'+acts+'<button class="sel-del" onclick="selDel(\''+s.id+'\')">Delete</button></div></div>';
+  }).join('');
+}
+function selChoose(id,oi){var s=(window.selections||[]).find(function(x){return x.id===id;});if(!s)return;s.chosen=(s.options[oi]||{}).label||'';save();renderSelections();}
+function selApprove(id){var s=(window.selections||[]).find(function(x){return x.id===id;});if(!s||!s.chosen)return;s.status='approved';save();renderSelections();}
+function selUnapprove(id){var s=(window.selections||[]).find(function(x){return x.id===id;});if(!s)return;s.status='pending';save();renderSelections();}
+function selDel(id){selections=(window.selections||[]).filter(function(x){return x.id!==id;});save();renderSelections();}
+function aiSuggestSelections(){
+  var jid=_selJobId();var j=(window.jobs||[]).find(function(x){return x.id===jid;});
+  var msg=document.getElementById('selMsg');
+  if(!j){if(msg)msg.textContent='Pick a job first.';return;}
+  if(msg)msg.textContent='Generating selections with AI for '+j.name+'...';
+  var sys='You are a construction project manager creating a client SELECTIONS sheet for a project called "'+j.name+'". List the finish and material decisions the homeowner needs to make, each with 3 realistic options at good / better / best price points using current California pricing. Return ONLY JSON, no markdown or commentary: {"selections":[{"category":"string e.g. Flooring","options":[{"label":"string","price":number},{"label":"string","price":number},{"label":"string","price":number}]}]} with 5-9 categories relevant to the project.';
+  callClaude(sys,'Project: '+j.name+' ('+(j.location||'')+'). Phase: '+(j.status||'')+'.',function(text){
+    var obj=_estParseJSON(text);
+    if(!obj||!obj.selections||!obj.selections.length){if(msg)msg.textContent='Could not generate selections - try again.';return;}
+    window.selections=window.selections||[];
+    obj.selections.forEach(function(s){window.selections.push({id:uid(),jobId:j.id,jobName:j.name,category:s.category||'Selection',options:(s.options||[]).map(function(o){return {label:o.label||'',price:estNum(o.price)};}),chosen:'',status:'pending'});});
+    save();renderSelections();if(msg)msg.textContent='Added '+obj.selections.length+' selection categories.';
+  },function(err){if(msg)msg.textContent='AI error: '+err;});
+}
+function printSelectionSheet(){
+  var jid=_selJobId();var j=(window.jobs||[]).find(function(x){return x.id===jid;});
+  var items=(window.selections||[]).filter(function(s){return s.jobId===jid;});
+  if(!items.length){alert('No selections to print for this job. Generate some first.');return;}
+  var company=(CURRENT_USER&&CURRENT_USER.name)||'Your Company';
+  var rows=items.map(function(s){
+    var opts=(s.options||[]).map(function(o){var on=(s.chosen===o.label);return '<tr class="'+(on?'chosen':'')+'"><td>'+(on?'\u25c9':'\u25cb')+' '+esc(o.label)+'</td><td class="r">'+estMoney(o.price)+'</td></tr>';}).join('');
+    return '<div class="selblock"><h3>'+esc(s.category)+(s.chosen?' <span class="ch">\u2713 '+esc(s.chosen)+'</span>':'')+'</h3><table>'+opts+'</table></div>';
+  }).join('');
+  var w=window.open('','_blank');if(!w){alert('Please allow pop-ups.');return;}
+  var doc='<!doctype html><html><head><meta charset="utf-8"><title>Selections - '+esc(j?j.name:'')+'</title><style>*{box-sizing:border-box;}body{font-family:Arial,Helvetica,sans-serif;color:#0A1628;margin:36px;}.hd{border-bottom:3px solid #1565C0;padding-bottom:14px;margin-bottom:8px;}.co{font-size:22px;font-weight:800;color:#1565C0;}.sub{color:#5A6B7D;font-size:13px;margin-top:4px;}h1{font-size:22px;margin:18px 0 4px;}.lead{color:#5A6B7D;font-size:13.5px;margin-bottom:20px;}.selblock{margin-bottom:16px;}.selblock h3{font-size:15px;margin:0 0 6px;border-bottom:1px solid #E1E8F0;padding-bottom:4px;}.ch{color:#2E9B5B;font-size:12px;font-weight:600;}table{width:100%;border-collapse:collapse;}td{padding:6px 8px;font-size:13px;border-bottom:1px solid #F0F3F7;}td.r{text-align:right;font-weight:600;color:#1565C0;width:110px;}tr.chosen td{background:#F0FBF4;font-weight:600;}.sign{margin-top:30px;display:flex;gap:40px;}.sign div{flex:1;border-top:1px solid #0A1628;padding-top:6px;font-size:12px;color:#5A6B7D;}.ft{margin-top:24px;font-size:11px;color:#9aa7b4;text-align:center;}</style></head><body><div class="hd"><div class="co">'+esc(company)+'</div><div class="sub">Selection Sheet'+(j?(' \u00b7 '+esc(j.name)):'')+(j&&j.client?(' \u00b7 '+esc(j.client)):'')+'</div></div><h1>Your finish selections</h1><div class="lead">Please review the options below and initial your choices. Prices are estimates and will be confirmed on your change order.</div>'+rows+'<div class="sign"><div>Client signature / date</div><div>'+esc(company)+' / date</div></div><div class="ft">Prepared by '+esc(company)+' \u00b7 powered by Orchamind</div></body></html>';
+  w.document.write(doc);w.document.close();w.focus();setTimeout(function(){try{w.print();}catch(e){}},400);
+}
 function renderSchedule(){
   renderUpcoming();
   var host=document.getElementById('schWeek'); if(!host) return;
