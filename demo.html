@@ -387,6 +387,21 @@ button:active, .btn:active, .btn-ghost:active, .tab:active, [role="button"]:acti
 .type-cursor{display:inline-block;width:7px;height:14px;background:var(--blue);margin-left:1px;vertical-align:text-bottom;border-radius:1px;animation:typeBlink .8s steps(1) infinite;}
 @keyframes typeBlink{50%{opacity:0;}}
 </style>
+<style id="gbb-css">
+.gbb-row{display:flex;gap:9px;flex-wrap:wrap;}
+.gbb-tiers{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:12px;}
+.gbb-card{border:1.5px solid var(--line,#e1e8f0);border-radius:12px;padding:13px;background:#fff;display:flex;flex-direction:column;gap:5px;position:relative;}
+.gbb-card.rec{border-color:#F9A825;box-shadow:0 4px 16px rgba(249,168,37,.18);}
+.gbb-badge{font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:.07em;color:#B8860B;}
+.gbb-name{font-weight:800;font-size:15px;color:var(--navy,#0A1628);}
+.gbb-tag{font-size:11.5px;color:var(--muted,#5A6B7D);line-height:1.4;min-height:34px;}
+.gbb-tot{font-size:21px;font-weight:800;color:#1565C0;}
+.gbb-meta{font-size:11px;color:var(--muted,#5A6B7D);}
+.gbb-use{margin-top:5px;padding:8px;border-radius:8px;border:none;background:var(--navy,#0A1628);color:#fff;font-weight:600;cursor:pointer;font-size:12.5px;}
+.gbb-card.rec .gbb-use{background:#F9A825;color:#0A1628;}
+.gbb-present{margin-top:12px;width:100%;padding:11px;border-radius:8px;border:1.5px solid #1565C0;background:#EAF2FD;color:#1565C0;font-weight:700;cursor:pointer;font-size:13px;}
+@media(max-width:560px){.gbb-tiers{grid-template-columns:1fr;}}
+</style>
 </head>
 <body class="locked">
 <div id="demoBanner" style="position:relative;z-index:1;background:linear-gradient(90deg,#0A1628,#1565C0);color:#fff;padding:10px 16px;display:flex;align-items:center;justify-content:center;gap:16px;flex-wrap:wrap;font-family:'Outfit',sans-serif;font-size:14px;box-shadow:0 2px 12px rgba(0,0,0,0.2);">
@@ -1128,8 +1143,9 @@ button:active, .btn:active, .btn-ghost:active, .tab:active, [role="button"]:acti
   <div class="est-ai">
     <label style="font-weight:700;color:var(--navy);font-size:13px;">&#10024; Draft with AI</label>
     <textarea id="estAiScope" rows="2" placeholder="Describe the job in plain words &mdash; e.g. 'Rewire a 2,000 sq ft home, 200A panel upgrade, 24 recessed lights, pull permit'"></textarea>
-    <button class="btn btn-ghost" type="button" id="estAiBtn" onclick="aiDraftEstimate()">&#10024; Generate line items</button>
+    <div class="gbb-row"><button class="btn btn-ghost" type="button" id="estAiBtn" onclick="aiDraftEstimate()">&#10024; Generate line items</button><button class="btn btn-ghost" type="button" id="estGbbBtn" onclick="aiGoodBetterBest()">&#9889; Good &middot; Better &middot; Best</button></div>
     <div id="estAiMsg" class="est-ai-msg"></div>
+    <div id="estTiers"></div>
   </div>
   <div class="li-wrap">
     <table class="li-tbl"><thead><tr><th>Description</th><th>Qty</th><th>Unit</th><th>Unit price</th><th>Amount</th><th></th></tr></thead><tbody id="estLines"></tbody></table>
@@ -2915,7 +2931,7 @@ function _estFill(e){
   document.getElementById('estNotes').value=e.notes||'';
   document.getElementById('estStatus').value=e.status||'draft';
   document.getElementById('estAiScope').value='';
-  document.getElementById('estAiMsg').textContent='';
+  document.getElementById('estAiMsg').textContent='';var _tc=document.getElementById('estTiers');if(_tc)_tc.innerHTML='';_gbbTiers=null;
   document.getElementById('estLines').innerHTML='';
   var items=(e.items&&e.items.length)?e.items:[{desc:'',qty:1,unit:'ea',price:0}];
   items.forEach(function(it){addEstLine(it);});
@@ -3004,6 +3020,76 @@ function aiDraftEstimate(){
     recalcEst();
     msg.textContent='Drafted '+obj.items.length+' line items - review, adjust, then Save.';
   },function(err){btn.disabled=false;btn.innerHTML=old;msg.textContent='AI error: '+err;});
+}
+var _gbbTiers=null;
+function _gbbTotal(items){var s=0;(items||[]).forEach(function(it){s+=estNum(it.qty)*estNum(it.price);});return s;}
+function aiGoodBetterBest(){
+  var scope=document.getElementById('estAiScope').value.trim();
+  var msg=document.getElementById('estAiMsg');var btn=document.getElementById('estGbbBtn');
+  if(!scope){msg.textContent='Type a short job description first.';return;}
+  btn.disabled=true;var old=btn.innerHTML;btn.innerHTML='Thinking...';msg.textContent='Building Good / Better / Best options with AI...';
+  var company=(CURRENT_USER&&CURRENT_USER.name)||'';
+  var sys='You are a senior construction estimator'+(company?(' for '+company):'')+'. From the job description, create THREE tiered proposal options a contractor can present to a homeowner, using realistic current California contractor pricing. "Good" = essential scope, budget-conscious, done right. "Better" = the recommended option: higher-grade materials, added value and some upgrades. "Best" = premium: full scope, top materials, warranties and extras. Good total < Better total < Best total. Each option has its own itemized line items. Return ONLY a JSON object, no markdown or code fences or commentary, exactly: {"tiers":[{"name":"Good","tagline":"one short client-facing sentence","items":[{"desc":"string","qty":number,"unit":"string","price":number}],"notes":"string"},{"name":"Better","tagline":"...","items":[...],"notes":"..."},{"name":"Best","tagline":"...","items":[...],"notes":"..."}]}';
+  callClaude(sys,'Job description: '+scope,function(text){
+    btn.disabled=false;btn.innerHTML=old;
+    var obj=_estParseJSON(text);
+    if(!obj||!obj.tiers||!obj.tiers.length){msg.textContent='Could not read the AI options - try rephrasing.';return;}
+    _gbbTiers=obj.tiers;_gbbRender();
+    msg.textContent='Three options ready - pick one to load, or present all three to your client.';
+  },function(err){btn.disabled=false;btn.innerHTML=old;msg.textContent='AI error: '+err;});
+}
+function _gbbRender(){
+  var c=document.getElementById('estTiers');if(!c)return;
+  if(!_gbbTiers){c.innerHTML='';return;}
+  var names=['Good','Better','Best'];var html='<div class="gbb-tiers">';
+  _gbbTiers.forEach(function(t,i){
+    var tot=_gbbTotal(t.items);var rec=(i===1)?' rec':'';
+    html+='<div class="gbb-card'+rec+'">'+(i===1?'<span class="gbb-badge">★ Recommended</span>':'')+
+      '<div class="gbb-name">'+esc(t.name||names[i]||'Option')+'</div>'+
+      '<div class="gbb-tag">'+esc(t.tagline||'')+'</div>'+
+      '<div class="gbb-tot">'+estMoney(tot)+'</div>'+
+      '<div class="gbb-meta">'+((t.items||[]).length)+' line items</div>'+
+      '<button type="button" class="gbb-use" onclick="_gbbUseTier('+i+')">Use this option</button></div>';
+  });
+  html+='</div><button type="button" class="gbb-present" onclick="printProposal()">\u{1F4C4} Present all three to your client \u2192</button>';
+  c.innerHTML=html.replace('\\u{1F4C4}','\u{1F4C4}');
+}
+function _gbbUseTier(i){
+  if(!_gbbTiers||!_gbbTiers[i])return;var t=_gbbTiers[i];
+  document.getElementById('estLines').innerHTML='';
+  (t.items||[]).forEach(function(it){addEstLine({desc:it.desc||'',qty:estNum(it.qty)||1,unit:it.unit||'ea',price:estNum(it.price)});});
+  if(t.notes){document.getElementById('estNotes').value=t.notes;}
+  recalcEst();
+  document.getElementById('estAiMsg').textContent='Loaded the "'+(t.name||'selected')+'" option - review and Save.';
+}
+function printProposal(){
+  if(!_gbbTiers||!_gbbTiers.length){alert('Generate Good / Better / Best options first.');return;}
+  var company=(CURRENT_USER&&CURRENT_USER.name)||'Your Company';
+  var client=document.getElementById('estClient').value.trim();
+  var project=document.getElementById('estProject').value.trim();
+  var cols=_gbbTiers.map(function(t,i){
+    var tot=_gbbTotal(t.items);
+    var items=(t.items||[]).map(function(it){return '<li>'+esc(it.desc)+'</li>';}).join('');
+    return '<div class="opt'+(i===1?' rec':'')+'">'+(i===1?'<div class="rbadge">Recommended</div>':'')+
+      '<h2>'+esc(t.name||'Option')+'</h2><div class="tag">'+esc(t.tagline||'')+'</div>'+
+      '<div class="price">'+estMoney(tot)+'</div><ul>'+items+'</ul></div>';
+  }).join('');
+  var w=window.open('','_blank');if(!w){alert('Please allow pop-ups to present the proposal.');return;}
+  var doc='<!doctype html><html><head><meta charset="utf-8"><title>Proposal - '+esc(company)+'</title><style>'+
+    '*{box-sizing:border-box;}body{font-family:Arial,Helvetica,sans-serif;color:#0A1628;margin:34px;}'+
+    '.hd{border-bottom:3px solid #1565C0;padding-bottom:14px;}.co{font-size:22px;font-weight:800;color:#1565C0;}'+
+    '.sub{color:#5A6B7D;font-size:13px;margin-top:4px;}h1{font-size:22px;margin:18px 0 4px;}.lead{color:#5A6B7D;font-size:13.5px;margin-bottom:22px;}'+
+    '.opts{display:flex;gap:14px;align-items:stretch;}.opt{flex:1;border:1.5px solid #E1E8F0;border-radius:14px;padding:18px;position:relative;}'+
+    '.opt.rec{border-color:#F9A825;box-shadow:0 6px 22px rgba(249,168,37,.2);}'+
+    '.rbadge{position:absolute;top:-11px;left:50%;transform:translateX(-50%);background:#F9A825;color:#0A1628;font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;padding:3px 12px;border-radius:20px;white-space:nowrap;}'+
+    '.opt h2{margin:2px 0 6px;font-size:19px;}.tag{font-size:12.5px;color:#5A6B7D;min-height:40px;}'+
+    '.price{font-size:30px;font-weight:800;color:#1565C0;margin:8px 0 12px;}ul{margin:0;padding-left:18px;}li{font-size:12.5px;margin-bottom:5px;color:#3a4a5a;}'+
+    '.ft{margin-top:26px;font-size:11px;color:#9aa7b4;text-align:center;}</style></head><body>'+
+    '<div class="hd"><div class="co">'+esc(company)+'</div><div class="sub">Project proposal'+(client?(' for '+esc(client)):'')+(project?(' \u00b7 '+esc(project)):'')+'</div></div>'+
+    '<h1>Choose the option that\u2019s right for you</h1><div class="lead">Three ways we can approach your project. Each option is complete and ready to start \u2014 simply choose the one that best fits your goals and budget.</div>'+
+    '<div class="opts">'+cols+'</div>'+
+    '<div class="ft">Prepared by '+esc(company)+' \u00b7 powered by Orchamind</div></body></html>';
+  w.document.write(doc);w.document.close();w.focus();setTimeout(function(){try{w.print();}catch(e){}},400);
 }
 function _estParseJSON(text){
   if(!text)return null;
