@@ -421,6 +421,24 @@ button:active, .btn:active, .btn-ghost:active, .tab:active, [role="button"]:acti
 .disp-empty{font-size:11.5px;color:#9aa7b4;padding:6px 2px;}
 .disp-empty-all{grid-column:1/-1;text-align:center;color:var(--muted,#5A6B7D);padding:34px;font-size:13.5px;}
 </style>
+<style id="pb-css">
+.pb-add{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px;}
+.pb-add input{border:1px solid var(--line,#e1e8f0);border-radius:8px;padding:9px 11px;font-size:13px;flex:1;min-width:110px;}
+.pb-cat{font-weight:700;color:var(--navy,#0A1628);font-size:11px;text-transform:uppercase;letter-spacing:.05em;margin:16px 0 6px;}
+.pb-row{display:flex;align-items:center;gap:10px;background:#fff;border:1px solid var(--line,#e1e8f0);border-radius:9px;padding:9px 12px;margin-bottom:6px;}
+.pb-nm{flex:1;font-size:13.5px;color:var(--navy,#0A1628);font-weight:500;}
+.pb-un{font-size:12px;color:var(--muted,#5A6B7D);width:46px;}
+.pb-pr{font-weight:700;color:#1565C0;font-size:13.5px;width:78px;text-align:right;}
+.pb-del{border:none;background:none;color:#C4CFDB;font-size:18px;cursor:pointer;line-height:1;padding:0 2px;}
+.pb-del:hover{color:#D32F2F;}
+.pb-empty{color:var(--muted,#5A6B7D);padding:20px;text-align:center;font-size:13.5px;}
+.pbpick{margin-top:8px;}
+.pbpick-h{font-size:11.5px;color:var(--muted,#5A6B7D);margin-bottom:6px;}
+.pbpick-cat{font-size:10px;font-weight:700;text-transform:uppercase;color:var(--muted,#5A6B7D);margin:8px 0 4px;letter-spacing:.05em;}
+.pbpick-item{display:block;width:100%;text-align:left;background:#fff;border:1px solid var(--line,#e1e8f0);border-radius:8px;padding:8px 11px;margin-bottom:5px;font-size:12.5px;cursor:pointer;color:var(--navy,#0A1628);}
+.pbpick-item:hover{border-color:#2D7FF9;background:#F5F9FF;}
+.pbpick-item span{float:right;color:var(--muted,#5A6B7D);}
+</style>
 </head>
 <body class="locked">
 <div id="demoBanner" style="position:relative;z-index:1;background:linear-gradient(90deg,#0A1628,#1565C0);color:#fff;padding:10px 16px;display:flex;align-items:center;justify-content:center;gap:16px;flex-wrap:wrap;font-family:'Outfit',sans-serif;font-size:14px;box-shadow:0 2px 12px rgba(0,0,0,0.2);">
@@ -501,7 +519,8 @@ button:active, .btn:active, .btn-ghost:active, .tab:active, [role="button"]:acti
   <button class="tab" data-tab="estimates" data-mgronly><svg class="ti" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M9 13h6"/><path d="M9 17h6"/></svg>Estimates</button>
   <div class="nav-sec">Work</div>
   <button class="tab" data-tab="jobs"><svg class="ti" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 7h20v13a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1z"/><path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>Jobs</button>
-  <button class="tab" data-tab="dispatch"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>Dispatch</button>
+  <button class="tab" data-tab="pricebook"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>Pricebook</button>
+      <button class="tab" data-tab="dispatch"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>Dispatch</button>
       <button class="tab" data-tab="schedule"><svg class="ti" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>Schedule</button>
   <button class="tab" data-tab="log"><svg class="ti" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>Site Log</button>
   <button class="tab" data-tab="sketches"><svg class="ti" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3h7v7H3z"/><path d="M14 3h7v4h-7z"/><path d="M14 11h7v10h-7z"/><path d="M3 14h7v7H3z"/></svg>Plans</button>
@@ -760,6 +779,12 @@ button:active, .btn:active, .btn-ghost:active, .tab:active, [role="button"]:acti
 .sch-up-b span{display:block;color:var(--muted);font-size:12px;margin-top:2px;}
 .sch-up-empty{color:var(--muted);font-size:13px;background:#fff;border:1px dashed var(--line);border-radius:10px;padding:14px;margin-bottom:16px;line-height:1.5;}
 </style>
+  <div class="panel" id="panel-pricebook">
+    <div class="panel-head"><h2>Pricebook</h2><button class="btn" onclick="aiBuildPricebook()">✨ Build with AI</button></div>
+    <div class="pb-add"><input id="pbName" placeholder="Item / service"><input id="pbCat" placeholder="Category" list="pbCats"><input id="pbUnit" placeholder="Unit" style="max-width:110px"><input id="pbPrice" type="number" placeholder="Price" style="max-width:110px"><button class="btn" onclick="pbAdd()">Add</button><datalist id="pbCats"></datalist></div>
+    <div id="pbMsg" class="est-ai-msg"></div>
+    <div id="pbList"></div>
+  </div>
   <div class="panel" id="panel-dispatch">
     <div class="panel-head"><h2>Dispatch Board</h2></div>
     <div id="dispSummary" class="disp-summary"></div>
@@ -1168,9 +1193,10 @@ button:active, .btn:active, .btn-ghost:active, .tab:active, [role="button"]:acti
   <div class="est-ai">
     <label style="font-weight:700;color:var(--navy);font-size:13px;">&#10024; Draft with AI</label>
     <textarea id="estAiScope" rows="2" placeholder="Describe the job in plain words &mdash; e.g. 'Rewire a 2,000 sq ft home, 200A panel upgrade, 24 recessed lights, pull permit'"></textarea>
-    <div class="gbb-row"><button class="btn btn-ghost" type="button" id="estAiBtn" onclick="aiDraftEstimate()">&#10024; Generate line items</button><button class="btn btn-ghost" type="button" id="estGbbBtn" onclick="aiGoodBetterBest()">&#9889; Good &middot; Better &middot; Best</button></div>
+    <div class="gbb-row"><button class="btn btn-ghost" type="button" id="estAiBtn" onclick="aiDraftEstimate()">&#10024; Generate line items</button><button class="btn btn-ghost" type="button" id="estGbbBtn" onclick="aiGoodBetterBest()">&#9889; Good &middot; Better &middot; Best</button><button class="btn btn-ghost" type="button" onclick="estFromPricebook()">+ From Pricebook</button></div>
     <div id="estAiMsg" class="est-ai-msg"></div>
     <div id="estTiers"></div>
+    <div id="estPbPick" class="pbpick"></div>
   </div>
   <div class="li-wrap">
     <table class="li-tbl"><thead><tr><th>Description</th><th>Qty</th><th>Unit</th><th>Unit price</th><th>Amount</th><th></th></tr></thead><tbody id="estLines"></tbody></table>
@@ -1408,6 +1434,16 @@ var jobs=[
   {id:'j3',name:'Hillside ADU Project',client:'J. Castellano',location:'Napa, CA',status:'rough',progress:55,crew:3,date:'2026-08-20',budget:240000,spent:142000,notes:'Electrical rough-in this week. Inspector visit pending.'},
   {id:'j4',name:'Calistoga Pool & Deck',client:'The Bennetts',location:'Calistoga, CA',status:'foundation',progress:20,crew:2,date:'2026-08-10',budget:135000,spent:38000,notes:'Excavation done. Rebar and gunite next. Behind 1 week due to rain.'}
 ];
+var pricebook=[
+  {id:'pb1',category:'Labor',name:'General labor',unit:'hr',price:75},
+  {id:'pb2',category:'Labor',name:'Skilled carpenter',unit:'hr',price:95},
+  {id:'pb3',category:'Electrical',name:'Recessed LED light (installed)',unit:'ea',price:180},
+  {id:'pb4',category:'Electrical',name:'200A panel upgrade',unit:'ea',price:3200},
+  {id:'pb5',category:'Concrete',name:'Concrete slab',unit:'sqft',price:12},
+  {id:'pb6',category:'Framing',name:'Wall framing (labor+material)',unit:'sqft',price:9},
+  {id:'pb7',category:'Permits',name:'Building permit',unit:'ea',price:450},
+  {id:'pb8',category:'Materials',name:'Drywall (installed)',unit:'sqft',price:3.5}
+];
 var crew=[
   {id:'c1',name:'Mike Torres',role:'Lead Framer',assign:'Sonoma Vista Residence',status:'on-site'},
   {id:'c2',name:'Danny Ruiz',role:'Carpenter',assign:'Valley View Estate',status:'on-site'},
@@ -1442,7 +1478,7 @@ function writeLocal(){try{localStorage.setItem(dataKey(),JSON.stringify({saved:t
 function markPending(){_pendingSync=true;try{localStorage.setItem(pendKey(),'1');}catch(e){}updateSyncPill();}
 function markSynced(){_pendingSync=false;try{localStorage.removeItem(pendKey());}catch(e){}updateSyncPill();}
 function pushToServer(){
-  fetch('/api/data',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({data:{saved:true,jobs:jobs,crew:crew,hours:hours,subs:subs,estimates:estimates,sketches:sketches,logs:logs,schedule:schedule,changeOrders:changeOrders,expenses:expenses,leads:leads,plans:plans}})})
+  fetch('/api/data',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({data:{saved:true,jobs:jobs,crew:crew,hours:hours,subs:subs,estimates:estimates,sketches:sketches,logs:logs,schedule:schedule,changeOrders:changeOrders,expenses:expenses,leads:leads,plans:plans,pricebook:pricebook}})})
     .then(function(r){return r.json();})
     .then(function(o){if(o&&!o.error){_dbReady=true;markSynced();}else{markPending();}})
     .catch(function(){markPending();});
@@ -1461,7 +1497,7 @@ function load(cb){
   // 1) OFFLINE-FIRST: recall unsynced flag + hydrate instantly from this device
   try{_pendingSync=(localStorage.getItem(pendKey())==='1');}catch(e){_pendingSync=false;}
   var localHad=false;
-  try{var ls=localStorage.getItem(dataKey());if(ls){var d=JSON.parse(ls);if(d&&d.saved){jobs=Array.isArray(d.jobs)?d.jobs:jobs;crew=Array.isArray(d.crew)?d.crew:crew;hours=Array.isArray(d.hours)?d.hours:hours;subs=Array.isArray(d.subs)?d.subs:subs;estimates=Array.isArray(d.estimates)?d.estimates:estimates;sketches=Array.isArray(d.sketches)?d.sketches:sketches;logs=Array.isArray(d.logs)?d.logs:logs;schedule=Array.isArray(d.schedule)?d.schedule:schedule;changeOrders=Array.isArray(d.changeOrders)?d.changeOrders:changeOrders;expenses=Array.isArray(d.expenses)?d.expenses:expenses;leads=Array.isArray(d.leads)?d.leads:leads;plans=(Array.isArray(d.plans)&&d.plans.length)?d.plans:plans;localHad=true;}}}catch(e){}
+  try{var ls=localStorage.getItem(dataKey());if(ls){var d=JSON.parse(ls);if(d&&d.saved){jobs=Array.isArray(d.jobs)?d.jobs:jobs;crew=Array.isArray(d.crew)?d.crew:crew;pricebook=Array.isArray(d.pricebook)?d.pricebook:pricebook;hours=Array.isArray(d.hours)?d.hours:hours;subs=Array.isArray(d.subs)?d.subs:subs;estimates=Array.isArray(d.estimates)?d.estimates:estimates;sketches=Array.isArray(d.sketches)?d.sketches:sketches;logs=Array.isArray(d.logs)?d.logs:logs;schedule=Array.isArray(d.schedule)?d.schedule:schedule;changeOrders=Array.isArray(d.changeOrders)?d.changeOrders:changeOrders;expenses=Array.isArray(d.expenses)?d.expenses:expenses;leads=Array.isArray(d.leads)?d.leads:leads;plans=(Array.isArray(d.plans)&&d.plans.length)?d.plans:plans;localHad=true;}}}catch(e){}
   // 2) reach the shared database, but NEVER block the app
   var timer=setTimeout(function(){updateSyncPill();finish();},3000);
   fetch('/api/data').then(function(r){return r.json();}).then(function(out){
@@ -1474,7 +1510,7 @@ function load(cb){
       crew=Array.isArray(out.data.crew)?out.data.crew:[];
       hours=Array.isArray(out.data.hours)?out.data.hours:[];
       subs=Array.isArray(out.data.subs)?out.data.subs:[];
-      estimates=Array.isArray(out.data.estimates)?out.data.estimates:[];
+      estimates=Array.isArray(out.data.estimates)?out.data.estimates:[];pricebook=Array.isArray(out.data.pricebook)?out.data.pricebook:pricebook;
       sketches=Array.isArray(out.data.sketches)?out.data.sketches:[];
       logs=Array.isArray(out.data.logs)?out.data.logs:[];
       schedule=Array.isArray(out.data.schedule)?out.data.schedule:[];
@@ -1881,6 +1917,7 @@ document.querySelectorAll('.tab').forEach(function(t){
     if(t.dataset.tab==='log'){renderLog();}
     if(t.dataset.tab==='schedule'){renderSchedule();}
     if(t.dataset.tab==='dispatch'){renderDispatch();}
+    if(t.dataset.tab==='pricebook'){renderPricebook();}
     if(t.dataset.tab==='changes'){renderChangeOrders();}
     if(t.dataset.tab==='costs'){renderCosts();}
     if(t.dataset.tab==='leads'){renderLeads();}
@@ -1896,7 +1933,7 @@ function _dl(fn,txt,mime){var b=new Blob([txt],{type:mime||'text/plain'});var u=
 function _csvCell(v){v=(v==null?'':String(v));if(/[",\n]/.test(v))v='"'+v.replace(/"/g,'""')+'"';return v;}
 function _csv(rows){if(!rows||!rows.length)return '';var cols=Object.keys(rows[0]);var out=cols.join(',')+'\n';rows.forEach(function(r){out+=cols.map(function(k){return _csvCell(r[k]);}).join(',')+'\n';});return out;}
 function _stamp(){return new Date().toISOString().split('T')[0];}
-function exportJSON(){var data={exportedAt:new Date().toISOString(),company:(CURRENT_USER&&CURRENT_USER.name)||'',jobs:jobs,crew:crew,hours:hours,subs:subs,estimates:estimates,sketches:sketches,logs:logs,schedule:schedule,changeOrders:changeOrders,expenses:expenses,leads:leads,plans:plans};_dl('orchamind-export-'+_stamp()+'.json',JSON.stringify(data,null,2),'application/json');}
+function exportJSON(){var data={exportedAt:new Date().toISOString(),company:(CURRENT_USER&&CURRENT_USER.name)||'',jobs:jobs,crew:crew,hours:hours,subs:subs,estimates:estimates,sketches:sketches,logs:logs,schedule:schedule,changeOrders:changeOrders,expenses:expenses,leads:leads,plans:plans,pricebook:pricebook};_dl('orchamind-export-'+_stamp()+'.json',JSON.stringify(data,null,2),'application/json');}
 function exportCSV(which){var map={jobs:jobs,crew:crew,hours:hours,subs:subs};var rows=map[which]||[];if(!rows.length){alert('Nothing to export there yet.');return;}_dl('orchamind-'+which+'-'+_stamp()+'.csv',_csv(rows),'text/csv');}
 function renderExportCounts(){var el=document.getElementById('exportCounts');if(!el)return;el.textContent=jobs.length+' projects \u00b7 '+hours.length+' timesheet entries \u00b7 '+crew.length+' crew \u00b7 '+subs.length+' subcontractors';}
 document.querySelectorAll('.modal-bg').forEach(function(m){m.addEventListener('click',function(e){if(e.target===m)closeModal(m.id);});});
@@ -1941,7 +1978,7 @@ function clearAllData(){
 
 // Explicit, non-debounced save that reports success/failure
 function saveNow(cb){
-  fetch('/api/data',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({data:{saved:true,jobs:jobs,crew:crew,hours:hours,subs:subs,estimates:estimates,sketches:sketches,logs:logs,schedule:schedule,changeOrders:changeOrders,expenses:expenses,leads:leads,plans:plans}})})
+  fetch('/api/data',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({data:{saved:true,jobs:jobs,crew:crew,hours:hours,subs:subs,estimates:estimates,sketches:sketches,logs:logs,schedule:schedule,changeOrders:changeOrders,expenses:expenses,leads:leads,plans:plans,pricebook:pricebook}})})
     .then(function(r){return r.json();})
     .then(function(o){var ok=o&&!o.error;if(ok)_dbReady=true;if(cb)cb(ok);})
     .catch(function(){if(cb)cb(false);});
@@ -3517,6 +3554,51 @@ function renderDispatch(){
   if(!crew.length)html='<div class="disp-empty-all">No crew yet. Add crew in the Crew tab, then dispatch them to jobs here.</div>';
   board.innerHTML=html;
 }
+function _pbCats(){var s={};(window.pricebook||[]).forEach(function(i){s[i.category||'Other']=1;});return Object.keys(s);}
+function renderPricebook(){
+  var list=document.getElementById('pbList');if(!list)return;
+  var dl=document.getElementById('pbCats');if(dl)dl.innerHTML=_pbCats().map(function(c){return '<option value="'+esc(c)+'">';}).join('');
+  var pb=(window.pricebook||[]);
+  if(!pb.length){list.innerHTML='<div class="pb-empty">No items yet. Add one above, or tap \u2728 Build with AI to generate a starter catalog for your trade.</div>';return;}
+  var groups={};pb.forEach(function(i){var c=i.category||'Other';(groups[c]=groups[c]||[]).push(i);});
+  var html='';Object.keys(groups).sort().forEach(function(c){
+    html+='<div class="pb-cat">'+esc(c)+'</div>';
+    groups[c].forEach(function(i){html+='<div class="pb-row"><div class="pb-nm">'+esc(i.name)+'</div><div class="pb-un">'+esc(i.unit||'ea')+'</div><div class="pb-pr">'+estMoney(i.price)+'</div><button class="pb-del" onclick="pbDel(\''+i.id+'\')">\u00d7</button></div>';});
+  });
+  list.innerHTML=html;
+}
+function pbAdd(){
+  var nm=document.getElementById('pbName').value.trim();if(!nm)return;
+  var it={id:uid(),category:document.getElementById('pbCat').value.trim()||'Other',name:nm,unit:document.getElementById('pbUnit').value.trim()||'ea',price:estNum(document.getElementById('pbPrice').value)};
+  window.pricebook=window.pricebook||[];window.pricebook.unshift(it);save();
+  document.getElementById('pbName').value='';document.getElementById('pbPrice').value='';document.getElementById('pbUnit').value='';
+  renderPricebook();
+}
+function pbDel(id){pricebook=(window.pricebook||[]).filter(function(x){return x.id!==id;});save();renderPricebook();}
+function aiBuildPricebook(){
+  var trade=prompt('Describe your trade or business so AI can build your starter pricebook:\n(e.g. "residential electrician in California")');
+  if(!trade)return;
+  var msg=document.getElementById('pbMsg');if(msg)msg.textContent='Building your pricebook with AI...';
+  var sys='You are a construction pricing expert. Build a starter pricebook of the most common services and materials for the described trade, using realistic current California contractor pricing. Return ONLY JSON, no markdown or commentary: {"items":[{"category":"string","name":"string","unit":"string","price":number}]} with 12-20 items across sensible categories (Labor, Materials, Permits, and trade-specific).';
+  callClaude(sys,'Trade: '+trade,function(text){
+    var obj=_estParseJSON(text);
+    if(!obj||!obj.items||!obj.items.length){if(msg)msg.textContent='Could not build the pricebook - try rephrasing.';return;}
+    window.pricebook=window.pricebook||[];var ex={};window.pricebook.forEach(function(i){ex[(i.name||'').toLowerCase()]=1;});var added=0;
+    obj.items.forEach(function(i){var k=(i.name||'').toLowerCase();if(k&&!ex[k]){window.pricebook.push({id:uid(),category:i.category||'Other',name:i.name,unit:i.unit||'ea',price:estNum(i.price)});ex[k]=1;added++;}});
+    save();renderPricebook();if(msg)msg.textContent='Added '+added+' items to your pricebook.';
+  },function(err){if(msg)msg.textContent='AI error: '+err;});
+}
+function estFromPricebook(){
+  var c=document.getElementById('estPbPick');if(!c)return;
+  if(c.innerHTML){c.innerHTML='';return;}
+  var pb=(window.pricebook||[]);
+  if(!pb.length){document.getElementById('estAiMsg').textContent='Your pricebook is empty - build it in the Pricebook tab first.';return;}
+  var groups={};pb.forEach(function(i){var g=i.category||'Other';(groups[g]=groups[g]||[]).push(i);});
+  var html='<div class="pbpick-h">Tap an item to add it as a line \u00b7 tap the button again to close</div>';
+  Object.keys(groups).sort().forEach(function(g){html+='<div class="pbpick-cat">'+esc(g)+'</div>';groups[g].forEach(function(i){html+='<button type="button" class="pbpick-item" onclick="estPbAdd(\''+i.id+'\')">'+esc(i.name)+' <span>'+estMoney(i.price)+'/'+esc(i.unit||'ea')+'</span></button>';});});
+  c.innerHTML=html;
+}
+function estPbAdd(id){var i=(window.pricebook||[]).find(function(x){return x.id===id;});if(!i)return;addEstLine({desc:i.name,qty:1,unit:i.unit||'ea',price:i.price});recalcEst();}
 function renderSchedule(){
   renderUpcoming();
   var host=document.getElementById('schWeek'); if(!host) return;
