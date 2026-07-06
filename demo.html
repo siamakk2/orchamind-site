@@ -457,6 +457,24 @@ button:active, .btn:active, .btn-ghost:active, .tab:active, [role="button"]:acti
 .sel-acts button:disabled{opacity:.5;cursor:not-allowed;}
 .sel-del{color:#D32F2F!important;margin-left:auto;}
 </style>
+<style id="sf-css">
+.sf-gen{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px;}
+.sf-gen select,.sf-gen input{border:1px solid var(--line,#e1e8f0);border-radius:8px;padding:9px 11px;font-size:13px;background:#fff;}
+.sf-gen input{flex:1;min-width:180px;}
+.sf-card{background:#fff;border:1px solid var(--line,#e1e8f0);border-radius:12px;padding:16px;margin-bottom:14px;}
+.sf-topic{font-weight:800;font-size:17px;color:var(--navy,#0A1628);margin-bottom:10px;}
+.sf-sec{margin-bottom:10px;}
+.sf-sec h4{font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted,#5A6B7D);margin:0 0 4px;}
+.sf-sec ul{margin:0;padding-left:18px;}
+.sf-sec li{font-size:13.5px;color:var(--navy,#0A1628);margin-bottom:3px;}
+.sf-acts{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap;}
+.sf-log-h{font-weight:700;color:var(--navy,#0A1628);font-size:12px;text-transform:uppercase;letter-spacing:.05em;margin:20px 0 8px;}
+.sf-logrow{display:flex;justify-content:space-between;align-items:center;background:#fff;border:1px solid var(--line,#e1e8f0);border-radius:9px;padding:11px 13px;margin-bottom:6px;gap:10px;}
+.sf-lt{font-weight:600;font-size:13.5px;color:var(--navy,#0A1628);}
+.sf-lm{font-size:11.5px;color:var(--muted,#5A6B7D);margin-top:2px;}
+.sf-logrow button{border:1px solid var(--line,#e1e8f0);background:#fff;border-radius:7px;padding:6px 12px;font-size:12px;font-weight:600;cursor:pointer;color:var(--navy,#0A1628);margin-left:6px;}
+.sf-del{color:#D32F2F!important;}
+</style>
 </head>
 <body class="locked">
 <div id="demoBanner" style="position:relative;z-index:1;background:linear-gradient(90deg,#0A1628,#1565C0);color:#fff;padding:10px 16px;display:flex;align-items:center;justify-content:center;gap:16px;flex-wrap:wrap;font-family:'Outfit',sans-serif;font-size:14px;box-shadow:0 2px 12px rgba(0,0,0,0.2);">
@@ -539,6 +557,7 @@ button:active, .btn:active, .btn-ghost:active, .tab:active, [role="button"]:acti
   <button class="tab" data-tab="jobs"><svg class="ti" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 7h20v13a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1z"/><path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>Jobs</button>
   <button class="tab" data-tab="pricebook"><svg class="ti" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>Pricebook</button>
       <button class="tab" data-tab="selections"><svg class="ti" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>Selections</button>
+      <button class="tab" data-tab="safety"><svg class="ti" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="M9 12l2 2 4-4"/></svg>Safety</button>
       <button class="tab" data-tab="dispatch"><svg class="ti" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>Dispatch</button>
       <button class="tab" data-tab="schedule"><svg class="ti" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>Schedule</button>
   <button class="tab" data-tab="log"><svg class="ti" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>Site Log</button>
@@ -808,6 +827,14 @@ button:active, .btn:active, .btn-ghost:active, .tab:active, [role="button"]:acti
     <div class="panel-head"><h2>Selections</h2><div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;"><select id="selJob" onchange="renderSelections()"></select><button class="btn" onclick="aiSuggestSelections()">✨ AI Suggest</button><button class="btn btn-ghost" onclick="printSelectionSheet()">📄 Client Sheet</button></div></div>
     <div id="selMsg" class="est-ai-msg"></div>
     <div id="selList"></div>
+  </div>
+  <div class="panel" id="panel-safety">
+    <div class="panel-head"><h2>Safety</h2></div>
+    <div class="sf-gen"><select id="sfJob"></select><input id="sfTask" placeholder="Task or hazard (optional) — e.g. trenching, working at height"><button class="btn" onclick="aiToolboxTalk()">✨ Generate Toolbox Talk</button></div>
+    <div id="sfMsg" class="est-ai-msg"></div>
+    <div id="sfCurrent"></div>
+    <div class="sf-log-h">Toolbox Talk Log</div>
+    <div id="sfLog"></div>
   </div>
   <div class="panel" id="panel-dispatch">
     <div class="panel-head"><h2>Dispatch Board</h2></div>
@@ -1472,6 +1499,7 @@ var selections=[
   {id:'sl1',jobId:'j1',jobName:'Sonoma Vista Residence',category:'Flooring',options:[{label:'Luxury vinyl plank',price:6500},{label:'Engineered hardwood',price:11200},{label:'Porcelain tile',price:9800}],chosen:'Engineered hardwood',status:'approved'},
   {id:'sl2',jobId:'j1',jobName:'Sonoma Vista Residence',category:'Kitchen countertops',options:[{label:'Laminate',price:2200},{label:'Granite',price:5400},{label:'Quartz',price:6800}],chosen:'',status:'pending'}
 ];
+var safety=[{id:'sf1',date:'2026-06-20',jobId:'j4',jobName:'Calistoga Pool & Deck',topic:'Excavation & trenching safety',hazards:['Cave-in / soil collapse','Underground utilities','Heavy equipment near crew'],controls:['Slope or bench trenches deeper than 5 ft','Call 811 to locate utilities before digging','Keep crew clear of equipment swing radius'],keyPoints:['Never enter an unprotected trench','Use a spotter when backing equipment','Re-inspect the trench daily and after rain'],status:'logged'}];
 var crew=[
   {id:'c1',name:'Mike Torres',role:'Lead Framer',assign:'Sonoma Vista Residence',status:'on-site'},
   {id:'c2',name:'Danny Ruiz',role:'Carpenter',assign:'Valley View Estate',status:'on-site'},
@@ -1506,7 +1534,7 @@ function writeLocal(){try{localStorage.setItem(dataKey(),JSON.stringify({saved:t
 function markPending(){_pendingSync=true;try{localStorage.setItem(pendKey(),'1');}catch(e){}updateSyncPill();}
 function markSynced(){_pendingSync=false;try{localStorage.removeItem(pendKey());}catch(e){}updateSyncPill();}
 function pushToServer(){
-  fetch('/api/data',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({data:{saved:true,jobs:jobs,crew:crew,hours:hours,subs:subs,estimates:estimates,sketches:sketches,logs:logs,schedule:schedule,changeOrders:changeOrders,expenses:expenses,leads:leads,plans:plans,pricebook:pricebook,selections:selections}})})
+  fetch('/api/data',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({data:{saved:true,jobs:jobs,crew:crew,hours:hours,subs:subs,estimates:estimates,sketches:sketches,logs:logs,schedule:schedule,changeOrders:changeOrders,expenses:expenses,leads:leads,plans:plans,pricebook:pricebook,selections:selections,safety:safety}})})
     .then(function(r){return r.json();})
     .then(function(o){if(o&&!o.error){_dbReady=true;markSynced();}else{markPending();}})
     .catch(function(){markPending();});
@@ -1525,7 +1553,7 @@ function load(cb){
   // 1) OFFLINE-FIRST: recall unsynced flag + hydrate instantly from this device
   try{_pendingSync=(localStorage.getItem(pendKey())==='1');}catch(e){_pendingSync=false;}
   var localHad=false;
-  try{var ls=localStorage.getItem(dataKey());if(ls){var d=JSON.parse(ls);if(d&&d.saved){jobs=Array.isArray(d.jobs)?d.jobs:jobs;crew=Array.isArray(d.crew)?d.crew:crew;pricebook=Array.isArray(d.pricebook)?d.pricebook:pricebook;selections=Array.isArray(d.selections)?d.selections:selections;hours=Array.isArray(d.hours)?d.hours:hours;subs=Array.isArray(d.subs)?d.subs:subs;estimates=Array.isArray(d.estimates)?d.estimates:estimates;sketches=Array.isArray(d.sketches)?d.sketches:sketches;logs=Array.isArray(d.logs)?d.logs:logs;schedule=Array.isArray(d.schedule)?d.schedule:schedule;changeOrders=Array.isArray(d.changeOrders)?d.changeOrders:changeOrders;expenses=Array.isArray(d.expenses)?d.expenses:expenses;leads=Array.isArray(d.leads)?d.leads:leads;plans=(Array.isArray(d.plans)&&d.plans.length)?d.plans:plans;localHad=true;}}}catch(e){}
+  try{var ls=localStorage.getItem(dataKey());if(ls){var d=JSON.parse(ls);if(d&&d.saved){jobs=Array.isArray(d.jobs)?d.jobs:jobs;crew=Array.isArray(d.crew)?d.crew:crew;pricebook=Array.isArray(d.pricebook)?d.pricebook:pricebook;selections=Array.isArray(d.selections)?d.selections:selections;safety=Array.isArray(d.safety)?d.safety:safety;hours=Array.isArray(d.hours)?d.hours:hours;subs=Array.isArray(d.subs)?d.subs:subs;estimates=Array.isArray(d.estimates)?d.estimates:estimates;sketches=Array.isArray(d.sketches)?d.sketches:sketches;logs=Array.isArray(d.logs)?d.logs:logs;schedule=Array.isArray(d.schedule)?d.schedule:schedule;changeOrders=Array.isArray(d.changeOrders)?d.changeOrders:changeOrders;expenses=Array.isArray(d.expenses)?d.expenses:expenses;leads=Array.isArray(d.leads)?d.leads:leads;plans=(Array.isArray(d.plans)&&d.plans.length)?d.plans:plans;localHad=true;}}}catch(e){}
   // 2) reach the shared database, but NEVER block the app
   var timer=setTimeout(function(){updateSyncPill();finish();},3000);
   fetch('/api/data').then(function(r){return r.json();}).then(function(out){
@@ -1538,7 +1566,7 @@ function load(cb){
       crew=Array.isArray(out.data.crew)?out.data.crew:[];
       hours=Array.isArray(out.data.hours)?out.data.hours:[];
       subs=Array.isArray(out.data.subs)?out.data.subs:[];
-      estimates=Array.isArray(out.data.estimates)?out.data.estimates:[];pricebook=Array.isArray(out.data.pricebook)?out.data.pricebook:pricebook;selections=Array.isArray(out.data.selections)?out.data.selections:selections;
+      estimates=Array.isArray(out.data.estimates)?out.data.estimates:[];pricebook=Array.isArray(out.data.pricebook)?out.data.pricebook:pricebook;selections=Array.isArray(out.data.selections)?out.data.selections:selections;safety=Array.isArray(out.data.safety)?out.data.safety:safety;
       sketches=Array.isArray(out.data.sketches)?out.data.sketches:[];
       logs=Array.isArray(out.data.logs)?out.data.logs:[];
       schedule=Array.isArray(out.data.schedule)?out.data.schedule:[];
@@ -1945,6 +1973,7 @@ document.querySelectorAll('.tab').forEach(function(t){
     if(t.dataset.tab==='log'){renderLog();}
     if(t.dataset.tab==='schedule'){renderSchedule();}
     if(t.dataset.tab==='dispatch'){renderDispatch();}
+    if(t.dataset.tab==='safety'){renderSafety();}
     if(t.dataset.tab==='pricebook'){renderPricebook();}
     if(t.dataset.tab==='selections'){renderSelections();}
     if(t.dataset.tab==='changes'){renderChangeOrders();}
@@ -1962,7 +1991,7 @@ function _dl(fn,txt,mime){var b=new Blob([txt],{type:mime||'text/plain'});var u=
 function _csvCell(v){v=(v==null?'':String(v));if(/[",\n]/.test(v))v='"'+v.replace(/"/g,'""')+'"';return v;}
 function _csv(rows){if(!rows||!rows.length)return '';var cols=Object.keys(rows[0]);var out=cols.join(',')+'\n';rows.forEach(function(r){out+=cols.map(function(k){return _csvCell(r[k]);}).join(',')+'\n';});return out;}
 function _stamp(){return new Date().toISOString().split('T')[0];}
-function exportJSON(){var data={exportedAt:new Date().toISOString(),company:(CURRENT_USER&&CURRENT_USER.name)||'',jobs:jobs,crew:crew,hours:hours,subs:subs,estimates:estimates,sketches:sketches,logs:logs,schedule:schedule,changeOrders:changeOrders,expenses:expenses,leads:leads,plans:plans,pricebook:pricebook,selections:selections};_dl('orchamind-export-'+_stamp()+'.json',JSON.stringify(data,null,2),'application/json');}
+function exportJSON(){var data={exportedAt:new Date().toISOString(),company:(CURRENT_USER&&CURRENT_USER.name)||'',jobs:jobs,crew:crew,hours:hours,subs:subs,estimates:estimates,sketches:sketches,logs:logs,schedule:schedule,changeOrders:changeOrders,expenses:expenses,leads:leads,plans:plans,pricebook:pricebook,selections:selections,safety:safety};_dl('orchamind-export-'+_stamp()+'.json',JSON.stringify(data,null,2),'application/json');}
 function exportCSV(which){var map={jobs:jobs,crew:crew,hours:hours,subs:subs};var rows=map[which]||[];if(!rows.length){alert('Nothing to export there yet.');return;}_dl('orchamind-'+which+'-'+_stamp()+'.csv',_csv(rows),'text/csv');}
 function renderExportCounts(){var el=document.getElementById('exportCounts');if(!el)return;el.textContent=jobs.length+' projects \u00b7 '+hours.length+' timesheet entries \u00b7 '+crew.length+' crew \u00b7 '+subs.length+' subcontractors';}
 document.querySelectorAll('.modal-bg').forEach(function(m){m.addEventListener('click',function(e){if(e.target===m)closeModal(m.id);});});
@@ -2007,7 +2036,7 @@ function clearAllData(){
 
 // Explicit, non-debounced save that reports success/failure
 function saveNow(cb){
-  fetch('/api/data',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({data:{saved:true,jobs:jobs,crew:crew,hours:hours,subs:subs,estimates:estimates,sketches:sketches,logs:logs,schedule:schedule,changeOrders:changeOrders,expenses:expenses,leads:leads,plans:plans,pricebook:pricebook,selections:selections}})})
+  fetch('/api/data',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({data:{saved:true,jobs:jobs,crew:crew,hours:hours,subs:subs,estimates:estimates,sketches:sketches,logs:logs,schedule:schedule,changeOrders:changeOrders,expenses:expenses,leads:leads,plans:plans,pricebook:pricebook,selections:selections,safety:safety}})})
     .then(function(r){return r.json();})
     .then(function(o){var ok=o&&!o.error;if(ok)_dbReady=true;if(cb)cb(ok);})
     .catch(function(){if(cb)cb(false);});
@@ -3672,6 +3701,69 @@ function printSelectionSheet(){
   }).join('');
   var w=window.open('','_blank');if(!w){alert('Please allow pop-ups.');return;}
   var doc='<!doctype html><html><head><meta charset="utf-8"><title>Selections - '+esc(j?j.name:'')+'</title><style>*{box-sizing:border-box;}body{font-family:Arial,Helvetica,sans-serif;color:#0A1628;margin:36px;}.hd{border-bottom:3px solid #1565C0;padding-bottom:14px;margin-bottom:8px;}.co{font-size:22px;font-weight:800;color:#1565C0;}.sub{color:#5A6B7D;font-size:13px;margin-top:4px;}h1{font-size:22px;margin:18px 0 4px;}.lead{color:#5A6B7D;font-size:13.5px;margin-bottom:20px;}.selblock{margin-bottom:16px;}.selblock h3{font-size:15px;margin:0 0 6px;border-bottom:1px solid #E1E8F0;padding-bottom:4px;}.ch{color:#2E9B5B;font-size:12px;font-weight:600;}table{width:100%;border-collapse:collapse;}td{padding:6px 8px;font-size:13px;border-bottom:1px solid #F0F3F7;}td.r{text-align:right;font-weight:600;color:#1565C0;width:110px;}tr.chosen td{background:#F0FBF4;font-weight:600;}.sign{margin-top:30px;display:flex;gap:40px;}.sign div{flex:1;border-top:1px solid #0A1628;padding-top:6px;font-size:12px;color:#5A6B7D;}.ft{margin-top:24px;font-size:11px;color:#9aa7b4;text-align:center;}</style></head><body><div class="hd"><div class="co">'+esc(company)+'</div><div class="sub">Selection Sheet'+(j?(' \u00b7 '+esc(j.name)):'')+(j&&j.client?(' \u00b7 '+esc(j.client)):'')+'</div></div><h1>Your finish selections</h1><div class="lead">Please review the options below and initial your choices. Prices are estimates and will be confirmed on your change order.</div>'+rows+'<div class="sign"><div>Client signature / date</div><div>'+esc(company)+' / date</div></div><div class="ft">Prepared by '+esc(company)+' \u00b7 powered by Orchamind</div></body></html>';
+  w.document.write(doc);w.document.close();w.focus();setTimeout(function(){try{w.print();}catch(e){}},400);
+}
+var _sfCurrent=null;
+function renderSafety(){
+  var sel=document.getElementById('sfJob');
+  if(sel){var cur=sel.value;sel.innerHTML='<option value="">\u2014 General / no specific job \u2014</option>'+(window.jobs||[]).map(function(j){return '<option value="'+esc(j.id)+'">'+esc(j.name)+'</option>';}).join('');if(cur)sel.value=cur;}
+  _sfRenderCurrent();_sfRenderLog();
+}
+function _sfList(arr){return (arr||[]).map(function(x){return '<li>'+esc(x)+'</li>';}).join('');}
+function _sfRenderCurrent(){
+  var c=document.getElementById('sfCurrent');if(!c)return;
+  if(!_sfCurrent){c.innerHTML='';return;}
+  var t=_sfCurrent;
+  c.innerHTML='<div class="sf-card"><div class="sf-topic">'+esc(t.topic)+'</div>'+
+    '<div class="sf-sec"><h4>Hazards</h4><ul>'+_sfList(t.hazards)+'</ul></div>'+
+    '<div class="sf-sec"><h4>Controls / precautions</h4><ul>'+_sfList(t.controls)+'</ul></div>'+
+    '<div class="sf-sec"><h4>Key talking points</h4><ul>'+_sfList(t.keyPoints)+'</ul></div>'+
+    '<div class="sf-acts"><button class="btn" onclick="sfSaveTalk()">Save to log</button><button class="btn btn-ghost" onclick="printToolboxTalk()">\u{1F4C4} Sign-off sheet</button></div></div>';
+}
+function _sfRenderLog(){
+  var l=document.getElementById('sfLog');if(!l)return;
+  var items=(window.safety||[]);
+  if(!items.length){l.innerHTML='<div class="pb-empty">No toolbox talks logged yet. Generate one above.</div>';return;}
+  l.innerHTML=items.map(function(t){return '<div class="sf-logrow"><div><div class="sf-lt">'+esc(t.topic)+'</div><div class="sf-lm">'+esc((typeof fmtDate==='function'?fmtDate(t.date):t.date))+(t.jobName?(' \u00b7 '+esc(t.jobName)):'')+'</div></div><div><button onclick="printToolboxTalk(\''+t.id+'\')">Sheet</button><button class="sf-del" onclick="sfDelTalk(\''+t.id+'\')">\u00d7</button></div></div>';}).join('');
+}
+function aiToolboxTalk(){
+  var jid=document.getElementById('sfJob').value;var j=(window.jobs||[]).find(function(x){return x.id===jid;});
+  var task=document.getElementById('sfTask').value.trim();
+  var msg=document.getElementById('sfMsg');
+  var ctx=(j?('Project: '+j.name+' ('+(j.location||'')+'), phase: '+(j.status||'')+'. '):'')+(task?('Focus/task: '+task):'');
+  if(!ctx){if(msg)msg.textContent='Pick a job or type a task/hazard first.';return;}
+  if(msg)msg.textContent='Generating today\u2019s toolbox talk with AI...';
+  var sys='You are a construction safety officer preparing a short daily toolbox talk (safety meeting) for a crew. Based on the project and task, produce a focused, practical talk. Return ONLY JSON, no markdown or commentary: {"topic":"string","hazards":["..."],"controls":["..."],"keyPoints":["..."]} with 3-6 items in each array, specific to the work described, in plain language a crew understands, referencing relevant OSHA-style precautions.';
+  callClaude(sys,ctx,function(text){
+    var obj=_estParseJSON(text);
+    if(!obj||!obj.topic){if(msg)msg.textContent='Could not generate the talk - try again.';return;}
+    _sfCurrent={topic:obj.topic,hazards:obj.hazards||[],controls:obj.controls||[],keyPoints:obj.keyPoints||[],jobId:jid,jobName:j?j.name:'',date:(new Date().toISOString().split('T')[0])};
+    _sfRenderCurrent();if(msg)msg.textContent='Talk ready - review, save it to your log, and print the sign-off sheet.';
+  },function(err){if(msg)msg.textContent='AI error: '+err;});
+}
+function sfSaveTalk(){
+  if(!_sfCurrent)return;
+  window.safety=window.safety||[];
+  window.safety.unshift(Object.assign({id:uid(),status:'logged'},_sfCurrent));
+  _sfCurrent=null;save();
+  var msg=document.getElementById('sfMsg');if(msg)msg.textContent='Saved to your toolbox talk log.';
+  renderSafety();
+}
+function sfDelTalk(id){safety=(window.safety||[]).filter(function(x){return x.id!==id;});save();renderSafety();}
+function printToolboxTalk(id){
+  var t=id?(window.safety||[]).find(function(x){return x.id===id;}):_sfCurrent;
+  if(!t){alert('Generate a toolbox talk first.');return;}
+  var company=(CURRENT_USER&&CURRENT_USER.name)||'Your Company';
+  function sec(title,arr){return '<h3>'+title+'</h3><ul>'+(arr||[]).map(function(x){return '<li>'+esc(x)+'</li>';}).join('')+'</ul>';}
+  var signRows='';for(var i=0;i<10;i++){signRows+='<tr><td>&nbsp;</td><td>&nbsp;</td></tr>';}
+  var w=window.open('','_blank');if(!w){alert('Please allow pop-ups.');return;}
+  var doc='<!doctype html><html><head><meta charset="utf-8"><title>Toolbox Talk - '+esc(t.topic)+'</title><style>*{box-sizing:border-box;}body{font-family:Arial,Helvetica,sans-serif;color:#0A1628;margin:34px;}.hd{border-bottom:3px solid #1565C0;padding-bottom:12px;margin-bottom:10px;display:flex;justify-content:space-between;align-items:flex-end;}.co{font-size:20px;font-weight:800;color:#1565C0;}.mt{font-size:12px;color:#5A6B7D;text-align:right;}h1{font-size:22px;margin:10px 0 2px;}.sub{color:#5A6B7D;font-size:13px;margin-bottom:14px;}h3{font-size:13px;text-transform:uppercase;letter-spacing:.04em;color:#1565C0;margin:16px 0 4px;}ul{margin:0;padding-left:20px;}li{font-size:13px;margin-bottom:4px;}table{width:100%;border-collapse:collapse;margin-top:8px;}th,td{border:1px solid #C9D4E0;padding:9px 10px;font-size:12.5px;text-align:left;}th{background:#EEF3F8;text-transform:uppercase;font-size:10.5px;letter-spacing:.04em;}.sig{height:34px;}.ft{margin-top:20px;font-size:11px;color:#9aa7b4;text-align:center;}</style></head><body>'+
+   '<div class="hd"><div class="co">'+esc(company)+'</div><div class="mt">Toolbox Talk / Safety Meeting<br>Date: '+esc(t.date||'')+(t.jobName?('<br>Job: '+esc(t.jobName)):'')+'</div></div>'+
+   '<h1>'+esc(t.topic)+'</h1><div class="sub">Review with the crew before work begins. Everyone present must sign below.</div>'+
+   sec('Hazards',t.hazards)+sec('Controls / precautions',t.controls)+sec('Key talking points',t.keyPoints)+
+   '<h3>Attendance &amp; sign-off</h3><table><thead><tr><th style="width:50%">Print name</th><th>Signature</th></tr></thead><tbody>'+signRows.replace(/<td>/g,'<td class="sig">')+'</tbody></table>'+
+   '<div style="margin-top:16px;font-size:12.5px;">Supervisor: __________________________  Signature: __________________________</div>'+
+   '<div class="ft">Prepared by '+esc(company)+' \u00b7 powered by Orchamind</div></body></html>';
   w.document.write(doc);w.document.close();w.focus();setTimeout(function(){try{w.print();}catch(e){}},400);
 }
 function renderSchedule(){
