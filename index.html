@@ -447,6 +447,19 @@ html{scroll-behavior:smooth}
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="Orchamind">
+<style id="feat2-css">
+.feat-cats{display:flex;flex-direction:column;gap:30px;margin-top:38px;text-align:left;}
+.feat-cat-h{display:flex;align-items:center;gap:10px;font-size:19px;font-weight:800;color:#fff;margin-bottom:15px;}
+.fc-dot{width:11px;height:11px;border-radius:50%;display:inline-block;flex:none;}
+.feat-grid2{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:13px;}
+.feat2{background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.1);border-radius:13px;padding:16px 17px;transition:border-color .2s,transform .2s;}
+.feat2:hover{border-color:rgba(91,157,255,.5);transform:translateY(-3px);}
+.feat2 b{display:block;font-size:14.5px;color:#fff;margin-bottom:5px;font-weight:700;}
+.feat2 span{font-size:12.5px;color:#9fb2cc;line-height:1.5;}
+.feat-cta{display:inline-block;background:linear-gradient(135deg,#2D7FF9,#1565C0);color:#fff;font-weight:700;padding:15px 32px;border-radius:10px;text-decoration:none;font-size:15px;}
+.feat-cta:hover{filter:brightness(1.08);}
+@media(max-width:600px){.feat-grid2{grid-template-columns:1fr;}}
+</style>
 </head>
 <body>
 
@@ -829,46 +842,18 @@ html{scroll-behavior:smooth}
 
 <section class="features" id="features">
   <div class="wrap">
-    <div class="section-eyebrow">What it does</div>
-    <h2 class="section-title">Your whole operation, with an AI that actually understands it.</h2>
-    <p class="section-lead">Not a database you have to feed. A working assistant that knows your jobs, your crew, and your trade — and helps you run all of it.</p>
-    <div class="feat-grid">
-      <div class="feat">
-        <div class="feat-ic"><svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><rect x="9" y="2" width="6" height="12" rx="3" fill="#F9A825"/><path d="M5 11a7 7 0 0 0 14 0" stroke="#5B9DFF" stroke-width="2" fill="none" stroke-linecap="round"/><line x1="12" y1="18" x2="12" y2="22" stroke="#fff" stroke-width="2" stroke-linecap="round"/><line x1="8" y1="22" x2="16" y2="22" stroke="#fff" stroke-width="2" stroke-linecap="round"/></svg></div>
-        <h3>Voice command everything</h3>
-        <p>Log hours, assign crew, update job progress, add notes — all by talking. Hands-free from the truck or the job site.</p>
-      </div>
-      <div class="feat">
-        <div class="feat-ic"><svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><circle cx="12" cy="12" r="5" fill="#F9A825"/><line x1="12" y1="2" x2="12" y2="5" stroke="#F9A825" stroke-width="2" stroke-linecap="round"/><line x1="3.5" y1="6.5" x2="5.5" y2="8.5" stroke="#F9A825" stroke-width="2" stroke-linecap="round"/><line x1="20.5" y1="6.5" x2="18.5" y2="8.5" stroke="#F9A825" stroke-width="2" stroke-linecap="round"/><line x1="2" y1="19" x2="22" y2="19" stroke="#fff" stroke-width="2.4" stroke-linecap="round"/><line x1="6" y1="22" x2="18" y2="22" stroke="#5B9DFF" stroke-width="2.4" stroke-linecap="round"/></svg></div>
-        <h3>AI morning briefing</h3>
-        <p>A daily plain-English rundown of what matters most across every job — priorities, watch-outs, and quick wins.</p>
-      </div>
-      <div class="feat">
-        <div class="feat-ic"><svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><circle cx="12" cy="12" r="9" fill="none" stroke="#5B9DFF" stroke-width="2"/><circle cx="12" cy="12" r="4.5" fill="none" stroke="#5B9DFF" stroke-width="1.6" opacity=".65"/><path d="M12 12L19 7" stroke="#2D7FF9" stroke-width="2" stroke-linecap="round"/><circle cx="16.5" cy="8" r="2.2" fill="#F9A825"/></svg></div>
-        <h3>Risk radar</h3>
-        <p>The AI scans for budget overruns, jobs falling behind, idle crew, and inspections coming up — before they cost you.</p>
-      </div>
-      <div class="feat">
-        <div class="feat-ic"><svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><rect x="5" y="3" width="14" height="18" rx="2.5" fill="#fff"/><rect x="8.5" y="1.8" width="7" height="3.6" rx="1.5" fill="#5B9DFF"/><path d="M8.5 13l2.2 2.2 4.3-4.4" stroke="#2D7FF9" stroke-width="2.2" fill="none" stroke-linecap="round" stroke-linejoin="round"/><line x1="8.5" y1="9" x2="15.5" y2="9" stroke="#CBD9EC" stroke-width="1.8" stroke-linecap="round"/></svg></div>
-        <h3>Knows codes &amp; permits</h3>
-        <p>"What permits do I need for a deck in Irvine?" "What's the inspection order before drywall?" It knows California building codes, CALGreen, Title 24, and SoCal permitting — and always reminds you to confirm with your local department.</p>
-      </div>
-      <div class="feat">
-        <div class="feat-ic"><svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><circle cx="8" cy="8" r="3.4" fill="#2D7FF9"/><path d="M2.5 19a5.5 5.5 0 0 1 11 0z" fill="#2D7FF9"/><circle cx="16.5" cy="9" r="3" fill="#F9A825"/><path d="M12 19a5 5 0 0 1 9.5 0z" fill="#F9A825"/></svg></div>
-        <h3>Crew &amp; hours tracking</h3>
-        <p>See who's on what job, log hours for payroll, and keep your whole team on the same live page.</p>
-      </div>
-      <div class="feat">
-        <div class="feat-ic"><svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><rect x="5" y="10" width="14" height="11" rx="2.5" fill="#2D7FF9"/><path d="M8 10V7a4 4 0 0 1 8 0v3" stroke="#F9A825" stroke-width="2.2" fill="none" stroke-linecap="round"/><circle cx="12" cy="14.6" r="1.8" fill="#fff"/><rect x="11.2" y="15" width="1.6" height="4" rx="0.8" fill="#fff"/></svg></div>
-        <h3>Role-based access</h3>
-        <p>You and your managers see the money. Crew see only their own jobs — never your budgets or margins.</p>
-      </div>
-      <div class="feat">
-        <div class="feat-ic"><svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><rect x="3" y="13" width="4.5" height="8" rx="1.2" fill="#5B9DFF"/><rect x="9.7" y="8" width="4.5" height="13" rx="1.2" fill="#2D7FF9"/><rect x="16.4" y="4" width="4.5" height="17" rx="1.2" fill="#F9A825"/></svg></div>
-        <h3>Payroll &amp; job-cost reports</h3>
-        <p>One-click hours totals per worker for payroll, plus budget-vs-spent on every job. Download to Excel or PDF and hand it straight to your bookkeeper.</p>
-      </div>
+    <div class="section-eyebrow">Everything you run — in one app</div>
+    <h2 class="section-title">One platform for the whole job. An AI that does the work.</h2>
+    <p class="section-lead">Orchamind replaces the stack of tools contractors juggle — estimating, dispatch, crew, safety, client updates, billing — and puts an AI on top of all of it. Not a database you feed. An assistant that runs the business with you.</p>
+    <div class="feat-cats">
+      <div class="feat-cat"><h3 class="feat-cat-h"><span class="fc-dot" style="background:#F9A825"></span>Win the work</h3><div class="feat-grid2"><div class="feat2"><b>AI Estimates</b><span>Describe a job in plain words; AI writes the itemized estimate with real pricing.</span></div><div class="feat2"><b>Good · Better · Best Proposals</b><span>AI builds three tiered options so the client picks which, not whether.</span></div><div class="feat2"><b>Pricebook</b><span>Your saved services & prices — build the whole catalog instantly with AI.</span></div><div class="feat2"><b>Leads & CRM</b><span>Track every lead from first call to signed contract.</span></div></div></div>
+      <div class="feat-cat"><h3 class="feat-cat-h"><span class="fc-dot" style="background:#2D7FF9"></span>Run the job</h3><div class="feat-grid2"><div class="feat2"><b>Dispatch Board</b><span>See every job and who's on it; assign crew and advance status at a glance.</span></div><div class="feat2"><b>Schedule</b><span>Plan the week, assign crews, and never double-book.</span></div><div class="feat2"><b>Selections</b><span>AI generates the client's finish choices with good/better/best pricing.</span></div><div class="feat2"><b>Change Orders</b><span>Document scope changes and price impact — no disputes.</span></div><div class="feat2"><b>Site Log & Photos</b><span>Daily progress, notes, and photos on every job.</span></div></div></div>
+      <div class="feat-cat"><h3 class="feat-cat-h"><span class="fc-dot" style="background:#2E9B5B"></span>Manage the crew</h3><div class="feat-grid2"><div class="feat2"><b>GPS Time Clock</b><span>Crew clock in/out with GPS-verified location — hours auto-logged.</span></div><div class="feat2"><b>Certifications & Compliance</b><span>Track licenses & safety cards with expiry alerts before they lapse.</span></div><div class="feat2"><b>Safety / Toolbox Talks</b><span>AI writes a tailored safety talk for today's job + a crew sign-off sheet.</span></div><div class="feat2"><b>Equipment Tracking</b><span>Every tool's status and who has it.</span></div></div></div>
+      <div class="feat-cat"><h3 class="feat-cat-h"><span class="fc-dot" style="background:#A06BFF"></span>Keep clients happy</h3><div class="feat-grid2"><div class="feat2"><b>Client Portal</b><span>A shareable, live project page for the homeowner.</span></div><div class="feat2"><b>AI Client Updates</b><span>One tap; AI writes a warm progress update to text or email.</span></div></div></div>
+      <div class="feat-cat"><h3 class="feat-cat-h"><span class="fc-dot" style="background:#14B8A6"></span>Run the money</h3><div class="feat-grid2"><div class="feat2"><b>Invoicing</b><span>Turn any estimate into an invoice and get paid.</span></div><div class="feat2"><b>Costs & Profit</b><span>Live budget vs. actual on every job.</span></div><div class="feat2"><b>Service Plans</b><span>Recurring maintenance revenue on autopilot.</span></div><div class="feat2"><b>Reports</b><span>Know your numbers without a spreadsheet.</span></div></div></div>
+      <div class="feat-cat"><h3 class="feat-cat-h"><span class="fc-dot" style="background:#5B9DFF"></span>The AI brain</h3><div class="feat-grid2"><div class="feat2"><b>Voice — run it hands-free</b><span>“Log Mike 8 hours on Sonoma Vista.” Add jobs, assign crew, update progress by talking.</span></div><div class="feat2"><b>AI Morning Briefing</b><span>A daily plain-English rundown of what matters most across every job.</span></div><div class="feat2"><b>AI Risk Radar</b><span>Flags jobs trending over budget or behind schedule before they blow up.</span></div></div></div>
     </div>
+    <div style="text-align:center;margin-top:42px;"><a href="demo.html?demo=1" class="feat-cta">Try the live demo →</a></div>
   </div>
 </section>
 
