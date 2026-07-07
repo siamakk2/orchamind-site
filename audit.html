@@ -499,6 +499,7 @@
         generatePage(idx, function(err, html){
           PAGES[idx] = err ? null : html;
           done++;
+          PAGES_DONE = done; maybeEmailReport();
           // Update tab state
           updateTabState(idx, err);
           // Show first page as soon as it's done
@@ -589,7 +590,8 @@
   });
 
   // ── LEAD GATE ────────────────────────────────────────────────────
-  var LEAD = { name:'', email:'', url:'', businessName:'', version:'' };
+  var LEAD = { name:'', email:'', url:'', businessName:'', version:'', captured:false };
+  var PAGES_DONE = 0, REPORT_EMAILED = false;
 
   function showGate(url, businessName){
     LEAD.url = url; LEAD.businessName = businessName;
@@ -603,9 +605,11 @@
     if(!name){ err.textContent='Please enter your name.'; err.style.display='block'; return; }
     if(!email || !email.includes('@')){ err.textContent='Please enter a valid email.'; err.style.display='block'; return; }
     err.style.display='none';
-    LEAD.name = name; LEAD.email = email;
+    LEAD.name = name; LEAD.email = email; LEAD.captured = true;
     // Save to our backend (fire and forget — doesn't block the user)
     saveLead();
+    maybeEmailReport();
+    setTimeout(function(){ maybeEmailReport(true); }, 25000);
     closeGate();
     showToast('✓ Got it, ' + name.split(' ')[0] + '! Your report is ready.');
   }
@@ -619,22 +623,20 @@
   }
 
   function saveLead(){
-    // Save lead to Upstash via our data API
+    // store the lead immediately (no report => store only, no email)
+    fetch('/api/leads', { method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ action:'saveLead', lead:{ name:LEAD.name, email:LEAD.email, url:LEAD.url, businessName:LEAD.businessName, version:LEAD.version||'', ts:new Date().toISOString() } }) }).catch(function(){});
+  }
+  function maybeEmailReport(force){
+    if(!LEAD.captured || REPORT_EMAILED) return;
+    if(!force && PAGES_DONE < 4) return;
+    REPORT_EMAILED = true;
     var _r = (typeof REPORT!=='undefined'&&REPORT)?REPORT:{};
-    var lead = {
-      name: LEAD.name,
-      email: LEAD.email,
-      url: LEAD.url,
-      businessName: LEAD.businessName,
-      version: LEAD.version||'',
-      ts: new Date().toISOString(),
-      report: { host:_r.host||LEAD.url, business_name:_r.business_name||LEAD.businessName, overall_score:_r.overall_score, grade_label:_r.grade_label, headline:_r.headline, what_they_do:_r.what_they_do, quick_wins:_r.quick_wins||[], scores:_r.scores||null }
-    };
-    fetch('/api/leads', {
-      method:'POST',
-      headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({ action:'saveLead', lead: lead })
-    }).catch(function(){/* silent fail */});
+    var pages = (PAGES||[]).map(function(html,i){ return html ? { title:'Website Version '+(i+1), html:html } : null; }).filter(Boolean);
+    var lead = { name:LEAD.name, email:LEAD.email, url:LEAD.url, businessName:LEAD.businessName, version:LEAD.version||'', ts:new Date().toISOString(),
+      report:{ host:_r.host||LEAD.url, business_name:_r.business_name||LEAD.businessName, overall_score:_r.overall_score, grade_label:_r.grade_label, headline:_r.headline, what_they_do:_r.what_they_do, quick_wins:_r.quick_wins||[], scores:_r.scores||null },
+      pages: pages };
+    fetch('/api/leads', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ action:'saveLead', lead: lead }) }).catch(function(){});
   }
 
   function showToast(msg){
