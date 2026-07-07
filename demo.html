@@ -509,6 +509,22 @@ button:active, .btn:active, .btn-ghost:active, .tab:active, [role="button"]:acti
 .eq-del{border:none;background:none;color:#C4CFDB;font-size:18px;cursor:pointer;padding:0 2px;}
 .eq-del:hover{color:#D32F2F;}
 </style>
+<style id="clk-css">
+.clk-card{background:linear-gradient(180deg,#0f2036,#0A1628);border:1px solid #23364d;border-radius:14px;padding:16px;margin-bottom:16px;color:#fff;}
+.clk-h{font-weight:800;font-size:15px;display:flex;align-items:center;gap:8px;margin-bottom:12px;}
+.clk-h span{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;background:#2D7FF9;color:#fff;padding:3px 9px;border-radius:20px;}
+.clk-in{display:flex;gap:8px;flex-wrap:wrap;}
+.clk-in select{border:1px solid #2b4058;background:#0d1a2b;color:#fff;border-radius:8px;padding:9px 11px;font-size:13px;flex:1;min-width:130px;}
+.clk-in .btn{flex:none;}
+.clk-msg{font-size:12px;color:#9fb4cc;margin-top:8px;min-height:15px;}
+.clk-none{font-size:12.5px;color:#7f97b0;margin-top:10px;}
+.clk-row{display:flex;align-items:center;gap:11px;background:#0d1a2b;border:1px solid #23364d;border-radius:10px;padding:11px 13px;margin-top:9px;}
+.clk-dot{width:9px;height:9px;border-radius:50%;background:#2E9B5B;box-shadow:0 0 0 4px rgba(46,155,91,.2);flex:none;}
+.clk-info{flex:1;}
+.clk-nm{font-weight:700;font-size:13.5px;}
+.clk-sub{font-size:11.5px;color:#9fb4cc;margin-top:2px;}
+.clk-out{background:#fff;color:#0A1628;border:none;border-radius:8px;padding:8px 14px;font-size:12.5px;font-weight:700;cursor:pointer;flex:none;}
+</style>
 </head>
 <body class="locked">
 <div id="demoBanner" style="position:relative;z-index:1;background:linear-gradient(90deg,#0A1628,#1565C0);color:#fff;padding:10px 16px;display:flex;align-items:center;justify-content:center;gap:16px;flex-wrap:wrap;font-family:'Outfit',sans-serif;font-size:14px;box-shadow:0 2px 12px rgba(0,0,0,0.2);">
@@ -1074,6 +1090,12 @@ button:active, .btn:active, .btn-ghost:active, .tab:active, [role="button"]:acti
         <button class="btn" onclick="openHoursModal()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Log Hours</button>
       </div>
     </div>
+    <div class="clk-card">
+      <div class="clk-h">⏱ Time Clock<span>GPS-verified</span></div>
+      <div class="clk-in"><select id="clkName"></select><select id="clkJob"></select><button class="btn" onclick="clockIn()">Clock In</button></div>
+      <div id="clkMsg" class="clk-msg"></div>
+      <div id="clkSess"></div>
+    </div>
     <div class="hours-table" id="hoursTable"></div>
   </div>
 
@@ -1552,6 +1574,7 @@ var selections=[
 var safety=[{id:'sf1',date:'2026-06-20',jobId:'j4',jobName:'Calistoga Pool & Deck',topic:'Excavation & trenching safety',hazards:['Cave-in / soil collapse','Underground utilities','Heavy equipment near crew'],controls:['Slope or bench trenches deeper than 5 ft','Call 811 to locate utilities before digging','Keep crew clear of equipment swing radius'],keyPoints:['Never enter an unprotected trench','Use a spotter when backing equipment','Re-inspect the trench daily and after rain'],status:'logged'}];
 var punch=[{id:'pu1',jobId:'j2',jobName:'Valley View Estate',desc:'Touch up paint on north hallway wall',location:'Hallway',status:'open'},{id:'pu2',jobId:'j2',jobName:'Valley View Estate',desc:'Adjust master closet door — rubs at top',location:'Master bedroom',status:'open'},{id:'pu3',jobId:'j2',jobName:'Valley View Estate',desc:'Replace cracked switch plate',location:'Kitchen',status:'done'}];
 var equipment=[{id:'eq1',name:'Skid steer loader',category:'Heavy equipment',status:'in-use',assignedTo:'Calistoga Pool & Deck'},{id:'eq2',name:'Generator (7500W)',category:'Power',status:'available',assignedTo:''},{id:'eq3',name:'Laser level',category:'Tools',status:'in-use',assignedTo:'Mike Torres'},{id:'eq4',name:'Compressor',category:'Power',status:'maintenance',assignedTo:''}];
+var clockSessions=[];
 var crew=[
   {id:'c1',name:'Mike Torres',role:'Lead Framer',assign:'Sonoma Vista Residence',status:'on-site'},
   {id:'c2',name:'Danny Ruiz',role:'Carpenter',assign:'Valley View Estate',status:'on-site'},
@@ -1586,7 +1609,7 @@ function writeLocal(){try{localStorage.setItem(dataKey(),JSON.stringify({saved:t
 function markPending(){_pendingSync=true;try{localStorage.setItem(pendKey(),'1');}catch(e){}updateSyncPill();}
 function markSynced(){_pendingSync=false;try{localStorage.removeItem(pendKey());}catch(e){}updateSyncPill();}
 function pushToServer(){
-  fetch('/api/data',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({data:{saved:true,jobs:jobs,crew:crew,hours:hours,subs:subs,estimates:estimates,sketches:sketches,logs:logs,schedule:schedule,changeOrders:changeOrders,expenses:expenses,leads:leads,plans:plans,pricebook:pricebook,selections:selections,safety:safety,punch:punch,equipment:equipment}})})
+  fetch('/api/data',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({data:{saved:true,jobs:jobs,crew:crew,hours:hours,subs:subs,estimates:estimates,sketches:sketches,logs:logs,schedule:schedule,changeOrders:changeOrders,expenses:expenses,leads:leads,plans:plans,pricebook:pricebook,selections:selections,safety:safety,punch:punch,equipment:equipment,clockSessions:clockSessions}})})
     .then(function(r){return r.json();})
     .then(function(o){if(o&&!o.error){_dbReady=true;markSynced();}else{markPending();}})
     .catch(function(){markPending();});
@@ -1605,7 +1628,7 @@ function load(cb){
   // 1) OFFLINE-FIRST: recall unsynced flag + hydrate instantly from this device
   try{_pendingSync=(localStorage.getItem(pendKey())==='1');}catch(e){_pendingSync=false;}
   var localHad=false;
-  try{var ls=localStorage.getItem(dataKey());if(ls){var d=JSON.parse(ls);if(d&&d.saved){jobs=Array.isArray(d.jobs)?d.jobs:jobs;crew=Array.isArray(d.crew)?d.crew:crew;pricebook=Array.isArray(d.pricebook)?d.pricebook:pricebook;selections=Array.isArray(d.selections)?d.selections:selections;safety=Array.isArray(d.safety)?d.safety:safety;punch=Array.isArray(d.punch)?d.punch:punch;equipment=Array.isArray(d.equipment)?d.equipment:equipment;hours=Array.isArray(d.hours)?d.hours:hours;subs=Array.isArray(d.subs)?d.subs:subs;estimates=Array.isArray(d.estimates)?d.estimates:estimates;sketches=Array.isArray(d.sketches)?d.sketches:sketches;logs=Array.isArray(d.logs)?d.logs:logs;schedule=Array.isArray(d.schedule)?d.schedule:schedule;changeOrders=Array.isArray(d.changeOrders)?d.changeOrders:changeOrders;expenses=Array.isArray(d.expenses)?d.expenses:expenses;leads=Array.isArray(d.leads)?d.leads:leads;plans=(Array.isArray(d.plans)&&d.plans.length)?d.plans:plans;localHad=true;}}}catch(e){}
+  try{var ls=localStorage.getItem(dataKey());if(ls){var d=JSON.parse(ls);if(d&&d.saved){jobs=Array.isArray(d.jobs)?d.jobs:jobs;crew=Array.isArray(d.crew)?d.crew:crew;pricebook=Array.isArray(d.pricebook)?d.pricebook:pricebook;selections=Array.isArray(d.selections)?d.selections:selections;safety=Array.isArray(d.safety)?d.safety:safety;punch=Array.isArray(d.punch)?d.punch:punch;equipment=Array.isArray(d.equipment)?d.equipment:equipment;clockSessions=Array.isArray(d.clockSessions)?d.clockSessions:clockSessions;hours=Array.isArray(d.hours)?d.hours:hours;subs=Array.isArray(d.subs)?d.subs:subs;estimates=Array.isArray(d.estimates)?d.estimates:estimates;sketches=Array.isArray(d.sketches)?d.sketches:sketches;logs=Array.isArray(d.logs)?d.logs:logs;schedule=Array.isArray(d.schedule)?d.schedule:schedule;changeOrders=Array.isArray(d.changeOrders)?d.changeOrders:changeOrders;expenses=Array.isArray(d.expenses)?d.expenses:expenses;leads=Array.isArray(d.leads)?d.leads:leads;plans=(Array.isArray(d.plans)&&d.plans.length)?d.plans:plans;localHad=true;}}}catch(e){}
   // 2) reach the shared database, but NEVER block the app
   var timer=setTimeout(function(){updateSyncPill();finish();},3000);
   fetch('/api/data').then(function(r){return r.json();}).then(function(out){
@@ -1618,7 +1641,7 @@ function load(cb){
       crew=Array.isArray(out.data.crew)?out.data.crew:[];
       hours=Array.isArray(out.data.hours)?out.data.hours:[];
       subs=Array.isArray(out.data.subs)?out.data.subs:[];
-      estimates=Array.isArray(out.data.estimates)?out.data.estimates:[];pricebook=Array.isArray(out.data.pricebook)?out.data.pricebook:pricebook;selections=Array.isArray(out.data.selections)?out.data.selections:selections;safety=Array.isArray(out.data.safety)?out.data.safety:safety;punch=Array.isArray(out.data.punch)?out.data.punch:punch;equipment=Array.isArray(out.data.equipment)?out.data.equipment:equipment;
+      estimates=Array.isArray(out.data.estimates)?out.data.estimates:[];pricebook=Array.isArray(out.data.pricebook)?out.data.pricebook:pricebook;selections=Array.isArray(out.data.selections)?out.data.selections:selections;safety=Array.isArray(out.data.safety)?out.data.safety:safety;punch=Array.isArray(out.data.punch)?out.data.punch:punch;equipment=Array.isArray(out.data.equipment)?out.data.equipment:equipment;clockSessions=Array.isArray(out.data.clockSessions)?out.data.clockSessions:clockSessions;
       sketches=Array.isArray(out.data.sketches)?out.data.sketches:[];
       logs=Array.isArray(out.data.logs)?out.data.logs:[];
       schedule=Array.isArray(out.data.schedule)?out.data.schedule:[];
@@ -1953,6 +1976,7 @@ function renderCrew(){
   }).join('');
 }
 function renderHours(){
+  renderClock();
   var t=document.getElementById('hoursTable');
   var rows='<div class="hours-row head"><div>Crew</div><div class="h-site">Job Site</div><div>Date</div><div>Hours</div></div>';
   if(!hours.length){t.innerHTML=rows+'<div class="empty"><p>No hours logged yet</p></div>';return;}
@@ -2032,6 +2056,7 @@ document.querySelectorAll('.tab').forEach(function(t){
     if(t.dataset.tab==='selections'){renderSelections();}
     if(t.dataset.tab==='changes'){renderChangeOrders();}
     if(t.dataset.tab==='costs'){renderCosts();}
+    if(t.dataset.tab==='hours'){renderHours();}
     if(t.dataset.tab==='leads'){renderLeads();}
     if(t.dataset.tab==='plans'){renderPlans();}
     if(t.dataset.tab==='customers'){renderCustomers();}
@@ -2045,7 +2070,7 @@ function _dl(fn,txt,mime){var b=new Blob([txt],{type:mime||'text/plain'});var u=
 function _csvCell(v){v=(v==null?'':String(v));if(/[",\n]/.test(v))v='"'+v.replace(/"/g,'""')+'"';return v;}
 function _csv(rows){if(!rows||!rows.length)return '';var cols=Object.keys(rows[0]);var out=cols.join(',')+'\n';rows.forEach(function(r){out+=cols.map(function(k){return _csvCell(r[k]);}).join(',')+'\n';});return out;}
 function _stamp(){return new Date().toISOString().split('T')[0];}
-function exportJSON(){var data={exportedAt:new Date().toISOString(),company:(CURRENT_USER&&CURRENT_USER.name)||'',jobs:jobs,crew:crew,hours:hours,subs:subs,estimates:estimates,sketches:sketches,logs:logs,schedule:schedule,changeOrders:changeOrders,expenses:expenses,leads:leads,plans:plans,pricebook:pricebook,selections:selections,safety:safety,punch:punch,equipment:equipment};_dl('orchamind-export-'+_stamp()+'.json',JSON.stringify(data,null,2),'application/json');}
+function exportJSON(){var data={exportedAt:new Date().toISOString(),company:(CURRENT_USER&&CURRENT_USER.name)||'',jobs:jobs,crew:crew,hours:hours,subs:subs,estimates:estimates,sketches:sketches,logs:logs,schedule:schedule,changeOrders:changeOrders,expenses:expenses,leads:leads,plans:plans,pricebook:pricebook,selections:selections,safety:safety,punch:punch,equipment:equipment,clockSessions:clockSessions};_dl('orchamind-export-'+_stamp()+'.json',JSON.stringify(data,null,2),'application/json');}
 function exportCSV(which){var map={jobs:jobs,crew:crew,hours:hours,subs:subs};var rows=map[which]||[];if(!rows.length){alert('Nothing to export there yet.');return;}_dl('orchamind-'+which+'-'+_stamp()+'.csv',_csv(rows),'text/csv');}
 function renderExportCounts(){var el=document.getElementById('exportCounts');if(!el)return;el.textContent=jobs.length+' projects \u00b7 '+hours.length+' timesheet entries \u00b7 '+crew.length+' crew \u00b7 '+subs.length+' subcontractors';}
 document.querySelectorAll('.modal-bg').forEach(function(m){m.addEventListener('click',function(e){if(e.target===m)closeModal(m.id);});});
@@ -2090,7 +2115,7 @@ function clearAllData(){
 
 // Explicit, non-debounced save that reports success/failure
 function saveNow(cb){
-  fetch('/api/data',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({data:{saved:true,jobs:jobs,crew:crew,hours:hours,subs:subs,estimates:estimates,sketches:sketches,logs:logs,schedule:schedule,changeOrders:changeOrders,expenses:expenses,leads:leads,plans:plans,pricebook:pricebook,selections:selections,safety:safety,punch:punch,equipment:equipment}})})
+  fetch('/api/data',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({data:{saved:true,jobs:jobs,crew:crew,hours:hours,subs:subs,estimates:estimates,sketches:sketches,logs:logs,schedule:schedule,changeOrders:changeOrders,expenses:expenses,leads:leads,plans:plans,pricebook:pricebook,selections:selections,safety:safety,punch:punch,equipment:equipment,clockSessions:clockSessions}})})
     .then(function(r){return r.json();})
     .then(function(o){var ok=o&&!o.error;if(ok)_dbReady=true;if(cb)cb(ok);})
     .catch(function(){if(cb)cb(false);});
@@ -3911,6 +3936,46 @@ function aiSuggestEquipment(){
     save();renderEquipment();if(msg)msg.textContent='Added '+added+' equipment items.';
   },function(err){if(msg)msg.textContent='AI error: '+err;});
 }
+var _clkTimer=null;
+function _clkTime(iso){try{return new Date(iso).toLocaleTimeString([],{hour:'numeric',minute:'2-digit'});}catch(e){return '';}}
+function _clkElapsed(iso){var ms=Date.now()-new Date(iso).getTime();if(ms<0)ms=0;var hh=Math.floor(ms/3600000);var mm=Math.floor((ms%3600000)/60000);return (hh>0?hh+'h ':'')+mm+'m';}
+function renderClock(){
+  var ncs=document.getElementById('clkName');
+  if(ncs){var cur=ncs.value;ncs.innerHTML='<option value="">Crew member\u2026</option>'+(window.crew||[]).map(function(c){return '<option value="'+esc(c.name)+'">'+esc(c.name)+'</option>';}).join('');if(cur)ncs.value=cur;}
+  var jcs=document.getElementById('clkJob');
+  if(jcs){var jc=jcs.value;jcs.innerHTML=(window.jobs||[]).map(function(j){return '<option value="'+esc(j.id)+'">'+esc(j.name)+'</option>';}).join('');if(jc)jcs.value=jc;}
+  var cs=document.getElementById('clkSess');if(!cs)return;
+  var sess=(window.clockSessions||[]);
+  if(!sess.length){cs.innerHTML='<div class="clk-none">No one clocked in right now. Pick a crew member and job, then Clock In.</div>';return;}
+  cs.innerHTML=sess.map(function(s){
+    return '<div class="clk-row"><span class="clk-dot"></span><div class="clk-info"><div class="clk-nm">'+esc(s.name)+'</div><div class="clk-sub">'+esc(s.jobName||'')+' \u00b7 in '+_clkTime(s.inTime)+' \u00b7 '+_clkElapsed(s.inTime)+(s.gps?' \u00b7 \u{1F4CD} GPS':' \u00b7 no GPS')+'</div></div><button class="clk-out" onclick="clockOut(\''+s.id+'\')">Clock Out</button></div>';
+  }).join('');
+}
+function clockIn(){
+  var nsel=document.getElementById('clkName');var name=nsel?nsel.value:'';
+  var jid=document.getElementById('clkJob').value;var j=(window.jobs||[]).find(function(x){return x.id===jid;});
+  var msg=document.getElementById('clkMsg');
+  if(!name){if(msg)msg.textContent='Pick a crew member first.';return;}
+  if(msg)msg.textContent='Getting location & clocking in\u2026';
+  function go(lat,lng,gps){
+    window.clockSessions=window.clockSessions||[];
+    window.clockSessions.push({id:uid(),name:name,jobId:jid,jobName:j?j.name:'',inTime:new Date().toISOString(),lat:lat,lng:lng,gps:gps});
+    save();renderClock();if(msg)msg.textContent=gps?(name+' clocked in \u2713 \u2014 location captured'):(name+' clocked in \u2713 \u2014 location unavailable');
+  }
+  if(navigator.geolocation){navigator.geolocation.getCurrentPosition(function(p){go(p.coords.latitude,p.coords.longitude,true);},function(){go(null,null,false);},{timeout:8000,enableHighAccuracy:true});}else{go(null,null,false);}
+}
+function clockOut(id){
+  var s=(window.clockSessions||[]).find(function(x){return x.id===id;});if(!s)return;
+  var msg=document.getElementById('clkMsg');if(msg)msg.textContent='Getting location & clocking out\u2026';
+  function fin(lat,lng,gps){
+    var hrs=Math.max(0,Math.round((Date.now()-new Date(s.inTime).getTime())/36000)/100);if(hrs<0.01)hrs=0.01;
+    hours.unshift({id:uid(),name:s.name,site:s.jobName,date:new Date().toISOString().split('T')[0],amount:hrs,gps:!!(s.gps&&gps),inAt:s.inTime,outAt:new Date().toISOString(),lat:lat,lng:lng});
+    clockSessions=(window.clockSessions||[]).filter(function(x){return x.id!==id;});
+    save();renderClock();renderHours();if(msg)msg.textContent=s.name+' clocked out \u2713 \u2014 '+hrs+'h logged'+((s.gps&&gps)?' (GPS-verified)':'');
+  }
+  if(navigator.geolocation){navigator.geolocation.getCurrentPosition(function(p){fin(p.coords.latitude,p.coords.longitude,true);},function(){fin(null,null,false);},{timeout:8000,enableHighAccuracy:true});}else{fin(null,null,false);}
+}
+if(!_clkTimer){_clkTimer=setInterval(function(){var p=document.getElementById('panel-hours');if(p&&p.classList.contains('active')&&(window.clockSessions||[]).length)renderClock();},30000);}
 function renderSchedule(){
   renderUpcoming();
   var host=document.getElementById('schWeek'); if(!host) return;
