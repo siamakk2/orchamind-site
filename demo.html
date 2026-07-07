@@ -542,6 +542,14 @@ button:active, .btn:active, .btn-ghost:active, .tab:active, [role="button"]:acti
 .cmp-del{border:none;background:none;color:#C4CFDB;font-size:18px;cursor:pointer;padding:0 2px;}.cmp-del:hover{color:#D32F2F;}
 .disp-warn{color:#E0A400;font-size:12px;cursor:help;}
 </style>
+<style id="lw-css">
+.lw-steps{margin:16px 0 10px;display:flex;flex-direction:column;gap:9px;}
+.lw-step{font-size:13px;color:var(--navy,#0A1628);display:flex;gap:10px;align-items:flex-start;}
+.lw-step b{background:var(--blue,#2D7FF9);color:#fff;width:20px;height:20px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:11px;flex:none;margin-top:1px;}
+.lw-tip{font-size:12px;color:var(--muted,#5A6B7D);background:#F5F8FC;border-radius:8px;padding:10px 12px;}
+.lw-tip code{background:#e6edf6;padding:1px 5px;border-radius:4px;font-size:11px;font-family:ui-monospace,Menlo,monospace;}
+#lwCode{width:100%;}
+</style>
 </head>
 <body class="locked">
 <div id="demoBanner" style="position:relative;z-index:1;background:linear-gradient(90deg,#0A1628,#1565C0);color:#fff;padding:10px 16px;display:flex;align-items:center;justify-content:center;gap:16px;flex-wrap:wrap;font-family:'Outfit',sans-serif;font-size:14px;box-shadow:0 2px 12px rgba(0,0,0,0.2);">
@@ -1002,7 +1010,7 @@ button:active, .btn:active, .btn-ghost:active, .tab:active, [role="button"]:acti
   <div class="panel" id="panel-leads">
     <div class="panel-head">
       <h2>Leads</h2>
-      <button class="btn" onclick="newLead()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>New Lead</button>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;"><button class="btn btn-ghost" onclick="openLeadWidget()"><svg class="ti" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>Website Widget</button><button class="btn" onclick="newLead()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>New Lead</button></div>
     </div>
     <p style="color:var(--muted);font-size:13.5px;margin:-4px 0 16px;">Every prospect from first call to won. Move a lead through the stages, draft a follow-up with AI, and turn a won lead into a job in one tap.</p>
     <div id="leadsBody"></div>
@@ -1506,6 +1514,16 @@ button:active, .btn:active, .btn-ghost:active, .tab:active, [role="button"]:acti
   <div class="field"><label>Assigned To</label><input type="text" id="crewAssign" placeholder="e.g. Sonoma Vista Residence"></div>
   <div class="field"><label>Status Today</label><select id="crewStatus"><option value="on-site">On Site</option><option value="off">Off / Unassigned</option></select></div>
   <div class="modal-foot"><button class="btn btn-ghost" onclick="closeModal('crewModal')">Cancel</button><button class="btn" onclick="saveCrew()">Save</button></div>
+</div></div>
+
+<div class="modal-bg" id="leadWidgetModal"><div class="modal" style="max-width:580px;">
+  <h3>Get leads from your website</h3>
+  <p style="color:var(--muted);font-size:13.5px;margin:-2px 0 14px;">Paste this one line into your website. When a visitor fills out the form, their details drop straight into this Leads tab — automatically, with no other setup.</p>
+  <div class="field"><label>Your embed code</label><textarea id="lwCode" readonly rows="2" style="font-family:ui-monospace,Menlo,monospace;font-size:12px;line-height:1.45;"></textarea></div>
+  <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;"><button class="btn" onclick="copyLeadWidget()">Copy code</button><a id="lwPreview" class="btn btn-ghost" href="#" target="_blank" rel="noopener">See a live preview</a><span id="lwMsg" style="font-size:12.5px;font-weight:600;"></span></div>
+  <div class="lw-steps"><div class="lw-step"><b>1</b><span>Copy the code above.</span></div><div class="lw-step"><b>2</b><span>Paste it into your website where you want the form — or send it to whoever manages your site.</span></div><div class="lw-step"><b>3</b><span>That's it. New leads show up right here in your Leads tab.</span></div></div>
+  <div class="lw-tip">Optional: customize with <code>data-color="#F9A825"</code> or <code>data-title="Get a free estimate"</code> on the script tag.</div>
+  <div class="modal-foot"><button class="btn btn-ghost" onclick="closeModal('leadWidgetModal')">Close</button></div>
 </div></div>
 
 <div class="modal-bg" id="hoursModal"><div class="modal">
@@ -4053,6 +4071,20 @@ function aiSuggestCerts(){
     obj.certs.forEach(function(ct){var k=(ct||'').toLowerCase();if(k&&!ex[k]){window.certs.push({id:uid(),crewName:nm,cert:ct,expires:''});ex[k]=1;added++;}});
     save();renderCompliance();if(msg)msg.textContent='Added '+added+' certifications for '+nm+' \u2014 set expiry dates as needed.';
   },function(err){if(msg)msg.textContent='AI error: '+err;});
+}
+function openLeadWidget(){
+  var u=(typeof CURRENT_USER!=='undefined'&&CURRENT_USER&&CURRENT_USER.username)?CURRENT_USER.username:'';
+  var code='<script src="https://orchamind.com/embed.js" data-orchamind="'+(u||'YOUR-ACCOUNT')+'"><\/script>';
+  var ta=document.getElementById('lwCode');if(ta)ta.value=code;
+  var pv=document.getElementById('lwPreview');if(pv)pv.href='https://orchamind.com/embed-preview.html?c='+encodeURIComponent(u||'demo');
+  var msg=document.getElementById('lwMsg');
+  if(msg){if(!u){msg.style.color='#B8860B';msg.textContent='Tip: sign in to get your personal code.';}else{msg.style.color='';msg.textContent='';}}
+  openModal('leadWidgetModal');
+}
+function copyLeadWidget(){
+  var t=document.getElementById('lwCode');if(!t)return;t.select();t.setSelectionRange(0,9999);
+  var done=function(){var m=document.getElementById('lwMsg');if(m){m.style.color='#2E9B5B';m.textContent='\u2713 Copied! Paste it on your website.';}};
+  try{if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(t.value).then(done,function(){document.execCommand('copy');done();});}else{document.execCommand('copy');done();}}catch(e){document.execCommand('copy');done();}
 }
 function renderSchedule(){
   renderUpcoming();
