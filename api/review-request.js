@@ -26,7 +26,7 @@ module.exports = async function handler(req, res) {
   var reviewLink = clip(body.reviewLink || '', 400).trim();
   var company = clip(body.company || '', 120).trim() || 'Your contractor';
   var clientName = clip(body.clientName || '', 120).trim();
-  var replyTo = clip(body.contractorEmail || '', 140).trim() || 'siamakk2@gmail.com';
+  var replyTo = clip(body.contractorEmail || '', 140).trim() || 'info@siamakkalhor.com';
   if (!to || to.indexOf('@') < 0) return res.status(200).json({ ok: false, error: 'This customer has no email on file.' });
   if (!reviewLink) return res.status(200).json({ ok: false, error: 'Add your review link in Company Profile first.' });
   if (!/^https?:\/\//i.test(reviewLink)) reviewLink = 'https://' + reviewLink;
