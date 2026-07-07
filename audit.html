@@ -620,12 +620,15 @@
 
   function saveLead(){
     // Save lead to Upstash via our data API
+    var _r = (typeof REPORT!=='undefined'&&REPORT)?REPORT:{};
     var lead = {
       name: LEAD.name,
       email: LEAD.email,
       url: LEAD.url,
       businessName: LEAD.businessName,
-      ts: new Date().toISOString()
+      version: LEAD.version||'',
+      ts: new Date().toISOString(),
+      report: { host:_r.host||LEAD.url, business_name:_r.business_name||LEAD.businessName, overall_score:_r.overall_score, grade_label:_r.grade_label, headline:_r.headline, what_they_do:_r.what_they_do, quick_wins:_r.quick_wins||[], scores:_r.scores||null }
     };
     fetch('/api/leads', {
       method:'POST',
