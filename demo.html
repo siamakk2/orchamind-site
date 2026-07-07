@@ -564,6 +564,14 @@ button:active, .btn:active, .btn-ghost:active, .tab:active, [role="button"]:acti
 .inv-list-h{font-weight:700;font-size:12px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted,#5A6B7D);margin:14px 0 8px;}
 .inv-row{background:#fff;border:1px solid var(--line,#e1e8f0);border-radius:8px;padding:9px 12px;margin-bottom:5px;font-size:13.5px;color:#2E7D46;}
 </style>
+<style id="bill-css">
+.bill-card{background:#fff;border:1px solid var(--line,#e1e8f0);border-radius:14px;padding:24px;max-width:560px;}
+.bill-badge{display:inline-block;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;padding:4px 11px;border-radius:20px;margin-bottom:12px;}
+.bill-badge.trial{background:#eaf2fd;color:#1565C0;}
+.bill-badge.ended{background:#fde8e8;color:#c0392b;}
+.bill-h{font-size:17px;font-weight:700;color:var(--navy,#0A1628);margin-bottom:6px;}
+.bill-p{font-size:13.5px;color:var(--muted,#5A6B7D);line-height:1.55;}
+</style>
 </head>
 <body class="locked">
 <div id="demoBanner" style="position:relative;z-index:1;background:linear-gradient(90deg,#0A1628,#1565C0);color:#fff;padding:10px 16px;display:flex;align-items:center;justify-content:center;gap:16px;flex-wrap:wrap;font-family:'Outfit',sans-serif;font-size:14px;box-shadow:0 2px 12px rgba(0,0,0,0.2);">
@@ -663,6 +671,7 @@ button:active, .btn:active, .btn-ghost:active, .tab:active, [role="button"]:acti
       <button class="tab" data-tab="equipment"><svg class="ti" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>Equipment</button>
       <button class="tab" data-tab="compliance"><svg class="ti" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="6"/><path d="M15.477 12.89 17 22l-5-3-5 3 1.523-9.11"/></svg>Compliance</button>
       <button class="tab" data-tab="invite"><svg class="ti" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 12 20 22 4 22 4 12"/><rect x="2" y="7" width="20" height="5"/><line x1="12" y1="22" x2="12" y2="7"/><path d="M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7z"/><path d="M12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z"/></svg>Invite &amp; Earn</button>
+      <button class="tab" data-tab="billing"><svg class="ti" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>Billing</button>
       <button class="tab" data-tab="dispatch"><svg class="ti" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>Dispatch</button>
       <button class="tab" data-tab="schedule"><svg class="ti" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>Schedule</button>
   <button class="tab" data-tab="log"><svg class="ti" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>Site Log</button>
@@ -969,6 +978,11 @@ button:active, .btn:active, .btn-ghost:active, .tab:active, [role="button"]:acti
     <div class="inv-btns"><button class="btn" onclick="copyRef()">Copy link</button><button class="btn btn-ghost" onclick="shareRefSMS()">Text it</button><button class="btn btn-ghost" onclick="shareRefEmail()">Email it</button><span id="invMsg"></span></div>
     <div class="inv-stats"><div class="inv-stat"><b id="invCount">0</b><span>Contractors invited</span></div><div class="inv-stat"><b id="invCredits">0</b><span>Free months earned</span></div></div>
     <div id="invList"></div>
+  </div>
+  <div class="panel" id="panel-billing">
+    <div class="panel-head"><h2>Billing</h2></div>
+    <div class="bill-card"><div id="billStatus"></div>
+    <button class="btn" id="billBtn" onclick="manageBilling()" style="margin-top:16px;">Add payment method / Manage billing</button></div>
   </div>
   <div class="panel" id="panel-dispatch">
     <div class="panel-head"><h2>Dispatch Board</h2></div>
@@ -2128,6 +2142,7 @@ document.querySelectorAll('.tab').forEach(function(t){
     if(t.dataset.tab==='log'){renderLog();}
     if(t.dataset.tab==='schedule'){renderSchedule();}
     if(t.dataset.tab==='dispatch'){renderDispatch();}
+    if(t.dataset.tab==='billing'){renderBilling();}
     if(t.dataset.tab==='invite'){renderInvite();}
     if(t.dataset.tab==='compliance'){renderCompliance();}
     if(t.dataset.tab==='equipment'){renderEquipment();}
@@ -4180,6 +4195,31 @@ function renderInvite(){
 function copyRef(){var t=document.getElementById('invLink');if(!t)return;t.select();t.setSelectionRange(0,9999);var done=function(){var m=document.getElementById('invMsg');if(m){m.style.color='#2E9B5B';m.textContent='\u2713 Copied!';}};try{if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(t.value).then(done,done);}else{document.execCommand('copy');done();}}catch(e){done();}}
 function shareRefSMS(){var l=document.getElementById('invLink').value;window.location.href='sms:?&body='+encodeURIComponent('You should try Orchamind \u2014 the AI app that runs your whole contracting business. Start free: '+l);}
 function shareRefEmail(){var l=document.getElementById('invLink').value;window.location.href='mailto:?subject='+encodeURIComponent('You should try Orchamind')+'&body='+encodeURIComponent('Orchamind is the AI app I use to run my business \u2014 estimates, crew, clients, billing, all of it. Start free with my link: '+l);}
+function renderBilling(){
+  var el=document.getElementById('billStatus');if(!el)return;
+  var te=(typeof CURRENT_USER!=='undefined'&&CURRENT_USER&&CURRENT_USER.trialEnd)?CURRENT_USER.trialEnd:0;
+  var now=Math.floor(Date.now()/1000);var html='';
+  if(te&&te>now){
+    var days=Math.ceil((te-now)/86400);
+    html='<div class="bill-badge trial">Free trial</div><div class="bill-h">You have '+days+' day'+(days===1?'':'s')+' left in your free trial.</div><div class="bill-p">Add a payment method to keep Orchamind after your trial. You will not be charged until the trial ends \u2014 then it is $500/month.</div>';
+  }else if(te){
+    html='<div class="bill-badge ended">Trial ended</div><div class="bill-h">Your free trial has ended.</div><div class="bill-p">Add a payment method to reactivate your workspace \u2014 $500/month.</div>';
+  }else{
+    html='<div class="bill-h">Manage your Orchamind subscription.</div><div class="bill-p">Add or update your payment method, view invoices, or manage your plan. Orchamind is $500/month, and your first month is free.</div>';
+  }
+  el.innerHTML=html;
+}
+function manageBilling(){
+  var u=(typeof CURRENT_USER!=='undefined'&&CURRENT_USER&&CURRENT_USER.username)?CURRENT_USER.username:'';
+  if(!u){showToast('Please sign in first.');return;}
+  var btn=document.getElementById('billBtn');var o=btn?btn.textContent:'';
+  if(btn){btn.disabled=true;btn.textContent='Opening\u2026';}
+  fetch('/api/accounts',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'billingPortal',username:u})}).then(function(r){return r.json();}).then(function(d){
+    if(btn){btn.disabled=false;btn.textContent=o;}
+    if(d&&d.ok&&d.url){window.location.href=d.url;}
+    else{showToast((d&&d.error)||'Could not open billing.');}
+  }).catch(function(){if(btn){btn.disabled=false;btn.textContent=o;}showToast('Network error opening billing.');});
+}
 function renderSchedule(){
   renderUpcoming();
   var host=document.getElementById('schWeek'); if(!host) return;
