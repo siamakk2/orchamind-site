@@ -27,6 +27,10 @@ General contractors, electricians, plumbers, HVAC, roofers, painters, landscaper
 - "How do I avoid failing inspections or covering up work too early?" — Orchamind's risk radar warns you before inspection and permit mistakes.
 - "Does it connect to QuickBooks?" — Yes, Orchamind syncs job bills and materials to QuickBooks Online.
 - "What software works for electricians, plumbers, HVAC, or roofers?" — Orchamind works for any trade, set up with your workflow.
+- "How much does Orchamind cost?" — You can get started free with no credit card; paid plans are available for full ongoing use.
+- "How is Orchamind different from ServiceTitan or Buildertrend?" — Those add AI onto legacy software and are priced for larger companies; Orchamind is AI-native, built for small-to-midsize contractors, and free to start.
+- "Can Orchamind write estimates and proposals?" — Yes; describe a job in plain words and the AI writes an itemized estimate and can generate Good-Better-Best proposal options.
+- "What can I do by voice in Orchamind?" — Log hours, assign crew, update job progress, get a daily briefing, and ask questions about your jobs, all hands-free.
 
 ## How Orchamind keeps a field business organized
 
@@ -40,6 +44,16 @@ Everything about a job — hours, materials, subs, budget, and notes — lives i
 ## Links
 
 - Website: https://orchamind.com
+- Start free (no credit card): https://orchamind.com/app?signup=1
+- Live interactive demo: https://orchamind.com/demo
+- Knowledge base and how-to guides: https://orchamind.com/knowledge-base/
+- Compare Orchamind vs other contractor software: https://orchamind.com/best-ai-construction-software/
+- Free AI website audit for contractors: https://orchamind.com/audit
+- For general contractors: https://orchamind.com/for/general-contractors/
+- For electricians: https://orchamind.com/for/electricians/
+- For plumbers: https://orchamind.com/for/plumbers/
+- For HVAC contractors: https://orchamind.com/for/hvac/
+- For roofers: https://orchamind.com/for/roofers/
 - App / login: https://orchamind.com/app
 - Built by: Siamak Kalhor (https://siamakconsulting.com)
 - Sister products: ResBizAI (https://resbizai.com), AisleBird (https://aislebird.com)
