@@ -550,6 +550,20 @@ button:active, .btn:active, .btn-ghost:active, .tab:active, [role="button"]:acti
 .lw-tip code{background:#e6edf6;padding:1px 5px;border-radius:4px;font-size:11px;font-family:ui-monospace,Menlo,monospace;}
 #lwCode{width:100%;}
 </style>
+<style id="inv-css">
+.inv-hero{background:linear-gradient(135deg,#12233d,#0A1628);border-radius:14px;padding:22px;margin-bottom:18px;color:#fff;}
+.inv-hero-h{font-size:19px;font-weight:800;margin-bottom:6px;}
+.inv-hero-p{font-size:14px;color:rgba(255,255,255,.85);line-height:1.5;}
+.inv-btns{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:10px;}
+#invMsg{font-size:12.5px;font-weight:600;}
+#invLink{width:100%;font-family:ui-monospace,Menlo,monospace;font-size:12.5px;}
+.inv-stats{display:flex;gap:12px;margin:18px 0;flex-wrap:wrap;}
+.inv-stat{flex:1;min-width:130px;background:#fff;border:1px solid var(--line,#e1e8f0);border-radius:12px;padding:16px;text-align:center;}
+.inv-stat b{display:block;font-size:30px;font-weight:800;color:#2D7FF9;}
+.inv-stat span{font-size:12px;color:var(--muted,#5A6B7D);}
+.inv-list-h{font-weight:700;font-size:12px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted,#5A6B7D);margin:14px 0 8px;}
+.inv-row{background:#fff;border:1px solid var(--line,#e1e8f0);border-radius:8px;padding:9px 12px;margin-bottom:5px;font-size:13.5px;color:#2E7D46;}
+</style>
 </head>
 <body class="locked">
 <div id="demoBanner" style="position:relative;z-index:1;background:linear-gradient(90deg,#0A1628,#1565C0);color:#fff;padding:10px 16px;display:flex;align-items:center;justify-content:center;gap:16px;flex-wrap:wrap;font-family:'Outfit',sans-serif;font-size:14px;box-shadow:0 2px 12px rgba(0,0,0,0.2);">
@@ -648,6 +662,7 @@ button:active, .btn:active, .btn-ghost:active, .tab:active, [role="button"]:acti
       <button class="tab" data-tab="punch"><svg class="ti" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3 8-8"/><path d="M20 12v6a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h9"/></svg>Punch List</button>
       <button class="tab" data-tab="equipment"><svg class="ti" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>Equipment</button>
       <button class="tab" data-tab="compliance"><svg class="ti" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="6"/><path d="M15.477 12.89 17 22l-5-3-5 3 1.523-9.11"/></svg>Compliance</button>
+      <button class="tab" data-tab="invite"><svg class="ti" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 12 20 22 4 22 4 12"/><rect x="2" y="7" width="20" height="5"/><line x1="12" y1="22" x2="12" y2="7"/><path d="M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7z"/><path d="M12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z"/></svg>Invite &amp; Earn</button>
       <button class="tab" data-tab="dispatch"><svg class="ti" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>Dispatch</button>
       <button class="tab" data-tab="schedule"><svg class="ti" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>Schedule</button>
   <button class="tab" data-tab="log"><svg class="ti" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>Site Log</button>
@@ -946,6 +961,14 @@ button:active, .btn:active, .btn-ghost:active, .tab:active, [role="button"]:acti
     <div id="cmpMsg" class="est-ai-msg"></div>
     <div id="cmpSummary" class="cmp-summary"></div>
     <div id="cmpList"></div>
+  </div>
+  <div class="panel" id="panel-invite">
+    <div class="panel-head"><h2>Invite &amp; Earn</h2></div>
+    <div class="inv-hero"><div class="inv-hero-h">🎁 Give a month, get a month.</div><div class="inv-hero-p">Invite other contractors to Orchamind. When they create their free account with your link, you both get a free month of Pro.</div></div>
+    <div class="field"><label>Your personal invite link</label><input id="invLink" readonly></div>
+    <div class="inv-btns"><button class="btn" onclick="copyRef()">Copy link</button><button class="btn btn-ghost" onclick="shareRefSMS()">Text it</button><button class="btn btn-ghost" onclick="shareRefEmail()">Email it</button><span id="invMsg"></span></div>
+    <div class="inv-stats"><div class="inv-stat"><b id="invCount">0</b><span>Contractors invited</span></div><div class="inv-stat"><b id="invCredits">0</b><span>Free months earned</span></div></div>
+    <div id="invList"></div>
   </div>
   <div class="panel" id="panel-dispatch">
     <div class="panel-head"><h2>Dispatch Board</h2></div>
@@ -2105,6 +2128,7 @@ document.querySelectorAll('.tab').forEach(function(t){
     if(t.dataset.tab==='log'){renderLog();}
     if(t.dataset.tab==='schedule'){renderSchedule();}
     if(t.dataset.tab==='dispatch'){renderDispatch();}
+    if(t.dataset.tab==='invite'){renderInvite();}
     if(t.dataset.tab==='compliance'){renderCompliance();}
     if(t.dataset.tab==='equipment'){renderEquipment();}
     if(t.dataset.tab==='punch'){renderPunch();}
@@ -2361,7 +2385,7 @@ function authRegister(){
   if(!co||!u||p.length<6){err.textContent='Enter a company name, a username, and a 6+ character password.';return;}
   if(!/^[a-z0-9_]+$/.test(u)){err.textContent='Username can use only lowercase letters, numbers, and underscores.';return;}
   var btn=document.getElementById('suBtn');btn.disabled=true;var old=btn.textContent;btn.textContent='Creating\u2026';err.textContent='';
-  fetch('/api/accounts',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'register',company:co,name:nm,email:em,username:u,password:p})})
+  fetch('/api/accounts',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'register',company:co,name:nm,email:em,username:u,password:p,ref:(window._REFCODE||'')})})
     .then(function(r){return r.json();}).then(function(d){
       btn.disabled=false;btn.textContent=old;
       if(d&&d.ok&&d.user){CURRENT_USER=d.user;try{sessionStorage.setItem('hci_session',JSON.stringify(CURRENT_USER));}catch(e){}enterApp();}
@@ -2442,7 +2466,7 @@ function bootAuth(){
   if(qs.get('app')==='1'||/^\/app\/?$/.test(location.pathname)){
     var saved=null;try{saved=JSON.parse(sessionStorage.getItem('hci_session')||'null');}catch(e){}
     if(saved&&saved.username&&saved.role!=='demo'){CURRENT_USER=saved;enterApp();return;}
-    if(qs.get('signup')==='1'){showForm('formSignup');var _pf=function(id,v){var el=document.getElementById(id);if(el&&v)el.value=v;};_pf('suCompany',qs.get('company'));_pf('suName',qs.get('name'));_pf('suEmail',qs.get('email'));return;}
+    if(qs.get('signup')==='1'){window._REFCODE=qs.get('ref')||'';showForm('formSignup');var _pf=function(id,v){var el=document.getElementById(id);if(el&&v)el.value=v;};_pf('suCompany',qs.get('company'));_pf('suName',qs.get('name'));_pf('suEmail',qs.get('email'));return;}
     fetch('/api/accounts',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'status'})})
       .then(function(r){return r.json();})
       .then(function(d){
@@ -4116,6 +4140,23 @@ function copyLeadWidget(){
   var done=function(){var m=document.getElementById('lwMsg');if(m){m.style.color='#2E9B5B';m.textContent='\u2713 Copied! Paste it on your website.';}};
   try{if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(t.value).then(done,function(){document.execCommand('copy');done();});}else{document.execCommand('copy');done();}}catch(e){document.execCommand('copy');done();}
 }
+function renderInvite(){
+  var u=(typeof CURRENT_USER!=='undefined'&&CURRENT_USER&&CURRENT_USER.username)?CURRENT_USER.username:'';
+  var link='https://orchamind.com/app?signup=1&ref='+encodeURIComponent(u||'');
+  var el=document.getElementById('invLink');if(el)el.value=link;
+  if(!u)return;
+  fetch('/api/accounts',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'refStats',username:u})}).then(function(r){return r.json();}).then(function(d){
+    if(!d||!d.ok)return;
+    var c=d.count||0;
+    var cc=document.getElementById('invCount');if(cc)cc.textContent=c;
+    var cr=document.getElementById('invCredits');if(cr)cr.textContent=c;
+    var lst=document.getElementById('invList');
+    if(lst){if(d.referrals&&d.referrals.length){lst.innerHTML='<div class="inv-list-h">Contractors you\'ve invited</div>'+d.referrals.map(function(x){return '<div class="inv-row">\u2713 '+esc(x.company||'A contractor')+'</div>';}).join('');}else{lst.innerHTML='';}}
+  }).catch(function(){});
+}
+function copyRef(){var t=document.getElementById('invLink');if(!t)return;t.select();t.setSelectionRange(0,9999);var done=function(){var m=document.getElementById('invMsg');if(m){m.style.color='#2E9B5B';m.textContent='\u2713 Copied!';}};try{if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(t.value).then(done,done);}else{document.execCommand('copy');done();}}catch(e){done();}}
+function shareRefSMS(){var l=document.getElementById('invLink').value;window.location.href='sms:?&body='+encodeURIComponent('You should try Orchamind \u2014 the AI app that runs your whole contracting business. Start free: '+l);}
+function shareRefEmail(){var l=document.getElementById('invLink').value;window.location.href='mailto:?subject='+encodeURIComponent('You should try Orchamind')+'&body='+encodeURIComponent('Orchamind is the AI app I use to run my business \u2014 estimates, crew, clients, billing, all of it. Start free with my link: '+l);}
 function renderSchedule(){
   renderUpcoming();
   var host=document.getElementById('schWeek'); if(!host) return;
