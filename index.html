@@ -481,7 +481,6 @@ html{scroll-behavior:smooth}
     <div class="nav-links" id="navLinks">
       <a href="#what">What is it</a>
       <a href="#how">How it works</a>
-      <a href="#demo">Live Demo</a>
       <a href="#features">Features</a>
       <a href="#industries">Industries</a>
       <a href="#founder">About</a>
@@ -668,79 +667,6 @@ html{scroll-behavior:smooth}
         <p>Risk alerts flag tight budgets, slipping jobs, and upcoming inspections — while there's still time to act.</p>
       </div>
     </div>
-  </div>
-</section>
-<section class="demo" id="demo" style="background:var(--white);">
-  <div class="wrap">
-    <div class="section-eyebrow">See it in action</div>
-    <h2 class="section-title">Click around a live sample.</h2>
-    <p class="section-lead">This is a working preview with sample data — tap the tabs, watch the AI briefing, try a voice command. Nothing here is real; it's just to show you how it feels.</p>
-
-    <div class="demo-frame">
-      <div class="demo-topbar">
-        <div class="demo-brand"><span class="demo-logo">▲</span> Site Manager <span class="demo-badge">SAMPLE</span></div>
-        <div class="demo-date">Tuesday, June 23</div>
-      </div>
-      <div class="demo-tabs">
-        <button class="demo-tab active" onclick="demoTab('today',this)">Today</button>
-        <button class="demo-tab" onclick="demoTab('jobs',this)">Jobs</button>
-        <button class="demo-tab" onclick="demoTab('crew',this)">Crew</button>
-        <button class="demo-tab" onclick="demoTab('ask',this)">Ask AI</button>
-        <button class="demo-tab" onclick="demoTab('reports',this)">Reports</button>
-      </div>
-      <div class="demo-body">
-        <!-- TODAY -->
-        <div class="demo-panel active" id="demo-today">
-          <div class="demo-briefing">
-            <div class="db-head"><span class="db-ai">✦ AI Morning Briefing</span></div>
-            <p><b>Good morning.</b> Here's what needs your attention today:</p>
-            <ul>
-              <li><b>Oak Street Remodel</b> is at 88% of budget with finishing work left — review before it slips.</li>
-              <li><b>Hillside Addition</b> framing inspection is tomorrow. Confirm the crew buttoned up the punch list.</li>
-              <li><b>Maple Ave</b> is 1 week behind — get the concrete sub scheduled today.</li>
-            </ul>
-            <p class="db-quick">⚡ Quick win: Tom has no hours logged this week — put him on Maple Ave.</p>
-          </div>
-        </div>
-        <!-- JOBS -->
-        <div class="demo-panel" id="demo-jobs">
-          <div class="demo-jobcard"><div class="dj-top"><b>Oak Street Remodel</b><span class="dj-tag">FINISHING</span></div><div class="dj-bar"><div class="dj-fill" style="width:78%"></div></div><div class="dj-meta">78% complete · Santa Rosa · 4 crew</div></div>
-          <div class="demo-jobcard"><div class="dj-top"><b>Hillside Addition</b><span class="dj-tag">ROUGH-IN</span></div><div class="dj-bar"><div class="dj-fill" style="width:55%"></div></div><div class="dj-meta">55% complete · Napa · 3 crew</div></div>
-          <div class="demo-jobcard"><div class="dj-top"><b>Maple Ave Deck</b><span class="dj-tag">FOUNDATION</span></div><div class="dj-bar"><div class="dj-fill" style="width:20%"></div></div><div class="dj-meta">20% complete · Sonoma · 2 crew</div></div>
-        </div>
-        <!-- CREW -->
-        <div class="demo-panel" id="demo-crew">
-          <div class="demo-crewrow"><div class="dc-av">M</div><div><b>Mike Torres</b><div class="dc-role">Foreman · Oak Street</div></div><span class="dc-status on">On site</span></div>
-          <div class="demo-crewrow"><div class="dc-av">C</div><div><b>Carlos Mendez</b><div class="dc-role">Lead · Hillside</div></div><span class="dc-status on">On site</span></div>
-          <div class="demo-crewrow"><div class="dc-av">T</div><div><b>Tom Walsh</b><div class="dc-role">Laborer · Unassigned</div></div><span class="dc-status off">Available</span></div>
-        </div>
-        <!-- ASK AI -->
-        <div class="demo-panel" id="demo-ask">
-          <div class="demo-chat">
-            <div class="dchat-q">Which job is tightest on budget?</div>
-            <div class="dchat-a">✦ Oak Street Remodel is your tightest — 88% of budget used with finishing work still to go. Worth pulling the cost detail before any surprises hit. The other two have healthy margins.</div>
-            <div class="dchat-q">What inspections do I need before drywall on Hillside?</div>
-            <div class="dchat-a">✦ Before drywall you'll need framing, electrical rough-in, and plumbing rough-in all signed off. In Napa County, schedule the framing inspection first — it gates the others.</div>
-          </div>
-        </div>
-        <!-- REPORTS -->
-        <div class="demo-panel" id="demo-reports">
-          <div class="demo-rep-head">
-            <div><b style="color:#fff;">Hours / Payroll</b> <span style="color:rgba(255,255,255,0.5);font-size:12px;">· This week</span></div>
-            <div class="demo-rep-btns"><span class="demo-rep-btn">⬇ Excel</span><span class="demo-rep-btn">⬇ PDF</span></div>
-          </div>
-          <table class="demo-rep-table">
-            <tr><th>Worker</th><th>Jobs</th><th style="text-align:right;">Hours</th></tr>
-            <tr><td>Mike Torres</td><td>Oak Street</td><td style="text-align:right;">15.5</td></tr>
-            <tr><td>Carlos Mendez</td><td>Hillside</td><td style="text-align:right;">8</td></tr>
-            <tr><td>Tom Walsh</td><td>Maple Ave</td><td style="text-align:right;">6</td></tr>
-            <tr class="demo-rep-total"><td>TOTAL</td><td></td><td style="text-align:right;">29.5 hrs</td></tr>
-          </table>
-          <div style="color:rgba(255,255,255,0.5);font-size:12px;margin-top:12px;text-align:center;">Download for payroll, or switch to Job Cost to see budget vs. spent per job.</div>
-        </div>
-      </div>
-    </div>
-    <p style="text-align:center;color:var(--slate);font-size:14px;margin-top:20px;">This is a sample preview. <a href="demo.html?demo=1" style="color:var(--signal);font-weight:600;">Open the full interactive demo →</a> and click around the real app with sample data.</p>
   </div>
 </section>
 <section class="audit-promo" id="audit">
