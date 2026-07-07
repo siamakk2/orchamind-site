@@ -27,7 +27,7 @@ module.exports = async function handler(req, res) {
   var kind = (body.kind === 'appt') ? 'appt' : 'otw';
   var when = clip(body.when || '', 80).trim();
   var phone = clip(body.contractorPhone || '', 40).trim();
-  var replyTo = clip(body.contractorEmail || '', 140).trim() || 'siamakk2@gmail.com';
+  var replyTo = clip(body.contractorEmail || '', 140).trim() || 'info@siamakkalhor.com';
   if (!to || to.indexOf('@') < 0) return res.status(200).json({ ok: false, error: 'This customer has no email on file.' });
 
   var greeting = clientName ? ('Hi ' + esc(clientName) + ',') : 'Hi there,';
