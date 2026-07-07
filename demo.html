@@ -2442,7 +2442,7 @@ function bootAuth(){
   if(qs.get('app')==='1'||/^\/app\/?$/.test(location.pathname)){
     var saved=null;try{saved=JSON.parse(sessionStorage.getItem('hci_session')||'null');}catch(e){}
     if(saved&&saved.username&&saved.role!=='demo'){CURRENT_USER=saved;enterApp();return;}
-    if(qs.get('signup')==='1'){showForm('formSignup');return;}
+    if(qs.get('signup')==='1'){showForm('formSignup');var _pf=function(id,v){var el=document.getElementById(id);if(el&&v)el.value=v;};_pf('suCompany',qs.get('company'));_pf('suName',qs.get('name'));_pf('suEmail',qs.get('email'));return;}
     fetch('/api/accounts',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'status'})})
       .then(function(r){return r.json();})
       .then(function(d){
