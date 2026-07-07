@@ -15,13 +15,13 @@ module.exports = async function handler(req, res) {
     if (req.method === 'GET') {
       var c = clip((req.query && req.query.c) || '', 80).trim();
       if (!c) return res.status(200).json({ ok: false, error: 'Missing link id.' });
-      var company = '';
+      var company = ''; var logo = '';
       try {
-        var cr = await fetch(rest + '/accounts?username=eq.' + encodeURIComponent(c) + '&select=company,name', { headers: H });
+        var cr = await fetch(rest + '/accounts?username=eq.' + encodeURIComponent(c) + '&select=company,name,profile', { headers: H });
         var ca = await cr.json();
-        if (Array.isArray(ca) && ca[0]) company = ca[0].company || ca[0].name || '';
+        if (Array.isArray(ca) && ca[0]) { company = ca[0].company || ca[0].name || ''; logo = (ca[0].profile && ca[0].profile.logo) || ''; }
       } catch (e) {}
-      return res.status(200).json({ ok: true, company: company });
+      return res.status(200).json({ ok: true, company: company, logo: logo });
     }
 
     if (req.method === 'POST') {
