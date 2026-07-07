@@ -7,7 +7,7 @@ module.exports = async function handler(req, res) {
   if (req.method === 'OPTIONS') return res.status(200).end();
   if (req.method !== 'POST') return res.status(405).json({ ok: false, error: 'Method not allowed' });
 
-  var STRIPE = process.env.STRIPE_SECRET_KEY_TEST || process.env.STRIPE_SECRET_KEY;
+  var STRIPE = process.env.STRIPE_SECRET_KEY || process.env.STRIPE_SECRET_KEY_TEST;
   var SVC = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SECRET_KEY || process.env.SUPABASE_SERVICE_KEY;
   var SUPABASE_URL = 'https://yqbprvyhzugdmavvurqb.supabase.co';
   if (!STRIPE) return res.status(200).json({ ok: false, error: 'Payments not configured (missing Stripe key).' });
@@ -82,6 +82,27 @@ module.exports = async function handler(req, res) {
         return res.status(200).json({ ok: false, error: (link && link.error && link.error.message) || 'Could not start setup.' });
       }
       return res.status(200).json({ ok: true, url: link.url });
+    }
+
+    if (action === 'payLink') {
+      if (!connectId) return res.status(200).json({ ok: false, error: 'Set up your payout account first, then you can create payment links.' });
+      var amount = Math.round(Number(body.amount) * 100);
+      if (!amount || amount < 50) return res.status(200).json({ ok: false, error: 'Enter a valid amount of at least $0.50.' });
+      var desc = String(body.description || 'Payment').slice(0, 250) || 'Payment';
+      var params = {
+        'mode': 'payment',
+        'line_items[0][price_data][currency]': 'usd',
+        'line_items[0][price_data][unit_amount]': String(amount),
+        'line_items[0][price_data][product_data][name]': desc,
+        'line_items[0][quantity]': '1',
+        'success_url': 'https://orchamind.com/paid.html',
+        'cancel_url': 'https://orchamind.com/paid.html?canceled=1'
+      };
+      if (body.email) params['customer_email'] = String(body.email);
+      var por = await fetch('https://api.stripe.com/v1/checkout/sessions', { method: 'POST', headers: { 'Authorization': 'Bearer ' + STRIPE, 'Content-Type': 'application/x-www-form-urlencoded', 'Stripe-Account': connectId }, body: form(params) });
+      var pcs = await por.json();
+      if (pcs && pcs.url) return res.status(200).json({ ok: true, url: pcs.url });
+      return res.status(200).json({ ok: false, error: (pcs && pcs.error && pcs.error.message) || 'Could not create the payment link.' });
     }
 
     return res.status(200).json({ ok: false, error: 'Unknown action.' });
