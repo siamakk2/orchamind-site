@@ -706,7 +706,7 @@ button:active, .btn:active, .btn-ghost:active, .tab:active, [role="button"]:acti
       <button class="voice-mic-big" id="voiceMicBig" onclick="toggleVoiceCommand()" title="Speak a command"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z"/><path d="M19 10v2a7 7 0 01-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg></button>
       <div class="voice-bar-text">
         <h4>Talk to your Site Manager</h4>
-        <p id="voiceHint">Tap the mic and say things like "Mike worked 8 hours at Sonoma Vista" or "Move Carlos to Calistoga" or "Set Valley View to 85 percent." You can also give a whole daily report in one breath — hours, progress, materials — and it files everything at once.</p>
+        <p id="voiceHint">Tap the mic, then speak naturally — ask a question or give a command. Take your time: <b>pause for a second when you’re done</b> and I’ll answer. Try “How many hours did Mike work this week?”, “Mike worked 8 hours at Sonoma Vista,” or “Move Carlos to Calistoga.” You can even give a whole daily report in one breath.</p>
         <div class="voice-status" id="voiceStatus"></div>
         <div class="voice-prompts" id="voicePrompts">
           <span class="vp-label">Try saying or typing:</span>
@@ -2255,7 +2255,7 @@ function initVoice(){
     var interim='';
     for(var i=e.resultIndex;i<e.results.length;i++){var r=e.results[i];if(r.isFinal){_finalTxt+=r[0].transcript+' ';}else{interim+=r[0].transcript;}}
     var shown=(_finalTxt+interim).replace(/\s+/g,' ').trim();
-    if(_recogTarget==='command'){var st=document.getElementById('voiceStatus');if(st)st.textContent=shown?('\u201c'+shown+'\u201d'):'Listening\u2026';}
+    if(_recogTarget==='command'){var st=document.getElementById('voiceStatus');if(st)st.textContent=shown?('\u201c'+shown+'\u201d'):'🎤 Listening… (pause when you’re done)';}
     else if(_recogTarget==='chat'){var ci=document.getElementById('chatInp');if(ci)ci.value=shown;}
     if(_silenceTimer)clearTimeout(_silenceTimer);
     _silenceTimer=setTimeout(_finalizeVoice,_SILENCE_MS);
@@ -2290,7 +2290,7 @@ function toggleVoiceCommand(){
   if(_recogActive&&_recogTarget==='command'){_finalizeVoice();return;}
   if(_recogActive)_stopRecog();
   _recogTarget='command';_finalTxt='';_restartCount=0;_wantListening=true;_recogActive=true;updateMicUI();
-  document.getElementById('voiceStatus').textContent='Listening...';
+  document.getElementById('voiceStatus').textContent='🎤 Listening… ask your full question, then pause when you’re done.';
   try{_recog.start();}catch(e){}
 }
 function toggleVoiceChat(){
@@ -2298,7 +2298,7 @@ function toggleVoiceChat(){
   if(_recogActive&&_recogTarget==='chat'){_finalizeVoice();return;}
   if(_recogActive)_stopRecog();
   _recogTarget='chat';_finalTxt='';_restartCount=0;_wantListening=true;_recogActive=true;updateMicUI();
-  document.getElementById('chatInp').placeholder='Listening...';
+  document.getElementById('chatInp').placeholder='Listening… pause when done';
   try{_recog.start();}catch(e){}
   setTimeout(function(){document.getElementById('chatInp').placeholder='Ask or speak...';},4000);
 }
