@@ -576,6 +576,18 @@ button:active, .btn:active, .btn-ghost:active, .tab:active, [role="button"]:acti
       <div style="text-align:right;margin:-8px 0 14px;"><a href="#" onclick="forgotPw();return false;" style="font-size:13px;color:#2D7FF9;font-weight:600;">Forgot password?</a></div>
       <button onclick="demoEnter()" style="width:100%;background:#fff;color:#1565C0;border:1.5px solid #1565C0;border-radius:9px;padding:11px 14px;font-size:14px;font-weight:600;cursor:pointer;margin-bottom:10px;">👀 Explore the demo — no account needed</button>
       <button onclick="authLogin()" id="liBtn" style="width:100%;background:#1565C0;color:#fff;border:none;border-radius:9px;padding:13px;font-size:15px;font-weight:700;cursor:pointer;">Log In</button>
+      <div style="text-align:center;margin-top:14px;font-size:13px;color:#5A6B7D;">New to Orchamind? <a href="#" onclick="showForm('formSignup');return false;" style="color:#2D7FF9;font-weight:700;">Create a free account</a></div>
+    </div>
+
+    <div id="formSignup" style="display:none;">
+      <p style="font-size:13.5px;color:#5A6B7D;margin-bottom:16px;text-align:center;">Create your free account and start running jobs in minutes. No credit card needed.</p>
+      <div style="margin-bottom:11px;"><label style="display:block;font-size:13px;font-weight:600;color:#0A1628;margin-bottom:6px;">Company name</label><input id="suCompany" type="text" placeholder="e.g. Howard Construction" style="width:100%;border:1.5px solid #E1E8F0;border-radius:9px;padding:11px 14px;font-size:15px;outline:none;"></div>
+      <div style="margin-bottom:11px;"><label style="display:block;font-size:13px;font-weight:600;color:#0A1628;margin-bottom:6px;">Your name</label><input id="suName" type="text" placeholder="e.g. Phil Howard" style="width:100%;border:1.5px solid #E1E8F0;border-radius:9px;padding:11px 14px;font-size:15px;outline:none;"></div>
+      <div style="margin-bottom:11px;"><label style="display:block;font-size:13px;font-weight:600;color:#0A1628;margin-bottom:6px;">Email</label><input id="suEmail" type="email" placeholder="you@company.com" style="width:100%;border:1.5px solid #E1E8F0;border-radius:9px;padding:11px 14px;font-size:15px;outline:none;"></div>
+      <div style="margin-bottom:11px;"><label style="display:block;font-size:13px;font-weight:600;color:#0A1628;margin-bottom:6px;">Choose a username</label><input id="suUser" type="text" placeholder="lowercase, no spaces" style="width:100%;border:1.5px solid #E1E8F0;border-radius:9px;padding:11px 14px;font-size:15px;outline:none;"></div>
+      <div style="margin-bottom:16px;"><label style="display:block;font-size:13px;font-weight:600;color:#0A1628;margin-bottom:6px;">Password</label><input id="suPass" type="password" placeholder="at least 6 characters" style="width:100%;border:1.5px solid #E1E8F0;border-radius:9px;padding:11px 14px;font-size:15px;outline:none;"></div>
+      <button onclick="authRegister()" id="suBtn" style="width:100%;background:#1565C0;color:#fff;border:none;border-radius:9px;padding:13px;font-size:15px;font-weight:700;cursor:pointer;">Create my free account</button>
+      <div style="text-align:center;margin-top:14px;font-size:13px;color:#5A6B7D;">Already have an account? <a href="#" onclick="showForm('formLogin');return false;" style="color:#2D7FF9;font-weight:700;">Log in</a></div>
     </div>
 
     <!-- CHANGE PASSWORD (first login) -->
@@ -2339,8 +2351,25 @@ function applyVoiceAction(act,silent){
 // ====== AUTHENTICATION ======
 var CURRENT_USER=null;
 
+function authRegister(){
+  var co=document.getElementById('suCompany').value.trim();
+  var nm=document.getElementById('suName').value.trim();
+  var em=document.getElementById('suEmail').value.trim();
+  var u=document.getElementById('suUser').value.trim().toLowerCase();
+  var p=document.getElementById('suPass').value;
+  var err=document.getElementById('authError');
+  if(!co||!u||p.length<6){err.textContent='Enter a company name, a username, and a 6+ character password.';return;}
+  if(!/^[a-z0-9_]+$/.test(u)){err.textContent='Username can use only lowercase letters, numbers, and underscores.';return;}
+  var btn=document.getElementById('suBtn');btn.disabled=true;var old=btn.textContent;btn.textContent='Creating\u2026';err.textContent='';
+  fetch('/api/accounts',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'register',company:co,name:nm,email:em,username:u,password:p})})
+    .then(function(r){return r.json();}).then(function(d){
+      btn.disabled=false;btn.textContent=old;
+      if(d&&d.ok&&d.user){CURRENT_USER=d.user;try{sessionStorage.setItem('hci_session',JSON.stringify(CURRENT_USER));}catch(e){}enterApp();}
+      else{err.textContent=(d&&d.error)||'Could not create your account.';}
+    }).catch(function(){btn.disabled=false;btn.textContent=old;err.textContent='Network error. Please try again.';});
+}
 function showForm(which){
-  ['formLogin','formChange','formSetup'].forEach(function(f){document.getElementById(f).style.display='none';});
+  ['formLogin','formChange','formSetup','formSignup'].forEach(function(f){document.getElementById(f).style.display='none';});
   document.getElementById(which).style.display='block';
   document.getElementById('authError').textContent='';
 }
@@ -2413,6 +2442,7 @@ function bootAuth(){
   if(qs.get('app')==='1'||/^\/app\/?$/.test(location.pathname)){
     var saved=null;try{saved=JSON.parse(sessionStorage.getItem('hci_session')||'null');}catch(e){}
     if(saved&&saved.username&&saved.role!=='demo'){CURRENT_USER=saved;enterApp();return;}
+    if(qs.get('signup')==='1'){showForm('formSignup');return;}
     fetch('/api/accounts',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'status'})})
       .then(function(r){return r.json();})
       .then(function(d){
