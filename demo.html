@@ -2224,7 +2224,18 @@ function runExample(text){
 var _speakOn=false;
 var _recog=null;
 var _recogActive=false;
-var _recogTarget=null; // 'command' or 'chat'
+var _recogTarget=null;
+var _finalTxt='';var _silenceTimer=null;var _wantListening=false;var _restartCount=0;var _SILENCE_MS=1700;
+function _finalizeVoice(){
+  if(_silenceTimer){clearTimeout(_silenceTimer);_silenceTimer=null;}
+  var txt=(_finalTxt||'').replace(/\s+/g,' ').trim();
+  _finalTxt='';_wantListening=false;
+  var target=_recogTarget;
+  _stopRecog();
+  if(txt.length<2)return;
+  if(target==='command'){processVoiceCommand(txt);}
+  else if(target==='chat'){var ci=document.getElementById('chatInp');if(ci)ci.value=txt;sendChat();}
+} // 'command' or 'chat'
 
 function initVoice(){
   var SR=window.SpeechRecognition||window.webkitSpeechRecognition;
@@ -2236,22 +2247,34 @@ function initVoice(){
     return;
   }
   _recog=new SR();
-  _recog.continuous=false;
+  _recog.continuous=true;
   _recog.interimResults=true;
+  _recog.maxAlternatives=1;
   _recog.lang='en-US';
   _recog.onresult=function(e){
-    var txt='';
-    for(var i=e.resultIndex;i<e.results.length;i++){txt+=e.results[i][0].transcript;}
-    if(_recogTarget==='command'){
-      document.getElementById('voiceStatus').textContent='"'+txt+'"';
-      if(e.results[e.results.length-1].isFinal){processVoiceCommand(txt);}
-    }else if(_recogTarget==='chat'){
-      document.getElementById('chatInp').value=txt;
-      if(e.results[e.results.length-1].isFinal){_stopRecog();sendChat();}
+    var interim='';
+    for(var i=e.resultIndex;i<e.results.length;i++){var r=e.results[i];if(r.isFinal){_finalTxt+=r[0].transcript+' ';}else{interim+=r[0].transcript;}}
+    var shown=(_finalTxt+interim).replace(/\s+/g,' ').trim();
+    if(_recogTarget==='command'){var st=document.getElementById('voiceStatus');if(st)st.textContent=shown?('\u201c'+shown+'\u201d'):'Listening\u2026';}
+    else if(_recogTarget==='chat'){var ci=document.getElementById('chatInp');if(ci)ci.value=shown;}
+    if(_silenceTimer)clearTimeout(_silenceTimer);
+    _silenceTimer=setTimeout(_finalizeVoice,_SILENCE_MS);
+  };
+  _recog.onend=function(){
+    _recogActive=false;updateMicUI();
+    if(_wantListening){
+      if((_finalTxt||'').trim()){_finalizeVoice();}
+      else if(_restartCount<15){_restartCount++;try{_recog.start();_recogActive=true;updateMicUI();}catch(e){_wantListening=false;}}
+      else{_wantListening=false;}
     }
   };
-  _recog.onend=function(){_recogActive=false;updateMicUI();};
-  _recog.onerror=function(e){_recogActive=false;updateMicUI();var s=document.getElementById('voiceStatus');if(s&&_recogTarget==='command')s.textContent='Didn\'t catch that — tap the mic and try again.';};
+  _recog.onerror=function(e){
+    var err=(e&&e.error)||'';
+    if(err==='no-speech'||err==='aborted'||err==='network'){return;}
+    _wantListening=false;_recogActive=false;updateMicUI();
+    var st=document.getElementById('voiceStatus');
+    if(st&&_recogTarget==='command'){st.textContent=(err==='not-allowed'||err==='service-not-allowed')?'Microphone access is blocked \u2014 allow it in your browser settings, then tap the mic.':'Sorry, I had trouble hearing \u2014 tap the mic and try again.';}
+  };
 }
 
 function updateMicUI(){
@@ -2260,21 +2283,21 @@ function updateMicUI(){
   if(chat)chat.classList.toggle('listening',_recogActive&&_recogTarget==='chat');
   var fm=document.getElementById('floatMic'); if(fm)fm.classList.toggle('listening',_recogActive&&_recogTarget==='command');
 }
-function _stopRecog(){if(_recog&&_recogActive){try{_recog.stop();}catch(e){}}_recogActive=false;updateMicUI();}
+function _stopRecog(){_wantListening=false;if(_silenceTimer){clearTimeout(_silenceTimer);_silenceTimer=null;}if(_recog&&_recogActive){try{_recog.stop();}catch(e){}}_recogActive=false;updateMicUI();}
 
 function toggleVoiceCommand(){
   if(!_recog)return;
-  if(_recogActive&&_recogTarget==='command'){_stopRecog();return;}
+  if(_recogActive&&_recogTarget==='command'){_finalizeVoice();return;}
   if(_recogActive)_stopRecog();
-  _recogTarget='command';_recogActive=true;updateMicUI();
+  _recogTarget='command';_finalTxt='';_restartCount=0;_wantListening=true;_recogActive=true;updateMicUI();
   document.getElementById('voiceStatus').textContent='Listening...';
   try{_recog.start();}catch(e){}
 }
 function toggleVoiceChat(){
   if(!_recog)return;
-  if(_recogActive&&_recogTarget==='chat'){_stopRecog();return;}
+  if(_recogActive&&_recogTarget==='chat'){_finalizeVoice();return;}
   if(_recogActive)_stopRecog();
-  _recogTarget='chat';_recogActive=true;updateMicUI();
+  _recogTarget='chat';_finalTxt='';_restartCount=0;_wantListening=true;_recogActive=true;updateMicUI();
   document.getElementById('chatInp').placeholder='Listening...';
   try{_recog.start();}catch(e){}
   setTimeout(function(){document.getElementById('chatInp').placeholder='Ask or speak...';},4000);
@@ -2299,7 +2322,7 @@ function speak(text){
 // ====== AI-POWERED VOICE COMMAND PARSER ======
 function processVoiceCommand(text){
   document.getElementById('voiceStatus').textContent='Got it — working on: "'+text+'"';
-  var sys=buildContext()+'\n\nPhil just gave you a spoken command on a construction job site. He may speak casually or imperfectly. Figure out his intent and convert it into a structured action. Return ONLY a JSON object (no markdown fences, no other text).\n\nShape: {"action":"ACTION","params":{...},"confirm":"short friendly sentence to read back","answer":"only for ask_question action"}\n\nValid actions and examples:\n\n1. log_hours - "Mike worked 8 hours at Sonoma Vista today" -> {"action":"log_hours","params":{"name":"Mike Torres","site":"Sonoma Vista Residence","amount":8,"date":"TODAY"},"confirm":"Logged 8 hours for Mike Torres at Sonoma Vista Residence."}\n\n2. assign_crew (move existing person) - "Move Carlos to Calistoga" -> {"action":"assign_crew","params":{"name":"Carlos Mendez","assign":"Calistoga Pool & Deck","status":"on-site"},"confirm":"Moved Carlos Mendez to Calistoga Pool & Deck."}\n\n3. add_crew (create NEW person) - "Add Danny Ruiz as a carpenter" or "New crew member Jose Garcia, electrician on Valley View" -> {"action":"add_crew","params":{"name":"Jose Garcia","role":"Electrician","assign":"Valley View Estate","status":"on-site"},"confirm":"Added Jose Garcia as Electrician on Valley View Estate."}\n\n4. set_progress - "Set Valley View to 85 percent" -> {"action":"set_progress","params":{"job":"Valley View Estate","progress":85},"confirm":"Updated Valley View Estate to 85 percent."}\n\n5. set_status - "Sonoma Vista is now in finishing" -> {"action":"set_status","params":{"job":"Sonoma Vista Residence","status":"finishing"},"confirm":"Set Sonoma Vista Residence to finishing phase."}\n\n6. add_job (create NEW project) - "New job, kitchen remodel for the Hendersons in Petaluma, budget 90 thousand" -> {"action":"add_job","params":{"name":"Henderson Kitchen Remodel","client":"The Hendersons","location":"Petaluma, CA","status":"planning","progress":0,"budget":90000,"spent":0},"confirm":"Created Henderson Kitchen Remodel for the Hendersons."}\n\n7. add_note - "Note on Calistoga: waiting on gunite delivery" -> {"action":"add_note","params":{"job":"Calistoga Pool & Deck","note":"Waiting on gunite delivery"},"confirm":"Added a note to Calistoga Pool & Deck."}\n\n8. ask_question (Phil is asking for advice/info, NOT changing data) - "What inspections do I need before drywall?" or "How do I price a deck?" -> {"action":"ask_question","answer":"Give a genuinely helpful, expert answer here as a master builder and construction business advisor. 2-4 sentences, specific and practical.","confirm":""}\n\n9. log_material (materials/supplies bought or delivered) - "Picked up 200 2x4s from ABC Supply for twelve hundred for Sonoma Vista" -> {"action":"log_material","params":{"item":"2x4 lumber","qty":"200","vendor":"ABC Supply","cost":1200,"job":"Sonoma Vista Residence"},"confirm":"Logged 200 2x4 lumber from ABC Supply ($1,200) to Sonoma Vista Residence."}\n\n10. daily_report (USE THIS ANY TIME the input has MORE THAN ONE fact - a full daily log or site report). Put params.actions as an ARRAY of the action objects above, EACH with its own short "confirm". - "At Sonoma Vista today Mike and Danny each did 8 hours, we poured the footings so we are at 50 percent, and I grabbed 200 2x4s from ABC Supply for 1200" -> {"action":"daily_report","params":{"actions":[{"action":"log_hours","params":{"name":"Mike Torres","site":"Sonoma Vista Residence","amount":8,"date":"TODAY"},"confirm":"8 hrs Mike Torres"},{"action":"log_hours","params":{"name":"Danny Ruiz","site":"Sonoma Vista Residence","amount":8,"date":"TODAY"},"confirm":"8 hrs Danny Ruiz"},{"action":"set_progress","params":{"job":"Sonoma Vista Residence","progress":50},"confirm":"Sonoma Vista to 50%"},{"action":"log_material","params":{"item":"2x4 lumber","qty":"200","vendor":"ABC Supply","cost":1200,"job":"Sonoma Vista Residence"},"confirm":"200 2x4s from ABC Supply ($1,200)"}]},"confirm":"Filed your Sonoma Vista site report."}\n\nMatch names/projects to the CLOSEST existing one, even from a short version. Status must be one of: planning, foundation, framing, rough, finishing, inspection, complete. For add_crew/add_job, fill in sensible values from what Phil said and leave blanks reasonable. If you genuinely cannot understand, use {"action":"unknown","confirm":"I did not catch that - try saying it another way."}';
+  var sys=buildContext()+'\n\nPhil just gave you a spoken command on a construction job site. He may speak casually or imperfectly. Figure out his intent and convert it into a structured action. Return ONLY a JSON object (no markdown fences, no other text).\n\nShape: {"action":"ACTION","params":{...},"confirm":"short friendly sentence to read back","answer":"only for ask_question action"}\n\nValid actions and examples:\n\n1. log_hours - "Mike worked 8 hours at Sonoma Vista today" -> {"action":"log_hours","params":{"name":"Mike Torres","site":"Sonoma Vista Residence","amount":8,"date":"TODAY"},"confirm":"Logged 8 hours for Mike Torres at Sonoma Vista Residence."}\n\n2. assign_crew (move existing person) - "Move Carlos to Calistoga" -> {"action":"assign_crew","params":{"name":"Carlos Mendez","assign":"Calistoga Pool & Deck","status":"on-site"},"confirm":"Moved Carlos Mendez to Calistoga Pool & Deck."}\n\n3. add_crew (create NEW person) - "Add Danny Ruiz as a carpenter" or "New crew member Jose Garcia, electrician on Valley View" -> {"action":"add_crew","params":{"name":"Jose Garcia","role":"Electrician","assign":"Valley View Estate","status":"on-site"},"confirm":"Added Jose Garcia as Electrician on Valley View Estate."}\n\n4. set_progress - "Set Valley View to 85 percent" -> {"action":"set_progress","params":{"job":"Valley View Estate","progress":85},"confirm":"Updated Valley View Estate to 85 percent."}\n\n5. set_status - "Sonoma Vista is now in finishing" -> {"action":"set_status","params":{"job":"Sonoma Vista Residence","status":"finishing"},"confirm":"Set Sonoma Vista Residence to finishing phase."}\n\n6. add_job (create NEW project) - "New job, kitchen remodel for the Hendersons in Petaluma, budget 90 thousand" -> {"action":"add_job","params":{"name":"Henderson Kitchen Remodel","client":"The Hendersons","location":"Petaluma, CA","status":"planning","progress":0,"budget":90000,"spent":0},"confirm":"Created Henderson Kitchen Remodel for the Hendersons."}\n\n7. add_note - "Note on Calistoga: waiting on gunite delivery" -> {"action":"add_note","params":{"job":"Calistoga Pool & Deck","note":"Waiting on gunite delivery"},"confirm":"Added a note to Calistoga Pool & Deck."}\n\n8. ask_question (Phil is asking for advice/info, NOT changing data) - "What inspections do I need before drywall?" or "How do I price a deck?" -> {"action":"ask_question","answer":"Give a genuinely helpful, expert answer here as a master builder and construction business advisor. 2-4 sentences, specific and practical.","confirm":""}\n\n9. log_material (materials/supplies bought or delivered) - "Picked up 200 2x4s from ABC Supply for twelve hundred for Sonoma Vista" -> {"action":"log_material","params":{"item":"2x4 lumber","qty":"200","vendor":"ABC Supply","cost":1200,"job":"Sonoma Vista Residence"},"confirm":"Logged 200 2x4 lumber from ABC Supply ($1,200) to Sonoma Vista Residence."}\n\n10. daily_report (USE THIS ANY TIME the input has MORE THAN ONE fact - a full daily log or site report). Put params.actions as an ARRAY of the action objects above, EACH with its own short "confirm". - "At Sonoma Vista today Mike and Danny each did 8 hours, we poured the footings so we are at 50 percent, and I grabbed 200 2x4s from ABC Supply for 1200" -> {"action":"daily_report","params":{"actions":[{"action":"log_hours","params":{"name":"Mike Torres","site":"Sonoma Vista Residence","amount":8,"date":"TODAY"},"confirm":"8 hrs Mike Torres"},{"action":"log_hours","params":{"name":"Danny Ruiz","site":"Sonoma Vista Residence","amount":8,"date":"TODAY"},"confirm":"8 hrs Danny Ruiz"},{"action":"set_progress","params":{"job":"Sonoma Vista Residence","progress":50},"confirm":"Sonoma Vista to 50%"},{"action":"log_material","params":{"item":"2x4 lumber","qty":"200","vendor":"ABC Supply","cost":1200,"job":"Sonoma Vista Residence"},"confirm":"200 2x4s from ABC Supply ($1,200)"}]},"confirm":"Filed your Sonoma Vista site report."}\n\nMatch names/projects to the CLOSEST existing one, even from a short version. Status must be one of: planning, foundation, framing, rough, finishing, inspection, complete. For add_crew/add_job, fill in sensible values from what Phil said and leave blanks reasonable. If Phil is asking a question, seeking advice, or making conversation (not a data command), ALWAYS use the ask_question action and give a genuinely helpful, specific answer; do NOT use unknown for a real question. Only if the transcript is empty or truly unintelligible should you use {"action":"unknown","confirm":"I did not catch that - try saying it another way."}';
   callClaude(sys,'Command: "'+text+'"',function(resp){
     try{
       var jt=resp.replace(/```json/g,'').replace(/```/g,'').trim();
