@@ -124,12 +124,27 @@ module.exports = async function handler(req, res) {
       var taken = await getUser(ru);
       if (taken) return res.status(200).json({ ok: false, error: 'That username is already taken \u2014 please pick another.' });
       var prof = { logo: '', phone: '', email: remail, address: '', license: '', website: '', reviewLink: '' };
+      var rref = (body.ref || '').toLowerCase().trim();
+      if (rref && rref !== ru) { var refU = await getUser(rref); if (refU) prof.referredBy = rref; }
       var insR = await sbFetch(base + '/accounts', { method: 'POST', headers: H, body: JSON.stringify({ username: ru, name: rname || rco, role: 'owner', owner: ru, company: rco, pass: hashPw(rpass), must_change: false, profile: prof }) });
       if (!insR.ok) { var erR = await insR.text(); return res.status(200).json({ ok: false, error: 'Could not create your account. ' + erR.slice(0, 140) }); }
       setSess(ru, 'owner');
       try { await sbFetch(base + '/activity_log', { method: 'POST', headers: H, body: JSON.stringify({ type: 'signup', username: ru, detail: (rco || ru) + ' created a free account' }) }); } catch (e) {}
+      if (prof.referredBy) { try { await sbFetch(base + '/activity_log', { method: 'POST', headers: H, body: JSON.stringify({ type: 'referral', username: prof.referredBy, detail: (rco || ru) + ' joined Orchamind via your invite' }) }); } catch (e) {} }
       return res.status(200).json({ ok: true, user: { username: ru, name: rname || rco, role: 'owner', company: rco, profile: prof, mustChange: false, billing: false } });
     }
+
+    if (action === 'refStats') {
+      var who = (body.username || '').toLowerCase().trim();
+      if (!who) return res.status(200).json({ ok: true, count: 0, referrals: [] });
+      try {
+        var qq = await sbFetch(base + '/accounts?profile->>referredBy=eq.' + encodeURIComponent(who) + '&select=username,company', { headers: H });
+        var arr = await qq.json();
+        var list = Array.isArray(arr) ? arr : [];
+        return res.status(200).json({ ok: true, count: list.length, referrals: list.map(function (x) { return { company: x.company || x.username }; }) });
+      } catch (e) { return res.status(200).json({ ok: true, count: 0, referrals: [] }); }
+    }
+
 
 
     if (action === 'requestReset') {
