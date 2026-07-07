@@ -98,7 +98,7 @@ module.exports = async function handler(req, res) {
           + '<div style="margin:22px 0;padding:16px;background:#EEF3F8;border-radius:8px;font-size:14px;color:#0A1628;"><div style="margin-bottom:4px;"><b>Login page:</b> orchamind.com/app</div><div><b>Your username:</b> ' + esc(username) + '</div><div style="color:#5A6B7D;margin-top:6px;">(Use the password you chose when you signed up.)</div></div>'
           + '<p style="font-size:14px;line-height:1.6;color:#5A6B7D;margin:0;">Your first 30 days are free. Any questions, just reply to this email.</p>'
           + '</div><div style="text-align:center;padding:16px;font-size:12px;color:#9aa7b4;">Orchamind &middot; Built by Siamak Kalhor Consulting</div></div>';
-        await fetch('https://api.resend.com/emails', { method: 'POST', headers: { 'Authorization': 'Bearer ' + RESEND, 'Content-Type': 'application/json' }, body: JSON.stringify({ from: 'Orchamind <welcome@orchamind.com>', to: [toEmail], reply_to: 'siamakk2@gmail.com', subject: 'Welcome to Orchamind \u2014 your workspace is ready', html: html }) });
+        await fetch('https://api.resend.com/emails', { method: 'POST', headers: { 'Authorization': 'Bearer ' + RESEND, 'Content-Type': 'application/json' }, body: JSON.stringify({ from: 'Orchamind <welcome@orchamind.com>', to: [toEmail], reply_to: 'info@siamakkalhor.com', subject: 'Welcome to Orchamind \u2014 your workspace is ready', html: html }) });
       }
     } catch (e) {}
 
