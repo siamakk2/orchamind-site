@@ -143,7 +143,10 @@ module.exports = async function handler(req, res) {
           }
         }
       } catch (eStripe) {}
-      var insR = await sbFetch(base + '/accounts', { method: 'POST', headers: H, body: JSON.stringify({ username: ru, name: rname || rco, role: 'owner', owner: ru, company: rco, pass: hashPw(rpass), must_change: false, profile: prof, stripe_customer: stripeCust, stripe_subscription: stripeSub }) });
+      var acctRow = { username: ru, name: rname || rco, role: 'owner', owner: ru, company: rco, pass: hashPw(rpass), must_change: false, profile: prof };
+      if (stripeCust) acctRow.stripe_customer = stripeCust;
+      if (stripeSub) acctRow.stripe_subscription = stripeSub;
+      var insR = await sbFetch(base + '/accounts', { method: 'POST', headers: H, body: JSON.stringify(acctRow) });
       if (!insR.ok) { var erR = await insR.text(); return res.status(200).json({ ok: false, error: 'Could not create your account. ' + erR.slice(0, 140) }); }
       setSess(ru, 'owner');
       try { await sbFetch(base + '/activity_log', { method: 'POST', headers: H, body: JSON.stringify({ type: 'signup', username: ru, detail: (rco || ru) + ' created a free account' }) }); } catch (e) {}
