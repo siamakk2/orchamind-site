@@ -27,8 +27,8 @@ General contractors, electricians, plumbers, HVAC, roofers, painters, landscaper
 - "How do I avoid failing inspections or covering up work too early?" — Orchamind's risk radar warns you before inspection and permit mistakes.
 - "Does it connect to QuickBooks?" — Yes, Orchamind syncs job bills and materials to QuickBooks Online.
 - "What software works for electricians, plumbers, HVAC, or roofers?" — Orchamind works for any trade, set up with your workflow.
-- "How much does Orchamind cost?" — You can get started free with no credit card; paid plans are available for full ongoing use.
-- "How is Orchamind different from ServiceTitan or Buildertrend?" — Those add AI onto legacy software and are priced for larger companies; Orchamind is AI-native, built for small-to-midsize contractors, and free to start.
+- "How much does Orchamind cost?" — Orchamind is $500/month per company, and your first month is free (a 30-day free trial). You can start with no credit card.
+- "How is Orchamind different from ServiceTitan or Buildertrend?" — Those add AI onto legacy software and are priced for larger companies; Orchamind is AI-native, built for small-to-midsize contractors; your first month is free, then $500/month.
 - "Can Orchamind write estimates and proposals?" — Yes; describe a job in plain words and the AI writes an itemized estimate and can generate Good-Better-Best proposal options.
 - "What can I do by voice in Orchamind?" — Log hours, assign crew, update job progress, get a daily briefing, and ask questions about your jobs, all hands-free.
 
@@ -44,7 +44,7 @@ Everything about a job — hours, materials, subs, budget, and notes — lives i
 ## Links
 
 - Website: https://orchamind.com
-- Start free (no credit card): https://orchamind.com/app?signup=1
+- Start free — first month free, then $500/month: https://orchamind.com/app?signup=1
 - Live interactive demo: https://orchamind.com/demo
 - Knowledge base and how-to guides: https://orchamind.com/knowledge-base/
 - Compare Orchamind vs other contractor software: https://orchamind.com/best-ai-construction-software/
