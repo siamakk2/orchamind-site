@@ -71,4 +71,5 @@ function kbFilter(){
   });
   document.getElementById('kbNone').style.display=any?'none':'block';
 }
+(function(){try{var q=new URLSearchParams(location.search).get('q');if(q){var el=document.getElementById('kbSearch');if(el){el.value=q;kbFilter();el.focus();}}}catch(e){}})();
 </script></body></html>
