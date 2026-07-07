@@ -41,9 +41,33 @@
   "applicationCategory": "BusinessApplication",
   "operatingSystem": "Web, iOS, Android",
   "description": "AI-powered operations assistant for contractors, trades, and field-service businesses. Manage jobs, crews, hours, and subcontractors by voice with daily AI briefings and risk alerts.",
-  "offers": { "@type": "Offer", "price": "500", "priceCurrency": "USD", "description": "$500 per month per company, with a 30-day free trial", "category": "subscription" },
-  "provider": { "@type": "Organization", "name": "Siamak Kalhor Consulting", "url": "https://siamakconsulting.com" },
-  "featureList": ["AI daily briefing", "Voice command job management", "Crew and hours tracking", "Risk radar alerts", "Subcontractor management", "Role-based access control"]
+  "offers": {
+    "@type": "Offer",
+    "price": "500",
+    "priceCurrency": "USD",
+    "description": "$500 per month per company, with a 30-day free trial",
+    "category": "subscription"
+  },
+  "provider": {
+    "@type": "Organization",
+    "name": "Siamak Kalhor Consulting",
+    "url": "https://siamakconsulting.com"
+  },
+  "featureList": [
+    "AI estimates and Good-Better-Best proposals",
+    "Voice command job management",
+    "Dispatch board",
+    "Job scheduling",
+    "GPS time clock",
+    "Crew and certification compliance tracking",
+    "AI safety toolbox talks",
+    "Client portal and AI client updates",
+    "Invoicing and job costing",
+    "Website lead-capture widget",
+    "Daily AI briefing",
+    "Risk radar alerts"
+  ],
+  "applicationSubCategory": "Construction Management Software"
 }
 </script>
 <script type="application/ld+json">
@@ -55,13 +79,40 @@
   "logo": "https://orchamind.com/apple-touch-icon.png",
   "image": "https://orchamind.com/og-image.jpg",
   "description": "AI-powered operations platform for contractors and field-service businesses — manage jobs, crews, hours, materials, and subcontractors by voice, with a daily AI briefing and risk alerts.",
-  "founder": { "@type": "Person", "name": "Siamak Kalhor", "url": "https://siamakconsulting.com" },
+  "founder": {
+    "@type": "Person",
+    "name": "Siamak Kalhor",
+    "url": "https://siamakconsulting.com"
+  },
   "sameAs": [
     "https://www.linkedin.com/in/siamakkalhor/",
     "https://instagram.com/sk_consulting",
     "https://x.com/SiamakKalhor"
   ],
-  "contactPoint": { "@type": "ContactPoint", "contactType": "sales", "email": "info@siamakkalhor.com", "telephone": "+1-323-657-7752", "areaServed": "US", "availableLanguage": "English" }
+  "contactPoint": {
+    "@type": "ContactPoint",
+    "contactType": "sales",
+    "email": "info@siamakkalhor.com",
+    "telephone": "+1-323-657-7752",
+    "areaServed": "US",
+    "availableLanguage": "English"
+  },
+  "foundingDate": "2025",
+  "slogan": "The AI that runs your contracting business.",
+  "knowsAbout": [
+    "AI software for contractors",
+    "Construction management software",
+    "Field service management",
+    "Contractor estimating software",
+    "Crew scheduling",
+    "Job costing",
+    "Dispatch software",
+    "AI voice assistant for construction"
+  ],
+  "areaServed": {
+    "@type": "Country",
+    "name": "United States"
+  }
 }
 </script>
 <script type="application/ld+json">
@@ -69,11 +120,102 @@
   "@context": "https://schema.org",
   "@type": "FAQPage",
   "mainEntity": [
-    {"@type":"Question","name":"What is Orchamind?","acceptedAnswer":{"@type":"Answer","text":"Orchamind is an AI-powered operations assistant for field businesses. It tracks your jobs, crew, and hours, and gives you a daily AI briefing, risk alerts, and instant answers to questions about your operation — all controllable by voice."}},
-    {"@type":"Question","name":"Who is Orchamind for?","acceptedAnswer":{"@type":"Answer","text":"Any business that runs jobs with a field team: general contractors, electricians, plumbers, HVAC, roofers, painters, landscapers, pool builders, cleaning and janitorial services, pest control, solar installers, moving companies, property maintenance, and more."}},
-    {"@type":"Question","name":"Do I need to be good with technology to use it?","acceptedAnswer":{"@type":"Answer","text":"No. If you can send a text message, you can run Orchamind. You can type or simply talk to it — say things like 'log 8 hours for Mike at the Johnson job' and it handles the rest."}},
-    {"@type":"Question","name":"Is my data private and secure?","acceptedAnswer":{"@type":"Answer","text":"Yes. Each company has its own private, secure system with role-based logins. Owners and managers see financials; crew members only see their assigned jobs. Passwords are encrypted and never stored in plain text."}},
-    {"@type":"Question","name":"How do I get started?","acceptedAnswer":{"@type":"Answer","text":"Contact Siamak Kalhor Consulting for a personalized walkthrough and demo. Your system is set up for your business, with your jobs, your crew, and your branding."}}
+    {
+      "@type": "Question",
+      "name": "What is the best AI software for general contractors?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Orchamind is an AI-native platform built for general contractors and field-service businesses. Unlike traditional software where AI is bolted on afterward, Orchamind lets you run estimates, dispatch, crew, safety, client updates, and billing by voice — the AI does the paperwork. It is free to get started, with no credit card required."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "How much does Orchamind cost?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "You can get started with Orchamind for free, with no credit card, and paid plans are available for full ongoing use. See the pricing section on this page for current details."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Does Orchamind work on a phone?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Yes. Orchamind is built mobile-first for the job site. It runs in any browser on iPhone and Android, and you can operate the whole app completely hands-free by voice."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Can Orchamind write estimates and proposals?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Yes. Describe a job in plain words and the AI writes an itemized estimate. Orchamind can also generate Good-Better-Best proposal options, which help contractors win more work by letting the client choose which option, not whether to buy."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "How is Orchamind different from ServiceTitan or Buildertrend?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "ServiceTitan and Buildertrend add AI onto legacy software and are priced for larger companies. Orchamind is AI-native and built for small-to-midsize contractors — the AI writes the estimate, dispatches the crew, and updates the client for you — and it is free to get started."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "What can I do by voice in Orchamind?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Nearly everything. You can log hours (“Mike worked 8 hours at Sonoma Vista”), assign or move crew, update job progress, get a daily briefing, and ask questions about your jobs — all hands-free from the truck or the job site."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "What features does Orchamind include?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Orchamind includes AI estimates and Good-Better-Best proposals, a dispatch board, scheduling, a GPS time clock, crew and certification tracking, AI safety toolbox talks, a client portal with AI client updates, invoicing and job costing, a website lead-capture widget, and a daily AI briefing with risk alerts — all operable by voice."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "What is Orchamind?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Orchamind is an AI-powered operations assistant for field businesses. It tracks your jobs, crew, and hours, and gives you a daily AI briefing, risk alerts, and instant answers to questions about your operation — all controllable by voice."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Who is Orchamind for?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Any business that runs jobs with a field team: general contractors, electricians, plumbers, HVAC, roofers, painters, landscapers, pool builders, cleaning and janitorial services, pest control, solar installers, moving companies, property maintenance, and more."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Do I need to be good with technology to use it?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "No. If you can send a text message, you can run Orchamind. You can type or simply talk to it — say things like 'log 8 hours for Mike at the Johnson job' and it handles the rest."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Is my data private and secure?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Yes. Each company has its own private, secure system with role-based logins. Owners and managers see financials; crew members only see their assigned jobs. Passwords are encrypted and never stored in plain text."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "How do I get started?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Contact Siamak Kalhor Consulting for a personalized walkthrough and demo. Your system is set up for your business, with your jobs, your crew, and your branding."
+      }
+    }
   ]
 }
 </script>
@@ -432,6 +574,7 @@
     .audit-text h2{font-size:26px;}
   }
 </style>
+<meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1">
 <link rel="canonical" href="https://orchamind.com/"/>
 <style id="mobile-ux-pass">
 html{scroll-behavior:smooth}
@@ -469,6 +612,27 @@ html{scroll-behavior:smooth}
 .price-free-btn:hover{filter:brightness(1.08);}
 @media(max-width:520px){.hero-trust{gap:12px;font-size:12.5px;}}
 </style>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "WebSite",
+  "name": "Orchamind",
+  "url": "https://orchamind.com",
+  "description": "AI-native operations platform for contractors and field-service businesses.",
+  "publisher": {
+    "@type": "Organization",
+    "name": "Orchamind"
+  },
+  "potentialAction": {
+    "@type": "SearchAction",
+    "target": {
+      "@type": "EntryPoint",
+      "urlTemplate": "https://orchamind.com/knowledge-base/?q={search_term_string}"
+    },
+    "query-input": "required name=search_term_string"
+  }
+}
+</script>
 </head>
 <body>
 
@@ -950,6 +1114,13 @@ html{scroll-behavior:smooth}
     <div class="section-eyebrow">Questions</div>
     <h2 class="section-title">Everything you're wondering.</h2>
     <div class="faq-list">
+      <div class="faq-item"><div class="faq-q" onclick="this.parentElement.classList.toggle('open')">What is the best AI software for general contractors?</div><div class="faq-a">Orchamind is an AI-native platform built for general contractors and field-service businesses. Unlike traditional software where AI is bolted on afterward, Orchamind lets you run estimates, dispatch, crew, safety, client updates, and billing by voice — the AI does the paperwork. It is free to get started, with no credit card required.</div></div>
+      <div class="faq-item"><div class="faq-q" onclick="this.parentElement.classList.toggle('open')">How much does Orchamind cost?</div><div class="faq-a">You can get started with Orchamind for free, with no credit card, and paid plans are available for full ongoing use. See the pricing section on this page for current details.</div></div>
+      <div class="faq-item"><div class="faq-q" onclick="this.parentElement.classList.toggle('open')">Does Orchamind work on a phone?</div><div class="faq-a">Yes. Orchamind is built mobile-first for the job site. It runs in any browser on iPhone and Android, and you can operate the whole app completely hands-free by voice.</div></div>
+      <div class="faq-item"><div class="faq-q" onclick="this.parentElement.classList.toggle('open')">Can Orchamind write estimates and proposals?</div><div class="faq-a">Yes. Describe a job in plain words and the AI writes an itemized estimate. Orchamind can also generate Good-Better-Best proposal options, which help contractors win more work by letting the client choose which option, not whether to buy.</div></div>
+      <div class="faq-item"><div class="faq-q" onclick="this.parentElement.classList.toggle('open')">How is Orchamind different from ServiceTitan or Buildertrend?</div><div class="faq-a">ServiceTitan and Buildertrend add AI onto legacy software and are priced for larger companies. Orchamind is AI-native and built for small-to-midsize contractors — the AI writes the estimate, dispatches the crew, and updates the client for you — and it is free to get started.</div></div>
+      <div class="faq-item"><div class="faq-q" onclick="this.parentElement.classList.toggle('open')">What can I do by voice in Orchamind?</div><div class="faq-a">Nearly everything. You can log hours (“Mike worked 8 hours at Sonoma Vista”), assign or move crew, update job progress, get a daily briefing, and ask questions about your jobs — all hands-free from the truck or the job site.</div></div>
+      <div class="faq-item"><div class="faq-q" onclick="this.parentElement.classList.toggle('open')">What features does Orchamind include?</div><div class="faq-a">Orchamind includes AI estimates and Good-Better-Best proposals, a dispatch board, scheduling, a GPS time clock, crew and certification tracking, AI safety toolbox talks, a client portal with AI client updates, invoicing and job costing, a website lead-capture widget, and a daily AI briefing with risk alerts — all operable by voice.</div></div>
       <div class="faq-item"><div class="faq-q" onclick="this.parentElement.classList.toggle('open')">Do I need to be good with technology?</div><div class="faq-a">Not at all. If you can send a text message, you can run Orchamind. You can type or simply talk to it — say "log 8 hours for Mike at the Johnson job" and it handles the rest. It was built specifically for trades people, not tech people.</div></div>
       <div class="faq-item"><div class="faq-q" onclick="this.parentElement.classList.toggle('open')">What kinds of businesses use it?</div><div class="faq-a">Any business that runs jobs with a field team: general contractors, electricians, plumbers, HVAC, roofers, painters, landscapers, pool builders, cleaning and janitorial, pest control, solar, property maintenance, moving companies, and more. It's set up with your industry's language.</div></div>
       <div class="faq-item"><div class="faq-q" onclick="this.parentElement.classList.toggle('open')">Is my data private and secure?</div><div class="faq-a">Yes. Each company gets its own private, secure system with individual logins. Owners and managers see financials and budgets; crew members only see the jobs they're assigned to. Passwords are encrypted and never stored in plain text.</div></div>
