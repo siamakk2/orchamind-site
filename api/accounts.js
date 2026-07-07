@@ -113,6 +113,25 @@ module.exports = async function handler(req, res) {
       return res.status(200).json({ ok: true, user: { username: u, name: name, role: 'owner' } });
     }
 
+    if (action === 'register') {
+      var ru = (body.username || '').toLowerCase().trim();
+      var rname = (body.name || '').trim();
+      var rpass = body.password || '';
+      var rco = (body.company || '').trim();
+      var remail = (body.email || '').trim();
+      if (!rco || !ru || String(rpass).length < 6) return res.status(200).json({ ok: false, error: 'Enter a company name, a username, and a password of at least 6 characters.' });
+      if (!/^[a-z0-9_]+$/.test(ru)) return res.status(200).json({ ok: false, error: 'Username can use only lowercase letters, numbers, and underscores (no spaces).' });
+      var taken = await getUser(ru);
+      if (taken) return res.status(200).json({ ok: false, error: 'That username is already taken \u2014 please pick another.' });
+      var prof = { logo: '', phone: '', email: remail, address: '', license: '', website: '', reviewLink: '' };
+      var insR = await sbFetch(base + '/accounts', { method: 'POST', headers: H, body: JSON.stringify({ username: ru, name: rname || rco, role: 'owner', owner: ru, company: rco, pass: hashPw(rpass), must_change: false, profile: prof }) });
+      if (!insR.ok) { var erR = await insR.text(); return res.status(200).json({ ok: false, error: 'Could not create your account. ' + erR.slice(0, 140) }); }
+      setSess(ru, 'owner');
+      try { await sbFetch(base + '/activity_log', { method: 'POST', headers: H, body: JSON.stringify({ type: 'signup', username: ru, detail: (rco || ru) + ' created a free account' }) }); } catch (e) {}
+      return res.status(200).json({ ok: true, user: { username: ru, name: rname || rco, role: 'owner', company: rco, profile: prof, mustChange: false, billing: false } });
+    }
+
+
     if (action === 'requestReset') {
       var ru = (body.username || '').toLowerCase().trim();
       if (ru) { try { await sbFetch(base + '/accounts?username=eq.' + encodeURIComponent(ru), { method: 'PATCH', headers: H, body: JSON.stringify({ reset_requested: true }) }); } catch (e) {} }
