@@ -460,6 +460,15 @@ html{scroll-behavior:smooth}
 .feat-cta:hover{filter:brightness(1.08);}
 @media(max-width:600px){.feat-grid2{grid-template-columns:1fr;}}
 </style>
+<style id="startfree-css">
+.hero-trust{display:flex;gap:18px;flex-wrap:wrap;margin:16px 0 6px;font-size:13.5px;color:rgba(255,255,255,.82);}
+.hero-trust span{white-space:nowrap;}
+.price-free{display:flex;align-items:center;justify-content:space-between;gap:18px;flex-wrap:wrap;background:linear-gradient(135deg,#12233d,#0A1628);border:1px solid rgba(45,127,249,.35);border-radius:14px;padding:18px 22px;margin:0 auto 26px;max-width:760px;color:#fff;}
+.price-free b{color:#fff;}.price-free div{font-size:14.5px;color:rgba(255,255,255,.9);}
+.price-free-btn{flex:none;background:linear-gradient(135deg,#2D7FF9,#1565C0);color:#fff;font-weight:700;padding:12px 24px;border-radius:9px;text-decoration:none;font-size:14.5px;white-space:nowrap;}
+.price-free-btn:hover{filter:brightness(1.08);}
+@media(max-width:520px){.hero-trust{gap:12px;font-size:12.5px;}}
+</style>
 </head>
 <body>
 
@@ -484,7 +493,7 @@ html{scroll-behavior:smooth}
       <a href="/knowledge-base">Knowledge Base</a>
       <a href="/audit" style="color:var(--amber) !important;font-weight:700;">Free Site Audit</a>
       <a href="demo.html?demo=1" style="color:#fff !important;border:1px solid rgba(255,255,255,0.3);padding:9px 16px;border-radius:9px;font-weight:600;font-size:14px;">Try Demo</a>
-      <a href="#contact" class="nav-cta">Get a demo</a>
+      <a href="/app?signup=1" class="nav-cta">Start free</a>
     </div>
     <button class="nav-toggle" onclick="document.getElementById('navLinks').classList.toggle('open')">☰</button>
   </div>
@@ -497,9 +506,10 @@ html{scroll-behavior:smooth}
       <h1>The AI brain that <span class="grad">runs your jobs</span> while you run your business.</h1>
       <p class="hero-sub">Orchamind tracks every job, crew member, and hour — then briefs you each morning, flags what's about to go wrong, and answers any question. Just talk to it. If you can send a text, you can run it.</p>
       <div class="hero-btns">
-        <a href="#contact" class="btn-primary">Get a personalized demo</a>
+        <a href="/app?signup=1" class="btn-primary">Start free →</a>
         <a href="demo.html?demo=1" class="btn-ghost"><svg class="btn-ic" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg> Try the live demo</a>
       </div>
+      <div class="hero-trust"><span>✓ Free to start</span><span>✓ No credit card</span><span>✓ Set up in minutes</span></div>
       <a href="/audit" class="hero-audit"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg> Free Online Presence Report &rarr;</a>
     </div>
 
@@ -967,7 +977,7 @@ html{scroll-behavior:smooth}
 <section class="pricing-sec" id="pricing">
   <div class="wrap">
     <div class="section-eyebrow">Pricing</div>
-    <h2 class="section-title">Simple pricing. Built to pay for itself.</h2>
+    <h2 class="section-title">Simple pricing. Built to pay for itself.</h2><div class="price-free"><div><b>Start free — no credit card.</b> Create your account and use Orchamind today. Upgrade any time.</div><a href="/app?signup=1" class="price-free-btn">Start free →</a></div>
     <p class="section-lead">Get a professional website once, or let the AI platform run your back office every day. Most contractors do both.</p>
     <div class="price-grid">
       <div class="pcard">
