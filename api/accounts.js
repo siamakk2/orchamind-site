@@ -289,7 +289,7 @@ module.exports = async function handler(req, res) {
             + '<a href="https://orchamind.com/app" style="display:inline-block;background:#F9A825;color:#0A1628;text-decoration:none;font-weight:bold;padding:13px 26px;border-radius:8px;font-size:15px;">Log in &amp; get started &rarr;</a>'
             + '<p style="font-size:13px;line-height:1.6;color:#8090A0;margin:20px 0 0;">For your security you\u2019ll set your own password the first time you log in. Questions? Just reply to this email.</p>'
             + '</div></div>';
-          var er = await fetch('https://api.resend.com/emails', { method: 'POST', headers: { 'Authorization': 'Bearer ' + RESEND, 'Content-Type': 'application/json' }, body: JSON.stringify({ from: 'Orchamind <welcome@orchamind.com>', to: [toEmail], reply_to: 'siamakk2@gmail.com', subject: 'Welcome to Orchamind \u2014 your ' + cc + ' workspace is ready', html: whtml }) });
+          var er = await fetch('https://api.resend.com/emails', { method: 'POST', headers: { 'Authorization': 'Bearer ' + RESEND, 'Content-Type': 'application/json' }, body: JSON.stringify({ from: 'Orchamind <welcome@orchamind.com>', to: [toEmail], reply_to: 'info@siamakkalhor.com', subject: 'Welcome to Orchamind \u2014 your ' + cc + ' workspace is ready', html: whtml }) });
           _emailed = er.ok;
           if (!er.ok) { try { var _et = await er.text(); _emailErr = _et.slice(0, 200); } catch (e3) { _emailErr = 'HTTP ' + er.status; } }
         } else if (!RESEND) { _emailErr = 'RESEND_API_KEY is not set in this project'; } else if (!toEmail) { _emailErr = 'no email entered';
