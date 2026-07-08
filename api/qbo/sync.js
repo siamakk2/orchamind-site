@@ -23,13 +23,16 @@ function httpReq(method, urlStr, headers, bodyStr){
     var data = bodyStr || '';
     var opts = { method: method, hostname: u.hostname, port: 443, path: u.pathname + (u.search || ''),
       headers: Object.assign({}, headers, data ? { 'Content-Length': Buffer.byteLength(data) } : {}) };
-    var rq = https.request(opts, function(resp){ var b=''; resp.on('data',function(c){b+=c;}); resp.on('end',function(){ resolve({status:resp.statusCode,text:b}); }); });
+    var rq = https.request(opts, function(resp){ var b=''; resp.on('data',function(c){b+=c;}); resp.on('end',function(){ resolve({status:resp.statusCode,text:b,headers:resp.headers||{}}); }); });
     rq.on('error', reject);
     rq.setTimeout(20000, function(){ rq.destroy(new Error('timeout')); });
     if (data) rq.write(data); rq.end();
   });
 }
 function jparse(s){ try{ return JSON.parse(s||'{}'); }catch(e){ return {}; } }
+// Intuit sends a trace id (intuit_tid) on every response — capture it for support/troubleshooting.
+function tidOf(r){ try{ var h=(r&&r.headers)||{}; return h['intuit_tid']||h['Intuit_TID']||h['intuit-tid']||''; }catch(e){ return ''; } }
+function logQbo(level, obj){ try{ console[level==='error'?'error':'log'](JSON.stringify(Object.assign({ source:'qbo', at:new Date().toISOString() }, obj))); }catch(e){} }
 
 var SB_URL = 'https://yqbprvyhzugdmavvurqb.supabase.co';
 function sbKey(){ return (process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SECRET_KEY || process.env.SUPABASE_SERVICE_KEY || '').trim(); }
@@ -149,10 +152,13 @@ module.exports = async (req, res) => {
           results.push({id:mid,status:'synced',billId:billId}); synced++;
         } else {
           var fault=(bj.Fault&&bj.Fault.Error&&bj.Fault.Error[0]&&(bj.Fault.Error[0].Message+' '+(bj.Fault.Error[0].Detail||'')))||String(br.text).slice(0,200);
-          results.push({id:mid,status:'error',error:fault}); errors++;
+          var tid=tidOf(br);
+          logQbo('error',{ event:'bill_create_failed', user:owner, realm:realm, job:jobId, material:mid, http:br.status, intuit_tid:tid, fault:String(fault).slice(0,300) });
+          results.push({id:mid,status:'error',error:fault,intuit_tid:tid}); errors++;
         }
-      }catch(ie){ results.push({id:mid,status:'error',error:(ie&&ie.message)||String(ie)}); errors++; }
+      }catch(ie){ logQbo('error',{ event:'material_sync_exception', user:owner, job:jobId, material:mid, message:(ie&&ie.message)||String(ie) }); results.push({id:mid,status:'error',error:(ie&&ie.message)||String(ie)}); errors++; }
     }
+    logQbo('log',{ event:'sync_complete', user:owner, realm:realm, job:jobId, synced:synced, skipped:skipped, errors:errors });
     return send({ok:true, realm:realm, account:acache.name||null, summary:{synced:synced,skipped:skipped,errors:errors}, results:results});
-  }catch(e){ return send({ok:false,error:(e&&e.message)||String(e)},200); }
+  }catch(e){ logQbo('error',{ event:'sync_failed', message:(e&&e.message)||String(e) }); return send({ok:false,error:(e&&e.message)||String(e)},200); }
 };
