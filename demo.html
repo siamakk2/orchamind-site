@@ -720,7 +720,7 @@ button:active, .btn:active, .btn-ghost:active, .tab:active, [role="button"]:acti
   <button class="tab active" data-tab="today"><svg class="ti" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9.5 12 3l9 6.5V21a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1z"/><path d="M9 22V12h6v10"/></svg>Home</button>
   <div class="nav-sec">Sales</div>
   <button class="tab" data-tab="leads" data-mgronly><svg class="ti" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>Leads</button>
-  <button class="tab" data-tab="customers" data-mgronly><svg class="ti" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>Customers</button>
+  <button class="tab" data-tab="customers" data-mgronly><svg class="ti" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>Clients</button>
   <button class="tab" data-tab="estimates" data-mgronly><svg class="ti" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M9 13h6"/><path d="M9 17h6"/></svg>Estimates</button>
   <div class="nav-sec">Work</div>
   <button class="tab" data-tab="jobs"><svg class="ti" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 7h20v13a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1z"/><path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>Jobs</button>
@@ -1145,9 +1145,9 @@ button:active, .btn:active, .btn-ghost:active, .tab:active, [role="button"]:acti
 .cust-empty{color:var(--muted);font-size:12.5px;padding:2px 0;}
 </style>
   <div class="panel" id="panel-customers">
-    <div class="panel-head"><h2>Customers</h2></div>
-    <p style="color:var(--muted);font-size:13.5px;margin:-4px 0 14px;">Everyone you work with, pulled together automatically from your jobs and leads. Tap a customer to see their whole history.</p>
-    <input type="text" id="custSearch" class="cust-search" placeholder="Search customers…" oninput="renderCustomers()">
+    <div class="panel-head"><h2>Clients</h2><button class="btn" onclick="openClientForm('')">+ Add client</button></div>
+    <p style="color:var(--muted);font-size:13.5px;margin:-4px 0 14px;">Everyone you work with. Add clients directly, or they appear automatically from your jobs and leads. Tap a client to see their full history.</p>
+    <input type="text" id="custSearch" class="cust-search" placeholder="Search clients…" oninput="renderCustomers()">
     <div id="custBody"></div>
   </div>
 <style>
@@ -1597,7 +1597,7 @@ button:active, .btn:active, .btn-ghost:active, .tab:active, [role="button"]:acti
   <h3 id="jobModalTitle">New Job</h3>
   <input type="hidden" id="jobId">
   <div class="field"><label>Project Name</label><input type="text" id="jobName" placeholder="e.g. Sonoma Vista Residence"></div>
-  <div class="field"><label>Client Name</label><input type="text" id="jobClient" placeholder="e.g. The Andersons"></div>
+  <div class="field"><label>Client Name</label><input type="text" id="jobClient" list="clientDL" placeholder="e.g. The Andersons"><datalist id="clientDL"></datalist></div>
   <div class="field"><label>Location</label><input type="text" id="jobLocation" placeholder="e.g. Santa Rosa, CA"></div>
   <div class="field-row">
     <div class="field"><label>Phase</label><select id="jobStatus">
@@ -1706,6 +1706,7 @@ var _demoAICount = 0;
 
 var STATUS_LABELS={planning:'Planning',foundation:'Foundation',framing:'Framing',rough:'Rough-In',finishing:'Finishing',inspection:'Inspection',complete:'Complete'};
 
+var clients=[];
 var jobs=[
   {id:'j1',name:'Sonoma Vista Residence',client:'The Andersons',location:'Santa Rosa, CA',status:'framing',progress:45,crew:5,date:'2026-09-15',budget:680000,spent:298000,notes:'Framing inspection scheduled for next week. Waiting on window delivery (2 wk lead).'},
   {id:'j2',name:'Valley View Estate',client:'M. Reynolds',location:'Sonoma, CA',status:'finishing',progress:78,crew:4,date:'2026-07-30',budget:540000,spent:475000,notes:'Final finishes underway. Client wants to add wine cellar - potential change order.'},
@@ -1761,11 +1762,11 @@ function _acctKey(){return (typeof CURRENT_USER!=='undefined'&&CURRENT_USER&&CUR
 function dataKey(){return 'orcha_data_'+_acctKey();}
 function pendKey(){return 'orcha_pend_'+_acctKey();}
 var _pendingSync=false;
-function writeLocal(){try{localStorage.setItem(dataKey(),JSON.stringify({saved:true,jobs:jobs,crew:crew,hours:hours,subs:subs,estimates:estimates,sketches:sketches,logs:logs,schedule:schedule,changeOrders:changeOrders,expenses:expenses,leads:leads,plans:plans,_ts:Date.now()}));}catch(e){}}
+function writeLocal(){try{localStorage.setItem(dataKey(),JSON.stringify({saved:true,jobs:jobs,crew:crew,hours:hours,subs:subs,estimates:estimates,sketches:sketches,logs:logs,schedule:schedule,changeOrders:changeOrders,expenses:expenses,leads:leads,plans:plans,clients:clients,_ts:Date.now()}));}catch(e){}}
 function markPending(){_pendingSync=true;try{localStorage.setItem(pendKey(),'1');}catch(e){}updateSyncPill();}
 function markSynced(){_pendingSync=false;try{localStorage.removeItem(pendKey());}catch(e){}updateSyncPill();}
 function pushToServer(){
-  fetch('/api/data',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({data:{saved:true,jobs:jobs,crew:crew,hours:hours,subs:subs,estimates:estimates,sketches:sketches,logs:logs,schedule:schedule,changeOrders:changeOrders,expenses:expenses,leads:leads,plans:plans,pricebook:pricebook,selections:selections,safety:safety,punch:punch,equipment:equipment,clockSessions:clockSessions,certs:certs}})})
+  fetch('/api/data',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({data:{saved:true,jobs:jobs,crew:crew,hours:hours,subs:subs,estimates:estimates,sketches:sketches,logs:logs,schedule:schedule,changeOrders:changeOrders,expenses:expenses,leads:leads,plans:plans,clients:clients,pricebook:pricebook,selections:selections,safety:safety,punch:punch,equipment:equipment,clockSessions:clockSessions,certs:certs}})})
     .then(function(r){return r.json();})
     .then(function(o){if(o&&!o.error){_dbReady=true;markSynced();}else{markPending();}})
     .catch(function(){markPending();});
@@ -1784,7 +1785,7 @@ function load(cb){
   // 1) OFFLINE-FIRST: recall unsynced flag + hydrate instantly from this device
   try{_pendingSync=(localStorage.getItem(pendKey())==='1');}catch(e){_pendingSync=false;}
   var localHad=false;
-  try{var ls=localStorage.getItem(dataKey());if(ls){var d=JSON.parse(ls);if(d&&d.saved){jobs=Array.isArray(d.jobs)?d.jobs:jobs;crew=Array.isArray(d.crew)?d.crew:crew;pricebook=Array.isArray(d.pricebook)?d.pricebook:pricebook;selections=Array.isArray(d.selections)?d.selections:selections;safety=Array.isArray(d.safety)?d.safety:safety;punch=Array.isArray(d.punch)?d.punch:punch;equipment=Array.isArray(d.equipment)?d.equipment:equipment;clockSessions=Array.isArray(d.clockSessions)?d.clockSessions:clockSessions;certs=Array.isArray(d.certs)?d.certs:certs;hours=Array.isArray(d.hours)?d.hours:hours;subs=Array.isArray(d.subs)?d.subs:subs;estimates=Array.isArray(d.estimates)?d.estimates:estimates;sketches=Array.isArray(d.sketches)?d.sketches:sketches;logs=Array.isArray(d.logs)?d.logs:logs;schedule=Array.isArray(d.schedule)?d.schedule:schedule;changeOrders=Array.isArray(d.changeOrders)?d.changeOrders:changeOrders;expenses=Array.isArray(d.expenses)?d.expenses:expenses;leads=Array.isArray(d.leads)?d.leads:leads;plans=(Array.isArray(d.plans)&&d.plans.length)?d.plans:plans;localHad=true;}}}catch(e){}
+  try{var ls=localStorage.getItem(dataKey());if(ls){var d=JSON.parse(ls);if(d&&d.saved){jobs=Array.isArray(d.jobs)?d.jobs:jobs;crew=Array.isArray(d.crew)?d.crew:crew;clients=Array.isArray(d.clients)?d.clients:clients;pricebook=Array.isArray(d.pricebook)?d.pricebook:pricebook;selections=Array.isArray(d.selections)?d.selections:selections;safety=Array.isArray(d.safety)?d.safety:safety;punch=Array.isArray(d.punch)?d.punch:punch;equipment=Array.isArray(d.equipment)?d.equipment:equipment;clockSessions=Array.isArray(d.clockSessions)?d.clockSessions:clockSessions;certs=Array.isArray(d.certs)?d.certs:certs;hours=Array.isArray(d.hours)?d.hours:hours;subs=Array.isArray(d.subs)?d.subs:subs;estimates=Array.isArray(d.estimates)?d.estimates:estimates;sketches=Array.isArray(d.sketches)?d.sketches:sketches;logs=Array.isArray(d.logs)?d.logs:logs;schedule=Array.isArray(d.schedule)?d.schedule:schedule;changeOrders=Array.isArray(d.changeOrders)?d.changeOrders:changeOrders;expenses=Array.isArray(d.expenses)?d.expenses:expenses;leads=Array.isArray(d.leads)?d.leads:leads;plans=(Array.isArray(d.plans)&&d.plans.length)?d.plans:plans;localHad=true;}}}catch(e){}
   // 2) reach the shared database, but NEVER block the app
   var timer=setTimeout(function(){updateSyncPill();finish();},3000);
   fetch('/api/data').then(function(r){return r.json();}).then(function(out){
@@ -1804,10 +1805,11 @@ function load(cb){
       changeOrders=Array.isArray(out.data.changeOrders)?out.data.changeOrders:[];
       expenses=Array.isArray(out.data.expenses)?out.data.expenses:[];
       leads=Array.isArray(out.data.leads)?out.data.leads:[];
+      clients=Array.isArray(out.data.clients)?out.data.clients:[];
       plans=(Array.isArray(out.data.plans)&&out.data.plans.length)?out.data.plans:plans;
       _dbReady=true;writeLocal();
     } else if (typeof IS_REAL_APP!=='undefined' && IS_REAL_APP && !(typeof isCrew==='function'&&isCrew())) {
-      jobs=[];crew=[];hours=[];subs=[];estimates=[];sketches=[];logs=[];schedule=[];changeOrders=[];expenses=[];leads=[];
+      jobs=[];crew=[];hours=[];subs=[];estimates=[];sketches=[];logs=[];schedule=[];changeOrders=[];expenses=[];leads=[];clients=[];
       try{ selections=[];punch=[];clockSessions=[]; }catch(e){}
       window._isFreshAccount=true;
       _dbReady=true;writeLocal();
@@ -2364,11 +2366,11 @@ function _dl(fn,txt,mime){var b=new Blob([txt],{type:mime||'text/plain'});var u=
 function _csvCell(v){v=(v==null?'':String(v));if(/[",\n]/.test(v))v='"'+v.replace(/"/g,'""')+'"';return v;}
 function _csv(rows){if(!rows||!rows.length)return '';var cols=Object.keys(rows[0]);var out=cols.join(',')+'\n';rows.forEach(function(r){out+=cols.map(function(k){return _csvCell(r[k]);}).join(',')+'\n';});return out;}
 function _stamp(){return new Date().toISOString().split('T')[0];}
-function exportJSON(){var data={exportedAt:new Date().toISOString(),company:(CURRENT_USER&&CURRENT_USER.name)||'',jobs:jobs,crew:crew,hours:hours,subs:subs,estimates:estimates,sketches:sketches,logs:logs,schedule:schedule,changeOrders:changeOrders,expenses:expenses,leads:leads,plans:plans,pricebook:pricebook,selections:selections,safety:safety,punch:punch,equipment:equipment,clockSessions:clockSessions,certs:certs};_dl('orchamind-export-'+_stamp()+'.json',JSON.stringify(data,null,2),'application/json');}
+function exportJSON(){var data={exportedAt:new Date().toISOString(),company:(CURRENT_USER&&CURRENT_USER.name)||'',jobs:jobs,crew:crew,hours:hours,subs:subs,estimates:estimates,sketches:sketches,logs:logs,schedule:schedule,changeOrders:changeOrders,expenses:expenses,leads:leads,plans:plans,clients:clients,pricebook:pricebook,selections:selections,safety:safety,punch:punch,equipment:equipment,clockSessions:clockSessions,certs:certs};_dl('orchamind-export-'+_stamp()+'.json',JSON.stringify(data,null,2),'application/json');}
 function exportCSV(which){var map={jobs:jobs,crew:crew,hours:hours,subs:subs};var rows=map[which]||[];if(!rows.length){alert('Nothing to export there yet.');return;}_dl('orchamind-'+which+'-'+_stamp()+'.csv',_csv(rows),'text/csv');}
 function renderExportCounts(){var el=document.getElementById('exportCounts');if(!el)return;el.textContent=jobs.length+' projects \u00b7 '+hours.length+' timesheet entries \u00b7 '+crew.length+' crew \u00b7 '+subs.length+' subcontractors';}
 document.querySelectorAll('.modal-bg').forEach(function(m){m.addEventListener('click',function(e){if(e.target===m)closeModal(m.id);});});
-function openJobModal(){document.getElementById('jobModalTitle').textContent='New Job';['jobId','jobName','jobClient','jobLocation','jobNotes'].forEach(function(i){document.getElementById(i).value='';});document.getElementById('jobStatus').value='planning';document.getElementById('jobProgress').value=0;document.getElementById('jobCrew').value=0;document.getElementById('jobDate').value='';document.getElementById('jobBudget').value='';document.getElementById('jobSpent').value='';openModal('jobModal');}
+function openJobModal(){try{_fillClientDL();}catch(e){}document.getElementById('jobModalTitle').textContent='New Job';['jobId','jobName','jobClient','jobLocation','jobNotes'].forEach(function(i){document.getElementById(i).value='';});document.getElementById('jobStatus').value='planning';document.getElementById('jobProgress').value=0;document.getElementById('jobCrew').value=0;document.getElementById('jobDate').value='';document.getElementById('jobBudget').value='';document.getElementById('jobSpent').value='';openModal('jobModal');}
 function editJob(id){var j=jobs.find(function(x){return x.id===id;});if(!j)return;document.getElementById('jobModalTitle').textContent='Edit Job';document.getElementById('jobId').value=j.id;document.getElementById('jobName').value=j.name;document.getElementById('jobClient').value=j.client;document.getElementById('jobLocation').value=j.location;document.getElementById('jobStatus').value=j.status;document.getElementById('jobProgress').value=j.progress;document.getElementById('jobCrew').value=j.crew;document.getElementById('jobDate').value=j.date||'';document.getElementById('jobBudget').value=j.budget||'';document.getElementById('jobSpent').value=j.spent||'';document.getElementById('jobNotes').value=j.notes||'';openModal('jobModal');}
 function saveJob(){var id=document.getElementById('jobId').value;var name=document.getElementById('jobName').value.trim();if(!name){alert('Please enter a project name.');return;}var data={name:name,client:document.getElementById('jobClient').value.trim(),location:document.getElementById('jobLocation').value.trim(),status:document.getElementById('jobStatus').value,progress:Math.min(100,Math.max(0,parseInt(document.getElementById('jobProgress').value)||0)),crew:parseInt(document.getElementById('jobCrew').value)||0,date:document.getElementById('jobDate').value,budget:parseInt(document.getElementById('jobBudget').value)||0,spent:parseInt(document.getElementById('jobSpent').value)||0,notes:document.getElementById('jobNotes').value.trim()};if(id){var j=jobs.find(function(x){return x.id===id;});Object.assign(j,data);}else{data.id=uid();jobs.unshift(data);}closeModal('jobModal');renderAll();}
 
@@ -2409,7 +2411,7 @@ function clearAllData(){
 
 // Explicit, non-debounced save that reports success/failure
 function saveNow(cb){
-  fetch('/api/data',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({data:{saved:true,jobs:jobs,crew:crew,hours:hours,subs:subs,estimates:estimates,sketches:sketches,logs:logs,schedule:schedule,changeOrders:changeOrders,expenses:expenses,leads:leads,plans:plans,pricebook:pricebook,selections:selections,safety:safety,punch:punch,equipment:equipment,clockSessions:clockSessions,certs:certs}})})
+  fetch('/api/data',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({data:{saved:true,jobs:jobs,crew:crew,hours:hours,subs:subs,estimates:estimates,sketches:sketches,logs:logs,schedule:schedule,changeOrders:changeOrders,expenses:expenses,leads:leads,plans:plans,clients:clients,pricebook:pricebook,selections:selections,safety:safety,punch:punch,equipment:equipment,clockSessions:clockSessions,certs:certs}})})
     .then(function(r){return r.json();})
     .then(function(o){var ok=o&&!o.error;if(ok)_dbReady=true;if(cb)cb(ok);})
     .catch(function(){if(cb)cb(false);});
@@ -4861,19 +4863,84 @@ function leadAiEmail(){ var to=window._leadAiEmail||''; location.href='mailto:'+
 function _custKey(s){ return String(s||'').trim().toLowerCase(); }
 function buildCustomers(){
   var map={};
-  function ensure(name){ var k=_custKey(name); if(!k) return null; if(!map[k]) map[k]={name:String(name).trim(),phone:'',email:'',jobs:[],leads:[]}; return map[k]; }
+  function ensure(name){ var k=_custKey(name); if(!k) return null; if(!map[k]) map[k]={name:String(name).trim(),phone:'',email:'',address:'',notes:'',id:'',_explicit:false,jobs:[],leads:[]}; return map[k]; }
+  (window.clients||[]).forEach(function(cl){ var c=ensure(cl.name); if(c){ c.id=cl.id||c.id; c._explicit=true; if(cl.phone)c.phone=cl.phone; if(cl.email)c.email=cl.email; if(cl.address)c.address=cl.address; if(cl.notes)c.notes=cl.notes; } });
   (window.jobs||[]).forEach(function(j){ if(j.client){ var c=ensure(j.client); if(c) c.jobs.push(j); } });
   (window.leads||[]).forEach(function(l){ var c=ensure(l.company||l.name); if(c){ c.leads.push(l); if(!c.phone&&l.phone)c.phone=l.phone; if(!c.email&&l.email)c.email=l.email; } });
   return Object.keys(map).map(function(k){return map[k];}).sort(function(a,b){return a.name.localeCompare(b.name);});
 }
+function _clientPersist(){ try{writeLocal();}catch(e){} try{pushToServer();}catch(e){} }
+function _fillClientDL(){ var dl=document.getElementById('clientDL'); if(!dl) return; dl.innerHTML=buildCustomers().map(function(c){return '<option value="'+esc(c.name)+'">';}).join(''); }
+function openClientForm(id){
+  var rec={id:'',name:'',phone:'',email:'',address:'',notes:''};
+  if(id){ (window.clients||[]).forEach(function(c){ if(c.id===id) rec=c; }); }
+  document.getElementById('clId').value=rec.id||'';
+  document.getElementById('clName').value=rec.name||'';
+  document.getElementById('clPhone').value=rec.phone||'';
+  document.getElementById('clEmail').value=rec.email||'';
+  document.getElementById('clAddress').value=rec.address||'';
+  document.getElementById('clNotes').value=rec.notes||'';
+  document.getElementById('clientFormTitle').textContent=id?'Edit client':'Add client';
+  openModal('clientFormModal');
+}
+function editClientByName(name){
+  var found=''; (window.clients||[]).forEach(function(c){ if(_custKey(c.name)===_custKey(name)) found=c.id; });
+  closeModal('clientDetailModal');
+  if(found){ openClientForm(found); }
+  else {
+    var cust=buildCustomers().filter(function(c){return _custKey(c.name)===_custKey(name);})[0]||{};
+    openClientForm('');
+    document.getElementById('clName').value=cust.name||name||'';
+    document.getElementById('clPhone').value=cust.phone||'';
+    document.getElementById('clEmail').value=cust.email||'';
+  }
+}
+function saveClient(){
+  var val=function(x){var e=document.getElementById(x);return e?e.value.trim():'';};
+  var name=val('clName'); if(!name){ showToast('Please enter a client name.'); return; }
+  var id=val('clId')||('cl'+Date.now());
+  var rec={id:id,name:name,phone:val('clPhone'),email:val('clEmail'),address:val('clAddress'),notes:val('clNotes')};
+  window.clients=window.clients||[];
+  var idx=-1; for(var i=0;i<clients.length;i++){ if(clients[i].id===id){idx=i;break;} }
+  if(idx>=0) clients[idx]=rec; else clients.push(rec);
+  _clientPersist(); closeModal('clientFormModal'); _fillClientDL(); renderCustomers(); showToast('\u2713 Client saved');
+}
+function delClient(id){
+  if(!id) return;
+  if(!confirm('Delete this client? Their jobs and history stay; only the client record is removed.')) return;
+  window.clients=(window.clients||[]).filter(function(c){return c.id!==id;});
+  _clientPersist(); closeModal('clientDetailModal'); _fillClientDL(); renderCustomers(); showToast('Client deleted');
+}
+function openClientDetail(name){
+  var c=buildCustomers().filter(function(x){return _custKey(x.name)===_custKey(name);})[0]; if(!c) return;
+  var money=function(n){return '$'+Number(n||0).toLocaleString();};
+  var inv=_custInvoiced(c);
+  var updates=(window.logs||[]).filter(function(l){ return c.jobs.some(function(j){return l.jobId===j.id||l.job===j.name;}); });
+  var html='<div class="jd-head"><div style="display:flex;align-items:center;gap:12px;"><div class="cust-av" style="width:44px;height:44px;font-size:19px;">'+esc(String(c.name||'?').charAt(0).toUpperCase())+'</div><div><div class="jd-title">'+esc(c.name)+'</div><div class="jd-sub">'+(c.jobs.length+' job'+(c.jobs.length!==1?'s':''))+(inv?(' \u00b7 '+money(inv)+' invoiced'):'')+'</div></div></div></div>';
+  var contact='';
+  if(c.phone) contact+='<div class="jd-row"><span>Phone</span><span><a href="tel:'+encodeURIComponent(c.phone)+'" style="color:#2D7FF9;text-decoration:none;">'+esc(c.phone)+'</a></span></div>';
+  if(c.email) contact+='<div class="jd-row"><span>Email</span><span><a href="mailto:'+encodeURIComponent(c.email)+'" style="color:#2D7FF9;text-decoration:none;">'+esc(c.email)+'</a></span></div>';
+  if(c.address) contact+='<div class="jd-row"><span>Address</span><span>'+esc(c.address)+'</span></div>';
+  if(contact) html+='<div class="jd-sec"><div class="jd-sec-h">Contact</div>'+contact+'</div>';
+  if(c.notes) html+='<div class="jd-sec"><div class="jd-sec-h">Notes</div><p class="jd-notes">'+esc(c.notes)+'</p></div>';
+  html+='<div class="jd-sec"><div class="jd-sec-h">Jobs ('+c.jobs.length+')</div>'+(c.jobs.length?c.jobs.map(function(j){return '<div class="jd-row" style="cursor:pointer;" data-jid="'+j.id+'" onclick="closeModal(\'clientDetailModal\');openJobDetail(this.getAttribute(\'data-jid\'))"><span>'+esc(j.name)+'</span><span style="color:#2D7FF9;">'+(j.progress||0)+'% \u203a</span></div>';}).join(''):'<p class="jd-notes" style="color:#8a97a8;">No jobs yet.</p>')+'</div>';
+  if(c.leads.length) html+='<div class="jd-sec"><div class="jd-sec-h">Leads ('+c.leads.length+')</div>'+c.leads.map(function(l){return '<div class="jd-row"><span>'+esc(l.service||l.notes||'Inquiry')+'</span><span style="color:#8a97a8;">'+esc(l.stage||'')+'</span></div>';}).join('')+'</div>';
+  html+='<div class="jd-sec"><div class="jd-sec-h">Recent updates ('+updates.length+')</div>'+(updates.length?updates.slice(0,5).map(function(l){return '<div class="jd-row"><span>'+esc((l.note||l.text||'Update').slice(0,80))+'</span><span style="color:#8a97a8;">'+esc(l.date||'')+'</span></div>';}).join(''):'<p class="jd-notes" style="color:#8a97a8;">No updates logged yet.</p>')+'</div>';
+  html+='<div class="jd-actions"><button class="ai-btn" data-cn="'+esc(c.name)+'" onclick="editClientByName(this.getAttribute(\'data-cn\'))">Edit client</button>';
+  if(c._explicit&&c.id) html+='<button data-cid="'+c.id+'" onclick="delClient(this.getAttribute(\'data-cid\'))" style="color:#D32F2F;">Delete</button>';
+  html+='</div>';
+  document.getElementById('clientDetailBody').innerHTML=html;
+  openModal('clientDetailModal');
+}
+
 function _custInvoiced(c){ var names=c.jobs.map(function(j){return j.name;}); var s=0; (window.estimates||[]).forEach(function(e){ if(e.kind==='invoice' && names.indexOf(e.project)>=0){ s+=estTotals(e).total; } }); return s; }
 function renderCustomers(){
   var host=document.getElementById('custBody'); if(!host) return;
   var qi=document.getElementById('custSearch'); var q=_custKey(qi?qi.value:'');
   var all=buildCustomers();
-  if(!all.length){ host.innerHTML='<div style="color:var(--muted);font-size:13.5px;padding:6px 2px;">No customers yet. They appear here automatically as you add jobs and leads.</div>'; return; }
+  if(!all.length){ host.innerHTML='<div style="color:var(--muted);font-size:13.5px;padding:6px 2px;">No clients yet. Add one with the button above, or they appear automatically as you add jobs and leads.</div>'; return; }
   var list=q?all.filter(function(c){return _custKey(c.name).indexOf(q)>=0;}):all;
-  if(!list.length){ host.innerHTML='<div style="color:var(--muted);font-size:13px;padding:6px 2px;">No customers match your search.</div>'; return; }
+  if(!list.length){ host.innerHTML='<div style="color:var(--muted);font-size:13px;padding:6px 2px;">No clients match your search.</div>'; return; }
   host.innerHTML=list.map(function(c){
     var inv=_custInvoiced(c);
     var openLeads=c.leads.filter(function(l){return l.stage!=='won'&&l.stage!=='lost';}).length;
@@ -4881,7 +4948,7 @@ function renderCustomers(){
     if(inv) bits.push(estMoney(inv)+' invoiced');
     if(openLeads) bits.push(openLeads+' open lead'+(openLeads!==1?'s':''));
     var contact=(c.phone||c.email)?('<span class="cust-contact">'+[c.phone?esc(c.phone):'',c.email?esc(c.email):''].filter(Boolean).join('  \u00b7  ')+'</span>'):'';
-    return '<div class="cust-card" data-cust="'+esc(c.name)+'"><div class="cust-av">'+esc(String(c.name||'?').charAt(0).toUpperCase())+'</div><div class="cust-b"><b>'+esc(c.name)+'</b><span>'+esc(bits.join(' \u00b7 '))+'</span>'+contact+'</div><div class="cust-chev">\u203a</div></div>';
+    return '<div class="cust-card" data-cust="'+esc(c.name)+'" onclick="openClientDetail(this.getAttribute(\'data-cust\'))" style="cursor:pointer;"><div class="cust-av">'+esc(String(c.name||'?').charAt(0).toUpperCase())+'</div><div class="cust-b"><b>'+esc(c.name)+'</b><span>'+esc(bits.join(' \u00b7 '))+'</span>'+contact+'</div><div class="cust-chev">\u203a</div></div>';
   }).join('');
 }
 function sendReviewRequest(){
@@ -5095,5 +5162,7 @@ function createJobFromPlan(id){
 
 </script>
 <div class="modal-bg" id="jobDetailModal"><div class="modal" style="max-width:600px;"><button class="modal-x" onclick="closeModal('jobDetailModal')" aria-label="Close">&times;</button><div id="jobDetailBody"></div></div></div>
+<div class="modal-bg" id="clientFormModal"><div class="modal"><button class="modal-x" onclick="closeModal('clientFormModal')">&times;</button><h3 id="clientFormTitle">Add client</h3><input type="hidden" id="clId"><div class="field"><label>Name</label><input type="text" id="clName" placeholder="e.g. The Andersons"></div><div class="field-row"><div class="field"><label>Phone</label><input type="tel" id="clPhone" placeholder="(707) 555-0142"></div><div class="field"><label>Email</label><input type="email" id="clEmail" placeholder="client@email.com"></div></div><div class="field"><label>Address</label><input type="text" id="clAddress" placeholder="Job or billing address"></div><div class="field"><label>Notes</label><textarea id="clNotes" placeholder="Anything worth remembering about this client"></textarea></div><button class="btn" onclick="saveClient()" style="width:100%;margin-top:6px;">Save client</button></div></div>
+<div class="modal-bg" id="clientDetailModal"><div class="modal" style="max-width:560px;"><button class="modal-x" onclick="closeModal('clientDetailModal')">&times;</button><div id="clientDetailBody"></div></div></div>
 </body>
 </html>
