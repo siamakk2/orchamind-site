@@ -651,6 +651,27 @@ button:active, .btn:active, .btn-ghost:active, .tab:active, [role="button"]:acti
 .thread-form{display:flex;gap:8px;border-top:1px solid var(--line,#e6ecf3);padding-top:12px;margin-top:4px;}
 .thread-form input{flex:1;border:1.5px solid var(--line,#e6ecf3);border-radius:10px;padding:11px 13px;font-size:14px;font-family:inherit;}
 </style>
+<style id="ux-polish">
+/* Proper modal chrome + a clean, findable close button (fixes the raw top-left button) */
+.modal{position:relative;box-shadow:0 24px 70px rgba(10,22,40,.30);}
+.modal-x{position:absolute;top:14px;right:14px;width:34px;height:34px;border-radius:50%;border:none;background:#eef2f7;color:#5A6B7D;font-size:20px;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0;transition:background .15s,color .15s,transform .15s;z-index:3;}
+.modal-x:hover{background:#e2e8f1;color:#0A1628;}
+.modal-x:active{transform:scale(.92);}
+/* keep titles/headers clear of the close button */
+.modal h3{font-family:'Outfit','Sora',sans-serif;padding-right:38px;}
+.jd-head{padding-right:40px;}
+/* smooth, modern open animation for every modal */
+@keyframes omModalIn{from{opacity:0;transform:translateY(16px) scale(.985);}to{opacity:1;transform:none;}}
+.modal-bg.show .modal{animation:omModalIn .22s cubic-bezier(.2,.7,.3,1);}
+.modal-bg{backdrop-filter:blur(2px);-webkit-backdrop-filter:blur(2px);}
+/* tactile press feedback on primary buttons & cards */
+.btn:active{transform:translateY(1px);}
+.job{transition:box-shadow .16s,transform .16s;}
+.job:hover{box-shadow:0 8px 26px rgba(10,22,40,.10);transform:translateY(-2px);}
+/* make the whole job card header feel tappable, not just the small name */
+.job-tap{border-radius:10px;margin:-4px -6px 0;padding:4px 6px 0;transition:background .14s;}
+.job-tap:hover{background:#f5f8fd;}
+</style>
 </head>
 <body class="locked">
 <div id="demoBanner" style="position:relative;z-index:1;background:linear-gradient(90deg,#0A1628,#1565C0);color:#fff;padding:10px 16px;display:flex;align-items:center;justify-content:center;gap:16px;flex-wrap:wrap;font-family:'Outfit',sans-serif;font-size:14px;box-shadow:0 2px 12px rgba(0,0,0,0.2);">
