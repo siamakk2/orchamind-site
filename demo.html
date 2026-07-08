@@ -612,6 +612,25 @@ button:active, .btn:active, .btn-ghost:active, .tab:active, [role="button"]:acti
 .jd-actions button:hover{border-color:var(--blue,#2D7FF9);color:var(--blue,#2D7FF9);}
 .jd-actions .ai-btn{background:var(--blue,#2D7FF9);color:#fff;border-color:var(--blue,#2D7FF9);}
 </style>
+<style id="ob-css">
+.ob-card{position:relative;background:linear-gradient(135deg,#0A1628,#13243d);border-radius:16px;padding:22px 22px 18px;margin-bottom:20px;color:#fff;box-shadow:0 8px 30px rgba(10,22,40,.18);}
+.ob-x{position:absolute;top:12px;right:14px;background:none;border:none;color:#7d90ac;font-size:24px;line-height:1;cursor:pointer;}
+.ob-title{font-family:'Outfit',sans-serif;font-size:20px;font-weight:800;margin-bottom:6px;}
+.ob-lead{font-size:13.5px;color:#c2d0e2;line-height:1.55;max-width:640px;}
+.ob-bar{height:7px;background:rgba(255,255,255,.12);border-radius:20px;margin:16px 0 6px;overflow:hidden;}
+.ob-bar-fill{height:100%;background:linear-gradient(90deg,#2D7FF9,#5B9DFF);border-radius:20px;transition:width .4s;}
+.ob-pct{font-size:11.5px;color:#8fa2bd;font-weight:600;margin-bottom:14px;}
+.ob-items{display:flex;flex-direction:column;gap:8px;}
+.ob-item{display:flex;align-items:center;gap:12px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);border-radius:11px;padding:11px 13px;}
+.ob-item.is-done{opacity:.6;}
+.ob-check{width:22px;height:22px;border-radius:50%;border:2px solid #3f5878;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;}
+.ob-check.done{background:#2E9B5B;border-color:#2E9B5B;color:#fff;}
+.ob-item-txt{flex:1;min-width:0;}
+.ob-item-l{font-size:14px;font-weight:700;color:#fff;}
+.ob-item-d{font-size:12px;color:#a7b6cc;margin-top:1px;}
+.ob-go{background:#2D7FF9;color:#fff;border:none;border-radius:8px;padding:8px 15px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;flex-shrink:0;}
+.ob-done-lbl{font-size:12px;color:#2E9B5B;font-weight:700;flex-shrink:0;}
+</style>
 </head>
 <body class="locked">
 <div id="demoBanner" style="position:relative;z-index:1;background:linear-gradient(90deg,#0A1628,#1565C0);color:#fff;padding:10px 16px;display:flex;align-items:center;justify-content:center;gap:16px;flex-wrap:wrap;font-family:'Outfit',sans-serif;font-size:14px;box-shadow:0 2px 12px rgba(0,0,0,0.2);">
@@ -745,6 +764,7 @@ button:active, .btn:active, .btn-ghost:active, .tab:active, [role="button"]:acti
 
   <!-- TODAY PANEL -->
   <div class="panel active" id="panel-today">
+    <div id="onboardCard" style="display:none;"></div>
     <div class="stats" style="margin-bottom:20px;">
       <div class="stat"><div class="stat-num" id="statActive">0</div><div class="stat-lbl">Active Jobs</div></div>
       <div class="stat red"><div class="stat-num" id="statRisk">0</div><div class="stat-lbl">At Risk</div></div>
@@ -1786,6 +1806,11 @@ function load(cb){
       leads=Array.isArray(out.data.leads)?out.data.leads:[];
       plans=(Array.isArray(out.data.plans)&&out.data.plans.length)?out.data.plans:plans;
       _dbReady=true;writeLocal();
+    } else if (typeof IS_REAL_APP!=='undefined' && IS_REAL_APP && !(typeof isCrew==='function'&&isCrew())) {
+      jobs=[];crew=[];hours=[];subs=[];estimates=[];sketches=[];logs=[];schedule=[];changeOrders=[];expenses=[];leads=[];
+      try{ selections=[];punch=[];clockSessions=[]; }catch(e){}
+      window._isFreshAccount=true;
+      _dbReady=true;writeLocal();
     }
     updateSyncPill();finish();
   }).catch(function(){clearTimeout(timer);updateSyncPill();finish();});
@@ -1922,6 +1947,7 @@ function renderRisks(risks){
 // ====== CHAT ASSISTANT ======
 var chatHistory=[];
 function sendChat(q){
+  try{ localStorage.setItem('om_ob_voice','1'); }catch(e){}
   var inp=document.getElementById('chatInp');
   var msg=q||inp.value.trim();
   if(!msg)return;
@@ -2144,6 +2170,51 @@ function openJobDetail(id){
   document.getElementById("jobDetailBody").innerHTML=html;
   openModal("jobDetailModal");
 }
+function _obState(){
+  var st={company:false, job:false, voice:false, widget:false, pay:false};
+  try{
+    var p=(CURRENT_USER&&CURRENT_USER.profile)||{};
+    st.company = !!(p.phone || p.logo || p.address || p.license);
+    st.job = (typeof jobs!=='undefined' && jobs && jobs.length>0);
+    st.voice = localStorage.getItem('om_ob_voice')==='1';
+    st.widget = localStorage.getItem('om_ob_widget')==='1';
+    st.pay = !!window._payConnected;
+  }catch(e){}
+  return st;
+}
+function markOnboard(k){ try{ localStorage.setItem('om_ob_'+k,'1'); }catch(e){} renderOnboarding(); }
+function dismissOnboard(){ try{ localStorage.setItem('om_ob_dismissed','1'); }catch(e){} var c=document.getElementById('onboardCard'); if(c)c.style.display='none'; }
+function renderOnboarding(){
+  var card=document.getElementById('onboardCard'); if(!card) return;
+  var crewMode=(typeof isCrew==='function'&&isCrew());
+  var dismissed=false; try{ dismissed=localStorage.getItem('om_ob_dismissed')==='1'; }catch(e){}
+  if(crewMode || dismissed || (typeof IS_REAL_APP==='undefined') || !IS_REAL_APP){ card.style.display='none'; return; }
+  var st=_obState();
+  var items=[
+    {k:'company', label:'Add your company details', desc:'Your name, phone, and logo brand your invoices, widget, and client updates.', tab:'profile', mark:''},
+    {k:'job', label:'Add your first job', desc:'Create a real project so the AI has something to work with.', tab:'jobs', mark:''},
+    {k:'voice', label:'Try the AI assistant', desc:'Ask it a question by voice or text \u2014 it is the heart of Orchamind.', tab:'assistant', mark:'voice'},
+    {k:'widget', label:'Get your website widget', desc:'One line of code turns your site into a lead & booking machine.', tab:'leads', mark:'widget'},
+    {k:'pay', label:'Set up online payments', desc:'Let clients pay you by card. Money goes straight to your bank.', tab:'profile', mark:''}
+  ];
+  var done=items.filter(function(i){return st[i.k];}).length;
+  if(done>=items.length){ try{ localStorage.setItem('om_ob_dismissed','1'); }catch(e){} card.style.display='none'; return; }
+  var pct=Math.round(done/items.length*100);
+  var name=(CURRENT_USER&&CURRENT_USER.name)?CURRENT_USER.name.split(' ')[0]:'there';
+  var rows=items.map(function(it){
+    var d=st[it.k];
+    var check=d?'<span class="ob-check done">\u2713</span>':'<span class="ob-check"></span>';
+    var mk=it.mark?('markOnboard(\''+it.mark+'\');'):'';
+    var action=d?'<span class="ob-done-lbl">Done</span>':('<button class="ob-go" onclick="goTab(\''+it.tab+'\',true);'+mk+'">Go &rsaquo;</button>');
+    return '<div class="ob-item '+(d?'is-done':'')+'">'+check+'<div class="ob-item-txt"><div class="ob-item-l">'+it.label+'</div><div class="ob-item-d">'+it.desc+'</div></div>'+action+'</div>';
+  }).join('');
+  card.innerHTML='<div class="ob-card"><button class="ob-x" onclick="dismissOnboard()" title="Hide">&times;</button>'
+    +'<div class="ob-head"><div class="ob-title">Welcome to Orchamind, '+esc(name)+' \ud83d\udc4b</div>'
+    +'<div class="ob-lead">You\u2019re set up with a clean workspace. Orchamind runs your whole contracting business \u2014 estimates, crew, jobs, client updates, and billing \u2014 and the AI does the paperwork. Knock out these '+items.length+' quick steps and you\u2019re rolling.</div></div>'
+    +'<div class="ob-bar"><div class="ob-bar-fill" style="width:'+pct+'%"></div></div><div class="ob-pct">'+done+' of '+items.length+' done</div>'
+    +'<div class="ob-items">'+rows+'</div></div>';
+  card.style.display='block';
+}
 function renderCrew(){
   var g=document.getElementById('crewGrid');
   if(!crew.length){g.innerHTML='<div class="empty"><p>No crew added yet</p></div>';return;}
@@ -2162,7 +2233,8 @@ function renderHours(){
   rows+='<div class="hours-row" style="background:#F7FAFD;font-weight:700;"><div class="h-name">Total</div><div class="h-site"></div><div></div><div class="hours-total">'+total+'h</div></div>';
   t.innerHTML=rows;
 }
-function renderAll(){renderStats();renderJobs();renderHomeJobs();renderAttention();renderCrew();renderHours();renderSubs();save();}
+function renderAll(){
+  try{ renderOnboarding(); }catch(e){}renderStats();renderJobs();renderHomeJobs();renderAttention();renderCrew();renderHours();renderSubs();save();}
 
 // ====== COMPANY PROFILE / BRANDING ======
 var PF_LOGO='';
@@ -2462,6 +2534,7 @@ function speak(text){
 
 // ====== AI-POWERED VOICE COMMAND PARSER ======
 function processVoiceCommand(text){
+  try{ localStorage.setItem('om_ob_voice','1'); }catch(e){}
   document.getElementById('voiceStatus').textContent='Got it — working on: "'+text+'"';
   var sys=buildContext()+'\n\nPhil just gave you a spoken command on a construction job site. He may speak casually or imperfectly. Figure out his intent and convert it into a structured action. Return ONLY a JSON object (no markdown fences, no other text).\n\nShape: {"action":"ACTION","params":{...},"confirm":"short friendly sentence to read back","answer":"only for ask_question action"}\n\nValid actions and examples:\n\n1. log_hours - "Mike worked 8 hours at Sonoma Vista today" -> {"action":"log_hours","params":{"name":"Mike Torres","site":"Sonoma Vista Residence","amount":8,"date":"TODAY"},"confirm":"Logged 8 hours for Mike Torres at Sonoma Vista Residence."}\n\n2. assign_crew (move existing person) - "Move Carlos to Calistoga" -> {"action":"assign_crew","params":{"name":"Carlos Mendez","assign":"Calistoga Pool & Deck","status":"on-site"},"confirm":"Moved Carlos Mendez to Calistoga Pool & Deck."}\n\n3. add_crew (create NEW person) - "Add Danny Ruiz as a carpenter" or "New crew member Jose Garcia, electrician on Valley View" -> {"action":"add_crew","params":{"name":"Jose Garcia","role":"Electrician","assign":"Valley View Estate","status":"on-site"},"confirm":"Added Jose Garcia as Electrician on Valley View Estate."}\n\n4. set_progress - "Set Valley View to 85 percent" -> {"action":"set_progress","params":{"job":"Valley View Estate","progress":85},"confirm":"Updated Valley View Estate to 85 percent."}\n\n5. set_status - "Sonoma Vista is now in finishing" -> {"action":"set_status","params":{"job":"Sonoma Vista Residence","status":"finishing"},"confirm":"Set Sonoma Vista Residence to finishing phase."}\n\n6. add_job (create NEW project) - "New job, kitchen remodel for the Hendersons in Petaluma, budget 90 thousand" -> {"action":"add_job","params":{"name":"Henderson Kitchen Remodel","client":"The Hendersons","location":"Petaluma, CA","status":"planning","progress":0,"budget":90000,"spent":0},"confirm":"Created Henderson Kitchen Remodel for the Hendersons."}\n\n7. add_note - "Note on Calistoga: waiting on gunite delivery" -> {"action":"add_note","params":{"job":"Calistoga Pool & Deck","note":"Waiting on gunite delivery"},"confirm":"Added a note to Calistoga Pool & Deck."}\n\n8. ask_question (Phil is asking for advice/info, NOT changing data) - "What inspections do I need before drywall?" or "How do I price a deck?" -> {"action":"ask_question","answer":"Give a genuinely helpful, expert answer here as a master builder and construction business advisor. 2-4 sentences, specific and practical.","confirm":""}\n\n9. log_material (materials/supplies bought or delivered) - "Picked up 200 2x4s from ABC Supply for twelve hundred for Sonoma Vista" -> {"action":"log_material","params":{"item":"2x4 lumber","qty":"200","vendor":"ABC Supply","cost":1200,"job":"Sonoma Vista Residence"},"confirm":"Logged 200 2x4 lumber from ABC Supply ($1,200) to Sonoma Vista Residence."}\n\n10. daily_report (USE THIS ANY TIME the input has MORE THAN ONE fact - a full daily log or site report). Put params.actions as an ARRAY of the action objects above, EACH with its own short "confirm". - "At Sonoma Vista today Mike and Danny each did 8 hours, we poured the footings so we are at 50 percent, and I grabbed 200 2x4s from ABC Supply for 1200" -> {"action":"daily_report","params":{"actions":[{"action":"log_hours","params":{"name":"Mike Torres","site":"Sonoma Vista Residence","amount":8,"date":"TODAY"},"confirm":"8 hrs Mike Torres"},{"action":"log_hours","params":{"name":"Danny Ruiz","site":"Sonoma Vista Residence","amount":8,"date":"TODAY"},"confirm":"8 hrs Danny Ruiz"},{"action":"set_progress","params":{"job":"Sonoma Vista Residence","progress":50},"confirm":"Sonoma Vista to 50%"},{"action":"log_material","params":{"item":"2x4 lumber","qty":"200","vendor":"ABC Supply","cost":1200,"job":"Sonoma Vista Residence"},"confirm":"200 2x4s from ABC Supply ($1,200)"}]},"confirm":"Filed your Sonoma Vista site report."}\n\nMatch names/projects to the CLOSEST existing one, even from a short version. Status must be one of: planning, foundation, framing, rough, finishing, inspection, complete. For add_crew/add_job, fill in sensible values from what Phil said and leave blanks reasonable. If Phil is asking a question, seeking advice, or making conversation (not a data command), ALWAYS use the ask_question action and give a genuinely helpful, specific answer; do NOT use unknown for a real question. Only if the transcript is empty or truly unintelligible should you use {"action":"unknown","confirm":"I did not catch that - try saying it another way."}';
   callClaude(sys,'Command: "'+text+'"',function(resp){
@@ -4327,7 +4400,7 @@ function _lwRender(){
   var msg=document.getElementById('lwMsg');
   if(msg){if(!u){msg.style.color='#B8860B';msg.textContent='Tip: sign in to get your personal code.';}else{msg.style.color='';msg.textContent='';}}
 }
-function openLeadWidget(){ setLeadWidgetMode('quote'); openModal('leadWidgetModal'); }
+function openLeadWidget(){ try{ localStorage.setItem('om_ob_widget','1'); }catch(e){} setLeadWidgetMode('quote'); openModal('leadWidgetModal'); }
 function copyLeadWidget(){
   var t=document.getElementById('lwCode');if(!t)return;t.select();t.setSelectionRange(0,9999);
   var done=function(){var m=document.getElementById('lwMsg');if(m){m.style.color='#2E9B5B';m.textContent='\u2713 Copied! Paste it on your website.';}};
