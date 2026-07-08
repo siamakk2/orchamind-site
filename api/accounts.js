@@ -160,10 +160,31 @@ module.exports = async function handler(req, res) {
       var BSK = process.env.STRIPE_SECRET_KEY || process.env.STRIPE_SECRET_KEY_TEST;
       if (!BSK) return res.status(200).json({ ok: false, error: 'Billing is not set up yet.' });
       try {
-        var bur = await sbFetch(base + '/accounts?username=eq.' + encodeURIComponent(bpUser) + '&select=stripe_customer', { headers: H });
+        var bur = await sbFetch(base + '/accounts?username=eq.' + encodeURIComponent(bpUser) + '&select=stripe_customer,company,profile', { headers: H });
         var bua = await bur.json();
         var bcust = (Array.isArray(bua) && bua[0] && bua[0].stripe_customer) || '';
-        if (!bcust) return res.status(200).json({ ok: false, error: 'No billing account is attached to this workspace yet.' });
+        // Self-heal: accounts created before billing existed have no Stripe customer. Create one (with a 30-day trial) on demand.
+        if (!bcust) {
+          var bRow = (Array.isArray(bua) && bua[0]) ? bua[0] : {};
+          var bEmail = (bRow.profile && bRow.profile.email) || '';
+          var bCo = bRow.company || bpUser;
+          var ccr = await fetch('https://api.stripe.com/v1/customers', { method: 'POST', headers: { 'Authorization': 'Bearer ' + BSK, 'Content-Type': 'application/x-www-form-urlencoded' }, body: 'email=' + encodeURIComponent(bEmail) + '&name=' + encodeURIComponent(bCo) + '&metadata[username]=' + encodeURIComponent(bpUser) });
+          var ccj = await ccr.json();
+          if (!ccr.ok || !ccj.id) return res.status(200).json({ ok: false, error: (ccj && ccj.error && ccj.error.message) || 'Could not start a billing account.' });
+          bcust = ccj.id;
+          var newSub = '';
+          try {
+            var BPRICE = process.env.STRIPE_PRICE_ID;
+            if (BPRICE) {
+              var ssr2 = await fetch('https://api.stripe.com/v1/subscriptions', { method: 'POST', headers: { 'Authorization': 'Bearer ' + BSK, 'Content-Type': 'application/x-www-form-urlencoded' }, body: 'customer=' + encodeURIComponent(bcust) + '&items[0][price]=' + encodeURIComponent(BPRICE) + '&trial_period_days=30&trial_settings[end_behavior][missing_payment_method]=pause&payment_settings[save_default_payment_method]=on_subscription' });
+              var ssj2 = await ssr2.json();
+              if (ssr2.ok && ssj2 && ssj2.id) newSub = ssj2.id;
+            }
+          } catch (eSub) {}
+          var patch = { stripe_customer: bcust };
+          if (newSub) patch.stripe_subscription = newSub;
+          try { await sbFetch(base + '/accounts?username=eq.' + encodeURIComponent(bpUser), { method: 'PATCH', headers: Object.assign({}, H, { 'Prefer': 'return=minimal' }), body: JSON.stringify(patch) }); } catch (ePatch) {}
+        }
         var bpr = await fetch('https://api.stripe.com/v1/billing_portal/sessions', { method: 'POST', headers: { 'Authorization': 'Bearer ' + BSK, 'Content-Type': 'application/x-www-form-urlencoded' }, body: 'customer=' + encodeURIComponent(bcust) + '&return_url=' + encodeURIComponent('https://orchamind.com/app') });
         var bpj = await bpr.json();
         if (bpr.ok && bpj && bpj.url) return res.status(200).json({ ok: true, url: bpj.url });
