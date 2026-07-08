@@ -56,6 +56,38 @@ module.exports = async function handler(req, res) {
         if (!ins.ok) return res.status(200).json({ ok: false, error: 'Could not submit. Please try again.' });
       }
       try { await fetch(rest + '/activity_log', { method: 'POST', headers: Object.assign({}, H, { 'Prefer': 'return=minimal' }), body: JSON.stringify({ type: 'lead', username: c2, detail: name + ' requested a quote' }) }); } catch (e) {}
+
+      // Instant notification to the contractor — speed-to-lead matters. Never blocks the visitor.
+      try {
+        var RESEND = process.env.RESEND_API_KEY;
+        if (RESEND) {
+          var pr = await fetch(rest + '/accounts?username=eq.' + encodeURIComponent(c2) + '&select=company,name,profile', { headers: H });
+          var pa = await pr.json();
+          var acct = (Array.isArray(pa) && pa[0]) ? pa[0] : null;
+          var toEmail = (acct && acct.profile && acct.profile.email) || '';
+          if (toEmail) {
+            var esc2 = function (x) { return String(x == null ? '' : x).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); };
+            var isBooking = (lead.service || '').indexOf('[Booking]') >= 0;
+            var svc = (lead.service || '').replace('[Booking]', '').trim();
+            var label = isBooking ? 'booking request' : 'lead';
+            var row = function (k, v) { return v ? ('<tr><td style="padding:6px 12px 6px 0;font-size:13px;color:#66748a;white-space:nowrap;">' + k + '</td><td style="padding:6px 0;font-size:14px;color:#0A1628;font-weight:600;">' + v + '</td></tr>') : ''; };
+            var phoneCell = lead.phone ? ('<a href="tel:' + encodeURIComponent(lead.phone) + '" style="color:#2D7FF9;text-decoration:none;">' + esc2(lead.phone) + '</a>') : '';
+            var mailCell = lead.email ? ('<a href="mailto:' + encodeURIComponent(lead.email) + '" style="color:#2D7FF9;text-decoration:none;">' + esc2(lead.email) + '</a>') : '';
+            var html2 = '<div style="font-family:Arial,Helvetica,sans-serif;max-width:520px;margin:0 auto;color:#0A1628;">'
+              + '<div style="background:#0A1628;padding:22px;border-radius:12px 12px 0 0;text-align:center;"><div style="color:#F9A825;font-size:12px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;">New ' + label + '</div><div style="color:#fff;font-size:22px;font-weight:800;margin-top:4px;">' + esc2(lead.name) + '</div></div>'
+              + '<div style="border:1px solid #e6ebf2;border-top:none;border-radius:0 0 12px 12px;padding:22px;">'
+              + '<p style="margin:0 0 14px;font-size:14.5px;color:#3a4a5a;">Someone just ' + (isBooking ? 'requested an appointment' : 'asked for a quote') + ' from your website. Reach out fast — the first contractor to respond usually wins the job.</p>'
+              + '<table style="width:100%;border-collapse:collapse;margin-bottom:18px;">'
+              + row('Name', esc2(lead.name)) + row('Phone', phoneCell) + row('Email', mailCell)
+              + row(isBooking ? 'Requested' : 'Service', esc2(svc)) + row('Notes', esc2(lead.notes)) + '</table>'
+              + (lead.phone ? ('<a href="tel:' + encodeURIComponent(lead.phone) + '" style="display:inline-block;background:#2E9B5B;color:#fff;text-decoration:none;font-weight:700;padding:12px 22px;border-radius:9px;font-size:14px;margin-right:8px;">Call ' + esc2(lead.name.split(' ')[0]) + '</a>') : '')
+              + '<a href="https://orchamind.com/app" style="display:inline-block;background:#2D7FF9;color:#fff;text-decoration:none;font-weight:700;padding:12px 22px;border-radius:9px;font-size:14px;">Open in Orchamind</a>'
+              + '</div><p style="text-align:center;font-size:11px;color:#9aa7b6;margin-top:12px;">Orchamind &middot; orchamind.com</p></div>';
+            await fetch('https://api.resend.com/emails', { method: 'POST', headers: { 'Authorization': 'Bearer ' + RESEND, 'Content-Type': 'application/json' }, body: JSON.stringify({ from: 'Orchamind <welcome@orchamind.com>', to: [toEmail], reply_to: (lead.email || undefined), subject: (isBooking ? '\uD83D\uDCC5 New booking request: ' : '\uD83D\uDD14 New lead: ') + lead.name + (svc ? (' \u2014 ' + svc) : ''), html: html2 }) });
+          }
+        }
+      } catch (eNotify) {}
+
       return res.status(200).json({ ok: true });
     }
 
