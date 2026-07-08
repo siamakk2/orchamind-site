@@ -1,3 +1,19 @@
+var crypto = require('crypto');
+function _sbSecret(){ return (process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SECRET_KEY || process.env.SUPABASE_SERVICE_KEY || '').trim(); }
+function sessUser(req){
+  try{
+    var KEY=_sbSecret(); if(!KEY) return null;
+    var c=(req.headers && req.headers.cookie) || '';
+    var m=c.match(/(?:^|;\s*)orcha_sess=([^;]+)/); if(!m) return null;
+    var p=decodeURIComponent(m[1]).split('|'); if(p.length!==4) return null;
+    var sig=crypto.createHmac('sha256',KEY).update(p[0]+'|'+p[1]+'|'+p[2]).digest('hex');
+    if(sig!==p[3]) return null;
+    if(Date.now()>Number(p[2])) return null;
+    if(p[1]==='demo') return null;
+    return p[0];
+  }catch(e){ return null; }
+}
+
 // QuickBooks OAuth2 callback: exchange code for tokens (via Node https), store in Supabase.
 var https = require('https');
 function esc(s){ return String(s).replace(/[&<>]/g, function(ch){ return {'&':'&amp;','<':'&lt;','>':'&gt;'}[ch]; }); }
@@ -41,6 +57,8 @@ module.exports = async (req, res) => {
                         : 'No authorization code came back. The code is single-use \u2014 always start fresh at <b>/api/qbo/connect</b>, pick a <b>sandbox</b> company, and click Connect.';
       res.statusCode = 200; return res.end(page('Connection not completed', '<p>' + detail + '</p><pre>' + dump + '</pre><p><a href="https://orchamind.com/api/qbo/connect">Try again &rarr;</a></p>'));
     }
+    var connUser = String(gp('state') || '').split('~')[0] || sessUser(req) || '';
+    if (!connUser) { res.statusCode = 200; return res.end(page('Could not identify your account', '<p>We could not tell which Orchamind account this QuickBooks connection belongs to. Please sign in to Orchamind and start again from <b>Connect QuickBooks</b>.</p><p><a href="/app">Back to Orchamind &rarr;</a></p>')); }
     var CID = (process.env.QBO_CLIENT_ID||'').trim(), CS = (process.env.QBO_CLIENT_SECRET||'').trim();
     if (!CID || !CS) { res.statusCode = 500; return res.end(page('Not configured', '<p>Missing in Vercel: ' + (!CID?'<b>QBO_CLIENT_ID</b> ':'') + (!CS?'<b>QBO_CLIENT_SECRET</b>':'') + '. Add it and redeploy.</p>')); }
     var REDIRECT = calcRedirect(req);
@@ -73,7 +91,7 @@ module.exports = async (req, res) => {
     var stored = false, storeErr = '';
     if (SB_URL && SB_KEY) {
       try {
-        var row = JSON.stringify({ id: 'default', realm_id: realmId, access_token: tok.access_token, refresh_token: tok.refresh_token, expires_at: Date.now() + ((tok.expires_in || 3600) * 1000), updated_at: new Date().toISOString() });
+        var row = JSON.stringify({ id: connUser, realm_id: realmId, access_token: tok.access_token, refresh_token: tok.refresh_token, expires_at: Date.now() + ((tok.expires_in || 3600) * 1000), updated_at: new Date().toISOString() });
         var sr = await httpReq('POST', SB_URL.replace(/\/$/,'') + '/rest/v1/qbo_tokens?on_conflict=id',
           { 'apikey': SB_KEY, 'Authorization': 'Bearer ' + SB_KEY, 'Content-Type': 'application/json', 'Prefer': 'resolution=merge-duplicates' }, row);
         if (sr.status >= 200 && sr.status < 300) { stored = true; } else { storeErr = 'HTTP ' + sr.status + ' ' + String(sr.text).slice(0,300) + '\n\nKey in use → ' + keyDiag; }
@@ -81,7 +99,7 @@ module.exports = async (req, res) => {
     } else { storeErr = 'No Supabase secret key found in env. Checked SUPABASE_SERVICE_ROLE_KEY, SUPABASE_SECRET_KEY, SUPABASE_SERVICE_KEY.'; }
 
     res.statusCode = 200;
-    if (stored) return res.end(page('\u2713 QuickBooks connected', '<p>Your QuickBooks company (realm <b>' + esc(realmId) + '</b>) is now linked to Orchamind. You can close this tab.</p><p><a href="/app">Back to Orchamind &rarr;</a></p>'));
+    if (stored) return res.end(page('\u2713 QuickBooks connected', '<p>Your QuickBooks company (realm <b>' + esc(realmId) + '</b>) is now linked to your Orchamind account (<b>' + esc(connUser) + '</b>). You can close this tab.</p><p><a href="/app">Back to Orchamind &rarr;</a></p>'));
     return res.end(page('Connected, but not saved', '<p>QuickBooks authorized successfully, but saving the token failed:</p><pre>' + esc(storeErr) + '</pre><p>The connection works \u2014 we just need to store it. Send me this message.</p>'));
   } catch (e) {
     res.statusCode = 200;
