@@ -632,6 +632,25 @@ button:active, .btn:active, .btn-ghost:active, .tab:active, [role="button"]:acti
 .ob-go{background:#2D7FF9;color:#fff;border:none;border-radius:8px;padding:8px 15px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;flex-shrink:0;}
 .ob-done-lbl{font-size:12px;color:#2E9B5B;font-weight:700;flex-shrink:0;}
 </style>
+<style id="msg-css">
+.tab-badge{background:#D32F2F;color:#fff;font-size:10px;font-weight:800;min-width:17px;height:17px;border-radius:9px;display:inline-flex;align-items:center;justify-content:center;padding:0 5px;margin-left:5px;}
+.mi-convo{display:flex;align-items:center;gap:12px;background:#fff;border:1px solid var(--line,#e6ecf3);border-radius:12px;padding:12px 14px;margin-bottom:9px;cursor:pointer;transition:border-color .15s;}
+.mi-convo:hover{border-color:var(--blue,#2D7FF9);}
+.mi-av{width:40px;height:40px;border-radius:50%;background:#eaf2fd;color:#1565C0;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.mi-mid{flex:1;min-width:0;}
+.mi-top{display:flex;align-items:center;gap:7px;}
+.mi-top b{font-size:14.5px;color:var(--navy,#0A1628);}
+.mi-dot{width:8px;height:8px;border-radius:50%;background:#D32F2F;flex-shrink:0;}
+.mi-sub{font-size:12px;color:var(--muted,#5A6B7D);}
+.mi-snip{font-size:13px;color:#3a4a5a;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:2px;}
+.mi-time{font-size:11.5px;color:#9aa7b6;flex-shrink:0;align-self:flex-start;}
+.tmsg{max-width:80%;padding:10px 13px;border-radius:14px;font-size:14px;margin-bottom:8px;line-height:1.4;}
+.tmsg.me{background:var(--blue,#2D7FF9);color:#fff;align-self:flex-end;border-bottom-right-radius:5px;}
+.tmsg.them{background:#eef2f7;color:var(--navy,#0A1628);align-self:flex-start;border-bottom-left-radius:5px;}
+.tmsg-d{font-size:10px;opacity:.7;margin-top:3px;}
+.thread-form{display:flex;gap:8px;border-top:1px solid var(--line,#e6ecf3);padding-top:12px;margin-top:4px;}
+.thread-form input{flex:1;border:1.5px solid var(--line,#e6ecf3);border-radius:10px;padding:11px 13px;font-size:14px;font-family:inherit;}
+</style>
 </head>
 <body class="locked">
 <div id="demoBanner" style="position:relative;z-index:1;background:linear-gradient(90deg,#0A1628,#1565C0);color:#fff;padding:10px 16px;display:flex;align-items:center;justify-content:center;gap:16px;flex-wrap:wrap;font-family:'Outfit',sans-serif;font-size:14px;box-shadow:0 2px 12px rgba(0,0,0,0.2);">
@@ -732,6 +751,7 @@ button:active, .btn:active, .btn-ghost:active, .tab:active, [role="button"]:acti
       <button class="tab" data-tab="equipment"><svg class="ti" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>Equipment</button>
       <button class="tab" data-tab="compliance"><svg class="ti" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="6"/><path d="M15.477 12.89 17 22l-5-3-5 3 1.523-9.11"/></svg>Compliance</button>
       <button class="tab" data-tab="invite"><svg class="ti" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 12 20 22 4 22 4 12"/><rect x="2" y="7" width="20" height="5"/><line x1="12" y1="22" x2="12" y2="7"/><path d="M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7z"/><path d="M12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z"/></svg>Invite &amp; Earn</button>
+      <button class="tab" data-tab="messages"><svg class="ti" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>Messages<span id="msgBadge" class="tab-badge" style="display:none;"></span></button>
       <button class="tab" data-tab="billing"><svg class="ti" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>Billing</button>
       <button class="tab" data-tab="dispatch"><svg class="ti" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>Dispatch</button>
       <button class="tab" data-tab="schedule"><svg class="ti" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>Schedule</button>
@@ -1040,6 +1060,11 @@ button:active, .btn:active, .btn-ghost:active, .tab:active, [role="button"]:acti
     <div class="inv-btns"><button class="btn" onclick="copyRef()">Copy link</button><button class="btn btn-ghost" onclick="shareRefSMS()">Text it</button><button class="btn btn-ghost" onclick="shareRefEmail()">Email it</button><span id="invMsg"></span></div>
     <div class="inv-stats"><div class="inv-stat"><b id="invCount">0</b><span>Contractors invited</span></div><div class="inv-stat"><b id="invCredits">0</b><span>Free months earned</span></div></div>
     <div id="invList"></div>
+  </div>
+  <div class="panel" id="panel-messages">
+    <div class="panel-head"><h2>Messages</h2></div>
+    <p style="color:var(--muted);font-size:13.5px;margin:-4px 0 14px;">Conversations with your clients from their project portals. Reply here and it appears instantly in their portal.</p>
+    <div id="msgBody"></div>
   </div>
   <div class="panel" id="panel-billing">
     <div class="panel-head"><h2>Billing</h2></div>
@@ -1708,6 +1733,7 @@ var _demoAICount = 0;
 var STATUS_LABELS={planning:'Planning',foundation:'Foundation',framing:'Framing',rough:'Rough-In',finishing:'Finishing',inspection:'Inspection',complete:'Complete'};
 
 var clients=[];
+var portalMessages={};
 var jobs=[
   {id:'j1',name:'Sonoma Vista Residence',client:'The Andersons',location:'Santa Rosa, CA',status:'framing',progress:45,crew:5,date:'2026-09-15',budget:680000,spent:298000,notes:'Framing inspection scheduled for next week. Waiting on window delivery (2 wk lead).'},
   {id:'j2',name:'Valley View Estate',client:'M. Reynolds',location:'Sonoma, CA',status:'finishing',progress:78,crew:4,date:'2026-07-30',budget:540000,spent:475000,notes:'Final finishes underway. Client wants to add wine cellar - potential change order.'},
@@ -1763,11 +1789,11 @@ function _acctKey(){return (typeof CURRENT_USER!=='undefined'&&CURRENT_USER&&CUR
 function dataKey(){return 'orcha_data_'+_acctKey();}
 function pendKey(){return 'orcha_pend_'+_acctKey();}
 var _pendingSync=false;
-function writeLocal(){try{localStorage.setItem(dataKey(),JSON.stringify({saved:true,jobs:jobs,crew:crew,hours:hours,subs:subs,estimates:estimates,sketches:sketches,logs:logs,schedule:schedule,changeOrders:changeOrders,expenses:expenses,leads:leads,plans:plans,clients:clients,_ts:Date.now()}));}catch(e){}}
+function writeLocal(){try{localStorage.setItem(dataKey(),JSON.stringify({saved:true,jobs:jobs,crew:crew,hours:hours,subs:subs,estimates:estimates,sketches:sketches,logs:logs,schedule:schedule,changeOrders:changeOrders,expenses:expenses,leads:leads,plans:plans,clients:clients,portalMessages:portalMessages,_ts:Date.now()}));}catch(e){}}
 function markPending(){_pendingSync=true;try{localStorage.setItem(pendKey(),'1');}catch(e){}updateSyncPill();}
 function markSynced(){_pendingSync=false;try{localStorage.removeItem(pendKey());}catch(e){}updateSyncPill();}
 function pushToServer(){
-  fetch('/api/data',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({data:{saved:true,jobs:jobs,crew:crew,hours:hours,subs:subs,estimates:estimates,sketches:sketches,logs:logs,schedule:schedule,changeOrders:changeOrders,expenses:expenses,leads:leads,plans:plans,clients:clients,pricebook:pricebook,selections:selections,safety:safety,punch:punch,equipment:equipment,clockSessions:clockSessions,certs:certs}})})
+  fetch('/api/data',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({data:{saved:true,jobs:jobs,crew:crew,hours:hours,subs:subs,estimates:estimates,sketches:sketches,logs:logs,schedule:schedule,changeOrders:changeOrders,expenses:expenses,leads:leads,plans:plans,clients:clients,portalMessages:portalMessages,pricebook:pricebook,selections:selections,safety:safety,punch:punch,equipment:equipment,clockSessions:clockSessions,certs:certs}})})
     .then(function(r){return r.json();})
     .then(function(o){if(o&&!o.error){_dbReady=true;markSynced();}else{markPending();}})
     .catch(function(){markPending();});
@@ -1786,7 +1812,7 @@ function load(cb){
   // 1) OFFLINE-FIRST: recall unsynced flag + hydrate instantly from this device
   try{_pendingSync=(localStorage.getItem(pendKey())==='1');}catch(e){_pendingSync=false;}
   var localHad=false;
-  try{var ls=localStorage.getItem(dataKey());if(ls){var d=JSON.parse(ls);if(d&&d.saved){jobs=Array.isArray(d.jobs)?d.jobs:jobs;crew=Array.isArray(d.crew)?d.crew:crew;clients=Array.isArray(d.clients)?d.clients:clients;pricebook=Array.isArray(d.pricebook)?d.pricebook:pricebook;selections=Array.isArray(d.selections)?d.selections:selections;safety=Array.isArray(d.safety)?d.safety:safety;punch=Array.isArray(d.punch)?d.punch:punch;equipment=Array.isArray(d.equipment)?d.equipment:equipment;clockSessions=Array.isArray(d.clockSessions)?d.clockSessions:clockSessions;certs=Array.isArray(d.certs)?d.certs:certs;hours=Array.isArray(d.hours)?d.hours:hours;subs=Array.isArray(d.subs)?d.subs:subs;estimates=Array.isArray(d.estimates)?d.estimates:estimates;sketches=Array.isArray(d.sketches)?d.sketches:sketches;logs=Array.isArray(d.logs)?d.logs:logs;schedule=Array.isArray(d.schedule)?d.schedule:schedule;changeOrders=Array.isArray(d.changeOrders)?d.changeOrders:changeOrders;expenses=Array.isArray(d.expenses)?d.expenses:expenses;leads=Array.isArray(d.leads)?d.leads:leads;plans=(Array.isArray(d.plans)&&d.plans.length)?d.plans:plans;localHad=true;}}}catch(e){}
+  try{var ls=localStorage.getItem(dataKey());if(ls){var d=JSON.parse(ls);if(d&&d.saved){jobs=Array.isArray(d.jobs)?d.jobs:jobs;crew=Array.isArray(d.crew)?d.crew:crew;clients=Array.isArray(d.clients)?d.clients:clients;portalMessages=(d.portalMessages&&typeof d.portalMessages==='object')?d.portalMessages:portalMessages;pricebook=Array.isArray(d.pricebook)?d.pricebook:pricebook;selections=Array.isArray(d.selections)?d.selections:selections;safety=Array.isArray(d.safety)?d.safety:safety;punch=Array.isArray(d.punch)?d.punch:punch;equipment=Array.isArray(d.equipment)?d.equipment:equipment;clockSessions=Array.isArray(d.clockSessions)?d.clockSessions:clockSessions;certs=Array.isArray(d.certs)?d.certs:certs;hours=Array.isArray(d.hours)?d.hours:hours;subs=Array.isArray(d.subs)?d.subs:subs;estimates=Array.isArray(d.estimates)?d.estimates:estimates;sketches=Array.isArray(d.sketches)?d.sketches:sketches;logs=Array.isArray(d.logs)?d.logs:logs;schedule=Array.isArray(d.schedule)?d.schedule:schedule;changeOrders=Array.isArray(d.changeOrders)?d.changeOrders:changeOrders;expenses=Array.isArray(d.expenses)?d.expenses:expenses;leads=Array.isArray(d.leads)?d.leads:leads;plans=(Array.isArray(d.plans)&&d.plans.length)?d.plans:plans;localHad=true;}}}catch(e){}
   // 2) reach the shared database, but NEVER block the app
   var timer=setTimeout(function(){updateSyncPill();finish();},3000);
   fetch('/api/data').then(function(r){return r.json();}).then(function(out){
@@ -1807,10 +1833,11 @@ function load(cb){
       expenses=Array.isArray(out.data.expenses)?out.data.expenses:[];
       leads=Array.isArray(out.data.leads)?out.data.leads:[];
       clients=Array.isArray(out.data.clients)?out.data.clients:[];
+      portalMessages=(out.data.portalMessages&&typeof out.data.portalMessages==='object')?out.data.portalMessages:{};
       plans=(Array.isArray(out.data.plans)&&out.data.plans.length)?out.data.plans:plans;
       _dbReady=true;writeLocal();
     } else if (typeof IS_REAL_APP!=='undefined' && IS_REAL_APP && !(typeof isCrew==='function'&&isCrew())) {
-      jobs=[];crew=[];hours=[];subs=[];estimates=[];sketches=[];logs=[];schedule=[];changeOrders=[];expenses=[];leads=[];clients=[];
+      jobs=[];crew=[];hours=[];subs=[];estimates=[];sketches=[];logs=[];schedule=[];changeOrders=[];expenses=[];leads=[];clients=[];portalMessages={};
       try{ selections=[];punch=[];clockSessions=[]; }catch(e){}
       window._isFreshAccount=true;
       _dbReady=true;writeLocal();
@@ -2237,7 +2264,8 @@ function renderHours(){
   t.innerHTML=rows;
 }
 function renderAll(){
-  try{ renderOnboarding(); }catch(e){}renderStats();renderJobs();renderHomeJobs();renderAttention();renderCrew();renderHours();renderSubs();save();}
+  try{ renderOnboarding(); }catch(e){}
+  try{ _msgBadge(); }catch(e){}renderStats();renderJobs();renderHomeJobs();renderAttention();renderCrew();renderHours();renderSubs();save();}
 
 // ====== COMPANY PROFILE / BRANDING ======
 var PF_LOGO='';
@@ -2311,6 +2339,7 @@ function _omRender(n){
   if(n==='leads'){renderLeads();}
   if(n==='plans'){renderPlans();}
   if(n==='customers'){renderCustomers();}
+  if(n==='messages'){refreshMessages();}
 }
 function goTab(name, push){
   var btn=document.querySelector('.tab[data-tab="'+name+'"]');
@@ -2367,7 +2396,7 @@ function _dl(fn,txt,mime){var b=new Blob([txt],{type:mime||'text/plain'});var u=
 function _csvCell(v){v=(v==null?'':String(v));if(/[",\n]/.test(v))v='"'+v.replace(/"/g,'""')+'"';return v;}
 function _csv(rows){if(!rows||!rows.length)return '';var cols=Object.keys(rows[0]);var out=cols.join(',')+'\n';rows.forEach(function(r){out+=cols.map(function(k){return _csvCell(r[k]);}).join(',')+'\n';});return out;}
 function _stamp(){return new Date().toISOString().split('T')[0];}
-function exportJSON(){var data={exportedAt:new Date().toISOString(),company:(CURRENT_USER&&CURRENT_USER.name)||'',jobs:jobs,crew:crew,hours:hours,subs:subs,estimates:estimates,sketches:sketches,logs:logs,schedule:schedule,changeOrders:changeOrders,expenses:expenses,leads:leads,plans:plans,clients:clients,pricebook:pricebook,selections:selections,safety:safety,punch:punch,equipment:equipment,clockSessions:clockSessions,certs:certs};_dl('orchamind-export-'+_stamp()+'.json',JSON.stringify(data,null,2),'application/json');}
+function exportJSON(){var data={exportedAt:new Date().toISOString(),company:(CURRENT_USER&&CURRENT_USER.name)||'',jobs:jobs,crew:crew,hours:hours,subs:subs,estimates:estimates,sketches:sketches,logs:logs,schedule:schedule,changeOrders:changeOrders,expenses:expenses,leads:leads,plans:plans,clients:clients,portalMessages:portalMessages,pricebook:pricebook,selections:selections,safety:safety,punch:punch,equipment:equipment,clockSessions:clockSessions,certs:certs};_dl('orchamind-export-'+_stamp()+'.json',JSON.stringify(data,null,2),'application/json');}
 function exportCSV(which){var map={jobs:jobs,crew:crew,hours:hours,subs:subs};var rows=map[which]||[];if(!rows.length){alert('Nothing to export there yet.');return;}_dl('orchamind-'+which+'-'+_stamp()+'.csv',_csv(rows),'text/csv');}
 function renderExportCounts(){var el=document.getElementById('exportCounts');if(!el)return;el.textContent=jobs.length+' projects \u00b7 '+hours.length+' timesheet entries \u00b7 '+crew.length+' crew \u00b7 '+subs.length+' subcontractors';}
 document.querySelectorAll('.modal-bg').forEach(function(m){m.addEventListener('click',function(e){if(e.target===m)closeModal(m.id);});});
@@ -2412,7 +2441,7 @@ function clearAllData(){
 
 // Explicit, non-debounced save that reports success/failure
 function saveNow(cb){
-  fetch('/api/data',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({data:{saved:true,jobs:jobs,crew:crew,hours:hours,subs:subs,estimates:estimates,sketches:sketches,logs:logs,schedule:schedule,changeOrders:changeOrders,expenses:expenses,leads:leads,plans:plans,clients:clients,pricebook:pricebook,selections:selections,safety:safety,punch:punch,equipment:equipment,clockSessions:clockSessions,certs:certs}})})
+  fetch('/api/data',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({data:{saved:true,jobs:jobs,crew:crew,hours:hours,subs:subs,estimates:estimates,sketches:sketches,logs:logs,schedule:schedule,changeOrders:changeOrders,expenses:expenses,leads:leads,plans:plans,clients:clients,portalMessages:portalMessages,pricebook:pricebook,selections:selections,safety:safety,punch:punch,equipment:equipment,clockSessions:clockSessions,certs:certs}})})
     .then(function(r){return r.json();})
     .then(function(o){var ok=o&&!o.error;if(ok)_dbReady=true;if(cb)cb(ok);})
     .catch(function(){if(cb)cb(false);});
@@ -4426,6 +4455,57 @@ function renderInvite(){
 function copyRef(){var t=document.getElementById('invLink');if(!t)return;t.select();t.setSelectionRange(0,9999);var done=function(){var m=document.getElementById('invMsg');if(m){m.style.color='#2E9B5B';m.textContent='\u2713 Copied!';}};try{if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(t.value).then(done,done);}else{document.execCommand('copy');done();}}catch(e){done();}}
 function shareRefSMS(){var l=document.getElementById('invLink').value;window.location.href='sms:?&body='+encodeURIComponent('You should try Orchamind \u2014 the AI app that runs your whole contracting business. Start free: '+l);}
 function shareRefEmail(){var l=document.getElementById('invLink').value;window.location.href='mailto:?subject='+encodeURIComponent('You should try Orchamind')+'&body='+encodeURIComponent('Orchamind is the AI app I use to run my business \u2014 estimates, crew, clients, billing, all of it. Start free with my link: '+l);}
+function _mfmt(d){ try{ if(typeof fmtDate==='function') return fmtDate(d); var x=new Date(d); if(!isNaN(x)) return x.toLocaleDateString(undefined,{month:'short',day:'numeric'}); }catch(e){} return String(d||'').slice(0,10); }
+function _msgConvos(){
+  var pm=window.portalMessages||{};
+  return Object.keys(pm).filter(function(jid){return pm[jid]&&pm[jid].length;}).map(function(jid){
+    var j=(window.jobs||[]).filter(function(x){return x.id===jid;})[0];
+    var arr=pm[jid]; var last=arr[arr.length-1];
+    return {jid:jid, name:(j?j.name:'Project'), client:(j?j.client:'')||'Client', last:last, count:arr.length, unread:(last&&last.from==='client')};
+  }).sort(function(a,b){return new Date(b.last.date)-new Date(a.last.date);});
+}
+function _msgBadge(){
+  var n=_msgConvos().filter(function(c){return c.unread;}).length;
+  var b=document.getElementById('msgBadge'); if(!b)return;
+  if(n>0){ b.textContent=n; b.style.display='inline-flex'; } else { b.style.display='none'; }
+}
+function renderMessages(){
+  var host=document.getElementById('msgBody'); if(!host) return;
+  var convos=_msgConvos();
+  if(!convos.length){ host.innerHTML='<div style="color:var(--muted);font-size:13.5px;padding:16px 2px;">No client messages yet. When a client messages you from their portal, the conversation shows up here \u2014 and you\u2019ll get an email too.</div>'; _msgBadge(); return; }
+  host.innerHTML=convos.map(function(c){
+    return '<div class="mi-convo" data-jid="'+esc(c.jid)+'" onclick="openThread(this.getAttribute(\'data-jid\'))"><div class="mi-av">'+esc((c.client||c.name||'?').charAt(0).toUpperCase())+'</div><div class="mi-mid"><div class="mi-top"><b>'+esc(c.client)+'</b>'+(c.unread?'<span class="mi-dot"></span>':'')+'</div><div class="mi-sub">'+esc(c.name)+'</div><div class="mi-snip">'+(c.last.from==='contractor'?'You: ':'')+esc(String(c.last.text||'').slice(0,64))+'</div></div><div class="mi-time">'+esc(_mfmt(c.last.date))+'</div></div>';
+  }).join('');
+  _msgBadge();
+}
+function refreshMessages(){
+  renderMessages();
+  fetch('/api/data').then(function(r){return r.json();}).then(function(out){ if(out&&out.data&&out.data.portalMessages&&typeof out.data.portalMessages==='object'){ window.portalMessages=out.data.portalMessages; renderMessages(); if(window._thread) renderThread(); } }).catch(function(){});
+}
+function openThread(jid){
+  window._thread=jid;
+  var j=(window.jobs||[]).filter(function(x){return x.id===jid;})[0];
+  document.getElementById('threadTitle').textContent=(j?(j.client||j.name):'Conversation');
+  document.getElementById('threadSub').textContent=(j?j.name:'');
+  renderThread();
+  openModal('threadModal');
+}
+function renderThread(){
+  var jid=window._thread; if(!jid) return;
+  var pm=(window.portalMessages||{})[jid]||[];
+  var box=document.getElementById('threadBody'); if(!box) return;
+  box.innerHTML=pm.length?pm.map(function(m){ return '<div class="tmsg '+(m.from==='contractor'?'me':'them')+'">'+esc(m.text)+'<div class="tmsg-d">'+esc(_mfmt(m.date))+'</div></div>'; }).join(''):'<div style="color:var(--muted);font-size:13px;text-align:center;padding:20px;">No messages yet.</div>';
+  setTimeout(function(){ box.scrollTop=box.scrollHeight; },0);
+}
+function sendReply(){
+  var jid=window._thread; if(!jid) return;
+  var inp=document.getElementById('threadInput'); var t=(inp.value||'').trim(); if(!t) return;
+  inp.value='';
+  window.portalMessages=window.portalMessages||{}; window.portalMessages[jid]=window.portalMessages[jid]||[];
+  window.portalMessages[jid].push({from:'contractor',text:t,date:new Date().toISOString()});
+  renderThread(); renderMessages();
+  try{writeLocal();}catch(e){} try{pushToServer();}catch(e){}
+}
 function renderBilling(){
   var el=document.getElementById('billStatus');if(!el)return;
   var te=(typeof CURRENT_USER!=='undefined'&&CURRENT_USER&&CURRENT_USER.trialEnd)?CURRENT_USER.trialEnd:0;
@@ -5165,5 +5245,6 @@ function createJobFromPlan(id){
 <div class="modal-bg" id="jobDetailModal"><div class="modal" style="max-width:600px;"><button class="modal-x" onclick="closeModal('jobDetailModal')" aria-label="Close">&times;</button><div id="jobDetailBody"></div></div></div>
 <div class="modal-bg" id="clientFormModal"><div class="modal"><button class="modal-x" onclick="closeModal('clientFormModal')">&times;</button><h3 id="clientFormTitle">Add client</h3><input type="hidden" id="clId"><div class="field"><label>Name</label><input type="text" id="clName" placeholder="e.g. The Andersons"></div><div class="field-row"><div class="field"><label>Phone</label><input type="tel" id="clPhone" placeholder="(707) 555-0142"></div><div class="field"><label>Email</label><input type="email" id="clEmail" placeholder="client@email.com"></div></div><div class="field"><label>Address</label><input type="text" id="clAddress" placeholder="Job or billing address"></div><div class="field"><label>Notes</label><textarea id="clNotes" placeholder="Anything worth remembering about this client"></textarea></div><button class="btn" onclick="saveClient()" style="width:100%;margin-top:6px;">Save client</button></div></div>
 <div class="modal-bg" id="clientDetailModal"><div class="modal" style="max-width:560px;"><button class="modal-x" onclick="closeModal('clientDetailModal')">&times;</button><div id="clientDetailBody"></div></div></div>
+<div class="modal-bg" id="threadModal"><div class="modal" style="max-width:520px;display:flex;flex-direction:column;max-height:82vh;"><button class="modal-x" onclick="closeModal('threadModal')">&times;</button><div style="border-bottom:1px solid var(--line,#e6ecf3);padding-bottom:10px;margin-bottom:4px;"><div id="threadTitle" style="font-weight:800;font-size:17px;font-family:Outfit,sans-serif;"></div><div id="threadSub" style="font-size:12.5px;color:var(--muted,#5A6B7D);"></div></div><div id="threadBody" style="flex:1;overflow-y:auto;padding:12px 2px;display:flex;flex-direction:column;"></div><div class="thread-form"><input type="text" id="threadInput" placeholder="Type your reply…" onkeydown="if(event.key==='Enter')sendReply()"><button class="btn" onclick="sendReply()" style="width:auto;padding:11px 18px;">Send</button></div></div></div>
 </body>
 </html>
