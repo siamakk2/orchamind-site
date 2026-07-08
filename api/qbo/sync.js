@@ -1,3 +1,19 @@
+var crypto = require('crypto');
+function _sbSecret(){ return (process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SECRET_KEY || process.env.SUPABASE_SERVICE_KEY || '').trim(); }
+function sessUser(req){
+  try{
+    var KEY=_sbSecret(); if(!KEY) return null;
+    var c=(req.headers && req.headers.cookie) || '';
+    var m=c.match(/(?:^|;\s*)orcha_sess=([^;]+)/); if(!m) return null;
+    var p=decodeURIComponent(m[1]).split('|'); if(p.length!==4) return null;
+    var sig=crypto.createHmac('sha256',KEY).update(p[0]+'|'+p[1]+'|'+p[2]).digest('hex');
+    if(sig!==p[3]) return null;
+    if(Date.now()>Number(p[2])) return null;
+    if(p[1]==='demo') return null;
+    return p[0];
+  }catch(e){ return null; }
+}
+
 // Orchamind -> QuickBooks manual sync: turn a job's logged materials into QuickBooks Bills.
 // Idempotent: every synced material is recorded in qbo_synced so re-clicking never double-posts.
 var https = require('https');
@@ -19,8 +35,8 @@ var SB_URL = 'https://yqbprvyhzugdmavvurqb.supabase.co';
 function sbKey(){ return (process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SECRET_KEY || process.env.SUPABASE_SERVICE_KEY || '').trim(); }
 function qboBase(){ return (process.env.QBO_API_BASE || 'https://sandbox-quickbooks.api.intuit.com').trim().replace(/\/$/,''); }
 
-async function getToken(SB_KEY){
-  var gr = await httpReq('GET', SB_URL + '/rest/v1/qbo_tokens?id=eq.default&select=*',
+async function getToken(SB_KEY, owner){
+  var gr = await httpReq('GET', SB_URL + '/rest/v1/qbo_tokens?id=eq.' + encodeURIComponent(owner) + '&select=*',
     { 'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY,'Accept':'application/json' });
   var rows = jparse(gr.text); if(!Array.isArray(rows)||!rows.length) return null;
   var t = rows[0];
@@ -34,7 +50,7 @@ async function getToken(SB_KEY){
     var nt = jparse(rr.text);
     if(nt.access_token){
       t.access_token = nt.access_token;
-      var row = JSON.stringify({ id:'default', realm_id:t.realm_id, access_token:nt.access_token, refresh_token:nt.refresh_token||t.refresh_token, expires_at:Date.now()+((nt.expires_in||3600)*1000), updated_at:new Date().toISOString() });
+      var row = JSON.stringify({ id:owner, realm_id:t.realm_id, access_token:nt.access_token, refresh_token:nt.refresh_token||t.refresh_token, expires_at:Date.now()+((nt.expires_in||3600)*1000), updated_at:new Date().toISOString() });
       await httpReq('POST', SB_URL+'/rest/v1/qbo_tokens?on_conflict=id',
         {'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY,'Content-Type':'application/json','Prefer':'resolution=merge-duplicates'}, row);
     }
@@ -80,12 +96,14 @@ module.exports = async (req, res) => {
     if(req.method!=='POST') return send({ok:false,error:'POST only'},405);
     var body=''; await new Promise(function(r){ req.on('data',function(c){body+=c;}); req.on('end',r); });
     var inp=jparse(body);
-    var jobId=String(inp.jobId||''), jobName=String(inp.jobName||'Job'), uname=String(inp.username||'app');
+    var owner = sessUser(req);
+    if(!owner) return send({ok:false,error:'Please log in again.'},401);
+    var jobId=String(inp.jobId||''), jobName=String(inp.jobName||'Job'), uname=owner;
     var mats=Array.isArray(inp.materials)?inp.materials:[];
     if(!mats.length) return send({ok:false,error:'No materials to sync.'});
     var SB_KEY=sbKey();
     if(!SB_KEY) return send({ok:false,error:'Server not configured (Supabase key missing).'},500);
-    var t=await getToken(SB_KEY);
+    var t=await getToken(SB_KEY, owner);
     if(!t || !t.access_token) return send({ok:false,notConnected:true,error:'QuickBooks is not connected yet.'});
     var base=qboBase(), realm=t.realm_id, token=t.access_token;
     var vcache={}, acache={};
