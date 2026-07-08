@@ -2448,7 +2448,7 @@ function checkPayStatus(){
     .then(function(r){return r.json();})
     .then(function(d){
       if(!d||!d.ok){ el.textContent=''; return; }
-      var _pt=document.getElementById('payTool'); if(_pt)_pt.style.display=(d.connected?'block':'none');
+      var _pt=document.getElementById('payTool'); if(_pt)_pt.style.display=(d.connected?'block':'none'); window._payConnected=!!d.connected;
       if(d.connected){ el.innerHTML='<span style="color:#1B8A4B;font-weight:700;">\u2713 Connected</span> \u2014 your clients can pay you by card.'; if(btn){btn.textContent='Manage payout account \u2192';} }
       else if(d.started){ el.innerHTML='<span style="color:#B45309;font-weight:700;">Setup not finished</span> \u2014 complete it to accept payments.'; if(btn){btn.textContent='Finish setup \u2192';} }
       else { el.textContent='Not connected yet. Set this up so clients can pay you online.'; if(btn){btn.textContent='Set up online payments \u2192';} }
@@ -2474,7 +2474,7 @@ function textPayLink(){ var u=(document.getElementById('payLinkUrl')||{}).value|
 function emailPayLink(){ var u=(document.getElementById('payLinkUrl')||{}).value||''; location.href='mailto:?subject='+encodeURIComponent('Your payment link')+'&body='+encodeURIComponent('You can pay securely by card here: '+u); }
 function connectPayments(btn){
   if(btn){btn.disabled=true;btn.textContent='Opening Stripe\u2026';}
-  fetch('/api/connect',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'onboard'})})
+  fetch('/api/connect',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:(window._payConnected?'dashboard':'onboard')})})
     .then(function(r){return r.json();})
     .then(function(d){
       if(d&&d.ok&&d.url){ location.href=d.url; }
