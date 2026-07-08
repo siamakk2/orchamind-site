@@ -106,7 +106,14 @@ module.exports = async function handler(req, res) {
         if (Array.isArray(ca) && ca[0]) company = ca[0].company || ca[0].name || '';
       } catch (e) {}
 
-      return res.status(200).json({ ok: true, project: { name: job.name, status: job.status, progress: job.progress || 0, location: job.location || '', date: job.date || '', client: job.client || '', company: company, updates: updates, changeOrders: cos } });
+      var invoices = (Array.isArray(data.estimates) ? data.estimates : []).filter(function (e) { return e.kind === 'invoice' && e.project === job.name; }).map(function (e) { var t = 0; (e.items || []).forEach(function (it) { t += (parseFloat(it.qty) || 0) * (parseFloat(it.price) || 0); }); return { number: e.number || '', date: e.date || '', total: t, status: e.status || 'sent' }; });
+      var pmsgs = (data.portalMessages && data.portalMessages[g.job_id]) ? data.portalMessages[g.job_id] : [];
+      var PH = [['Planning & design',8],['Permits & site prep',20],['Foundation',32],['Framing',50],['Rough-in — plumbing, electrical, HVAC',66],['Insulation & drywall',78],['Finishes & fixtures',92],['Punch list & walkthrough',99],['Complete',100]];
+      var prog = job.progress || 0;
+      var milestones = PH.map(function (ph) { return { label: ph[0], done: prog >= ph[1] }; });
+      var nextStep = 'Wrapping up';
+      for (var mi = 0; mi < milestones.length; mi++) { if (!milestones[mi].done) { milestones[mi].current = true; nextStep = milestones[mi].label; break; } }
+      return res.status(200).json({ ok: true, project: { name: job.name, status: job.status, progress: prog, location: job.location || '', date: job.date || '', client: job.client || '', company: company, updates: updates, changeOrders: cos, invoices: invoices, messages: pmsgs, milestones: milestones, nextStep: nextStep } });
     }
 
     if (action === 'co') {
@@ -136,6 +143,37 @@ module.exports = async function handler(req, res) {
       var upd = await fetch(base + '/app_data?username=eq.' + encodeURIComponent(g2.owner), { method: 'PATCH', headers: Object.assign({}, H, { 'Prefer': 'return=minimal' }), body: JSON.stringify({ data: data2 }) });
       if (!upd.ok) return res.status(200).json({ ok: false, error: 'Could not save your decision. Please try again.' });
       return res.status(200).json({ ok: true, status: decision });
+    }
+
+    if (action === 'message') {
+      var mcode = String(body.code || '').toUpperCase().replace(/[^A-Z0-9]/g, '');
+      var memail = String(body.email || '').toLowerCase().trim();
+      var mtext = String(body.text || '').trim().slice(0, 1000);
+      if (!mcode || !mtext) return res.status(200).json({ ok: false, error: 'Please enter a message.' });
+      var mgr = await fetch(base + '/portal_grants?code=eq.' + encodeURIComponent(mcode) + '&select=owner,job_id,email', { headers: H });
+      var mga = await mgr.json(); var g3 = (Array.isArray(mga) && mga[0]) ? mga[0] : null;
+      if (!g3) return res.status(200).json({ ok: false, error: 'Access code not found.' });
+      if (g3.email && g3.email !== memail) return res.status(200).json({ ok: false, error: 'That email does not match this code.' });
+      var mdr = await fetch(base + '/app_data?username=eq.' + encodeURIComponent(g3.owner) + '&select=data', { headers: H });
+      var mda = await mdr.json(); var data3 = (Array.isArray(mda) && mda[0] && mda[0].data) ? mda[0].data : null;
+      if (!data3) return res.status(200).json({ ok: false, error: 'Project not available.' });
+      data3.portalMessages = data3.portalMessages || {};
+      data3.portalMessages[g3.job_id] = data3.portalMessages[g3.job_id] || [];
+      var entry = { from: 'client', text: mtext, date: new Date().toISOString() };
+      data3.portalMessages[g3.job_id].push(entry);
+      var mupd = await fetch(base + '/app_data?username=eq.' + encodeURIComponent(g3.owner), { method: 'PATCH', headers: Object.assign({}, H, { 'Prefer': 'return=minimal' }), body: JSON.stringify({ data: data3 }) });
+      if (!mupd.ok) return res.status(200).json({ ok: false, error: 'Could not send your message. Please try again.' });
+      try {
+        var RESEND = process.env.RESEND_API_KEY;
+        if (RESEND) {
+          var acr = await fetch(base + '/accounts?username=eq.' + encodeURIComponent(g3.owner) + '&select=profile', { headers: H });
+          var aca = await acr.json(); var toEmail = (Array.isArray(aca) && aca[0] && aca[0].profile && aca[0].profile.email) || '';
+          if (toEmail) {
+            await fetch('https://api.resend.com/emails', { method: 'POST', headers: { 'Authorization': 'Bearer ' + RESEND, 'Content-Type': 'application/json' }, body: JSON.stringify({ from: 'Orchamind <welcome@orchamind.com>', to: [toEmail], reply_to: (memail || undefined), subject: 'New message from your client', html: '<p>You have a new message from your client in their project portal:</p><blockquote style="border-left:3px solid #2D7FF9;padding-left:12px;color:#333;">' + mtext.replace(/</g, '&lt;') + '</blockquote><p><a href="https://orchamind.com/app">Open Orchamind &rarr;</a></p>' }) });
+          }
+        }
+      } catch (eMsg) {}
+      return res.status(200).json({ ok: true, message: entry });
     }
 
     return res.status(200).json({ ok: false, error: 'Unknown action.' });
