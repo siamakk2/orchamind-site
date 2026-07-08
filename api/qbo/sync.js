@@ -47,7 +47,18 @@ async function getToken(SB_KEY, owner){
     var rr = await httpReq('POST','https://oauth.platform.intuit.com/oauth2/v1/tokens/bearer',
       {'Authorization':'Basic '+basic,'Content-Type':'application/x-www-form-urlencoded','Accept':'application/json'},
       'grant_type=refresh_token&refresh_token='+encodeURIComponent(t.refresh_token));
+    // one retry on transient (5xx / network) failures
+    if (!rr || rr.status >= 500) {
+      await new Promise(function(r){ setTimeout(r, 800); });
+      try {
+        rr = await httpReq('POST','https://oauth.platform.intuit.com/oauth2/v1/tokens/bearer',
+          {'Authorization':'Basic '+basic,'Content-Type':'application/x-www-form-urlencoded','Accept':'application/json'},
+          'grant_type=refresh_token&refresh_token='+encodeURIComponent(t.refresh_token));
+      } catch(e2){}
+    }
     var nt = jparse(rr.text);
+    // refresh token expired or revoked -> user must reconnect
+    if (!nt.access_token && (String(rr.text||'').indexOf('invalid_grant') >= 0 || rr.status === 400)) { return { _reauth: true }; }
     if(nt.access_token){
       t.access_token = nt.access_token;
       var row = JSON.stringify({ id:owner, realm_id:t.realm_id, access_token:nt.access_token, refresh_token:nt.refresh_token||t.refresh_token, expires_at:Date.now()+((nt.expires_in||3600)*1000), updated_at:new Date().toISOString() });
@@ -104,6 +115,7 @@ module.exports = async (req, res) => {
     var SB_KEY=sbKey();
     if(!SB_KEY) return send({ok:false,error:'Server not configured (Supabase key missing).'},500);
     var t=await getToken(SB_KEY, owner);
+    if(t && t._reauth) return send({ok:false,notConnected:true,error:'Your QuickBooks connection has expired. Please reconnect.'});
     if(!t || !t.access_token) return send({ok:false,notConnected:true,error:'QuickBooks is not connected yet.'});
     var base=qboBase(), realm=t.realm_id, token=t.access_token;
     var vcache={}, acache={};
