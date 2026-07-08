@@ -217,12 +217,51 @@ module.exports = async function handler(req, res) {
       var row = await getUser(lu);
       if (!row || !verifyPw(lp, row.pass)) return res.status(200).json({ ok: false, error: 'Wrong username or password.' });
       if (row.status === 'paused' && row.username !== 'siamakk2') { var pauUrl = await stripePortal(row.stripe_customer, 'https://orchamind.com/app'); return res.status(200).json({ ok: true, paused: true, user: { username: row.username, name: row.name, role: row.role || 'member', company: row.company || '', paused: true, portalUrl: pauUrl } }); }
+      // Optional email 2FA: if enabled on this account, email a 6-digit code and require it before issuing a session.
+      if (row.mfa_enabled) {
+        var mfaEmail = (row.profile && row.profile.email) || '';
+        if (!mfaEmail) { /* no email on file -> cannot 2FA, fall through to normal login so user is never locked out */ }
+        else {
+          var code = String(Math.floor(100000 + Math.random() * 900000));
+          var exp = Date.now() + 10 * 60 * 1000;
+          try { await sbFetch(base + '/accounts?username=eq.' + encodeURIComponent(lu), { method: 'PATCH', headers: H, body: JSON.stringify({ mfa_code: code, mfa_code_exp: exp }) }); } catch (e) {}
+          try {
+            var RS = process.env.RESEND_API_KEY;
+            if (RS) {
+              await fetch('https://api.resend.com/emails', { method: 'POST', headers: { 'Authorization': 'Bearer ' + RS, 'Content-Type': 'application/json' }, body: JSON.stringify({ from: 'Orchamind <welcome@orchamind.com>', to: [mfaEmail], subject: 'Your Orchamind login code: ' + code, html: '<div style="font-family:Arial,sans-serif;max-width:460px;margin:0 auto;color:#0A1628;text-align:center;padding:20px;"><div style="font-size:13px;color:#5A6B7D;letter-spacing:.1em;text-transform:uppercase;font-weight:700;">Your login code</div><div style="font-size:40px;font-weight:800;letter-spacing:.15em;margin:14px 0;color:#0A1628;">' + code + '</div><p style="font-size:13.5px;color:#5A6B7D;">Enter this code to finish signing in. It expires in 10 minutes. If you did not try to sign in, you can ignore this email.</p></div>' }) });
+            }
+          } catch (e) {}
+          return res.status(200).json({ ok: true, mfa: true, username: row.username });
+        }
+      }
       setSess(lu, row.role || 'member');
       var brandRow = row;
       if (row.owner && row.owner !== row.username) { try { var orow = await getUser(row.owner); if (orow) brandRow = orow; } catch (e) {} }
       var co = row.company || brandRow.company || '';
       try { await sbFetch(base + '/activity_log', { method: 'POST', headers: H, body: JSON.stringify({ type: 'login', username: row.username, detail: (row.company || row.name || row.username) + ' logged in' }) }); } catch (e) {}
-      return res.status(200).json({ ok: true, user: { username: row.username, name: row.name, role: row.role || 'member', company: co, profile: brandRow.profile || null, mustChange: !!row.must_change, billing: !!row.stripe_customer } });
+      return res.status(200).json({ ok: true, user: { username: row.username, name: row.name, role: row.role || 'member', company: co, profile: brandRow.profile || null, mustChange: !!row.must_change, billing: !!row.stripe_customer, mfaEnabled: !!row.mfa_enabled } });
+    }
+
+    if (action === 'mfaVerify') {
+      var mu = (body.username || '').toLowerCase().trim();
+      var mcode = String(body.code || '').replace(/[^0-9]/g, '');
+      var mrow = await getUser(mu);
+      if (!mrow) return res.status(200).json({ ok: false, error: 'Please sign in again.' });
+      if (!mrow.mfa_code || !mrow.mfa_code_exp || Date.now() > Number(mrow.mfa_code_exp)) return res.status(200).json({ ok: false, error: 'That code has expired. Please sign in again.' });
+      if (mcode !== String(mrow.mfa_code)) return res.status(200).json({ ok: false, error: 'Incorrect code. Please try again.' });
+      try { await sbFetch(base + '/accounts?username=eq.' + encodeURIComponent(mu), { method: 'PATCH', headers: H, body: JSON.stringify({ mfa_code: null, mfa_code_exp: null }) }); } catch (e) {}
+      setSess(mu, mrow.role || 'member');
+      var mbrand = mrow;
+      if (mrow.owner && mrow.owner !== mrow.username) { try { var mo = await getUser(mrow.owner); if (mo) mbrand = mo; } catch (e) {} }
+      return res.status(200).json({ ok: true, user: { username: mrow.username, name: mrow.name, role: mrow.role || 'member', company: mrow.company || mbrand.company || '', profile: mbrand.profile || null, mustChange: !!mrow.must_change, billing: !!mrow.stripe_customer } });
+    }
+
+    if (action === 'mfaToggle') {
+      var tsess = verifyToken(readCookie());
+      if (!tsess || !tsess.username) return res.status(200).json({ ok: false, error: 'Please sign in again.' });
+      var enable = !!body.enable;
+      try { await sbFetch(base + '/accounts?username=eq.' + encodeURIComponent(tsess.username), { method: 'PATCH', headers: H, body: JSON.stringify({ mfa_enabled: enable }) }); } catch (e) { return res.status(200).json({ ok: false, error: 'Could not update.' }); }
+      return res.status(200).json({ ok: true, enabled: enable });
     }
 
     if (action === 'changePassword') {
