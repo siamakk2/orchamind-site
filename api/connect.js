@@ -56,6 +56,10 @@ module.exports = async function handler(req, res) {
     }
 
     if (action === 'onboard') {
+      if (connectId) {
+        var _chk = await stripe('/v1/accounts/' + connectId, 'GET');
+        if (_chk && _chk.error) { connectId = null; }
+      }
       if (!connectId) {
         var acc = await stripe('/v1/accounts', 'POST', {
           'type': 'express',
