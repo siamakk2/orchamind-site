@@ -1,5 +1,6 @@
 var crypto = require('crypto');
 function _sbSecret(){ return (process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SECRET_KEY || process.env.SUPABASE_SERVICE_KEY || '').trim(); }
+function _getCookie(req,name){ var c=(req.headers&&req.headers.cookie)||''; var m=c.match(new RegExp('(?:^|;\\s*)'+name+'=([^;]+)')); return m?decodeURIComponent(m[1]):''; }
 function sessUser(req){
   try{
     var KEY=_sbSecret(); if(!KEY) return null;
@@ -57,7 +58,14 @@ module.exports = async (req, res) => {
                         : 'No authorization code came back. The code is single-use \u2014 always start fresh at <b>/api/qbo/connect</b>, pick a <b>sandbox</b> company, and click Connect.';
       res.statusCode = 200; return res.end(page('Connection not completed', '<p>' + detail + '</p><pre>' + dump + '</pre><p><a href="https://orchamind.com/api/qbo/connect">Try again &rarr;</a></p>'));
     }
-    var connUser = String(gp('state') || '').split('~')[0] || sessUser(req) || '';
+    var stateParam = String(gp('state') || '');
+    var stateCookie = _getCookie(req, 'qbo_state');
+    if (!stateParam || !stateCookie || stateParam !== stateCookie) {
+      res.statusCode = 200;
+      return res.end(page('Security check failed', '<p>This connection could not be verified (OAuth state mismatch). This check protects you against cross-site request forgery (CSRF). Nothing was connected.</p><p>Please start again from Orchamind.</p><p><a href="https://orchamind.com/api/qbo/connect">Connect QuickBooks &rarr;</a></p>'));
+    }
+    res.setHeader('Set-Cookie', 'qbo_state=; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=0');
+    var connUser = stateParam.split('~')[0] || sessUser(req) || '';
     if (!connUser) { res.statusCode = 200; return res.end(page('Could not identify your account', '<p>We could not tell which Orchamind account this QuickBooks connection belongs to. Please sign in to Orchamind and start again from <b>Connect QuickBooks</b>.</p><p><a href="/app">Back to Orchamind &rarr;</a></p>')); }
     var CID = (process.env.QBO_CLIENT_ID||'').trim(), CS = (process.env.QBO_CLIENT_SECRET||'').trim();
     if (!CID || !CS) { res.statusCode = 500; return res.end(page('Not configured', '<p>Missing in Vercel: ' + (!CID?'<b>QBO_CLIENT_ID</b> ':'') + (!CS?'<b>QBO_CLIENT_SECRET</b>':'') + '. Add it and redeploy.</p>')); }
