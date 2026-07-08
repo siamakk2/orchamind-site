@@ -584,6 +584,11 @@ button:active, .btn:active, .btn-ghost:active, .tab:active, [role="button"]:acti
 #omToast{position:fixed;left:50%;bottom:26px;transform:translate(-50%,20px);background:#0A1628;color:#fff;font-size:14px;font-weight:600;padding:13px 20px;border-radius:11px;box-shadow:0 10px 34px rgba(10,22,40,.32);z-index:9999;opacity:0;pointer-events:none;transition:opacity .22s,transform .22s;max-width:88vw;text-align:center;line-height:1.45;}
 #omToast.show{opacity:1;transform:translate(-50%,0);}
 </style>
+<style id="navback-css">
+.appback{display:none;align-items:center;justify-content:center;background:none;border:none;color:var(--blue,#2D7FF9);cursor:pointer;padding:6px;margin-right:-2px;}
+.appback svg{width:24px;height:24px;}
+@media(max-width:900px){ .appback.show{display:inline-flex;} }
+</style>
 </head>
 <body class="locked">
 <div id="demoBanner" style="position:relative;z-index:1;background:linear-gradient(90deg,#0A1628,#1565C0);color:#fff;padding:10px 16px;display:flex;align-items:center;justify-content:center;gap:16px;flex-wrap:wrap;font-family:'Outfit',sans-serif;font-size:14px;box-shadow:0 2px 12px rgba(0,0,0,0.2);">
@@ -651,6 +656,7 @@ button:active, .btn:active, .btn-ghost:active, .tab:active, [role="button"]:acti
 
 <div class="topbar">
   <div class="topbar-inner">
+    <button class="appback" id="appBack" onclick="omBack()" aria-label="Back"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg></button>
     <button class="appburger" onclick="toggleSide()" aria-label="Open menu"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg></button>
     <a href="https://orchamind-site.vercel.app"><img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAzNDAgNzIiIHdpZHRoPSIzNDAiIGhlaWdodD0iNzIiPgo8cmVjdCB4PSIwIiB5PSIwIiB3aWR0aD0iMzQwIiBoZWlnaHQ9IjcyIiByeD0iNiIgZmlsbD0iI0ZGRkZGRiIvPgo8cmVjdCB4PSI4IiB5PSIxNCIgd2lkdGg9IjQ0IiBoZWlnaHQ9IjQ0IiByeD0iMTEiIGZpbGw9IiMwQTE2MjgiLz4KPHBhdGggZD0iTTE4IDM2IGg2IGw0IDEyIGw2IC0yNCBsNCAxMiBoNiIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjMkQ3RkY5IiBzdHJva2Utd2lkdGg9IjMuNSIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIi8+Cjx0ZXh0IHg9IjY2IiB5PSIzOCIgZm9udC1mYW1pbHk9IkFyaWFsLCBzYW5zLXNlcmlmIiBmb250LXNpemU9IjI0IiBmb250LXdlaWdodD0iODAwIiBmaWxsPSIjMEExNjI4Ij5PcmNoYW1pbmQ8L3RleHQ+Cjx0ZXh0IHg9IjY2IiB5PSI1NiIgZm9udC1mYW1pbHk9IkFyaWFsLCBzYW5zLXNlcmlmIiBmb250LXNpemU9IjExIiBmb250LXdlaWdodD0iNjAwIiBmaWxsPSIjNUE2QjdEIiBsZXR0ZXItc3BhY2luZz0iMSI+QUkgU0lURSBNQU5BR0VSPC90ZXh0Pgo8L3N2Zz4=" alt="Orchamind Demo"></a>
     <div class="topbar-right">
@@ -2141,41 +2147,83 @@ function saveCompanyProfile(){
     }).catch(function(){ if(m){m.style.color='#D32F2F';m.textContent='Server error.';} });
 }
 
-// ====== TABS ======
+// ====== TABS + BROWSER HISTORY (phone back button works) ======
+var _omTab='today';
+function _omRender(n){
+  if(n==='admin'){loadUsers();}
+  if(n==='profile'){loadProfileForm();checkPayStatus();setQuoteLink();}
+  if(n==='reports'){renderReport();}
+  if(n==='estimates'){renderEstimates();}
+  if(n==='sketches'){renderSketches();}
+  if(n==='log'){renderLog();}
+  if(n==='schedule'){renderSchedule();}
+  if(n==='dispatch'){renderDispatch();}
+  if(n==='billing'){renderBilling();}
+  if(n==='invite'){renderInvite();}
+  if(n==='compliance'){renderCompliance();}
+  if(n==='equipment'){renderEquipment();}
+  if(n==='punch'){renderPunch();}
+  if(n==='safety'){renderSafety();}
+  if(n==='pricebook'){renderPricebook();}
+  if(n==='selections'){renderSelections();}
+  if(n==='changes'){renderChangeOrders();}
+  if(n==='costs'){renderCosts();}
+  if(n==='hours'){renderHours();}
+  if(n==='leads'){renderLeads();}
+  if(n==='plans'){renderPlans();}
+  if(n==='customers'){renderCustomers();}
+}
+function goTab(name, push){
+  var btn=document.querySelector('.tab[data-tab="'+name+'"]');
+  var panel=document.getElementById('panel-'+name);
+  if(!btn||!panel) return;
+  document.querySelectorAll('.tab').forEach(function(x){x.classList.remove('active');});
+  document.querySelectorAll('.panel').forEach(function(x){x.classList.remove('active');});
+  btn.classList.add('active'); panel.classList.add('active');
+  _omTab=name;
+  _omRender(name);
+  try{ if(typeof closeSide==='function') closeSide(); }catch(e){}
+  try{ window.scrollTo(0,0); }catch(e){}
+  _omBackBtn();
+  if(push!==false){ try{ history.pushState({omTab:name},'', '#'+name); }catch(e){} }
+}
+function _omBackBtn(){
+  var b=document.getElementById('appBack');
+  if(b) b.classList.toggle('show', _omTab!=='today');
+}
+function omBack(){
+  try{ if(history.length>1){ history.back(); return; } }catch(e){}
+  goTab('today', true);
+}
 document.querySelectorAll('.tab').forEach(function(t){
-  t.addEventListener('click',function(){
-    document.querySelectorAll('.tab').forEach(function(x){x.classList.remove('active');});
-    document.querySelectorAll('.panel').forEach(function(x){x.classList.remove('active');});
-    t.classList.add('active');
-    document.getElementById('panel-'+t.dataset.tab).classList.add('active');
-    if(t.dataset.tab==='admin'){loadUsers();}
-    if(t.dataset.tab==='profile'){loadProfileForm();}
-    if(t.dataset.tab==='reports'){renderReport();}
-    if(t.dataset.tab==='estimates'){renderEstimates();}
-    if(t.dataset.tab==='sketches'){renderSketches();}
-    if(t.dataset.tab==='log'){renderLog();}
-    if(t.dataset.tab==='schedule'){renderSchedule();}
-    if(t.dataset.tab==='dispatch'){renderDispatch();}
-    if(t.dataset.tab==='billing'){renderBilling();}
-    if(t.dataset.tab==='invite'){renderInvite();}
-    if(t.dataset.tab==='compliance'){renderCompliance();}
-    if(t.dataset.tab==='equipment'){renderEquipment();}
-    if(t.dataset.tab==='punch'){renderPunch();}
-    if(t.dataset.tab==='safety'){renderSafety();}
-    if(t.dataset.tab==='pricebook'){renderPricebook();}
-    if(t.dataset.tab==='selections'){renderSelections();}
-    if(t.dataset.tab==='changes'){renderChangeOrders();}
-    if(t.dataset.tab==='costs'){renderCosts();}
-    if(t.dataset.tab==='hours'){renderHours();}
-    if(t.dataset.tab==='leads'){renderLeads();}
-    if(t.dataset.tab==='plans'){renderPlans();}
-    if(t.dataset.tab==='customers'){renderCustomers();}
-    if(t.dataset.tab==='profile'){checkPayStatus(); setQuoteLink();}
-  });
+  t.addEventListener('click', function(){ goTab(t.dataset.tab, true); });
 });
+window.addEventListener('popstate', function(e){
+  var openM=document.querySelector('.modal-bg.show');
+  if(openM){ openM.classList.remove('show'); return; }   // back closes an open modal first
+  var st=e.state||{};
+  var tab=st.omTab || (location.hash||'').replace('#','') || 'today';
+  if(document.getElementById('panel-'+tab)) goTab(tab, false);
+});
+function _omInitNav(){
+  try{
+    var hsh=(location.hash||'').replace('#','');
+    if(hsh && document.getElementById('panel-'+hsh)) goTab(hsh, false);
+    else { _omTab='today'; _omBackBtn(); }
+    history.replaceState({omTab:_omTab}, '', location.hash||'');
+  }catch(e){}
+}
+
 // ====== MODALS ======
-function openModal(id){document.getElementById(id).classList.add('show');}
-function closeModal(id){document.getElementById(id).classList.remove('show');}
+function openModal(id){
+  var el=document.getElementById(id); if(!el) return;
+  el.classList.add('show');
+  try{ history.pushState({omModal:id, omTab:(typeof _omTab!=='undefined'?_omTab:'today')}, '', location.hash||''); }catch(e){}
+}
+function closeModal(id){
+  try{ var st=history.state||{}; if(st.omModal===id){ history.back(); return; } }catch(e){}
+  var el=document.getElementById(id); if(el) el.classList.remove('show');
+}
 function _dl(fn,txt,mime){var b=new Blob([txt],{type:mime||'text/plain'});var u=URL.createObjectURL(b);var a=document.createElement('a');a.href=u;a.download=fn;document.body.appendChild(a);a.click();setTimeout(function(){document.body.removeChild(a);URL.revokeObjectURL(u);},120);}
 function _csvCell(v){v=(v==null?'':String(v));if(/[",\n]/.test(v))v='"'+v.replace(/"/g,'""')+'"';return v;}
 function _csv(rows){if(!rows||!rows.length)return '';var cols=Object.keys(rows[0]);var out=cols.join(',')+'\n';rows.forEach(function(r){out+=cols.map(function(k){return _csvCell(r[k]);}).join(',')+'\n';});return out;}
@@ -2605,6 +2653,7 @@ function logout(){
 
 function enterApp(){
   document.getElementById('authWrap').style.display='none';
+  try{ setTimeout(_omInitNav, 0); }catch(e){}
   try{ var _fm=document.getElementById('floatMic'); if(_fm) _fm.style.display='flex'; var _fs=document.getElementById('floatSupport'); if(_fs && window.CURRENT_USER && CURRENT_USER.username!=='siamakk2') _fs.style.display='flex'; }catch(e){}
   try{ if(CURRENT_USER && CURRENT_USER.role!=='demo' && CURRENT_USER.username!=='demo'){ var _db=document.getElementById('demoBanner'); if(_db) _db.style.display='none'; } }catch(e){}
   document.body.classList.remove('locked');
