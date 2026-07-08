@@ -580,6 +580,10 @@ button:active, .btn:active, .btn-ghost:active, .tab:active, [role="button"]:acti
 .lw-mode.active{border-color:#2D7FF9;background:#f2f7ff;}
 .lw-mode.active b{color:#1565C0;}
 </style>
+<style id="toast-css">
+#omToast{position:fixed;left:50%;bottom:26px;transform:translate(-50%,20px);background:#0A1628;color:#fff;font-size:14px;font-weight:600;padding:13px 20px;border-radius:11px;box-shadow:0 10px 34px rgba(10,22,40,.32);z-index:9999;opacity:0;pointer-events:none;transition:opacity .22s,transform .22s;max-width:88vw;text-align:center;line-height:1.45;}
+#omToast.show{opacity:1;transform:translate(-50%,0);}
+</style>
 </head>
 <body class="locked">
 <div id="demoBanner" style="position:relative;z-index:1;background:linear-gradient(90deg,#0A1628,#1565C0);color:#fff;padding:10px 16px;display:flex;align-items:center;justify-content:center;gap:16px;flex-wrap:wrap;font-family:'Outfit',sans-serif;font-size:14px;box-shadow:0 2px 12px rgba(0,0,0,0.2);">
@@ -4246,6 +4250,16 @@ function renderBilling(){
     html='<div class="bill-h">Manage your Orchamind subscription.</div><div class="bill-p">Add or update your payment method, view invoices, or manage your plan. Orchamind is $500/month, and your first month is free.</div>';
   }
   el.innerHTML=html;
+}
+function showToast(msg, ms){
+  try{
+    var t=document.getElementById('omToast');
+    if(!t){ t=document.createElement('div'); t.id='omToast'; document.body.appendChild(t); }
+    t.textContent=String(msg||'');
+    t.classList.add('show');
+    if(window._toastTimer)clearTimeout(window._toastTimer);
+    window._toastTimer=setTimeout(function(){ t.classList.remove('show'); }, ms||4200);
+  }catch(e){ if(window.console)console.log('[toast]',msg); }
 }
 function manageBilling(){
   var u=(typeof CURRENT_USER!=='undefined'&&CURRENT_USER&&CURRENT_USER.username)?CURRENT_USER.username:'';
