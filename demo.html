@@ -572,6 +572,14 @@ button:active, .btn:active, .btn-ghost:active, .tab:active, [role="button"]:acti
 .bill-h{font-size:17px;font-weight:700;color:var(--navy,#0A1628);margin-bottom:6px;}
 .bill-p{font-size:13.5px;color:var(--muted,#5A6B7D);line-height:1.55;}
 </style>
+<style id="lwmode-css">
+.lw-modes{display:flex;gap:9px;margin-bottom:14px;flex-wrap:wrap;}
+.lw-mode{flex:1;min-width:150px;text-align:left;background:#fff;border:1.5px solid var(--line,#e1e8f0);border-radius:11px;padding:11px 13px;cursor:pointer;font-family:inherit;transition:border-color .15s,background .15s;}
+.lw-mode b{display:block;font-size:13.5px;color:var(--navy,#0A1628);font-weight:700;margin-bottom:2px;}
+.lw-mode span{font-size:11.5px;color:var(--muted,#5A6B7D);}
+.lw-mode.active{border-color:#2D7FF9;background:#f2f7ff;}
+.lw-mode.active b{color:#1565C0;}
+</style>
 </head>
 <body class="locked">
 <div id="demoBanner" style="position:relative;z-index:1;background:linear-gradient(90deg,#0A1628,#1565C0);color:#fff;padding:10px 16px;display:flex;align-items:center;justify-content:center;gap:16px;flex-wrap:wrap;font-family:'Outfit',sans-serif;font-size:14px;box-shadow:0 2px 12px rgba(0,0,0,0.2);">
@@ -1567,12 +1575,13 @@ button:active, .btn:active, .btn-ghost:active, .tab:active, [role="button"]:acti
 </div></div>
 
 <div class="modal-bg" id="leadWidgetModal"><div class="modal" style="max-width:580px;">
-  <h3>Get leads from your website</h3>
-  <p style="color:var(--muted);font-size:13.5px;margin:-2px 0 14px;">Paste this one line into your website. When a visitor fills out the form, their details drop straight into this Leads tab — automatically, with no other setup.</p>
+  <h3>Get leads &amp; bookings from your website</h3>
+  <p style="color:var(--muted);font-size:13.5px;margin:-2px 0 12px;">Pick what you want on your site, then paste the one line of code. Everything lands right here in your Leads tab — no other setup.</p>
+  <div class="lw-modes"><button type="button" class="lw-mode active" id="lwModeQuote" onclick="setLeadWidgetMode('quote')"><b>Quote request</b><span>Visitor asks for a quote</span></button><button type="button" class="lw-mode" id="lwModeBook" onclick="setLeadWidgetMode('book')"><b>Online booking</b><span>Visitor picks a date &amp; time</span></button></div>
   <div class="field"><label>Your embed code</label><textarea id="lwCode" readonly rows="2" style="font-family:ui-monospace,Menlo,monospace;font-size:12px;line-height:1.45;"></textarea></div>
   <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;"><button class="btn" onclick="copyLeadWidget()">Copy code</button><a id="lwPreview" class="btn btn-ghost" href="#" target="_blank" rel="noopener">See a live preview</a><span id="lwMsg" style="font-size:12.5px;font-weight:600;"></span></div>
-  <div class="lw-steps"><div class="lw-step"><b>1</b><span>Copy the code above.</span></div><div class="lw-step"><b>2</b><span>Paste it into your website where you want the form — or send it to whoever manages your site.</span></div><div class="lw-step"><b>3</b><span>That's it. New leads show up right here in your Leads tab.</span></div></div>
-  <div class="lw-tip">Optional: customize with <code>data-color="#F9A825"</code> or <code>data-title="Get a free estimate"</code> on the script tag. Turn it into an <b>online booking form</b> by adding <code>data-mode="book"</code>.</div>
+  <div class="lw-steps"><div class="lw-step"><b>1</b><span>Copy the code above.</span></div><div class="lw-step"><b>2</b><span>Paste it into your website where you want the form — or send it to whoever manages your site.</span></div><div class="lw-step"><b>3</b><span>That's it. New leads and booking requests show up right here in your Leads tab.</span></div></div>
+  <div class="lw-tip">Optional: customize with <code>data-color="#F9A825"</code> or <code>data-title="Get a free estimate"</code> on the script tag.</div>
   <div class="modal-foot"><button class="btn btn-ghost" onclick="closeModal('leadWidgetModal')">Close</button></div>
 </div></div>
 
@@ -4183,15 +4192,25 @@ function aiSuggestCerts(){
     save();renderCompliance();if(msg)msg.textContent='Added '+added+' certifications for '+nm+' \u2014 set expiry dates as needed.';
   },function(err){if(msg)msg.textContent='AI error: '+err;});
 }
-function openLeadWidget(){
+var _lwMode='quote';
+function setLeadWidgetMode(mode){
+  _lwMode=(mode==='book')?'book':'quote';
+  var q=document.getElementById('lwModeQuote'), b=document.getElementById('lwModeBook');
+  if(q)q.classList.toggle('active',_lwMode==='quote');
+  if(b)b.classList.toggle('active',_lwMode==='book');
+  _lwRender();
+}
+function _lwRender(){
   var u=(typeof CURRENT_USER!=='undefined'&&CURRENT_USER&&CURRENT_USER.username)?CURRENT_USER.username:'';
-  var code='<script src="https://orchamind.com/embed.js" data-orchamind="'+(u||'YOUR-ACCOUNT')+'"><\/script>';
+  var modeAttr=(_lwMode==='book')?' data-mode="book"':'';
+  var code='<script src="https://orchamind.com/embed.js" data-orchamind="'+(u||'YOUR-ACCOUNT')+'"'+modeAttr+'><\/script>';
   var ta=document.getElementById('lwCode');if(ta)ta.value=code;
-  var pv=document.getElementById('lwPreview');if(pv)pv.href='https://orchamind.com/embed-preview.html?c='+encodeURIComponent(u||'demo');
+  var pv=document.getElementById('lwPreview');
+  if(pv)pv.href='https://orchamind.com/embed-preview.html?c='+encodeURIComponent(u||'demo')+(_lwMode==='book'?'&mode=book':'');
   var msg=document.getElementById('lwMsg');
   if(msg){if(!u){msg.style.color='#B8860B';msg.textContent='Tip: sign in to get your personal code.';}else{msg.style.color='';msg.textContent='';}}
-  openModal('leadWidgetModal');
 }
+function openLeadWidget(){ setLeadWidgetMode('quote'); openModal('leadWidgetModal'); }
 function copyLeadWidget(){
   var t=document.getElementById('lwCode');if(!t)return;t.select();t.setSelectionRange(0,9999);
   var done=function(){var m=document.getElementById('lwMsg');if(m){m.style.color='#2E9B5B';m.textContent='\u2713 Copied! Paste it on your website.';}};
