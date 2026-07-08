@@ -613,21 +613,22 @@ button:active, .btn:active, .btn-ghost:active, .tab:active, [role="button"]:acti
 .jd-actions .ai-btn{background:var(--blue,#2D7FF9);color:#fff;border-color:var(--blue,#2D7FF9);}
 </style>
 <style id="ob-css">
-.ob-card{position:relative;background:linear-gradient(135deg,#0A1628,#13243d);border-radius:16px;padding:22px 22px 18px;margin-bottom:20px;color:#fff;box-shadow:0 8px 30px rgba(10,22,40,.18);}
+.ob-card{position:relative;background:linear-gradient(135deg,#0A1628,#13243d);border-radius:14px;padding:18px 18px 15px;margin-bottom:18px;color:#fff;box-shadow:0 8px 30px rgba(10,22,40,.18);}
 .ob-x{position:absolute;top:12px;right:14px;background:none;border:none;color:#7d90ac;font-size:24px;line-height:1;cursor:pointer;}
-.ob-title{font-family:'Outfit',sans-serif;font-size:20px;font-weight:800;margin-bottom:6px;}
+.ob-title{font-family:'Outfit',sans-serif;font-size:17px;font-weight:800;margin-bottom:4px;}
 .ob-lead{font-size:13.5px;color:#c2d0e2;line-height:1.55;max-width:640px;}
 .ob-bar{height:7px;background:rgba(255,255,255,.12);border-radius:20px;margin:16px 0 6px;overflow:hidden;}
 .ob-bar-fill{height:100%;background:linear-gradient(90deg,#2D7FF9,#5B9DFF);border-radius:20px;transition:width .4s;}
 .ob-pct{font-size:11.5px;color:#8fa2bd;font-weight:600;margin-bottom:14px;}
-.ob-items{display:flex;flex-direction:column;gap:8px;}
-.ob-item{display:flex;align-items:center;gap:12px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);border-radius:11px;padding:11px 13px;}
+.ob-items{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+@media(max-width:640px){.ob-items{grid-template-columns:1fr;}}
+.ob-item{display:flex;align-items:center;gap:10px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);border-radius:10px;padding:9px 11px;}
 .ob-item.is-done{opacity:.6;}
 .ob-check{width:22px;height:22px;border-radius:50%;border:2px solid #3f5878;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;}
 .ob-check.done{background:#2E9B5B;border-color:#2E9B5B;color:#fff;}
 .ob-item-txt{flex:1;min-width:0;}
 .ob-item-l{font-size:14px;font-weight:700;color:#fff;}
-.ob-item-d{font-size:12px;color:#a7b6cc;margin-top:1px;}
+.ob-item-d{font-size:11px;color:#a7b6cc;margin-top:1px;line-height:1.35;}
 .ob-go{background:#2D7FF9;color:#fff;border:none;border-radius:8px;padding:8px 15px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;flex-shrink:0;}
 .ob-done-lbl{font-size:12px;color:#2E9B5B;font-weight:700;flex-shrink:0;}
 </style>
@@ -2212,7 +2213,7 @@ function renderOnboarding(){
   }).join('');
   card.innerHTML='<div class="ob-card"><button class="ob-x" onclick="dismissOnboard()" title="Hide">&times;</button>'
     +'<div class="ob-head"><div class="ob-title">Welcome to Orchamind, '+esc(name)+' \ud83d\udc4b</div>'
-    +'<div class="ob-lead">You\u2019re set up with a clean workspace. Orchamind runs your whole contracting business \u2014 estimates, crew, jobs, client updates, and billing \u2014 and the AI does the paperwork. Knock out these '+items.length+' quick steps and you\u2019re rolling.</div></div>'
+    +'<div class="ob-lead">Finish these '+items.length+' quick steps so Orchamind can work for you \u2014 you can do them now or come back anytime.</div></div>'
     +'<div class="ob-bar"><div class="ob-bar-fill" style="width:'+pct+'%"></div></div><div class="ob-pct">'+done+' of '+items.length+' done</div>'
     +'<div class="ob-items">'+rows+'</div></div>';
   card.style.display='block';
