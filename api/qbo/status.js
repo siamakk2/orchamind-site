@@ -1,3 +1,19 @@
+var crypto = require('crypto');
+function _sbSecret(){ return (process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SECRET_KEY || process.env.SUPABASE_SERVICE_KEY || '').trim(); }
+function sessUser(req){
+  try{
+    var KEY=_sbSecret(); if(!KEY) return null;
+    var c=(req.headers && req.headers.cookie) || '';
+    var m=c.match(/(?:^|;\s*)orcha_sess=([^;]+)/); if(!m) return null;
+    var p=decodeURIComponent(m[1]).split('|'); if(p.length!==4) return null;
+    var sig=crypto.createHmac('sha256',KEY).update(p[0]+'|'+p[1]+'|'+p[2]).digest('hex');
+    if(sig!==p[3]) return null;
+    if(Date.now()>Number(p[2])) return null;
+    if(p[1]==='demo') return null;
+    return p[0];
+  }catch(e){ return null; }
+}
+
 // QuickBooks connection status check: reads saved token, refreshes if needed, pings QBO CompanyInfo.
 var https = require('https');
 function esc(s){ return String(s).replace(/[&<>]/g, function(ch){ return {'&':'&amp;','<':'&lt;','>':'&gt;'}[ch]; }); }
@@ -29,7 +45,9 @@ module.exports = async (req, res) => {
     var SB_KEY = (process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SECRET_KEY || process.env.SUPABASE_SERVICE_KEY || '').trim();
     if (!SB_KEY) { res.statusCode=200; return res.end(page('Can\u2019t check', '<p class="bad">No Supabase key in env.</p>')); }
     // 1) read saved token
-    var gr = await httpReq('GET', SB_URL + '/rest/v1/qbo_tokens?id=eq.default&select=*',
+    var _u = sessUser(req);
+    if (!_u) { res.statusCode=200; return res.end(page('Please sign in first', '<p>Log in to Orchamind to see <b>your</b> QuickBooks connection.</p><p><a href="/app">Go to Orchamind &rarr;</a></p>')); }
+    var gr = await httpReq('GET', SB_URL + '/rest/v1/qbo_tokens?id=eq.' + encodeURIComponent(_u) + '&select=*',
       { 'apikey': SB_KEY, 'Authorization': 'Bearer ' + SB_KEY, 'Accept':'application/json' });
     var rows; try { rows = JSON.parse(gr.text||'[]'); } catch(e){ rows = []; }
     if (gr.status<200 || gr.status>=300) { res.statusCode=200; return res.end(page('Can\u2019t read token', '<pre>HTTP '+esc(String(gr.status))+' '+esc(String(gr.text).slice(0,300))+'</pre>')); }
@@ -51,7 +69,7 @@ module.exports = async (req, res) => {
         var nt; try { nt = JSON.parse(rr.text||'{}'); } catch(e){ nt={}; }
         if (nt.access_token) {
           access = nt.access_token; refreshed = true;
-          var row = JSON.stringify({ id:'default', realm_id: realm, access_token: nt.access_token, refresh_token: nt.refresh_token||t.refresh_token, expires_at: Date.now()+((nt.expires_in||3600)*1000), updated_at:new Date().toISOString() });
+          var row = JSON.stringify({ id:_u, realm_id: realm, access_token: nt.access_token, refresh_token: nt.refresh_token||t.refresh_token, expires_at: Date.now()+((nt.expires_in||3600)*1000), updated_at:new Date().toISOString() });
           await httpReq('POST', SB_URL + '/rest/v1/qbo_tokens?on_conflict=id',
             { 'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY,'Content-Type':'application/json','Prefer':'resolution=merge-duplicates' }, row);
         } else { refreshNote = 'Refresh returned HTTP '+rr.status+' '+String(rr.text).slice(0,200); }
