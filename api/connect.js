@@ -84,6 +84,13 @@ module.exports = async function handler(req, res) {
       return res.status(200).json({ ok: true, url: link.url });
     }
 
+    if (action === 'dashboard') {
+      if (!connectId) return res.status(200).json({ ok: false, error: 'No payout account yet. Set up online payments first.' });
+      var ll = await stripe('/v1/accounts/' + connectId + '/login_links', 'POST', {});
+      if (ll && ll.url) return res.status(200).json({ ok: true, url: ll.url });
+      return res.status(200).json({ ok: false, error: (ll && ll.error && ll.error.message) || 'Could not open your Stripe payout dashboard.' });
+    }
+
     if (action === 'payLink') {
       if (!connectId) return res.status(200).json({ ok: false, error: 'Set up your payout account first, then you can create payment links.' });
       var amount = Math.round(Number(body.amount) * 100);
