@@ -691,6 +691,13 @@ button:active, .btn:active, .btn-ghost:active, .tab:active, [role="button"]:acti
       <div style="text-align:center;margin-top:14px;font-size:13px;color:#5A6B7D;">Already have an account? <a href="#" onclick="showForm('formLogin');return false;" style="color:#2D7FF9;font-weight:700;">Log in</a></div>
     </div>
 
+    <!-- MFA CODE -->
+    <div id="formMfa" style="display:none;">
+      <div style="margin-bottom:13px;"><label style="display:block;font-size:12px;font-weight:600;color:#5A6B7D;margin-bottom:6px;">6-digit code</label><input id="mfaCode" type="text" inputmode="numeric" maxlength="6" placeholder="000000" style="width:100%;border:1.5px solid #d8e0ea;border-radius:9px;padding:12px;font-size:20px;letter-spacing:.3em;text-align:center;font-family:inherit;"></div>
+      <p style="font-size:12.5px;color:#5A6B7D;margin-bottom:12px;">We emailed a 6-digit code to the address on your account. Enter it to finish signing in.</p>
+      <button onclick="verifyMfa()" id="mfaBtn" style="width:100%;background:#1565C0;color:#fff;border:none;border-radius:9px;padding:13px;font-weight:700;font-size:15px;cursor:pointer;">Verify &amp; sign in</button>
+      <button onclick="showForm('formLogin');document.getElementById('authSubtitle').textContent='Sign in to your workspace';" style="width:100%;background:none;border:none;color:#5A6B7D;margin-top:10px;font-size:13px;cursor:pointer;">&larr; Back to login</button>
+    </div>
     <!-- CHANGE PASSWORD (first login) -->
     <div id="formChange" style="display:none;">
       <p style="font-size:13.5px;color:#5A6B7D;margin-bottom:16px;text-align:center;">Welcome! Please set your own password to continue.</p>
@@ -1325,6 +1332,12 @@ button:active, .btn:active, .btn-ghost:active, .tab:active, [role="button"]:acti
 
   <!-- ADMIN / TEAM PANEL -->
   <div class="panel" id="panel-profile">
+    <div id="mfaRow" style="display:none;background:#f4f7fb;border:1px solid #e6ecf3;border-radius:11px;padding:13px 15px;margin-bottom:16px;">
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;">
+        <div><div style="font-weight:700;font-size:14px;">Two-factor login (2FA)</div><div style="font-size:12.5px;color:#5A6B7D;margin-top:2px;">Email a 6-digit code at each login for extra security.</div></div>
+        <button id="mfaToggleBtn" onclick="toggleMfa()" style="background:#2D7FF9;color:#fff;border:none;border-radius:8px;padding:9px 15px;font-weight:700;font-size:13px;cursor:pointer;white-space:nowrap;">Enable</button>
+      </div>
+    </div>
     <div class="panel-head"><h2>Company Profile</h2></div>
     <div style="max-width:640px;">
       <p style="font-size:13px;color:#5A6B7D;margin:0 0 18px;">Your logo and details show at the top of your app. When you're ready, you can turn this same branding into a website.</p>
@@ -2291,7 +2304,27 @@ function onLogoPick(e){
   }; img.src=rd.result; };
   rd.readAsDataURL(f);
 }
+function toggleMfa(){
+  var enable=!(CURRENT_USER&&CURRENT_USER.mfaEnabled);
+  var btn=document.getElementById('mfaToggleBtn'); if(btn){btn.disabled=true;btn.textContent='...';}
+  fetch('/api/accounts',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'mfaToggle',enable:enable})})
+    .then(function(r){return r.json();}).then(function(d){
+      if(btn)btn.disabled=false;
+      if(d&&d.ok){ if(CURRENT_USER)CURRENT_USER.mfaEnabled=d.enabled; try{sessionStorage.setItem('hci_session',JSON.stringify(CURRENT_USER));}catch(e){} _mfaBtnState(); if(typeof showToast==='function')showToast(d.enabled?'\u2713 Two-factor login enabled':'Two-factor login disabled'); }
+      else { _mfaBtnState(); if(typeof showToast==='function')showToast((d&&d.error)||'Could not update.'); }
+    }).catch(function(){ if(btn)btn.disabled=false; _mfaBtnState(); });
+}
+function _mfaBtnState(){
+  var row=document.getElementById('mfaRow'); var btn=document.getElementById('mfaToggleBtn');
+  if(!row||!btn) return;
+  var isOwnerLike=(CURRENT_USER&&(CURRENT_USER.role!=='crew'));
+  row.style.display=isOwnerLike?'block':'none';
+  var on=!!(CURRENT_USER&&CURRENT_USER.mfaEnabled);
+  btn.textContent=on?'Disable':'Enable';
+  btn.style.background=on?'#8a97a8':'#2D7FF9';
+}
 function loadProfileForm(){
+  try{ _mfaBtnState(); }catch(e){}
   var pr=(CURRENT_USER&&CURRENT_USER.profile)?CURRENT_USER.profile:{};
   PF_LOGO=pr.logo||'';
   var set=function(id,v){var el=document.getElementById(id); if(el)el.value=v||'';};
@@ -2780,6 +2813,17 @@ function authSeedOwner(){
     }).catch(function(){document.getElementById('suBtn').textContent='Create Owner Account';authErr('Server error.');});
 }
 
+function verifyMfa(){
+  var code=(document.getElementById('mfaCode').value||'').replace(/[^0-9]/g,'');
+  if(code.length<6){authErr('Enter the 6-digit code.');return;}
+  var btn=document.getElementById('mfaBtn'); btn.textContent='Verifying...'; btn.disabled=true;
+  fetch('/api/accounts',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'mfaVerify',username:window._mfaUser,code:code})})
+    .then(function(r){return r.json();}).then(function(d){
+      btn.textContent='Verify & sign in'; btn.disabled=false;
+      if(d&&d.ok){ CURRENT_USER=d.user; sessionStorage.setItem('hci_session',JSON.stringify(CURRENT_USER)); enterApp(); }
+      else { authErr((d&&d.error)||'Could not verify.'); }
+    }).catch(function(){ btn.textContent='Verify & sign in'; btn.disabled=false; authErr('Network error.'); });
+}
 function authLogin(){
   var user=document.getElementById('liUser').value.trim().toLowerCase();
   var pass=document.getElementById('liPass').value;
@@ -2788,6 +2832,7 @@ function authLogin(){
   fetch('/api/accounts',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'login',username:user,password:pass})})
     .then(function(r){return r.json();}).then(function(d){
       document.getElementById('liBtn').textContent='Log In';
+      if(d&&d.ok&&d.mfa){ window._mfaUser=d.username; showForm('formMfa'); document.getElementById('authSubtitle').textContent='Check your email'; var mc=document.getElementById('mfaCode'); if(mc){mc.value='';mc.focus();} return; }
       if(d&&d.ok){
         CURRENT_USER=d.user;
         if(d.user&&d.user.paused){ showRenewWall(d.user); return; }
