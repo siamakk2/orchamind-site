@@ -621,7 +621,7 @@ button:active, .btn:active, .btn-ghost:active, .tab:active, [role="button"]:acti
 .ob-bar-fill{height:100%;background:linear-gradient(90deg,#2D7FF9,#5B9DFF);border-radius:20px;transition:width .4s;}
 .ob-pct{font-size:11.5px;color:#8fa2bd;font-weight:600;margin-bottom:14px;}
 .ob-items{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
-@media(max-width:640px){.ob-items{grid-template-columns:1fr;}}
+@media(max-width:640px){.ob-items{gap:7px;}.ob-item{flex-direction:column;align-items:flex-start;gap:6px;padding:11px;}.ob-item-l{font-size:13px;}.ob-item-d{font-size:10.5px;}.ob-go{width:100%;}.ob-check{width:19px;height:19px;}}
 .ob-item{display:flex;align-items:center;gap:10px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);border-radius:10px;padding:9px 11px;}
 .ob-item.is-done{opacity:.6;}
 .ob-check{width:22px;height:22px;border-radius:50%;border:2px solid #3f5878;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;}
@@ -2281,12 +2281,12 @@ function openJobDetail(id){
   openModal("jobDetailModal");
 }
 function _obState(){
-  var st={company:false, job:false, voice:false, widget:false, pay:false};
+  var st={company:false, job:false, crew:false, widget:false, pay:false};
   try{
     var p=(CURRENT_USER&&CURRENT_USER.profile)||{};
     st.company = !!(p.phone || p.logo || p.address || p.license);
     st.job = (typeof jobs!=='undefined' && jobs && jobs.length>0);
-    st.voice = localStorage.getItem('om_ob_voice')==='1';
+    st.crew = (typeof crew!=='undefined' && crew && crew.length>0);
     st.widget = localStorage.getItem('om_ob_widget')==='1';
     st.pay = !!window._payConnected;
   }catch(e){}
@@ -2301,11 +2301,11 @@ function renderOnboarding(){
   if(crewMode || dismissed || (typeof IS_REAL_APP==='undefined') || !IS_REAL_APP){ card.style.display='none'; return; }
   var st=_obState();
   var items=[
-    {k:'company', label:'Add your company details', desc:'Your name, phone, and logo brand your invoices, widget, and client updates.', tab:'profile', mark:''},
-    {k:'job', label:'Add your first job', desc:'Create a real project so the AI has something to work with.', tab:'jobs', mark:''},
-    {k:'voice', label:'Try the AI assistant', desc:'Ask it a question by voice or text \u2014 it is the heart of Orchamind.', tab:'assistant', mark:'voice'},
-    {k:'widget', label:'Get your website widget', desc:'One line of code turns your site into a lead & booking machine.', tab:'leads', mark:'widget'},
-    {k:'pay', label:'Set up online payments', desc:'Let clients pay you by card. Money goes straight to your bank.', tab:'profile', mark:''}
+    {k:'company', label:'Company details', desc:'Name, phone & logo for your invoices and widget.', tab:'profile', mark:''},
+    {k:'job', label:'Add a project', desc:'Create your first job to start tracking it.', tab:'jobs', mark:''},
+    {k:'crew', label:'Add your crew', desc:'Add your team so you can assign and schedule them.', tab:'crew', mark:''},
+    {k:'widget', label:'Website widget', desc:'One line of code turns your site into a lead machine.', tab:'leads', mark:'widget'},
+    {k:'pay', label:'Online payments', desc:'Get paid by card, straight to your bank.', tab:'profile', mark:''}
   ];
   var done=items.filter(function(i){return st[i.k];}).length;
   if(done>=items.length){ try{ localStorage.setItem('om_ob_dismissed','1'); }catch(e){} card.style.display='none'; return; }
