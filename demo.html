@@ -687,6 +687,34 @@ button:active, .btn:active, .btn-ghost:active, .tab:active, [role="button"]:acti
 .ca-mail{background:#eef3fa;color:#1565C0;}
 .ca-btn:hover{filter:brightness(.97);}
 </style>
+<style id="fab-css">
+#aiFab{position:fixed;right:18px;bottom:20px;z-index:900;display:flex;align-items:center;gap:8px;background:linear-gradient(135deg,#2D7FF9,#1565C0);color:#fff;border:none;border-radius:30px;padding:13px 18px 13px 15px;font-family:inherit;font-size:14px;font-weight:700;cursor:pointer;box-shadow:0 8px 26px rgba(45,127,249,.42);transition:transform .15s,box-shadow .15s,opacity .2s;}
+#aiFab:hover{transform:translateY(-2px);box-shadow:0 12px 32px rgba(45,127,249,.5);}
+#aiFab svg{width:21px;height:21px;}
+#aiFab.hidden{opacity:0;pointer-events:none;transform:scale(.8);}
+@media(max-width:600px){#aiFab span{display:none;}#aiFab{padding:15px;border-radius:50%;bottom:82px;}}
+#aiChatPop{position:fixed;right:18px;bottom:20px;z-index:901;width:370px;max-width:calc(100vw - 24px);height:520px;max-height:calc(100vh - 90px);background:#fff;border-radius:18px;box-shadow:0 24px 70px rgba(10,22,40,.34);display:none;flex-direction:column;overflow:hidden;transform-origin:bottom right;}
+#aiChatPop.show{display:flex;animation:fabIn .2s cubic-bezier(.2,.7,.3,1);}
+@keyframes fabIn{from{opacity:0;transform:translateY(16px) scale(.96);}to{opacity:1;transform:none;}}
+@media(max-width:600px){#aiChatPop{right:0;left:0;bottom:0;width:100%;max-width:100%;height:80vh;border-radius:18px 18px 0 0;}}
+.aicp-head{background:linear-gradient(135deg,#0A1628,#16294a);color:#fff;padding:15px 16px;display:flex;justify-content:space-between;align-items:center;}
+.aicp-head b{font-family:'Outfit',sans-serif;font-size:15px;}
+.aicp-sub{font-size:11.5px;color:#9fb2cd;margin-top:1px;}
+.aicp-x{background:rgba(255,255,255,.14);border:none;color:#fff;width:28px;height:28px;border-radius:50%;font-size:18px;cursor:pointer;line-height:1;}
+.aicp-msgs{flex:1;overflow-y:auto;padding:14px;display:flex;flex-direction:column;gap:9px;background:#f6f8fb;}
+.aicp-msg{max-width:85%;padding:10px 13px;border-radius:14px;font-size:14px;line-height:1.45;}
+.aicp-msg.user{background:#2D7FF9;color:#fff;align-self:flex-end;border-bottom-right-radius:5px;}
+.aicp-msg.ai{background:#fff;color:#0A1628;align-self:flex-start;border-bottom-left-radius:5px;box-shadow:0 1px 4px rgba(10,22,40,.06);}
+.aicp-dots{display:flex;gap:4px;padding:6px 16px;}
+.aicp-dots span{width:7px;height:7px;border-radius:50%;background:#b7c3d4;animation:fabDot 1.2s infinite;}
+.aicp-dots span:nth-child(2){animation-delay:.2s;}.aicp-dots span:nth-child(3){animation-delay:.4s;}
+@keyframes fabDot{0%,60%,100%{opacity:.3;}30%{opacity:1;}}
+.aicp-form{display:flex;gap:8px;padding:11px 12px;border-top:1px solid #e6ecf3;background:#fff;}
+.aicp-form input{flex:1;border:1.5px solid #dde5ee;border-radius:22px;padding:11px 15px;font-size:14px;font-family:inherit;outline:none;}
+.aicp-form input:focus{border-color:#2D7FF9;}
+.aicp-form button{background:#2D7FF9;color:#fff;border:none;width:42px;height:42px;border-radius:50%;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.aicp-form button svg{width:18px;height:18px;}
+</style>
 </head>
 <body class="locked">
 <div id="demoBanner" style="position:relative;z-index:1;background:linear-gradient(90deg,#0A1628,#1565C0);color:#fff;padding:10px 16px;display:flex;align-items:center;justify-content:center;gap:16px;flex-wrap:wrap;font-family:'Outfit',sans-serif;font-size:14px;box-shadow:0 2px 12px rgba(0,0,0,0.2);">
@@ -2908,6 +2936,7 @@ function logout(){
 function enterApp(){
   document.getElementById('authWrap').style.display='none';
   try{ setTimeout(_omInitNav, 0); }catch(e){}
+  try{ toggleFabChat_init(); }catch(e){}
   try{ var _fn=(CURRENT_USER&&CURRENT_USER.name)?CURRENT_USER.name.split(' ')[0]:''; var _gt=document.getElementById('aiGreeting'); if(_gt&&_fn) _gt.innerHTML='Hey '+esc(_fn)+'! I\u2019m your AI assistant \u2014 ask me anything about your jobs, crew, schedule, or numbers, by voice or text.'; var _pt=document.getElementById('aiPanelTitle'); if(_pt&&CURRENT_USER&&CURRENT_USER.company) _pt.textContent=CURRENT_USER.company+' AI'; }catch(e){}
   try{ var _fm=document.getElementById('floatMic'); if(_fm) _fm.style.display='flex'; var _fs=document.getElementById('floatSupport'); if(_fs && window.CURRENT_USER && CURRENT_USER.username!=='siamakk2') _fs.style.display='flex'; }catch(e){}
   try{ if(CURRENT_USER && CURRENT_USER.role!=='demo' && CURRENT_USER.username!=='demo'){ var _db=document.getElementById('demoBanner'); if(_db) _db.style.display='none'; } }catch(e){}
@@ -3531,6 +3560,47 @@ function startApp(){
 </div>
 
 <script>
+function toggleFabChat(){
+  var pop=document.getElementById('aiChatPop'); var fab=document.getElementById('aiFab');
+  var open=pop.classList.toggle('show'); if(fab) fab.classList.toggle('hidden', open);
+  if(open){
+    var tt=document.getElementById('aicpTitle'); if(tt&&window.CURRENT_USER&&CURRENT_USER.company) tt.textContent=CURRENT_USER.company+' AI';
+    var msgs=document.getElementById('aicpMsgs');
+    if(msgs && !msgs.dataset.greeted){
+      var nm=(CURRENT_USER&&CURRENT_USER.name)?CURRENT_USER.name.split(' ')[0]:'';
+      _fabAdd('ai','Hey'+(nm?(' '+nm):'')+'! Ask me anything about your jobs, crew, schedule, or numbers \u2014 or how to get something done in the app.');
+      msgs.dataset.greeted='1';
+    }
+    setTimeout(function(){ var i=document.getElementById('aicpInput'); if(i)i.focus(); },80);
+  }
+}
+function _fabAdd(who, text){
+  var msgs=document.getElementById('aicpMsgs'); if(!msgs) return;
+  var d=document.createElement('div'); d.className='aicp-msg '+who; d.innerHTML=esc(text).replace(/\n/g,'<br>').replace(/\*\*(.+?)\*\*/g,'<b>$1</b>');
+  msgs.appendChild(d); msgs.scrollTop=msgs.scrollHeight;
+}
+function fabSend(){
+  var inp=document.getElementById('aicpInput'); var msg=(inp.value||'').trim(); if(!msg) return;
+  inp.value=''; _fabAdd('user',msg);
+  var dots=document.getElementById('aicpDots'); dots.style.display='flex';
+  try{ localStorage.setItem('om_ob_voice','1'); }catch(e){}
+  var nm=(CURRENT_USER&&CURRENT_USER.name)?CURRENT_USER.name.split(' ')[0]:'there';
+  var sys=buildContext()+"\n\nYou\u2019re chatting with "+nm+" inside the Orchamind app. Answer like a warm, sharp friend who runs their back office \u2014 real, natural, to the point, contractions, no corporate filler. Reference their actual jobs, crew, dates and dollar figures by name. If they ask how to do something in the app, give the short steps. Keep it brief unless they want detail.";
+  window._fabHist=window._fabHist||[];
+  var convo=window._fabHist.slice(-4).map(function(m){return (m.r==='u'?nm:'You')+': '+m.t;}).join('\n');
+  var full=(convo?convo+'\n\n':'')+nm+': '+msg;
+  callClaude(sys, full, function(text){
+    dots.style.display='none'; _fabAdd('ai',text);
+    window._fabHist.push({r:'u',t:msg}); window._fabHist.push({r:'a',t:text});
+  }, function(err){
+    dots.style.display='none'; _fabAdd('ai',"I couldn\u2019t reach the AI just now. Please try again in a moment.");
+  });
+}
+function toggleFabChat_init(){
+  var fab=document.getElementById('aiFab'); if(!fab) return;
+  var crew=(typeof isCrew==='function'&&isCrew());
+  fab.style.display=crew?'none':'flex';
+}
 function toggleSide(){var s=document.getElementById('appSide'),sc=document.getElementById('sideScrim');if(!s)return;if(s.classList.contains('open')){s.classList.remove('open');if(sc)sc.classList.remove('on');}else{s.classList.add('open');if(sc)sc.classList.add('on');}}
 function closeSide(){var s=document.getElementById('appSide'),sc=document.getElementById('sideScrim');if(s)s.classList.remove('open');if(sc)sc.classList.remove('on');}
 (function(){var s=document.getElementById('appSide');if(s){s.querySelectorAll('.tab').forEach(function(b){b.addEventListener('click',function(){if(window.innerWidth<=900){closeSide();}});});}})();
@@ -5350,5 +5420,16 @@ function createJobFromPlan(id){
 <div class="modal-bg" id="clientFormModal"><div class="modal"><button class="modal-x" onclick="closeModal('clientFormModal')">&times;</button><h3 id="clientFormTitle">Add client</h3><input type="hidden" id="clId"><div class="field"><label>Name</label><input type="text" id="clName" placeholder="e.g. The Andersons"></div><div class="field-row"><div class="field"><label>Phone</label><input type="tel" id="clPhone" placeholder="(707) 555-0142"></div><div class="field"><label>Email</label><input type="email" id="clEmail" placeholder="client@email.com"></div></div><div class="field"><label>Address</label><input type="text" id="clAddress" placeholder="Job or billing address"></div><div class="field"><label>Notes</label><textarea id="clNotes" placeholder="Anything worth remembering about this client"></textarea></div><button class="btn" onclick="saveClient()" style="width:100%;margin-top:6px;">Save client</button></div></div>
 <div class="modal-bg" id="clientDetailModal"><div class="modal" style="max-width:560px;"><button class="modal-x" onclick="closeModal('clientDetailModal')">&times;</button><div id="clientDetailBody"></div></div></div>
 <div class="modal-bg" id="threadModal"><div class="modal" style="max-width:520px;display:flex;flex-direction:column;max-height:82vh;"><button class="modal-x" onclick="closeModal('threadModal')">&times;</button><div style="border-bottom:1px solid var(--line,#e6ecf3);padding-bottom:10px;margin-bottom:4px;"><div id="threadTitle" style="font-weight:800;font-size:17px;font-family:Outfit,sans-serif;"></div><div id="threadSub" style="font-size:12.5px;color:var(--muted,#5A6B7D);"></div></div><div id="threadBody" style="flex:1;overflow-y:auto;padding:12px 2px;display:flex;flex-direction:column;"></div><div class="thread-form"><input type="text" id="threadInput" placeholder="Type your reply…" onkeydown="if(event.key==='Enter')sendReply()"><button class="btn" onclick="sendReply()" style="width:auto;padding:11px 18px;">Send</button></div></div></div>
-</body>
+<!-- Floating AI chat (available on every screen) -->
+<button id="aiFab" onclick="toggleFabChat()" aria-label="Ask AI">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>
+  <span>Ask AI</span>
+</button>
+<div id="aiChatPop">
+  <div class="aicp-head"><div><b id="aicpTitle">AI Assistant</b><div class="aicp-sub">Ask me anything — by text</div></div><button class="aicp-x" onclick="toggleFabChat()" aria-label="Close">&times;</button></div>
+  <div class="aicp-msgs" id="aicpMsgs"></div>
+  <div class="aicp-dots" id="aicpDots" style="display:none;"><span></span><span></span><span></span></div>
+  <div class="aicp-form"><input type="text" id="aicpInput" placeholder="Type your question…" onkeydown="if(event.key==='+Q+'Enter'+Q+')fabSend()"><button onclick="fabSend()" aria-label="Send"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg></button></div>
+</div>
+</body></body>
 </html>
