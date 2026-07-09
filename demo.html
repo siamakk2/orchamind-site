@@ -2951,7 +2951,7 @@ var subs=[];
 function renderSubs(){
   var g=document.getElementById('subsGrid'); if(!g)return;
   if(!Array.isArray(subs))subs=[];
-  if(!subs.length){g.innerHTML='<div class="empty"><p>No subcontractors yet</p><span>Tap \u201cAdd Sub\u201d to add electrical, plumbing, drywall, painting, HVAC and more.</span></div>';return;}
+  if(!subs.length){g.innerHTML=omEmpty('clients','No subcontractors yet','Add the subs you work with so you can assign and track them.');return;}
   g.innerHTML=subs.map(function(s){
     var initial=esc((((s.trade||'?')+'')[0])||'?');
     return '<div style="background:#fff;border:1px solid #E1E8F0;border-radius:14px;padding:16px;display:flex;flex-direction:column;gap:8px;">'
@@ -3550,7 +3550,7 @@ function renderEstimates(){
   if(sum){sum.innerHTML=estChip('Pipeline',estMoney(pipeline),'Open estimates')+estChip('Won',estMoney(won),'Accepted')+estChip('Outstanding',estMoney(outstanding),'Unpaid invoices')+estChip('Collected',estMoney(paid),'Paid');}
   var html='';
   html+='<div class="est-grp-h">Estimates ('+ests.length+')</div>';
-  html+= ests.length? ests.map(estCard).join('') : '<div style="color:var(--muted);padding:8px 2px;font-size:13.5px;">No estimates yet. Tap New Estimate to create one.</div>';
+  html+= ests.length? ests.map(estCard).join('') : omEmpty('jobs','No estimates yet','Create a polished, professional estimate in seconds with AI.');
   html+='<div class="est-grp-h" style="margin-top:22px;">Invoices ('+invs.length+')</div>';
   html+= invs.length? invs.map(estCard).join('') : '<div style="color:var(--muted);padding:8px 2px;font-size:13.5px;">No invoices yet. Accept an estimate and convert it to an invoice.</div>';
   list.innerHTML=html;
@@ -3917,7 +3917,7 @@ function saveSketch(){
 function renderSketches(){
   var dl=document.getElementById('skJob');if(dl){dl.innerHTML='<option value="">Select a job (optional)...</option>'+(window.jobs||[]).map(function(j){return '<option value="'+esc(j.name)+'">'+esc(j.name)+'</option>';}).join('');}
   var list=document.getElementById('skList');if(!list)return;
-  if(!sketches.length){list.innerHTML='<div style="color:var(--muted);font-size:13.5px;padding:6px 2px;">No saved drawings yet. Generate one above and tap Save to job.</div>';return;}
+  if(!sketches.length){list.innerHTML=omEmpty('photo','No saved drawings yet','Generate a concept sketch above, then save it here.');return;}
   list.innerHTML=sketches.map(function(s){
     return '<div class="sk-card"><div class="t">'+esc(s.typeLabel||'Concept')+'</div>'+
       '<div class="m">'+esc(s.job||s.desc||'')+' &middot; '+esc(s.date||'')+'</div>'+
@@ -4085,7 +4085,7 @@ function saveLog(){
 }
 function renderLog(){
   var el=document.getElementById('logList'); if(!el) return;
-  if(!logs.length){ el.innerHTML='<div style="color:var(--muted);font-size:13.5px;padding:6px 2px;">No site log entries yet. Tap New Entry to add photos and notes from the job.</div>'; return; }
+  if(!logs.length){ el.innerHTML=omEmpty('photo','No site log entries yet','Post photos and notes from the field to keep a running record.'); return; }
   el.innerHTML=logs.map(function(L){
     var photos=(L.photos||[]).map(function(p){ return '<img class="log-photo" src="'+esc(p.url)+'" alt="" data-open="'+esc(p.url)+'">'; }).join('');
     return '<div class="log-entry"><div class="log-head"><div><b>'+esc(L.job||'General')+'</b><span class="log-date">'+esc(fmtDate(L.date)||L.date||'')+(L.author?(' \u00b7 '+esc(L.author)):'')+'</span></div><button class="log-del" data-dellog="'+esc(L.id)+'">Delete</button></div>'+(L.note?('<div class="log-note">'+esc(L.note)+'</div>'):'')+(photos?('<div class="log-gallery">'+photos+'</div>'):'')+'</div>';
@@ -4120,7 +4120,7 @@ function renderUpcoming(){
   var host=document.getElementById('schUpcoming'); if(!host) return;
   var todayStr=_schYmd(new Date());
   var up=(window.schedule||[]).filter(function(s){return (s.date||'')>=todayStr && s.status!=='Completed';}).sort(function(a,b){return (a.date+(a.start||'')).localeCompare(b.date+(b.start||''));});
-  if(!up.length){ host.innerHTML='<div class="sch-up-empty">No upcoming jobs scheduled yet. Tap "Schedule Job" to add one - it will show up here and on the week calendar below.</div>'; return; }
+  if(!up.length){ host.innerHTML=omEmpty('jobs','Nothing scheduled yet','Schedule a job to see it here on your calendar.'); return; }
   var rows=up.slice(0,12).map(function(s){
     var dt=new Date(s.date+'T00:00:00'); var crew=_schCrewArr(s);
     return '<div class="sch-up" data-sgoto="'+esc(s.date)+'"><div class="sch-up-d"><b>'+_schShort(dt)+'</b><span>'+dt.toLocaleDateString('en-US',{weekday:'short'})+'</span></div>'+
@@ -4374,7 +4374,7 @@ function renderEquipment(){
   var sm=document.getElementById('eqSummary');
   if(sm)sm.innerHTML=eq.length?_EQ.map(function(d){return '<div><span class="dp '+d[0].replace('-','')+'"></span>'+counts[d[0]]+' '+d[1]+'</div>';}).join(''):'';
   var list=document.getElementById('eqList');if(!list)return;
-  if(!eq.length){list.innerHTML='<div class="pb-empty">No equipment yet. Add a tool above, or tap \u2728 AI Suggest to generate a starter list for your trade.</div>';return;}
+  if(!eq.length){list.innerHTML=omEmpty('jobs','No equipment yet','Track your tools and gear — and who has what.');return;}
   list.innerHTML=eq.map(function(e){
     var st=e.status||'available';var stLbl=(_EQ.filter(function(d){return d[0]===st;})[0]||_EQ[0])[1];
     return '<div class="eq-row"><div class="eq-main"><div class="eq-nm">'+esc(e.name)+'</div><div class="eq-cat">'+esc(e.category||'')+'</div></div>'+
@@ -4757,7 +4757,7 @@ function _coBadge(st){ st=st||'draft'; var map={draft:['#EEF3F8','#5A6B7D'],sent
 function renderChangeOrders(){
   var list=document.getElementById('coList'); if(!list) return;
   var _jsel=document.getElementById('coJob'); if(_jsel){ _jsel.innerHTML='<option value="">Select a job\u2026</option>'+(window.jobs||[]).map(function(j){return '<option value="'+esc(j.name)+'">'+esc(j.name)+'</option>';}).join(''); }
-  if(!changeOrders.length){ list.innerHTML='<div style="color:var(--muted);font-size:13.5px;padding:6px 2px;">No change orders yet. Tap New Change Order when a job\u2019s scope changes.</div>'; return; }
+  if(!changeOrders.length){ list.innerHTML=omEmpty('jobs','No change orders yet','Log a change order whenever scope or price changes on a job.'); return; }
   list.innerHTML=changeOrders.map(function(c){
     var t=coTotals(c);
     var acts='<div class="est-acts">';
@@ -4891,7 +4891,7 @@ function renderCosts(){
   var exp=(window.expenses||[]).slice().sort(function(a,b){return (b.date||'').localeCompare(a.date||'');});
   var expHtml=exp.length? exp.map(function(x){
     return '<div class="exp-row"><div class="exp-b"><b>'+esc(x.vendor||x.category||'Expense')+'</b><span>'+esc(x.jobName||'')+' \u00b7 '+esc(x.category||'')+' \u00b7 '+esc(fmtDate(x.date)||x.date||'')+(x.note?(' \u00b7 '+esc(x.note)):'')+'</span></div><div class="exp-amt">'+estMoney(x.amount)+'</div><div class="exp-acts"><button data-expedit="'+esc(x.id)+'">Edit</button><button data-expdel="'+esc(x.id)+'">\u2715</button></div></div>';
-  }).join('') : '<div style="color:var(--muted);font-size:13px;padding:6px 2px;">No expenses logged yet. Tap Add Expense to start tracking job costs.</div>';
+  }).join('') : omEmpty('jobs','No expenses yet','Track job costs here to protect your margins.');
   host.innerHTML=summary+(cards?('<div class="cost-grid">'+cards+'</div>'):'<div style="color:var(--muted);font-size:13px;margin-bottom:12px;">Add jobs to see per-job profitability.</div>')+'<div class="est-grp-h" style="margin-top:22px;">Expenses</div>'+expHtml;
 }
 function _expFillJobs(sel,val){ if(!sel) return; sel.innerHTML='<option value="">Select a job\u2026</option>'+(window.jobs||[]).map(function(j){return '<option value="'+esc(j.name)+'">'+esc(j.name)+'</option>';}).join(''); if(val){ var has=false; for(var o=0;o<sel.options.length;o++){ if(sel.options[o].value===val){has=true;break;} } if(!has){ var op=document.createElement('option'); op.value=val; op.textContent=val; sel.appendChild(op); } sel.value=val; } else { sel.value=''; } }
@@ -5283,7 +5283,7 @@ function _planNext(dateStr, every){
 function renderPlans(){
   var host=document.getElementById('plansBody'); if(!host) return;
   var plans=(window.plans||[]); var today=new Date().toISOString().split('T')[0];
-  if(!plans.length){ host.innerHTML='<div style="color:var(--muted);font-size:13.5px;padding:6px 2px;">No service plans yet. Tap New Plan to set up recurring work \u2014 maintenance, repeat visits, contracts.</div>'; return; }
+  if(!plans.length){ host.innerHTML=omEmpty('jobs','No service plans yet','Set up recurring maintenance plans for steady, repeat revenue.'); return; }
   var due=plans.filter(function(p){return (p.nextDate||'') && p.nextDate<=today;});
   var up=plans.filter(function(p){return !((p.nextDate||'') && p.nextDate<=today);}).sort(function(a,b){return (a.nextDate||'').localeCompare(b.nextDate||'');});
   function card(p){
