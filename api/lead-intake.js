@@ -88,6 +88,28 @@ module.exports = async function handler(req, res) {
         }
       } catch (eNotify) {}
 
+      // Instant SMS to the contractor (dormant until Twilio creds are set in Vercel; never blocks the visitor).
+      try {
+        var TW_SID = process.env.TWILIO_ACCOUNT_SID, TW_TOK = process.env.TWILIO_AUTH_TOKEN, TW_FROM = process.env.TWILIO_FROM;
+        if (TW_SID && TW_TOK && TW_FROM) {
+          var pr2 = await fetch(rest + '/accounts?username=eq.' + encodeURIComponent(c2) + '&select=profile', { headers: H });
+          var pa2 = await pr2.json();
+          var toPhone = (Array.isArray(pa2) && pa2[0] && pa2[0].profile && pa2[0].profile.phone) || '';
+          if (toPhone) {
+            var isBk = (lead.service || '').indexOf('[Booking]') >= 0;
+            var svc2 = (lead.service || '').replace('[Booking]', '').trim();
+            var sms = (isBk ? 'New booking request' : 'New lead') + ' \u2014 ' + (lead.name || 'Someone')
+              + (lead.phone ? ('\n' + lead.phone) : '')
+              + (svc2 ? ('\n' + svc2) : '')
+              + (lead.notes ? ('\n' + String(lead.notes).slice(0, 120)) : '')
+              + '\nOpen: orchamind.com/app';
+            var form = 'From=' + encodeURIComponent(TW_FROM) + '&To=' + encodeURIComponent(toPhone) + '&Body=' + encodeURIComponent(sms);
+            var auth = Buffer.from(TW_SID + ':' + TW_TOK).toString('base64');
+            await fetch('https://api.twilio.com/2010-04-01/Accounts/' + encodeURIComponent(TW_SID) + '/Messages.json', { method: 'POST', headers: { 'Authorization': 'Basic ' + auth, 'Content-Type': 'application/x-www-form-urlencoded' }, body: form });
+          }
+        }
+      } catch (eSms) {}
+
       return res.status(200).json({ ok: true });
     }
 
