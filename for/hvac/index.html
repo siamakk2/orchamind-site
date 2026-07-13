@@ -88,6 +88,19 @@ h2.st{font-size:clamp(26px,4vw,38px);font-weight:800;text-align:center;max-width
 a:focus-visible,button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{
   outline:3px solid #1E6FE0;outline-offset:2px;border-radius:4px;}
 </style>
+<style id="perf-paint">
+/* Skip rendering work for sections the user hasn't scrolled to yet.
+   Biggest FCP/LCP win on a long text page: the browser only lays out/paints what's visible. */
+section:nth-of-type(n+4){content-visibility:auto;contain-intrinsic-size:0 900px;}
+/* backdrop-filter is one of the most expensive paint ops on mobile GPUs. Desktop keeps it. */
+@media (max-width:900px){
+  .nav,.nav-inner,header .nav{backdrop-filter:none!important;-webkit-backdrop-filter:none!important;}
+}
+/* Respect reduced-motion (also cuts main-thread animation cost). */
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation-duration:.001ms!important;animation-iteration-count:1!important;transition-duration:.001ms!important;scroll-behavior:auto!important;}
+}
+</style>
 </head><body>
 <div class="tb"><div class="wrap"><a class="tb-logo" href="/"><img src="/icon-512.png" alt="Orchamind">Orchamind</a><a class="tb-cta" href="/app?signup=1">Start free</a></div></div>
 
