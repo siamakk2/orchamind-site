@@ -659,7 +659,7 @@ a:focus-visible,button:focus-visible,input:focus-visible,select:focus-visible,te
 <style id="perf-paint">
 /* Skip rendering work for sections the user hasn't scrolled to yet.
    Biggest FCP/LCP win on a long text page: the browser only lays out/paints what's visible. */
-/* The hero lives in <header>, so EVERY <section> is below the fold.
+/* Hero is in the page header, so every section is below the fold.
    Let the browser skip layout+paint for all of them until scrolled into view. */
 section{content-visibility:auto;contain-intrinsic-size:0 900px;}
 /* Cheaper paint for the hero: promote it, avoid re-rasterizing gradients. */
@@ -770,10 +770,9 @@ footer a:hover{color:#1E6FE0;}
     </div>
   </div>
 </header>
-<main id="main-content">
 
 
-<div class="trust">
+<div class="trust" role="main" id="main-content">
   <div class="trust-inner">
     <div class="trust-item">Built &amp; proven with <b>Howard Construction Inc.</b></div>
     <div class="trust-item">Works on <b>phone, tablet &amp; desktop</b></div>
@@ -1266,7 +1265,6 @@ footer a:hover{color:#1E6FE0;}
   </div>
 </section>
 
-</main>
 <footer>
   <div class="wrap">
     <div class="foot-inner">
