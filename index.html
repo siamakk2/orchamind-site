@@ -495,6 +495,15 @@ footer [style*="opacity:.6"],footer [style*="opacity: 0.6"]{opacity:1!important;
 footer a{color:#3E4C5C;}
 footer a:hover{color:#1E6FE0;}
 </style>
+<style id="a11y-contrast-v3">
+/* Final measured contrast pass:
+   - blue chips: #2D7FF9 on their own 10%-tint bg = 3.38 (even #1E6FE0 = 4.23) -> #1A5FC4 = 4.6+
+   - chat placeholder: white@.40 on navy = 3.79 -> .58 = 6.6
+   - appwin date: white@.45 = 4.49 (just under) -> .58 */
+[style*="color:#2D7FF9"]{color:#1A5FC4 !important;}
+.chat-input-row input::placeholder{color:rgba(255,255,255,.58) !important;}
+.appwin-date{color:rgba(255,255,255,.58) !important;}
+</style>
 </head>
 <body>
 
