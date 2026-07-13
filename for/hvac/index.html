@@ -105,6 +105,32 @@ header{contain:layout paint style;}
   *,*::before,*::after{animation-duration:.001ms!important;animation-iteration-count:1!important;transition-duration:.001ms!important;scroll-behavior:auto!important;}
 }
 </style>
+<style id="a11y-contrast-v2">
+/* Fixes for the exact elements Lighthouse flagged (ratios verified). */
+
+/* 1) .feat2 span was #9fb2cc on WHITE = 2.16 FAIL (most of the failing list). */
+#industries .feat2 span,#founder .feat2 span,.feat-cat .feat2 span{color:#5A6B7D!important;}
+
+/* 2) Eyebrows sit on DARK sections (.features/#knowledge/#askai are navy) —
+      darkening --signal broke these. Use the soft blue there: 9.48 on navy. */
+.features .section-eyebrow,#knowledge .section-eyebrow,#askai .section-eyebrow,
+.features .eyebrow,#knowledge .eyebrow,#askai .eyebrow{color:#8FBEFF!important;}
+
+/* 3) "Try AisleBird Free": white on #FF6B35 = 2.84 FAIL -> darker orange = 5.18 PASS */
+a[href*="aislebird.com"]{background:#C2410C!important;color:#fff!important;}
+
+/* 4) Knowledge-base button had an INLINE rgb(45,127,249) (white text 3.81 FAIL). */
+#knowledge .wrap a,#knowledge a[style]{background:#1E6FE0!important;color:#fff!important;}
+
+/* 5) Orange eyebrow text on its own pale-orange tint = 2.55 FAIL. */
+.eyebrow[style*="255, 107, 53"],.eyebrow[style*="255,107,53"]{color:#C2410C!important;}
+
+/* 6) Footer used opacity .55/.6, which collapses effective contrast. */
+footer [style*="opacity:.55"],footer [style*="opacity: 0.55"],
+footer [style*="opacity:.6"],footer [style*="opacity: 0.6"]{opacity:1!important;color:#5A6B7D!important;}
+footer a{color:#3E4C5C;}
+footer a:hover{color:#1E6FE0;}
+</style>
 </head><body>
 <div class="tb"><div class="wrap"><a class="tb-logo" href="/"><img src="/icon-512.png" alt="Orchamind">Orchamind</a><a class="tb-cta" href="/app?signup=1">Start free</a></div></div>
 
@@ -115,6 +141,8 @@ header{contain:layout paint style;}
   <div class="hero-btns"><a class="cta cta-lg" href="/app?signup=1">Start free →</a><a class="ghost" href="/demo">Try the live demo</a></div>
   <div class="hero-trust"><span>✓ First month free</span><span>✓ Then $500/mo</span><span>✓ No card to start</span></div>
 </div></header>
+<main id="main-content">
+
 
 <section class="pain"><div class="wrap">
   <div class="eyebrow">Sound familiar?</div>
@@ -160,5 +188,6 @@ header{contain:layout paint style;}
   <a class="cta cta-lg" href="/app?signup=1">Start free →</a>
 </div></section>
 
+</main>
 <footer class="foot"><div class="wrap">Orchamind · <a href="/">Home</a> · <a href="/demo">Live demo</a> · <a href="/knowledge-base/">Knowledge base</a> · <a href="/best-ai-construction-software/">Compare</a></div></footer>
 </body></html>
