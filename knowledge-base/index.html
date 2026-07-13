@@ -3,7 +3,8 @@
 window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}
 (function(){var loaded=false;function load(){if(loaded)return;loaded=true;var s=document.createElement('script');s.async=true;s.src='https://www.googletagmanager.com/gtag/js?id=G-LWCBNFLTDM';document.head.appendChild(s);gtag('js',new Date());gtag('config','G-LWCBNFLTDM');}
 ['scroll','pointerdown','keydown','touchstart'].forEach(function(e){window.addEventListener(e,load,{once:true,passive:true});});
-if(document.readyState==='complete'){setTimeout(load,1200);}else{window.addEventListener('load',function(){setTimeout(load,1200);});}
+function idle(){if('requestIdleCallback' in window){requestIdleCallback(load,{timeout:6000});}else{setTimeout(load,5000);}}
+if(document.readyState==='complete'){idle();}else{window.addEventListener('load',idle);}
 })();</script><script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag("js",new Date());gtag("config","G-LWCBNFLTDM");</script>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Knowledge Base &mdash; How Orchamind Works | Orchamind</title>
