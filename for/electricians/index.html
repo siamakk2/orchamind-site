@@ -91,7 +91,11 @@ a:focus-visible,button:focus-visible,input:focus-visible,select:focus-visible,te
 <style id="perf-paint">
 /* Skip rendering work for sections the user hasn't scrolled to yet.
    Biggest FCP/LCP win on a long text page: the browser only lays out/paints what's visible. */
-section:nth-of-type(n+4){content-visibility:auto;contain-intrinsic-size:0 900px;}
+/* The hero lives in <header>, so EVERY <section> is below the fold.
+   Let the browser skip layout+paint for all of them until scrolled into view. */
+section{content-visibility:auto;contain-intrinsic-size:0 900px;}
+/* Cheaper paint for the hero: promote it, avoid re-rasterizing gradients. */
+header{contain:layout paint style;}
 /* backdrop-filter is one of the most expensive paint ops on mobile GPUs. Desktop keeps it. */
 @media (max-width:900px){
   .nav,.nav-inner,header .nav{backdrop-filter:none!important;-webkit-backdrop-filter:none!important;}
