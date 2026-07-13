@@ -66,7 +66,23 @@ h2.st{font-size:clamp(26px,4vw,38px);font-weight:800;text-align:center;max-width
 .final p{color:rgba(255,255,255,.82);margin-bottom:26px;font-size:16.5px;}
 .foot{background:#0A1628;color:rgba(255,255,255,.55);text-align:center;padding:26px 22px;font-size:13px;border-top:1px solid rgba(255,255,255,.08);}
 .foot a{color:rgba(255,255,255,.7);}
-</style></head><body>
+</style><style id="a11y-contrast">
+/* WCAG AA contrast fixes (verified ratios).
+   signal #1E6FE0: white-on-blue 4.77, blue-on-white 4.77 (was 3.81 = FAIL)
+   signal-soft #8FBEFF on navy: 9.48 (was 6.66)
+   amber-ink #9A5B00 on light: 5.43 (amber #F9A825 on white was 1.97 = FAIL) */
+:root{--signal:#1E6FE0;--signal-soft:#8FBEFF;--amber-ink:#9A5B00;}
+/* amber as TEXT on light tints -> darkened amber (keeps the brand hue, readable) */
+.dj-tag{color:var(--amber-ink)!important;}
+.audit-eyebrow{color:var(--amber-ink)!important;}
+.hero-audit:hover,.cta-card a.cc-val:hover{color:var(--amber-ink)!important;}
+/* amber stays as-is on dark navy (9.20 = passes) and on amber buttons w/ navy text (9.20) */
+.demo-briefing li::before{color:var(--amber);}
+/* focus visibility for keyboard users */
+a:focus-visible,button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{
+  outline:3px solid #1E6FE0;outline-offset:2px;border-radius:4px;}
+</style>
+</head><body>
 <div class="tb"><div class="wrap"><a class="tb-logo" href="/"><img src="/icon-512.png" alt="Orchamind">Orchamind</a><a class="tb-cta" href="/app?signup=1">Start free</a></div></div>
 
 <header class="hero"><div class="wrap">
