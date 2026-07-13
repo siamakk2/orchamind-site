@@ -91,7 +91,7 @@ a:focus-visible,button:focus-visible,input:focus-visible,select:focus-visible,te
 <style id="perf-paint">
 /* Skip rendering work for sections the user hasn't scrolled to yet.
    Biggest FCP/LCP win on a long text page: the browser only lays out/paints what's visible. */
-/* The hero lives in <header>, so EVERY <section> is below the fold.
+/* Hero is in the page header, so every section is below the fold.
    Let the browser skip layout+paint for all of them until scrolled into view. */
 section{content-visibility:auto;contain-intrinsic-size:0 900px;}
 /* Cheaper paint for the hero: promote it, avoid re-rasterizing gradients. */
@@ -141,7 +141,6 @@ footer a:hover{color:#1E6FE0;}
   <div class="hero-btns"><a class="cta cta-lg" href="/app?signup=1">Start free →</a><a class="ghost" href="/demo">Try the live demo</a></div>
   <div class="hero-trust"><span>✓ First month free</span><span>✓ Then $500/mo</span><span>✓ No card to start</span></div>
 </div></header>
-<main id="main-content">
 
 
 <section class="pain"><div class="wrap">
@@ -188,6 +187,5 @@ footer a:hover{color:#1E6FE0;}
   <a class="cta cta-lg" href="/app?signup=1">Start free →</a>
 </div></section>
 
-</main>
 <footer class="foot"><div class="wrap">Orchamind · <a href="/">Home</a> · <a href="/demo">Live demo</a> · <a href="/knowledge-base/">Knowledge base</a> · <a href="/best-ai-construction-software/">Compare</a></div></footer>
 </body></html>
