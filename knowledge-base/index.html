@@ -1,5 +1,10 @@
 <!DOCTYPE html><html lang="en"><head>
-<script async src="https://www.googletagmanager.com/gtag/js?id=G-LWCBNFLTDM"></script><script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag("js",new Date());gtag("config","G-LWCBNFLTDM");</script>
+<script>/* gtagDeferred: keep analytics, but off the critical path (fixes 'reduce unused JavaScript') */
+window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}
+(function(){var loaded=false;function load(){if(loaded)return;loaded=true;var s=document.createElement('script');s.async=true;s.src='https://www.googletagmanager.com/gtag/js?id=G-LWCBNFLTDM';document.head.appendChild(s);gtag('js',new Date());gtag('config','G-LWCBNFLTDM');}
+['scroll','pointerdown','keydown','touchstart'].forEach(function(e){window.addEventListener(e,load,{once:true,passive:true});});
+if(document.readyState==='complete'){setTimeout(load,1200);}else{window.addEventListener('load',function(){setTimeout(load,1200);});}
+})();</script><script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag("js",new Date());gtag("config","G-LWCBNFLTDM");</script>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Knowledge Base &mdash; How Orchamind Works | Orchamind</title>
 <meta name="description" content="The Orchamind knowledge base: step-by-step guides to every feature &mdash; AI estimates, dispatch, GPS time clock, safety toolbox talks, selections, client portal, compliance and more.">
