@@ -634,6 +634,22 @@ html{scroll-behavior:smooth}
   }
 }
 </script>
+<style id="a11y-contrast">
+/* WCAG AA contrast fixes (verified ratios).
+   signal #1E6FE0: white-on-blue 4.77, blue-on-white 4.77 (was 3.81 = FAIL)
+   signal-soft #8FBEFF on navy: 9.48 (was 6.66)
+   amber-ink #9A5B00 on light: 5.43 (amber #F9A825 on white was 1.97 = FAIL) */
+:root{--signal:#1E6FE0;--signal-soft:#8FBEFF;--amber-ink:#9A5B00;}
+/* amber as TEXT on light tints -> darkened amber (keeps the brand hue, readable) */
+.dj-tag{color:var(--amber-ink)!important;}
+.audit-eyebrow{color:var(--amber-ink)!important;}
+.hero-audit:hover,.cta-card a.cc-val:hover{color:var(--amber-ink)!important;}
+/* amber stays as-is on dark navy (9.20 = passes) and on amber buttons w/ navy text (9.20) */
+.demo-briefing li::before{color:var(--amber);}
+/* focus visibility for keyboard users */
+a:focus-visible,button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{
+  outline:3px solid #1E6FE0;outline-offset:2px;border-radius:4px;}
+</style>
 </head>
 <body>
 
