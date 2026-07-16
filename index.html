@@ -504,6 +504,15 @@ footer a:hover{color:#1E6FE0;}
 .chat-input-row input::placeholder{color:rgba(255,255,255,.58) !important;}
 .appwin-date{color:rgba(255,255,255,.58) !important;}
 </style>
+<style id="mobile-grid-fix">
+/* Corrective: force content grids to single column on mobile (overrides source-order bug) */
+@media(max-width:900px){
+  .founder-grid,.price-grid,.case-inner,.hero-inner,.feat-grid,.problem-grid,.steps,.gal-grid,.audit-card{grid-template-columns:1fr !important;}
+  .founder-grid{gap:34px !important;text-align:center !important;}
+  .price-grid{gap:20px !important;}
+  .founder-text,.founder-text *{overflow-wrap:anywhere;}
+}
+</style>
 </head>
 <body>
 
