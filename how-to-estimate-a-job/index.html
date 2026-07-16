@@ -165,9 +165,44 @@ footer [style*="opacity:.6"],footer [style*="opacity: 0.6"]{opacity:1!important;
 footer a{color:#3E4C5C;}
 footer a:hover{color:#1E6FE0;}
 </style>
+<style id="sk-nav-css">
+.sk-nav{position:sticky;top:0;z-index:99999;background:#0A1628;border-bottom:1px solid rgba(255,255,255,.08);font-family:'Sora','Inter',system-ui,sans-serif}
+.sk-nav *{box-sizing:border-box}
+.sk-nav-in{display:flex;align-items:center;gap:14px;max-width:1180px;margin:0 auto;padding:12px 20px;flex-wrap:wrap}
+.sk-logo{display:flex;align-items:center;gap:9px;color:#fff;font-weight:800;font-size:19px;text-decoration:none;margin-right:auto;font-family:'Sora',sans-serif}
+.sk-logo-mark{width:30px;height:30px;border-radius:8px;background:linear-gradient(135deg,#2D7FF9,#5B9DFF);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.sk-logo-mark svg{width:18px;height:18px}
+.sk-nav-links{display:flex;align-items:center;gap:20px}
+.sk-nav-links a{color:rgba(255,255,255,.78);text-decoration:none;font:500 14px/1 'Inter',sans-serif;white-space:nowrap}
+.sk-nav-links a:hover{color:#fff}
+.sk-cta{background:#2D7FF9;color:#fff!important;padding:9px 15px;border-radius:9px}
+.sk-nav-toggle{display:none;background:none;border:none;color:#fff;font-size:24px;cursor:pointer;line-height:1;padding:4px}
+@media(max-width:900px){
+  .sk-nav-toggle{display:block}
+  .sk-nav-links{display:none;flex-direction:column;align-items:flex-start;width:100%;gap:16px;padding:10px 0 4px}
+  .sk-nav.sk-open .sk-nav-links{display:flex}
+}
+</style>
 </head>
 <body>
-<nav class="nav"><div class="nav-in"><a href="/" class="logo"><span class="logo-mark"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12h4l3 8 4-16 3 8h4"/></svg></span>Orchamind</a><a href="/demo" class="nav-cta">Try the demo →</a></div></nav>
+<nav class="sk-nav">
+<div class="sk-nav-in">
+<a href="/" class="sk-logo"><span class="sk-logo-mark"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12h4l3 8 4-16 3 8h4"/></svg></span>Orchamind</a>
+<button class="sk-nav-toggle" aria-label="Menu" onclick="this.closest('.sk-nav').classList.toggle('sk-open')">&#9776;</button>
+<div class="sk-nav-links">
+<a href="/#what">What is it</a>
+<a href="/#how">How it works</a>
+<a href="/#features">Features</a>
+<a href="/#industries">Industries</a>
+<a href="/#pricing">Pricing</a>
+<a href="/#founder">About</a>
+<a href="/best-contractor-software/">Compare</a>
+<a href="/faq/">FAQ</a>
+<a href="/knowledge-base/">Knowledge Base</a>
+<a href="/audit" class="sk-cta">Free Site Audit &rarr;</a>
+</div>
+</div>
+</nav>
 <article class="article"><div class="wrap">
 <div class="crumb"><a href="/">Orchamind</a> › Guides › Estimating</div>
 <span class="eyebrow">Estimating</span>
