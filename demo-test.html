@@ -4327,18 +4327,33 @@ function selChoose(id,oi){var s=(window.selections||[]).find(function(x){return 
 function selApprove(id){var s=(window.selections||[]).find(function(x){return x.id===id;});if(!s||!s.chosen)return;s.status='approved';save();renderSelections();}
 function selUnapprove(id){var s=(window.selections||[]).find(function(x){return x.id===id;});if(!s)return;s.status='pending';save();renderSelections();}
 function selDel(id){selections=(window.selections||[]).filter(function(x){return x.id!==id;});save();renderSelections();}
+
+function _pbSelReprice(o){
+  var hasPb=(window.pricebook||[]).length>0;
+  var m=_pbById(o.pbId)||_pbByName(o.label);
+  if(m) return {label:m.name,price:estNum(m.price),_src:'pricebook'};
+  var lbl=String(o.label||'');
+  if(!/\(est\.\)$/.test(lbl)) lbl=lbl+' (est.)';
+  return {label:lbl,price:estNum(o.price),_src:'ai'};
+}
+function _pbSelCounts(sels){
+  var c={priced:0,est:0};
+  (sels||[]).forEach(function(s){(s.options||[]).forEach(function(o){ if(o._src==='pricebook')c.priced++; else c.est++; });});
+  return c;
+}
+
 function aiSuggestSelections(){
   var jid=_selJobId();var j=(window.jobs||[]).find(function(x){return x.id===jid;});
   var msg=document.getElementById('selMsg');
   if(!j){if(msg)msg.textContent='Pick a job first.';return;}
   if(msg)msg.textContent='Generating selections with AI for '+j.name+'...';
-  var sys='You are a construction project manager creating a client SELECTIONS sheet for a project called "'+j.name+'". List the finish and material decisions the homeowner needs to make, each with 3 realistic options at good / better / best price points using current California pricing. Return ONLY JSON, no markdown or commentary: {"selections":[{"category":"string e.g. Flooring","options":[{"label":"string","price":number},{"label":"string","price":number},{"label":"string","price":number}]}]} with 5-9 categories relevant to the project.';
+  var _rc=_pbRateCard(); var sys='You are a construction project manager creating a client SELECTIONS sheet for a project called "'+j.name+'". List the finish and material decisions the homeowner needs to make, each with 3 options at good / better / best levels that differ by MATERIAL GRADE and scope.'+(_rc?('\n\nCONTRACTOR RATE CARD (id | category | item | unit | rate) - these are the ONLY confirmed prices:\n'+_rc+'\n\nIf an option matches a rate-card item, put its id in "pbId" and do NOT invent a price - the app applies the contractor rate. If it is not on the rate card, set "pbId" to null and give a conservative ballpark allowance; it will be shown to the homeowner as an estimate, so keep it defensible rather than precise-looking.'):('\n\nNo rate card yet - give conservative ballpark allowances; every one will be labelled an estimate.'))+' Return ONLY JSON, no markdown or commentary: {"selections":[{"category":"string e.g. Flooring","options":[{"label":"string","pbId":"string or null","price":number},{"label":"string","pbId":"string or null","price":number},{"label":"string","pbId":"string or null","price":number}]}]} with 5-9 categories relevant to the project.';
   callClaude(sys,'Project: '+j.name+' ('+(j.location||'')+'). Phase: '+(j.status||'')+'.',function(text){
     var obj=_estParseJSON(text);
     if(!obj||!obj.selections||!obj.selections.length){if(msg)msg.textContent='Could not generate selections - try again.';return;}
     window.selections=window.selections||[];
-    obj.selections.forEach(function(s){window.selections.push({id:uid(),jobId:j.id,jobName:j.name,category:s.category||'Selection',options:(s.options||[]).map(function(o){return {label:o.label||'',price:estNum(o.price)};}),chosen:'',status:'pending'});});
-    save();renderSelections();if(msg)msg.textContent='Added '+obj.selections.length+' selection categories.';
+    obj.selections.forEach(function(s){window.selections.push({id:uid(),jobId:j.id,jobName:j.name,category:s.category||'Selection',options:(s.options||[]).map(_pbSelReprice),chosen:'',status:'pending'});});
+    save();renderSelections();var _sc=_pbSelCounts(obj.selections.map(function(s){return {options:(s.options||[]).map(_pbSelReprice)};}));if(msg)msg.textContent='Added '+obj.selections.length+' categories - '+_sc.priced+' priced from your Pricebook, '+_sc.est+' ballpark allowances marked (est.) to confirm.';
   },function(err){if(msg)msg.textContent='AI error: '+err;});
 }
 function printSelectionSheet(){
