@@ -718,7 +718,7 @@ button:active, .btn:active, .btn-ghost:active, .tab:active, [role="button"]:acti
 </head>
 <body class="locked">
 <div id="demoBanner" style="position:relative;z-index:1;background:linear-gradient(90deg,#0A1628,#1565C0);color:#fff;padding:10px 16px;display:flex;align-items:center;justify-content:center;gap:16px;flex-wrap:wrap;font-family:'Outfit',sans-serif;font-size:14px;box-shadow:0 2px 12px rgba(0,0,0,0.2);">
-  <span style="font-weight:600;">🎮 Demo Mode — this is sample data, nothing is saved. Play around!</span>
+  <span style="font-weight:600;">🎮 Demo Mode — sample data, nothing is saved. NEW: snap a photo of your plans in Estimates and watch the AI do the takeoff.</span>
   <a href="https://orchamind-site.vercel.app" style="background:#F9A825;color:#0A1628;font-weight:700;padding:6px 16px;border-radius:8px;text-decoration:none;font-size:13px;">Get this for your business →</a>
   <span style="opacity:0.8;font-size:13px;">or call (323) 657-7752</span>
 </div>
@@ -1563,7 +1563,7 @@ button:active, .btn:active, .btn-ghost:active, .tab:active, [role="button"]:acti
   <div class="est-ai">
     <label style="font-weight:700;color:var(--navy);font-size:13px;">&#10024; Draft with AI</label>
     <textarea id="estAiScope" rows="2" placeholder="Describe the job in plain words &mdash; e.g. 'Rewire a 2,000 sq ft home, 200A panel upgrade, 24 recessed lights, pull permit'"></textarea>
-    <div class="gbb-row"><button class="btn btn-ghost" type="button" id="estAiBtn" onclick="aiDraftEstimate()">&#10024; Generate line items</button><button class="btn btn-ghost" type="button" id="estGbbBtn" onclick="aiGoodBetterBest()">&#9889; Good &middot; Better &middot; Best</button><button class="btn btn-ghost" type="button" id="estPlanBtn" onclick="document.getElementById('estPlanFile').click()">&#128208; From plans</button><button class="btn btn-ghost" type="button" onclick="estFromPricebook()">+ From Pricebook</button></div>
+    <div class="gbb-row"><button class="btn btn-ghost" type="button" id="estAiBtn" onclick="aiDraftEstimate()">&#10024; Generate line items</button><button class="btn btn-ghost" type="button" id="estGbbBtn" onclick="aiGoodBetterBest()">&#9889; Good &middot; Better &middot; Best</button><button class="btn btn-ghost" type="button" id="estPlanBtn" onclick="document.getElementById('estPlanFile').click()">&#128208; From plans <span style="background:#2E9B5B;color:#fff;border-radius:8px;font-size:9px;padding:1px 5px;vertical-align:middle;">NEW</span></button><button class="btn btn-ghost" type="button" onclick="estFromPricebook()">+ From Pricebook</button></div>
     <input type="file" id="estPlanFile" accept="image/*,application/pdf" multiple style="display:none" onchange="aiEstimateFromPlans(this.files);this.value='';">
     <div id="estAiMsg" class="est-ai-msg"></div>
     <div id="estPlanQ"></div>
@@ -1857,6 +1857,8 @@ var estimates=[
   {id:'e1',kind:'estimate',number:'EST-0001',client:'The Bennetts',clientEmail:'',project:'Calistoga Pool & Deck',location:'Calistoga, CA',date:'2026-06-18',validUntil:'2026-07-18',status:'sent',taxRate:0,notes:'50% deposit to schedule. Balance on completion. Valid 30 days.',items:[{desc:'Excavation & grading',qty:1,unit:'ls',price:14500},{desc:'Gunite pool shell',qty:1,unit:'ls',price:38000},{desc:'Stamped concrete deck',qty:850,unit:'sqft',price:22},{desc:'Equipment & plumbing',qty:1,unit:'ls',price:16500}]},
   {id:'e2',kind:'invoice',number:'INV-0001',client:'M. Reynolds',clientEmail:'',project:'Valley View Estate',location:'Sonoma, CA',date:'2026-06-20',validUntil:'',status:'sent',taxRate:0,notes:'Net 15. Thank you.',items:[{desc:'Progress billing - finishing phase (draw 4)',qty:1,unit:'ls',price:62000}]}
 ];
+var _e3={id:'e3',kind:'estimate',number:'EST-0002',client:'J. Castellano',clientEmail:'',project:'Hillside ADU Project',location:'Napa, CA',date:'2026-07-27',validUntil:'2026-08-26',status:'draft',taxRate:0,notes:'AI takeoff from uploaded plans (2 pages). Assumptions: 9 ft ceilings | standard-grade fixtures | slab on grade, no demo required. Review every line before sending.',items:[{desc:'Foundation - slab on grade (per plans, 748 sqft)',qty:748,unit:'sqft',price:12},{desc:'Wall framing - labor + material (takeoff from floor plan)',qty:2350,unit:'sqft',price:9},{desc:'Electrical rough-in + 14 recessed LED lights per lighting plan',qty:1,unit:'ls',price:9800},{desc:'Plumbing rough + fixtures (1 bath + kitchenette per plans)',qty:1,unit:'ls',price:11500},{desc:'Drywall installed',qty:2350,unit:'sqft',price:3.5},{desc:'Building permit',qty:1,unit:'ea',price:450}]};
+estimates.push(_e3);
 var sketches=[];
 var schedule=[];
 var changeOrders=[{id:'co1',number:'CO-0001',jobName:'Hillside Addition',jobId:'',date:'2026-06-25',title:'Upgrade to quartz countertops',desc:'Client requested quartz instead of laminate in the kitchen and primary bath.',items:[{desc:'Quartz material (kitchen + bath)',qty:1,price:4200},{desc:'Additional fabrication & install labor',qty:1,price:1400}],status:'sent'}];
@@ -3797,6 +3799,15 @@ function aiDraftEstimate(){
   },function(err){btn.disabled=false;btn.innerHTML=old;msg.textContent='AI error: '+err;});
 }
 /* ===== Plans -> Estimate module ===== */
+function _planDemoOk(){
+  try{
+    if(window.DEMO_MODE && typeof IS_REAL_APP!=='undefined' && !IS_REAL_APP && typeof _demoAICount!=='undefined'){
+      if(_demoAICount>=DEMO_AI_LIMIT){return false;}
+      _demoAICount+=2; // plan reading is a heavier call
+    }
+  }catch(e){}
+  return true;
+}
 var _planBlocks=null,_planDraft=null;
 function callClaudeBlocks(systemPrompt,blocks,cb,errCb,maxTokens){
   var mt=maxTokens||6000,acc="",tries=0;
@@ -3842,6 +3853,7 @@ function aiEstimateFromPlans(files){
   var msg=document.getElementById('estAiMsg');var btn=document.getElementById('estPlanBtn');
   var list=Array.prototype.slice.call(files||[]);
   if(!list.length)return;
+  if(!_planDemoOk()){msg.textContent="You've reached the demo's AI limit. The full version has unlimited AI - call Siamak at 323-657-7752 to get Orchamind for your business.";return;}
   var pdfs=list.filter(function(f){return f.type==='application/pdf';});
   var imgs=list.filter(function(f){return f.type.indexOf('image/')===0;});
   if(pdfs.length>1){msg.textContent='One PDF at a time, please.';return;}
@@ -3901,6 +3913,7 @@ function estPlanRefine(){
   var msg=document.getElementById('estAiMsg');
   if(!ans){msg.textContent='Type a quick answer to the questions first.';return;}
   if(!_planBlocks||!_planDraft){msg.textContent='Read the plans first.';return;}
+  if(!_planDemoOk()){msg.textContent="You've reached the demo's AI limit. The full version has unlimited AI - call Siamak at 323-657-7752 to get Orchamind for your business.";return;}
   var btn=document.getElementById('estPlanRefBtn');btn.disabled=true;var old=btn.innerHTML;btn.innerHTML='Refining...';
   msg.textContent='Updating the estimate with your answers...';
   var messages=[
