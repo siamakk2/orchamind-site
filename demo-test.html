@@ -1563,8 +1563,10 @@ button:active, .btn:active, .btn-ghost:active, .tab:active, [role="button"]:acti
   <div class="est-ai">
     <label style="font-weight:700;color:var(--navy);font-size:13px;">&#10024; Draft with AI</label>
     <textarea id="estAiScope" rows="2" placeholder="Describe the job in plain words &mdash; e.g. 'Rewire a 2,000 sq ft home, 200A panel upgrade, 24 recessed lights, pull permit'"></textarea>
-    <div class="gbb-row"><button class="btn btn-ghost" type="button" id="estAiBtn" onclick="aiDraftEstimate()">&#10024; Generate line items</button><button class="btn btn-ghost" type="button" id="estGbbBtn" onclick="aiGoodBetterBest()">&#9889; Good &middot; Better &middot; Best</button><button class="btn btn-ghost" type="button" onclick="estFromPricebook()">+ From Pricebook</button></div>
+    <div class="gbb-row"><button class="btn btn-ghost" type="button" id="estAiBtn" onclick="aiDraftEstimate()">&#10024; Generate line items</button><button class="btn btn-ghost" type="button" id="estGbbBtn" onclick="aiGoodBetterBest()">&#9889; Good &middot; Better &middot; Best</button><button class="btn btn-ghost" type="button" id="estPlanBtn" onclick="document.getElementById('estPlanFile').click()">&#128208; From plans</button><button class="btn btn-ghost" type="button" onclick="estFromPricebook()">+ From Pricebook</button></div>
+    <input type="file" id="estPlanFile" accept="image/*,application/pdf" multiple style="display:none" onchange="aiEstimateFromPlans(this.files);this.value='';">
     <div id="estAiMsg" class="est-ai-msg"></div>
+    <div id="estPlanQ"></div>
     <div id="estTiers"></div>
     <div id="estPbPick" class="pbpick"></div>
   </div>
@@ -3793,6 +3795,129 @@ function aiDraftEstimate(){
     var _c=_pbCounts(_lines); msg.textContent='Drafted '+obj.items.length+' lines - '+_c.priced+' priced from your Pricebook'+(_c.unpriced?(', '+_c.unpriced+' NEED YOUR RATE'):'')+(_c.ai?(', '+_c.ai+' unconfirmed'):'')+'. Review, then Save.';
   },function(err){btn.disabled=false;btn.innerHTML=old;msg.textContent='AI error: '+err;});
 }
+/* ===== Plans -> Estimate module ===== */
+var _planBlocks=null,_planDraft=null;
+function callClaudeBlocks(systemPrompt,blocks,cb,errCb,maxTokens){
+  var mt=maxTokens||6000,acc="",tries=0;
+  function go(messages){
+    fetch("/api/claude",{method:"POST",headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({model:"claude-sonnet-4-6",max_tokens:mt,system:systemPrompt,messages:messages})
+    }).then(function(r){return r.json();}).then(function(data){
+      if(data&&data.error){errCb&&errCb(typeof data.error==='string'?data.error:(data.error.message||'AI error'));return;}
+      var text="";
+      if(data&&data.content){text=data.content.filter(function(b){return b.type==="text";}).map(function(b){return b.text;}).join("\n");}
+      acc+=text;
+      if(data&&data.stop_reason==="max_tokens"&&tries<3&&text){
+        tries++;
+        go(messages.concat([{role:"assistant",content:text},{role:"user",content:"Continue your previous answer exactly where it left off. Do not repeat anything you already wrote."}]));
+      } else { if(acc){cb(acc);}else{errCb&&errCb("No response from AI");} }
+    }).catch(function(e){errCb&&errCb(e.message);});
+  }
+  go([{role:"user",content:blocks}]);
+}
+function _planShrinkImage(file,cb,err){
+  var rd=new FileReader();
+  rd.onload=function(){
+    var img=new Image();
+    img.onload=function(){
+      var MAX=1568,w=img.width,h=img.height;
+      if(w>MAX||h>MAX){var s=MAX/Math.max(w,h);w=Math.round(w*s);h=Math.round(h*s);}
+      var cv=document.createElement('canvas');cv.width=w;cv.height=h;
+      cv.getContext('2d').drawImage(img,0,0,w,h);
+      var d=cv.toDataURL('image/jpeg',0.82);
+      cb({type:"image",source:{type:"base64",media_type:"image/jpeg",data:d.substring(d.indexOf(',')+1)}});
+    };
+    img.onerror=function(){err('Could not read one of the images.');};
+    img.src=rd.result;
+  };
+  rd.onerror=function(){err('Could not read one of the files.');};
+  rd.readAsDataURL(file);
+}
+function _planSys(){
+  var company=(CURRENT_USER&&CURRENT_USER.name)||'';
+  return 'You are a senior construction cost estimator'+(company?(' for '+company):'')+'. You are reading construction plans, blueprints, sketches or site drawings. First perform a quantity takeoff: identify the scope of work, rooms, dimensions, square footage, and counts of relevant elements (fixtures, outlets, windows, doors, panels, runs, squares of roofing, etc.). Then convert the takeoff into realistic itemized estimate line items using current California contractor pricing. Split labor and materials into separate lines where sensible, and include permit or fee lines if implied. CRITICAL: never silently guess. Anything you could not read or that the plans do not specify must appear as a plain-English entry in "assumptions" (what you assumed and why) or as a short clarifying question in "questions" (maximum 4, only ones that materially change price). Return ONLY a JSON object with no markdown, no code fences, and no commentary, in exactly this shape: {"items":[{"desc":"string","qty":number,"unit":"string","price":number}],"notes":"string","assumptions":["string"],"questions":["string"]} where price is the dollar amount per unit.';
+}
+function aiEstimateFromPlans(files){
+  var msg=document.getElementById('estAiMsg');var btn=document.getElementById('estPlanBtn');
+  var list=Array.prototype.slice.call(files||[]);
+  if(!list.length)return;
+  var pdfs=list.filter(function(f){return f.type==='application/pdf';});
+  var imgs=list.filter(function(f){return f.type.indexOf('image/')===0;});
+  if(pdfs.length>1){msg.textContent='One PDF at a time, please.';return;}
+  if(pdfs.length&&imgs.length){msg.textContent='Send either one PDF or up to 4 photos of the plans - not both at once.';return;}
+  if(imgs.length>4){msg.textContent='Up to 4 plan photos at a time - pick the most important pages.';return;}
+  if(pdfs.length&&pdfs[0].size>3000000){msg.textContent='That PDF is over 3 MB. Export a smaller version, or snap photos of the key pages instead.';return;}
+  btn.disabled=true;var old=btn.innerHTML;btn.innerHTML='Reading plans...';
+  msg.textContent='Reading your plans - doing the takeoff...';
+  document.getElementById('estPlanQ').innerHTML='';_planDraft=null;
+  var fail=function(e){btn.disabled=false;btn.innerHTML=old;msg.textContent='Plan reading error: '+e;};
+  var blocks=[],done=0;
+  var finish=function(){
+    var scope=document.getElementById('estAiScope').value.trim();
+    blocks.push({type:"text",text:'These are the plans for the job.'+(scope?(' Extra context from the contractor: '+scope):'')+' Do the takeoff and draft the estimate.'});
+    _planBlocks=blocks;
+    callClaudeBlocks(_planSys(),blocks,function(text){
+      btn.disabled=false;btn.innerHTML=old;_planApply(text,msg);
+    },fail,6000);
+  };
+  if(pdfs.length){
+    var rd=new FileReader();
+    rd.onload=function(){var d=rd.result;blocks.push({type:"document",source:{type:"base64",media_type:"application/pdf",data:d.substring(d.indexOf(',')+1)}});finish();};
+    rd.onerror=function(){fail('Could not read the PDF.');};
+    rd.readAsDataURL(pdfs[0]);
+  } else {
+    imgs.forEach(function(f,i){
+      _planShrinkImage(f,function(b){blocks[i]=b;done++;if(done===imgs.length){blocks=blocks.filter(Boolean);finish();}},fail);
+    });
+  }
+}
+function _planApply(text,msg){
+  var obj=_estParseJSON(text);
+  if(!obj||!obj.items||!obj.items.length){msg.textContent='Could not read the AI takeoff - try clearer photos or add a short description.';return;}
+  _planDraft=obj;
+  document.getElementById('estLines').innerHTML='';
+  obj.items.forEach(function(it){addEstLine({desc:it.desc||'',qty:estNum(it.qty)||1,unit:it.unit||'ea',price:estNum(it.price)});});
+  var notes=document.getElementById('estNotes');
+  var extra=(obj.notes||'');
+  if(obj.assumptions&&obj.assumptions.length){extra+=(extra?'\n':'')+'Assumptions: '+obj.assumptions.join(' | ');}
+  if(extra&&!notes.value.trim()){notes.value=extra;}
+  recalcEst();
+  msg.textContent='Drafted '+obj.items.length+' line items from your plans - AI draft, review every line before sending.';
+  _planRenderQ(obj.questions||[]);
+}
+function _planRenderQ(qs){
+  var c=document.getElementById('estPlanQ');if(!c)return;
+  if(!qs.length){c.innerHTML='';return;}
+  var html='<div style="background:#FFF8E6;border:1px solid #F2D98C;border-radius:10px;padding:10px 12px;margin:8px 0;font-size:12.5px;">'+
+    '<b>The plans didn\u2019t tell me everything.</b> Answer what you can (voice or type) and I\u2019ll refine the numbers:'+
+    '<ul style="margin:6px 0 8px;padding-left:18px;">'+qs.map(function(q){return '<li>'+esc(q)+'</li>';}).join('')+'</ul>'+
+    '<textarea id="estPlanAns" rows="2" style="width:100%;box-sizing:border-box;" placeholder="e.g. Standard-grade fixtures, demo is included, ceilings are 9 ft..."></textarea>'+
+    '<button class="btn btn-ghost" type="button" id="estPlanRefBtn" onclick="estPlanRefine()" style="margin-top:6px;">&#128260; Refine estimate</button></div>';
+  c.innerHTML=html;
+}
+function estPlanRefine(){
+  var ans=(document.getElementById('estPlanAns')||{}).value||'';ans=ans.trim();
+  var msg=document.getElementById('estAiMsg');
+  if(!ans){msg.textContent='Type a quick answer to the questions first.';return;}
+  if(!_planBlocks||!_planDraft){msg.textContent='Read the plans first.';return;}
+  var btn=document.getElementById('estPlanRefBtn');btn.disabled=true;var old=btn.innerHTML;btn.innerHTML='Refining...';
+  msg.textContent='Updating the estimate with your answers...';
+  var messages=[
+    {role:"user",content:_planBlocks},
+    {role:"assistant",content:JSON.stringify(_planDraft)},
+    {role:"user",content:'The contractor answered your questions: "'+ans+'". Update the takeoff and pricing accordingly. Return ONLY the same JSON shape as before ({"items":[...],"notes":"...","assumptions":[...],"questions":[...]}), with questions now containing only anything still unresolved.'}
+  ];
+  fetch("/api/claude",{method:"POST",headers:{"Content-Type":"application/json"},
+    body:JSON.stringify({model:"claude-sonnet-4-6",max_tokens:6000,system:_planSys(),messages:messages})
+  }).then(function(r){return r.json();}).then(function(data){
+    btn.disabled=false;btn.innerHTML=old;
+    if(data&&data.error){msg.textContent='AI error: '+(typeof data.error==='string'?data.error:(data.error.message||'unknown'));return;}
+    var text="";
+    if(data&&data.content){text=data.content.filter(function(b){return b.type==="text";}).map(function(b){return b.text;}).join("\n");}
+    _planApply(text,msg);
+  }).catch(function(e){btn.disabled=false;btn.innerHTML=old;msg.textContent='AI error: '+e.message;});
+}
+/* ===== end Plans -> Estimate ===== */
 var _gbbTiers=null;
 function _gbbTotal(items){var s=0;(items||[]).forEach(function(it){s+=estNum(it.qty)*estNum(it.price);});return s;}
 function aiGoodBetterBest(){

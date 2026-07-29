@@ -3750,22 +3750,49 @@ function emailEstimate(id){
   var subj=title+' '+(e.number||'')+' - '+(e.project||company);
   window.location.href='mailto:'+encodeURIComponent(e.clientEmail||'')+'?subject='+encodeURIComponent(subj)+'&body='+encodeURIComponent(parts.join(NL));
 }
+
+/* ---- Pricebook-driven estimating: prices come from the contractor's rates, never invented by AI ---- */
+function _pbRateCard(){
+  var pb=(window.pricebook||[]);
+  if(!pb.length) return '';
+  return pb.map(function(i){ return i.id+' | '+(i.category||'Other')+' | '+i.name+' | per '+(i.unit||'ea')+' | $'+estNum(i.price); }).join('\n');
+}
+function _pbById(id){ if(!id) return null; return (window.pricebook||[]).find(function(x){return x.id===id;})||null; }
+function _pbByName(name){
+  var pb=(window.pricebook||[]); if(!name) return null;
+  var n=String(name).toLowerCase().trim();
+  var hit=pb.find(function(x){return String(x.name||'').toLowerCase().trim()===n;});
+  if(hit) return hit;
+  return pb.find(function(x){ var xn=String(x.name||'').toLowerCase().trim(); return xn && (xn.indexOf(n)!==-1 || n.indexOf(xn)!==-1); })||null;
+}
+function _pbReprice(it){
+  var hasPb=(window.pricebook||[]).length>0;
+  var m=_pbById(it.pbId)||_pbByName(it.desc);
+  if(m) return {desc:m.name,qty:estNum(it.qty)||1,unit:m.unit||it.unit||'ea',price:estNum(m.price),_src:'pricebook'};
+  if(!hasPb) return {desc:(it.desc||'')+' [estimate - confirm]',qty:estNum(it.qty)||1,unit:it.unit||'ea',price:estNum(it.price),_src:'ai'};
+  return {desc:(it.desc||'')+' [needs your rate]',qty:estNum(it.qty)||1,unit:it.unit||'ea',price:0,_src:'unpriced'};
+}
+function _pbRepriceList(items){ return (items||[]).map(_pbReprice); }
+function _pbRepriceTiers(tiers){ return (tiers||[]).map(function(t){ t.items=_pbRepriceList(t.items); return t; }); }
+function _pbCounts(items){ var c={priced:0,unpriced:0,ai:0}; (items||[]).forEach(function(i){ if(i._src==='pricebook')c.priced++; else if(i._src==='unpriced')c.unpriced++; else c.ai++; }); return c; }
+function _pbTierWarn(tiers){ var u=0; (tiers||[]).forEach(function(t){ u+=_pbCounts(t.items).unpriced; }); return u; }
+
 function aiDraftEstimate(){
   var scope=document.getElementById('estAiScope').value.trim();
   var msg=document.getElementById('estAiMsg');var btn=document.getElementById('estAiBtn');
   if(!scope){msg.textContent='Type a short job description first.';return;}
   btn.disabled=true;var old=btn.innerHTML;btn.innerHTML='Thinking...';msg.textContent='Drafting line items with AI...';
   var company=(CURRENT_USER&&CURRENT_USER.name)||'';
-  var sys='You are a senior construction cost estimator'+(company?(' for '+company):'')+'. Convert the job description into realistic itemized estimate line items using current California contractor pricing. Split labor and materials into separate lines where sensible, and include permit or fee lines if implied. Return ONLY a JSON object with no markdown, no code fences, and no commentary, in exactly this shape: {"items":[{"desc":"string","qty":number,"unit":"string","price":number}],"notes":"string"} where price is the dollar amount per unit.';
+  var _rc=_pbRateCard(); var sys='You are a senior construction cost estimator'+(company?(' for '+company):'')+'. Break the job description into itemized estimate lines. Split labor and materials into separate lines where sensible, and include permit or fee lines if implied.'+(_rc?('\n\nCONTRACTOR RATE CARD (id | category | item | unit | rate) - these are the ONLY valid prices:\n'+_rc+'\n\nFor every line, choose the matching rate-card id and put it in "pbId", and give the QUANTITY. Do NOT invent, guess, or adjust any price - the app applies the contractor rate. If nothing on the rate card fits the line, set "pbId" to null and still give desc, qty and unit.'):('\n\nThe contractor has no rate card yet, so give a rough ballpark unit price per line; it will be labelled unconfirmed.'))+' Return ONLY a JSON object with no markdown, no code fences, and no commentary, in exactly this shape: {"items":[{"desc":"string","pbId":"string or null","qty":number,"unit":"string","price":number}],"notes":"string"}';
   callClaude(sys,'Job description: '+scope,function(text){
     btn.disabled=false;btn.innerHTML=old;
     var obj=_estParseJSON(text);
     if(!obj||!obj.items||!obj.items.length){msg.textContent='Could not read the AI draft - try rephrasing the description.';return;}
     document.getElementById('estLines').innerHTML='';
-    obj.items.forEach(function(it){addEstLine({desc:it.desc||'',qty:estNum(it.qty)||1,unit:it.unit||'ea',price:estNum(it.price)});});
+    var _lines=_pbRepriceList(obj.items); _lines.forEach(function(it){addEstLine({desc:it.desc,qty:it.qty,unit:it.unit,price:it.price});});
     if(obj.notes&&!document.getElementById('estNotes').value.trim()){document.getElementById('estNotes').value=obj.notes;}
     recalcEst();
-    msg.textContent='Drafted '+obj.items.length+' line items - review, adjust, then Save.';
+    var _c=_pbCounts(_lines); msg.textContent='Drafted '+obj.items.length+' lines - '+_c.priced+' priced from your Pricebook'+(_c.unpriced?(', '+_c.unpriced+' NEED YOUR RATE'):'')+(_c.ai?(', '+_c.ai+' unconfirmed'):'')+'. Review, then Save.';
   },function(err){btn.disabled=false;btn.innerHTML=old;msg.textContent='AI error: '+err;});
 }
 /* ===== Plans -> Estimate module ===== */
@@ -3899,13 +3926,13 @@ function aiGoodBetterBest(){
   if(!scope){msg.textContent='Type a short job description first.';return;}
   btn.disabled=true;var old=btn.innerHTML;btn.innerHTML='Thinking...';msg.textContent='Building Good / Better / Best options with AI...';
   var company=(CURRENT_USER&&CURRENT_USER.name)||'';
-  var sys='You are a senior construction estimator'+(company?(' for '+company):'')+'. From the job description, create THREE tiered proposal options a contractor can present to a homeowner, using realistic current California contractor pricing. "Good" = essential scope, budget-conscious, done right. "Better" = the recommended option: higher-grade materials, added value and some upgrades. "Best" = premium: full scope, top materials, warranties and extras. Good total < Better total < Best total. Each option has its own itemized line items. Return ONLY a JSON object, no markdown or code fences or commentary, exactly: {"tiers":[{"name":"Good","tagline":"one short client-facing sentence","items":[{"desc":"string","qty":number,"unit":"string","price":number}],"notes":"string"},{"name":"Better","tagline":"...","items":[...],"notes":"..."},{"name":"Best","tagline":"...","items":[...],"notes":"..."}]}';
+  var _rc=_pbRateCard(); var sys='You are a senior construction estimator'+(company?(' for '+company):'')+'. From the job description, create THREE tiered proposal options a contractor can present to a homeowner. "Good" = essential scope, done right. "Better" = the recommended option: added value and upgrades. "Best" = premium: full scope, top materials, warranties and extras. The tiers must differ by SCOPE - which items are included and their quantities - never by marking up the same numbers. Good total < Better total < Best total.'+(_rc?('\n\nCONTRACTOR RATE CARD (id | category | item | unit | rate) - these are the ONLY valid prices:\n'+_rc+'\n\nFor every line, choose the matching rate-card id as "pbId" and give the QUANTITY. Do NOT invent or adjust prices - the app applies the contractor rate. If nothing fits, set "pbId" to null.'):('\n\nNo rate card yet - give rough ballpark unit prices; they will be labelled unconfirmed.'))+' Return ONLY a JSON object, no markdown or code fences or commentary, exactly: {"tiers":[{"name":"Good","tagline":"one short client-facing sentence","items":[{"desc":"string","pbId":"string or null","qty":number,"unit":"string","price":number}],"notes":"string"},{"name":"Better","tagline":"...","items":[],"notes":"..."},{"name":"Best","tagline":"...","items":[],"notes":"..."}]}';
   callClaude(sys,'Job description: '+scope,function(text){
     btn.disabled=false;btn.innerHTML=old;
     var obj=_estParseJSON(text);
     if(!obj||!obj.tiers||!obj.tiers.length){msg.textContent='Could not read the AI options - try rephrasing.';return;}
-    _gbbTiers=obj.tiers;_gbbRender();
-    msg.textContent='Three options ready - pick one to load, or present all three to your client.';
+    _gbbTiers=_pbRepriceTiers(obj.tiers);_gbbRender();
+    var _uw=_pbTierWarn(_gbbTiers); msg.textContent='Three options ready'+(_uw?(' - '+_uw+' line(s) NEED YOUR RATE before sending'):' - priced from your Pricebook')+'.';
   },function(err){btn.disabled=false;btn.innerHTML=old;msg.textContent='AI error: '+err;});
 }
 function _gbbRender(){
@@ -3944,7 +3971,7 @@ function printProposal(){
       '<h2>'+esc(t.name||'Option')+'</h2><div class="tag">'+esc(t.tagline||'')+'</div>'+
       '<div class="price">'+estMoney(tot)+'</div><ul>'+items+'</ul></div>';
   }).join('');
-  var w=window.open('','_blank');if(!w){alert('Please allow pop-ups to present the proposal.');return;}
+  var w=_docWin();
   var doc='<!doctype html><html><head><meta charset="utf-8"><title>Proposal - '+esc(company)+'</title><style>'+
     '*{box-sizing:border-box;}body{font-family:Arial,Helvetica,sans-serif;color:#0A1628;margin:34px;}'+
     '.hd{border-bottom:3px solid #1565C0;padding-bottom:14px;}.co{font-size:22px;font-weight:800;color:#1565C0;}'+
@@ -3968,6 +3995,107 @@ function _estParseJSON(text){
   if(a>=0&&b>a){t=t.substring(a,b+1);}
   try{return JSON.parse(t);}catch(e){return null;}
 }
+
+/* ---- Document delivery: in-page viewer with real PDF download + share (replaces blocked pop-ups) ---- */
+function _docName(html){
+  var m=/<title>([^<]*)<\/title>/i.exec(html||'');
+  var t=(m?m[1]:'Document').replace(/[\\\/:*?"<>|]+/g,'-').replace(/\s+/g,' ').trim();
+  return (t||'Document')+'.pdf';
+}
+function _loadHtml2Pdf(cb){
+  if(window.html2pdf) return cb();
+  var s=document.createElement('script');
+  s.src='https://cdn.jsdelivr.net/npm/html2pdf.js@0.10.1/dist/html2pdf.bundle.min.js';
+  s.onload=function(){ cb(); };
+  s.onerror=function(){ cb(new Error('Could not load the PDF tool - check your connection, or use Print.')); };
+  document.head.appendChild(s);
+}
+function _docPdfBlob(fr,filename,cb,msg){
+  _loadHtml2Pdf(function(err){
+    if(err){ if(msg)msg.textContent=err.message; return; }
+    var body=fr.contentWindow.document.body;
+    window.html2pdf().set({
+      margin:[10,10,10,10], filename:filename,
+      image:{type:'jpeg',quality:0.96},
+      html2canvas:{scale:2,useCORS:true,backgroundColor:'#ffffff'},
+      jsPDF:{unit:'mm',format:'letter',orientation:'portrait'},
+      pagebreak:{mode:['css','legacy']}
+    }).from(body).outputPdf('blob').then(function(blob){ cb(blob); })
+      .catch(function(){ if(msg)msg.textContent='Could not build the PDF - use Print instead.'; });
+  });
+}
+function _docDownload(fr,filename,msg){
+  if(msg)msg.textContent='Building PDF...';
+  _docPdfBlob(fr,filename,function(blob){
+    var u=URL.createObjectURL(blob);
+    var a=document.createElement('a'); a.href=u; a.download=filename;
+    document.body.appendChild(a); a.click();
+    setTimeout(function(){ try{document.body.removeChild(a);}catch(e){} URL.revokeObjectURL(u); },150);
+    if(msg)msg.textContent='Saved to your downloads as '+filename;
+  },msg);
+}
+function _docShareFile(fr,filename,msg){
+  if(msg)msg.textContent='Preparing to share...';
+  _docPdfBlob(fr,filename,function(blob){
+    try{
+      var file=new File([blob],filename,{type:'application/pdf'});
+      if(navigator.canShare && navigator.canShare({files:[file]})){
+        navigator.share({files:[file],title:filename})
+          .then(function(){ if(msg)msg.textContent='Sent.'; })
+          .catch(function(){ if(msg)msg.textContent=''; });
+      } else { if(msg)msg.textContent='Sharing not available here - use Download PDF.'; }
+    }catch(e){ if(msg)msg.textContent='Sharing not available here - use Download PDF.'; }
+  },msg);
+}
+function _deliverDoc(html,name){
+  var filename=name||_docName(html);
+  var ov=document.getElementById('_docOverlay');
+  if(!ov){
+    ov=document.createElement('div'); ov.id='_docOverlay';
+    ov.innerHTML='<div class="_doc-bar">'+
+      '<button type="button" class="_doc-btn _doc-primary" id="_docPdfBtn">\u2b07 Download PDF</button>'+
+      '<button type="button" class="_doc-btn" id="_docPrintBtn">\ud83d\udda8 Print</button>'+
+      '<button type="button" class="_doc-btn" id="_docShareBtn" style="display:none">\u2197 Send</button>'+
+      '<span class="_doc-msg" id="_docMsg"></span>'+
+      '<button type="button" class="_doc-btn _doc-close" id="_docCloseBtn">\u2715 Close</button>'+
+      '</div><div class="_doc-stage"><iframe id="_docFrame" title="Document preview"></iframe></div>';
+    document.body.appendChild(ov);
+    var st=document.createElement('style');
+    st.textContent='#_docOverlay{position:fixed;inset:0;z-index:99999;background:rgba(8,12,20,.9);display:none;flex-direction:column}'+
+      '#_docOverlay.show{display:flex}'+
+      '._doc-bar{display:flex;gap:8px;align-items:center;flex-wrap:wrap;padding:10px 12px;background:#0f172a;border-bottom:1px solid rgba(255,255,255,.12)}'+
+      '._doc-btn{font:600 14px/1 system-ui,-apple-system,sans-serif;padding:11px 14px;border-radius:9px;border:1px solid rgba(255,255,255,.18);background:rgba(255,255,255,.07);color:#e6eefc;cursor:pointer}'+
+      '._doc-primary{background:#2563eb;border-color:#2563eb;color:#fff}'+
+      '._doc-close{margin-left:auto}'+
+      '._doc-msg{color:#9fb4d4;font:500 13px/1.3 system-ui,sans-serif;flex:1;min-width:120px}'+
+      '._doc-stage{flex:1;overflow:auto;-webkit-overflow-scrolling:touch;background:#5b6572;padding:12px}'+
+      '#_docFrame{width:100%;max-width:900px;margin:0 auto;display:block;background:#fff;border:0;border-radius:6px;min-height:78vh;box-shadow:0 10px 40px rgba(0,0,0,.45)}';
+    document.head.appendChild(st);
+    document.getElementById('_docCloseBtn').onclick=function(){ ov.classList.remove('show'); };
+  }
+  ov.classList.add('show');
+  var msg=document.getElementById('_docMsg'); msg.textContent='';
+  var fr=document.getElementById('_docFrame');
+  var d=fr.contentWindow.document; d.open(); d.write(html); d.close();
+  document.getElementById('_docPdfBtn').onclick=function(){ _docDownload(fr,filename,msg); };
+  document.getElementById('_docPrintBtn').onclick=function(){
+    try{ fr.contentWindow.focus(); fr.contentWindow.print(); }
+    catch(e){ msg.textContent='Print unavailable here - use Download PDF.'; }
+  };
+  var sb=document.getElementById('_docShareBtn');
+  if(navigator.share){ sb.style.display=''; sb.onclick=function(){ _docShareFile(fr,filename,msg); }; }
+  else { sb.style.display='none'; }
+}
+/* Stand-in for the old pop-up window: collects the written HTML, then shows the viewer. */
+function _docWin(){
+  var buf='';
+  return {
+    document:{ open:function(){buf='';}, write:function(s){ buf+=(s||''); }, close:function(){} },
+    focus:function(){},
+    print:function(){ _deliverDoc(buf); }
+  };
+}
+
 function printEstimate(id){
   var e=estimates.find(function(x){return x.id===id;});if(!e)return;
   var t=estTotals(e);
@@ -3975,8 +4103,7 @@ function printEstimate(id){
   var title=(e.kind==='invoice')?'INVOICE':'ESTIMATE';
   var rows=(e.items||[]).map(function(it){return '<tr><td>'+esc(it.desc)+'</td><td class="c">'+estNum(it.qty)+'</td><td class="c">'+esc(it.unit||'')+'</td><td class="r">'+estMoney(it.price)+'</td><td class="r">'+estMoney(estNum(it.qty)*estNum(it.price))+'</td></tr>';}).join('');
   var taxRow=(estNum(e.taxRate)>0)?('<tr><td class="r" colspan="4">Tax ('+estNum(e.taxRate)+'%)</td><td class="r">'+estMoney(t.tax)+'</td></tr>'):'';
-  var w=window.open('','_blank');
-  if(!w){alert('Please allow pop-ups to print or save the PDF.');return;}
+  var w=_docWin();
   var doc=`<!doctype html><html><head><meta charset="utf-8"><title>${title} ${esc(e.number||'')}</title>
 <style>
 *{box-sizing:border-box;}body{font-family:Arial,Helvetica,sans-serif;color:#0A1628;margin:40px;}
@@ -4106,7 +4233,7 @@ function _skWrapDoc(svg,title){
 }
 function printCurrentSketch(){
   if(!_curSketchSvg){alert('Generate a drawing first.');return;}
-  var w=window.open('','_blank');if(!w){alert('Please allow pop-ups to print or save the PDF.');return;}
+  var w=_docWin();
   w.document.write(_skWrapDoc(_curSketchSvg,_skTypeLabels[_skType]||'Concept drawing'));w.document.close();w.focus();
   setTimeout(function(){try{w.print();}catch(e){}},350);
 }
@@ -4138,7 +4265,7 @@ function reopenSketch(id){
 }
 function printSavedSketch(id){
   var s=sketches.find(function(x){return x.id===id;});if(!s)return;
-  var w=window.open('','_blank');if(!w){alert('Please allow pop-ups to print or save the PDF.');return;}
+  var w=_docWin();
   w.document.write(_skWrapDoc(s.svg,s.typeLabel||'Concept drawing'));w.document.close();w.focus();
   setTimeout(function(){try{w.print();}catch(e){}},350);
 }
@@ -4425,18 +4552,33 @@ function selChoose(id,oi){var s=(window.selections||[]).find(function(x){return 
 function selApprove(id){var s=(window.selections||[]).find(function(x){return x.id===id;});if(!s||!s.chosen)return;s.status='approved';save();renderSelections();}
 function selUnapprove(id){var s=(window.selections||[]).find(function(x){return x.id===id;});if(!s)return;s.status='pending';save();renderSelections();}
 function selDel(id){selections=(window.selections||[]).filter(function(x){return x.id!==id;});save();renderSelections();}
+
+function _pbSelReprice(o){
+  var hasPb=(window.pricebook||[]).length>0;
+  var m=_pbById(o.pbId)||_pbByName(o.label);
+  if(m) return {label:m.name,price:estNum(m.price),_src:'pricebook'};
+  var lbl=String(o.label||'');
+  if(!/\(est\.\)$/.test(lbl)) lbl=lbl+' (est.)';
+  return {label:lbl,price:estNum(o.price),_src:'ai'};
+}
+function _pbSelCounts(sels){
+  var c={priced:0,est:0};
+  (sels||[]).forEach(function(s){(s.options||[]).forEach(function(o){ if(o._src==='pricebook')c.priced++; else c.est++; });});
+  return c;
+}
+
 function aiSuggestSelections(){
   var jid=_selJobId();var j=(window.jobs||[]).find(function(x){return x.id===jid;});
   var msg=document.getElementById('selMsg');
   if(!j){if(msg)msg.textContent='Pick a job first.';return;}
   if(msg)msg.textContent='Generating selections with AI for '+j.name+'...';
-  var sys='You are a construction project manager creating a client SELECTIONS sheet for a project called "'+j.name+'". List the finish and material decisions the homeowner needs to make, each with 3 realistic options at good / better / best price points using current California pricing. Return ONLY JSON, no markdown or commentary: {"selections":[{"category":"string e.g. Flooring","options":[{"label":"string","price":number},{"label":"string","price":number},{"label":"string","price":number}]}]} with 5-9 categories relevant to the project.';
+  var _rc=_pbRateCard(); var sys='You are a construction project manager creating a client SELECTIONS sheet for a project called "'+j.name+'". List the finish and material decisions the homeowner needs to make, each with 3 options at good / better / best levels that differ by MATERIAL GRADE and scope.'+(_rc?('\n\nCONTRACTOR RATE CARD (id | category | item | unit | rate) - these are the ONLY confirmed prices:\n'+_rc+'\n\nIf an option matches a rate-card item, put its id in "pbId" and do NOT invent a price - the app applies the contractor rate. If it is not on the rate card, set "pbId" to null and give a conservative ballpark allowance; it will be shown to the homeowner as an estimate, so keep it defensible rather than precise-looking.'):('\n\nNo rate card yet - give conservative ballpark allowances; every one will be labelled an estimate.'))+' Return ONLY JSON, no markdown or commentary: {"selections":[{"category":"string e.g. Flooring","options":[{"label":"string","pbId":"string or null","price":number},{"label":"string","pbId":"string or null","price":number},{"label":"string","pbId":"string or null","price":number}]}]} with 5-9 categories relevant to the project.';
   callClaude(sys,'Project: '+j.name+' ('+(j.location||'')+'). Phase: '+(j.status||'')+'.',function(text){
     var obj=_estParseJSON(text);
     if(!obj||!obj.selections||!obj.selections.length){if(msg)msg.textContent='Could not generate selections - try again.';return;}
     window.selections=window.selections||[];
-    obj.selections.forEach(function(s){window.selections.push({id:uid(),jobId:j.id,jobName:j.name,category:s.category||'Selection',options:(s.options||[]).map(function(o){return {label:o.label||'',price:estNum(o.price)};}),chosen:'',status:'pending'});});
-    save();renderSelections();if(msg)msg.textContent='Added '+obj.selections.length+' selection categories.';
+    obj.selections.forEach(function(s){window.selections.push({id:uid(),jobId:j.id,jobName:j.name,category:s.category||'Selection',options:(s.options||[]).map(_pbSelReprice),chosen:'',status:'pending'});});
+    save();renderSelections();var _sc=_pbSelCounts(obj.selections.map(function(s){return {options:(s.options||[]).map(_pbSelReprice)};}));if(msg)msg.textContent='Added '+obj.selections.length+' categories - '+_sc.priced+' priced from your Pricebook, '+_sc.est+' ballpark allowances marked (est.) to confirm.';
   },function(err){if(msg)msg.textContent='AI error: '+err;});
 }
 function printSelectionSheet(){
@@ -4448,7 +4590,7 @@ function printSelectionSheet(){
     var opts=(s.options||[]).map(function(o){var on=(s.chosen===o.label);return '<tr class="'+(on?'chosen':'')+'"><td>'+(on?'\u25c9':'\u25cb')+' '+esc(o.label)+'</td><td class="r">'+estMoney(o.price)+'</td></tr>';}).join('');
     return '<div class="selblock"><h3>'+esc(s.category)+(s.chosen?' <span class="ch">\u2713 '+esc(s.chosen)+'</span>':'')+'</h3><table>'+opts+'</table></div>';
   }).join('');
-  var w=window.open('','_blank');if(!w){alert('Please allow pop-ups.');return;}
+  var w=_docWin();
   var doc='<!doctype html><html><head><meta charset="utf-8"><title>Selections - '+esc(j?j.name:'')+'</title><style>*{box-sizing:border-box;}body{font-family:Arial,Helvetica,sans-serif;color:#0A1628;margin:36px;}.hd{border-bottom:3px solid #1565C0;padding-bottom:14px;margin-bottom:8px;}.co{font-size:22px;font-weight:800;color:#1565C0;}.sub{color:#5A6B7D;font-size:13px;margin-top:4px;}h1{font-size:22px;margin:18px 0 4px;}.lead{color:#5A6B7D;font-size:13.5px;margin-bottom:20px;}.selblock{margin-bottom:16px;}.selblock h3{font-size:15px;margin:0 0 6px;border-bottom:1px solid #E1E8F0;padding-bottom:4px;}.ch{color:#2E9B5B;font-size:12px;font-weight:600;}table{width:100%;border-collapse:collapse;}td{padding:6px 8px;font-size:13px;border-bottom:1px solid #F0F3F7;}td.r{text-align:right;font-weight:600;color:#1565C0;width:110px;}tr.chosen td{background:#F0FBF4;font-weight:600;}.sign{margin-top:30px;display:flex;gap:40px;}.sign div{flex:1;border-top:1px solid #0A1628;padding-top:6px;font-size:12px;color:#5A6B7D;}.ft{margin-top:24px;font-size:11px;color:#9aa7b4;text-align:center;}</style></head><body><div class="hd"><div class="co">'+esc(company)+'</div><div class="sub">Selection Sheet'+(j?(' \u00b7 '+esc(j.name)):'')+(j&&j.client?(' \u00b7 '+esc(j.client)):'')+'</div></div><h1>Your finish selections</h1><div class="lead">Please review the options below and initial your choices. Prices are estimates and will be confirmed on your change order.</div>'+rows+'<div class="sign"><div>Client signature / date</div><div>'+esc(company)+' / date</div></div><div class="ft">Prepared by '+esc(company)+' \u00b7 powered by Orchamind</div></body></html>';
   w.document.write(doc);w.document.close();w.focus();setTimeout(function(){try{w.print();}catch(e){}},400);
 }
@@ -4505,7 +4647,7 @@ function printToolboxTalk(id){
   var company=(CURRENT_USER&&CURRENT_USER.name)||'Your Company';
   function sec(title,arr){return '<h3>'+title+'</h3><ul>'+(arr||[]).map(function(x){return '<li>'+esc(x)+'</li>';}).join('')+'</ul>';}
   var signRows='';for(var i=0;i<10;i++){signRows+='<tr><td>&nbsp;</td><td>&nbsp;</td></tr>';}
-  var w=window.open('','_blank');if(!w){alert('Please allow pop-ups.');return;}
+  var w=_docWin();
   var doc='<!doctype html><html><head><meta charset="utf-8"><title>Toolbox Talk - '+esc(t.topic)+'</title><style>*{box-sizing:border-box;}body{font-family:Arial,Helvetica,sans-serif;color:#0A1628;margin:34px;}.hd{border-bottom:3px solid #1565C0;padding-bottom:12px;margin-bottom:10px;display:flex;justify-content:space-between;align-items:flex-end;}.co{font-size:20px;font-weight:800;color:#1565C0;}.mt{font-size:12px;color:#5A6B7D;text-align:right;}h1{font-size:22px;margin:10px 0 2px;}.sub{color:#5A6B7D;font-size:13px;margin-bottom:14px;}h3{font-size:13px;text-transform:uppercase;letter-spacing:.04em;color:#1565C0;margin:16px 0 4px;}ul{margin:0;padding-left:20px;}li{font-size:13px;margin-bottom:4px;}table{width:100%;border-collapse:collapse;margin-top:8px;}th,td{border:1px solid #C9D4E0;padding:9px 10px;font-size:12.5px;text-align:left;}th{background:#EEF3F8;text-transform:uppercase;font-size:10.5px;letter-spacing:.04em;}.sig{height:34px;}.ft{margin-top:20px;font-size:11px;color:#9aa7b4;text-align:center;}</style></head><body>'+
    '<div class="hd"><div class="co">'+esc(company)+'</div><div class="mt">Toolbox Talk / Safety Meeting<br>Date: '+esc(t.date||'')+(t.jobName?('<br>Job: '+esc(t.jobName)):'')+'</div></div>'+
    '<h1>'+esc(t.topic)+'</h1><div class="sub">Review with the crew before work begins. Everyone present must sign below.</div>'+
@@ -4557,7 +4699,7 @@ function printPunchList(){
   var company=(CURRENT_USER&&CURRENT_USER.name)||'Your Company';
   var done=items.filter(function(p){return p.status==='done';}).length;
   var rows=items.map(function(p,i){return '<tr class="'+(p.status==='done'?'d':'')+'"><td class="c">'+(i+1)+'</td><td>'+esc(p.desc)+'</td><td>'+esc(p.location||'')+'</td><td class="c">'+(p.status==='done'?'\u2713 Done':'\u2610')+'</td></tr>';}).join('');
-  var w=window.open('','_blank');if(!w){alert('Please allow pop-ups.');return;}
+  var w=_docWin();
   var doc='<!doctype html><html><head><meta charset="utf-8"><title>Punch List - '+esc(j?j.name:'')+'</title><style>*{box-sizing:border-box;}body{font-family:Arial,Helvetica,sans-serif;color:#0A1628;margin:34px;}.hd{border-bottom:3px solid #1565C0;padding-bottom:12px;margin-bottom:8px;display:flex;justify-content:space-between;align-items:flex-end;}.co{font-size:20px;font-weight:800;color:#1565C0;}.mt{font-size:12px;color:#5A6B7D;text-align:right;}h1{font-size:22px;margin:12px 0 2px;}.sub{color:#5A6B7D;font-size:13px;margin-bottom:14px;}table{width:100%;border-collapse:collapse;}th,td{border:1px solid #C9D4E0;padding:8px 10px;font-size:12.5px;text-align:left;}th{background:#EEF3F8;text-transform:uppercase;font-size:10.5px;letter-spacing:.04em;}td.c,th.c{text-align:center;width:44px;}tr.d td{color:#8A9AAC;}.ft{margin-top:20px;font-size:11px;color:#9aa7b4;text-align:center;}</style></head><body>'+
    '<div class="hd"><div class="co">'+esc(company)+'</div><div class="mt">Punch List<br>Date: '+(new Date().toISOString().split("T")[0])+(j?('<br>Job: '+esc(j.name)):'')+'</div></div>'+
    '<h1>Punch List</h1><div class="sub">'+done+' of '+items.length+' items complete'+(j&&j.client?(' \u00b7 '+esc(j.client)):'')+'</div>'+
@@ -5041,7 +5183,7 @@ function printCO(id){
   var c=(window.changeOrders||[]).find(function(x){return x.id===id;}); if(!c) return;
   var company=(CURRENT_USER&&CURRENT_USER.name)||'Your Company'; var t=coTotals(c);
   var rows=(c.items||[]).map(function(it){ return '<tr><td>'+esc(it.desc)+'</td><td class="c">'+estNum(it.qty)+'</td><td class="r">'+estMoney(it.price)+'</td><td class="r">'+estMoney(estNum(it.qty)*estNum(it.price))+'</td></tr>'; }).join('');
-  var w=window.open('','_blank'); if(!w){ alert('Please allow pop-ups to print.'); return; }
+  var w=_docWin();
   var doc=`<!doctype html><html><head><meta charset="utf-8"><title>${esc(c.number||'Change Order')}</title>
 <style>*{box-sizing:border-box}body{font-family:Arial,Helvetica,sans-serif;color:#0A1628;margin:40px}.hd{display:flex;justify-content:space-between;border-bottom:3px solid #1565C0;padding-bottom:16px;margin-bottom:18px}.co{font-size:20px;font-weight:700;color:#1565C0}h1{font-size:24px;margin:0}.meta{font-size:13px;color:#5A6B7D}table{width:100%;border-collapse:collapse;margin-top:12px;font-size:13px}th{background:#EEF3F8;text-align:left;padding:9px}td{padding:9px;border-bottom:1px solid #E1E8F0}td.c{text-align:center}td.r{text-align:right}tfoot td{font-weight:700;border:none}.grand td{font-size:16px;color:#1565C0;border-top:2px solid #1565C0}.sig{margin-top:40px;display:flex;gap:40px}.sig div{flex:1;border-top:1px solid #0A1628;padding-top:6px;font-size:12px;color:#5A6B7D}</style></head><body>
 <div class="hd"><div><div class="co">${esc(company)}</div><div class="meta">CHANGE ORDER</div></div><div style="text-align:right"><h1>Change Order</h1><div class="meta">${esc(c.number||'')}<br>Date: ${esc(c.date||'')}</div></div></div>
