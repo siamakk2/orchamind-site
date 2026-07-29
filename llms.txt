@@ -35,6 +35,7 @@ Orchamind replaces the stack of tools a field business juggles. Instead of the o
 - [How to write a construction bid that wins](https://orchamind.com/how-to-write-construction-bid/): Structure, pricing, and what makes bids lose.
 - [How to estimate a construction job](https://orchamind.com/how-to-estimate-a-job/): Labor, materials, overhead, and margin — without underbidding.
 - [Can AI write a construction estimate?](https://orchamind.com/ai-construction-estimate-software/): What AI estimating can and cannot do today.
+- [AI construction takeoff: plans to estimate](https://orchamind.com/ai-construction-takeoff/): Upload plans or snap photos of blueprints; AI does the takeoff and drafts the itemized estimate with listed assumptions and clarifying questions.
 - [Can AI draw floor plans and electrical/plumbing layouts?](https://orchamind.com/ai-construction-drawings/): The honest state of AI construction drawings.
 
 ## What Orchamind does
