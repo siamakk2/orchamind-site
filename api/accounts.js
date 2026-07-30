@@ -288,9 +288,12 @@ module.exports = async function handler(req, res) {
 
     if (action === 'list') {
       if (!isAdmin) return res.status(200).json({ ok: false, error: 'Admin only.' });
-      var r3 = await sbFetch(base + '/accounts?select=username,name,role,company,owner,must_change,reset_requested,status,stripe_customer,created_at,profile&order=created_at.asc', { headers: H });
+      var r3 = await sbFetch(base + '/accounts?select=username,name,role,company,owner,must_change,reset_requested,status,stripe_customer,stripe_status,trial_end,last_payment_at,created_at,profile&order=created_at.asc', { headers: H });
       var a3 = await r3.json();
-      return res.status(200).json({ ok: true, users: Array.isArray(a3) ? a3 : [] });
+      var pays = [], usage = [];
+      try { var rp = await sbFetch(base + '/payments?select=stripe_customer,amount_cents,paid,invoice_number,created_at&order=created_at.desc&limit=500', { headers: H }); if (rp.ok) { var pj = await rp.json(); if (Array.isArray(pj)) pays = pj; } } catch (e) {}
+      try { var ru2 = await sbFetch(base + '/usage_summary?select=*', { headers: H }); if (ru2.ok) { var uj = await ru2.json(); if (Array.isArray(uj)) usage = uj; } } catch (e) {}
+      return res.status(200).json({ ok: true, users: Array.isArray(a3) ? a3 : [], payments: pays, usage: usage });
     }
 
     if (action === 'add') {
