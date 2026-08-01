@@ -4123,6 +4123,12 @@ function _p3dEnsureLoop(){
   (function frame(){if(_p3dAuto)_p3dTheta+=0.004;_p3dRender();_p3dRAF=requestAnimationFrame(frame);})();
 }
 
+function _p3dShade(hex,f){
+  // f in [0,1] brightness multiplier; clamp to keep colors alive
+  var n=parseInt(hex.slice(1),16),r=(n>>16)&255,g2=(n>>8)&255,b=n&255;
+  f=Math.max(0.35,Math.min(1.25,f));
+  return 'rgb('+Math.min(255,r*f|0)+','+Math.min(255,g2*f|0)+','+Math.min(255,b*f|0)+')';
+}
 function _p3dRender(){
   var g=_planGeom;if(!g)return;
   var cv=document.getElementById('p3dCanvas');var dpr=window.devicePixelRatio||1;
@@ -4133,45 +4139,67 @@ function _p3dRender(){
   var minX=1e9,minY=1e9,maxX=-1e9,maxY=-1e9;
   rooms.forEach(function(r){minX=Math.min(minX,r.x);minY=Math.min(minY,r.y);maxX=Math.max(maxX,r.x+r.w);maxY=Math.max(maxY,r.y+r.h);});
   var cvirt=Math.max(maxX-minX,maxY-minY)||1;
-  var span=cvirt*1.5;
+  var span=cvirt*1.55;
   var s=(Math.min(W,H)*0.95/span)*_p3dZoom;
   var cx=(minX+maxX)/2,cy=(minY+maxY)/2;
   var cosT=Math.cos(_p3dTheta),sinT=Math.sin(_p3dTheta);
   function P(x,y,z){
     var rx=(x-cx)*cosT-(y-cy)*sinT, ry=(x-cx)*sinT+(y-cy)*cosT;
-    return {x:W/2+rx*s, y:H*0.56+ry*s*0.5-z*s*0.72, d:ry};
+    return {x:W/2+rx*s, y:H*0.60+ry*s*0.5-z*s*0.70, d:ry};
   }
-  function quad(a,b,c2,d2,fill,stroke,alpha){
-    ctx.globalAlpha=alpha==null?1:alpha;
-    ctx.beginPath();ctx.moveTo(a.x,a.y);ctx.lineTo(b.x,b.y);ctx.lineTo(c2.x,c2.y);ctx.lineTo(d2.x,d2.y);ctx.closePath();
+  function poly(pts,fill,stroke,lw){
+    ctx.beginPath();ctx.moveTo(pts[0].x,pts[0].y);
+    for(var k=1;k<pts.length;k++)ctx.lineTo(pts[k].x,pts[k].y);
+    ctx.closePath();
     if(fill){ctx.fillStyle=fill;ctx.fill();}
-    if(stroke){ctx.strokeStyle=stroke;ctx.lineWidth=1;ctx.stroke();}
-    ctx.globalAlpha=1;
+    if(stroke){ctx.strokeStyle=stroke;ctx.lineWidth=lw||1;ctx.lineJoin='round';ctx.stroke();}
   }
-  // ground slab
+  // ---- soft contact shadow ----
   var m=Math.max(2,cvirt*0.06);
-  quad(P(minX-m,minY-m,0),P(maxX+m,minY-m,0),P(maxX+m,maxY+m,0),P(minX-m,maxY+m,0),'#DFE9F5','#C9D6E6');
-  // collect walls from all rooms, sort far -> near
-  var walls=[],labels=[];
+  ctx.save();ctx.globalAlpha=0.16;
+  var sh=[P(minX-m,minY-m,0),P(maxX+m,minY-m,0),P(maxX+m,maxY+m,0),P(minX-m,maxY+m,0)];
+  sh.forEach(function(p){p.x+=6;p.y+=8;});
+  poly(sh,'#0A1628',null);ctx.restore();
+  // ---- ground plane ----
+  poly([P(minX-m,minY-m,0),P(maxX+m,minY-m,0),P(maxX+m,maxY+m,0),P(minX-m,maxY+m,0)],'#E6EEF7','#CBD9E8',1);
+  // ---- ground grid (5 ft) ----
+  ctx.strokeStyle='rgba(120,150,185,0.28)';ctx.lineWidth=0.5;
+  var gx0=Math.floor((minX-m)/5)*5,gx1=Math.ceil((maxX+m)/5)*5;
+  var gy0=Math.floor((minY-m)/5)*5,gy1=Math.ceil((maxY+m)/5)*5;
+  for(var gx=gx0;gx<=gx1;gx+=5){var a=P(gx,gy0,0),b=P(gx,gy1,0);ctx.beginPath();ctx.moveTo(a.x,a.y);ctx.lineTo(b.x,b.y);ctx.stroke();}
+  for(var gy=gy0;gy<=gy1;gy+=5){var a2=P(gx0,gy,0),b2=P(gx1,gy,0);ctx.beginPath();ctx.moveTo(a2.x,a2.y);ctx.lineTo(b2.x,b2.y);ctx.stroke();}
+  // ---- light direction in plan space (rotates with model so shading is consistent) ----
+  var lightAng=_p3dTheta+0.9, lx=Math.cos(lightAng), ly=Math.sin(lightAng);
+  // ---- build faces: floors + 4 walls per room, then z-sort all together ----
+  var faces=[],labels=[];
   rooms.forEach(function(r,i){
     var col=_P3D_COLORS[i%_P3D_COLORS.length];
     var x0=r.x,y0=r.y,x1=r.x+r.w,y1=r.y+r.h;
-    var fl=[P(x0,y0,0),P(x1,y0,0),P(x1,y1,0),P(x0,y1,0)];
-    quad(fl[0],fl[1],fl[2],fl[3],_hexA(col,0.16),null);
-    var segs=[[x0,y0,x1,y0],[x1,y0,x1,y1],[x1,y1,x0,y1],[x0,y1,x0,y0]];
+    // colored floor
+    faces.push({d:((r.x+r.w/2-cx)*sinT+(r.y+r.h/2-cy)*cosT)-0.01,
+      pts:[P(x0,y0,0),P(x1,y0,0),P(x1,y1,0),P(x0,y1,0)],
+      fill:_p3dShade(col,0.55),stroke:'rgba(10,22,40,0.18)',lw:1});
+    // 4 walls, each with an outward normal for lighting
+    var segs=[[x0,y0,x1,y0,0,-1],[x1,y0,x1,y1,1,0],[x1,y1,x0,y1,0,1],[x0,y1,x0,y0,-1,0]];
     segs.forEach(function(sg){
+      var nx=sg[4],ny=sg[5];
+      var lit=0.72+0.5*Math.max(0,nx*lx+ny*ly); // Lambert-ish
       var a=P(sg[0],sg[1],0),b=P(sg[2],sg[3],0),c2=P(sg[2],sg[3],hFt),d2=P(sg[0],sg[1],hFt);
-      walls.push({d:(a.d+b.d)/2,a:a,b:b,c:c2,dd:d2,col:col});
+      faces.push({d:(a.d+b.d)/2,pts:[a,b,c2,d2],fill:_p3dShade(col,lit),stroke:'rgba(10,22,40,0.5)',lw:1});
     });
-    var ctr=P((x0+x1)/2,(y0+y1)/2,hFt);
-    labels.push({p:ctr,t:(r.name||'Room')+' \u00b7 '+Math.round(r.w*r.h)+' sf'});
+    labels.push({p:P((x0+x1)/2,(y0+y1)/2,hFt),d:((r.x+r.w/2-cx)*sinT+(r.y+r.h/2-cy)*cosT),t:(r.name||'Room'),sf:Math.round(r.w*r.h)+' sf'});
   });
-  walls.sort(function(a,b){return a.d-b.d;});
-  walls.forEach(function(w2){quad(w2.a,w2.b,w2.c,w2.dd,_hexA(w2.col,0.32),'rgba(10,22,40,0.55)',1);});
-  ctx.font='600 11px Inter,system-ui,sans-serif';ctx.textAlign='center';
+  faces.sort(function(a,b){return a.d-b.d;});
+  faces.forEach(function(f){poly(f.pts,f.fill,f.stroke,f.lw);});
+  // ---- labels, near-to-far so front rooms sit on top ----
+  labels.sort(function(a,b){return a.d-b.d;});
+  ctx.textAlign='center';
   labels.forEach(function(l){
-    ctx.lineWidth=3;ctx.strokeStyle='rgba(255,255,255,0.9)';ctx.strokeText(l.t,l.p.x,l.p.y-6);
-    ctx.fillStyle='#0A1628';ctx.fillText(l.t,l.p.x,l.p.y-6);
+    ctx.font='700 12px Inter,system-ui,sans-serif';
+    ctx.lineWidth=3.5;ctx.strokeStyle='rgba(255,255,255,0.92)';
+    ctx.strokeText(l.t,l.p.x,l.p.y-14);ctx.fillStyle='#0A1628';ctx.fillText(l.t,l.p.x,l.p.y-14);
+    ctx.font='600 10.5px Inter,system-ui,sans-serif';
+    ctx.strokeText(l.sf,l.p.x,l.p.y-2);ctx.fillStyle='#3A4A5E';ctx.fillText(l.sf,l.p.x,l.p.y-2);
   });
 }
 function _hexA(hex,a){
