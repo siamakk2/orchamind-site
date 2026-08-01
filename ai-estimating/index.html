@@ -77,7 +77,83 @@ h1{font-family:var(--display);font-size:clamp(32px,5vw,50px);font-weight:800;lin
 .footer a:hover{color:var(--signal-soft)}
 @media(max-width:700px){.related-grid{grid-template-columns:1fr}}
 </style>
+<style id="a11y-contrast">
+/* WCAG AA contrast fixes (verified ratios).
+   signal #1E6FE0: white-on-blue 4.77, blue-on-white 4.77 (was 3.81 = FAIL)
+   signal-soft #8FBEFF on navy: 9.48 (was 6.66)
+   amber-ink #9A5B00 on light: 5.43 (amber #F9A825 on white was 1.97 = FAIL) */
+:root{--signal:#1E6FE0;--signal-soft:#8FBEFF;--amber-ink:#9A5B00;}
+/* amber as TEXT on light tints -> darkened amber (keeps the brand hue, readable) */
+.dj-tag{color:var(--amber-ink)!important;}
+.audit-eyebrow{color:var(--amber-ink)!important;}
+.hero-audit:hover,.cta-card a.cc-val:hover{color:var(--amber-ink)!important;}
+/* amber stays as-is on dark navy (9.20 = passes) and on amber buttons w/ navy text (9.20) */
+.demo-briefing li::before{color:var(--amber);}
+/* focus visibility for keyboard users */
+a:focus-visible,button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{
+  outline:3px solid #1E6FE0;outline-offset:2px;border-radius:4px;}
+</style>
+<style id="perf-paint">
+/* Skip rendering work for sections the user hasn't scrolled to yet.
+   Biggest FCP/LCP win on a long text page: the browser only lays out/paints what's visible. */
+/* The hero lives in <header>, so EVERY <section> is below the fold.
+   Let the browser skip layout+paint for all of them until scrolled into view. */
+section{content-visibility:auto;contain-intrinsic-size:0 900px;}
+/* Cheaper paint for the hero: promote it, avoid re-rasterizing gradients. */
+header{contain:layout paint style;}
+/* backdrop-filter is one of the most expensive paint ops on mobile GPUs. Desktop keeps it. */
+@media (max-width:900px){
+  .nav,.nav-inner,header .nav{backdrop-filter:none!important;-webkit-backdrop-filter:none!important;}
+}
+/* Respect reduced-motion (also cuts main-thread animation cost). */
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation-duration:.001ms!important;animation-iteration-count:1!important;transition-duration:.001ms!important;scroll-behavior:auto!important;}
+}
+</style>
+<style id="a11y-contrast-v2">
+/* Fixes for the exact elements Lighthouse flagged (ratios verified). */
 
+/* 1) .feat2 span was #9fb2cc on WHITE = 2.16 FAIL (most of the failing list). */
+#industries .feat2 span,#founder .feat2 span,.feat-cat .feat2 span{color:#5A6B7D!important;}
+
+/* 2) Eyebrows sit on DARK sections (.features/#knowledge/#askai are navy) —
+      darkening --signal broke these. Use the soft blue there: 9.48 on navy. */
+.features .section-eyebrow,#knowledge .section-eyebrow,#askai .section-eyebrow,
+.features .eyebrow,#knowledge .eyebrow,#askai .eyebrow{color:#8FBEFF!important;}
+
+/* 3) "Try AisleBird Free": white on #FF6B35 = 2.84 FAIL -> darker orange = 5.18 PASS */
+a[href*="aislebird.com"]{background:#C2410C!important;color:#fff!important;}
+
+/* 4) Knowledge-base button had an INLINE rgb(45,127,249) (white text 3.81 FAIL). */
+#knowledge .wrap a,#knowledge a[style]{background:#1E6FE0!important;color:#fff!important;}
+
+/* 5) Orange eyebrow text on its own pale-orange tint = 2.55 FAIL. */
+.eyebrow[style*="255, 107, 53"],.eyebrow[style*="255,107,53"]{color:#C2410C!important;}
+
+/* 6) Footer used opacity .55/.6, which collapses effective contrast. */
+footer [style*="opacity:.55"],footer [style*="opacity: 0.55"],
+footer [style*="opacity:.6"],footer [style*="opacity: 0.6"]{opacity:1!important;color:#5A6B7D!important;}
+footer a{color:#3E4C5C;}
+footer a:hover{color:#1E6FE0;}
+</style>
+<style id="sk-nav-css">
+.sk-nav{position:sticky;top:0;z-index:99999;background:#0A1628;border-bottom:1px solid rgba(255,255,255,.08);font-family:'Sora','Inter',system-ui,sans-serif}
+.sk-nav *{box-sizing:border-box}
+.sk-nav-in{display:flex;align-items:center;gap:14px;max-width:1180px;margin:0 auto;padding:12px 20px;flex-wrap:wrap}
+.sk-logo{display:flex;align-items:center;gap:9px;color:#fff;font-weight:800;font-size:19px;text-decoration:none;margin-right:auto;font-family:'Sora',sans-serif}
+.sk-logo-mark{width:30px;height:30px;border-radius:8px;background:linear-gradient(135deg,#2D7FF9,#5B9DFF);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.sk-logo-mark svg{width:18px;height:18px}
+.sk-nav-links{display:flex;align-items:center;gap:20px}
+.sk-nav-links a{color:rgba(255,255,255,.78);text-decoration:none;font:500 14px/1 'Inter',sans-serif;white-space:nowrap}
+.sk-nav-links a:hover{color:#fff}
+.sk-cta{background:#2D7FF9;color:#fff!important;padding:9px 15px;border-radius:9px}
+.sk-nav-toggle{display:none;background:none;border:none;color:#fff;font-size:24px;cursor:pointer;line-height:1;padding:4px}
+@media(max-width:900px){
+  .sk-nav-toggle{display:block}
+  .sk-nav-links{display:none;flex-direction:column;align-items:flex-start;width:100%;gap:16px;padding:10px 0 4px}
+  .sk-nav.sk-open .sk-nav-links{display:flex}
+}
+</style>
 <style>
 .est-hero{background:linear-gradient(160deg,#0A1628 0%,#132741 60%,#1A3A5C 100%);color:#EAF1F9;padding:64px 0 56px;}
 .est-hero .wrap{max-width:1000px;}
