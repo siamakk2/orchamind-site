@@ -3865,6 +3865,7 @@ function aiDraftEstimate(){
     var obj=_estParseJSON(text);
     if(!obj||!obj.items||!obj.items.length){msg.textContent='Could not read the AI draft - try rephrasing the description.';return;}
     document.getElementById('estLines').innerHTML='';
+    _planGeom=null;
     var _lines=_pbRepriceList(obj.items); _lines.forEach(function(it){addEstLine({desc:it.desc,qty:it.qty,unit:it.unit,price:it.price});});
     if(obj.notes&&!document.getElementById('estNotes').value.trim()){document.getElementById('estNotes').value=obj.notes;}
     recalcEst();
