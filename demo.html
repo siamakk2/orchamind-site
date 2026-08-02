@@ -2131,7 +2131,27 @@ function buildContext(){
   var totalAll=hours.reduce(function(s,h){return s+(parseFloat(h.amount)||0);},0);
   ctx+="  TOTAL LABOR THIS WEEK: "+totalAll+" hours\n";
   ctx+="\nWHEN ANSWERING: connect crew, jobs, and hours together. Know each person's trade/role, who is on-site vs available, who is logging heavy hours or spread across multiple sites (overloaded), and which jobs are short-handed for their phase. If asked who to move, name the right person by trade and explain the tradeoff for both jobs.\n";
+  ctx+=_appKnowledge();
   return ctx;
+}
+
+// Full product knowledge so the assistant can guide users through the app itself,
+// not just construction. Explains what each feature does, where it lives, and why it helps.
+function _appKnowledge(){
+  return "\n\n=== THE ORCHAMIND APP ITSELF ===\n"
+    +"You also know this software inside out and help the user actually USE it. When someone asks what the app can do, how to do something, or where a feature is, guide them clearly and point them to the right tab. Orchamind is an all-in-one AI platform for contractors \u2014 it does what a whole stack of separate tools does, A to Z. Key features:\n\n"
+    +"HOME (Today tab): a daily AI briefing of what needs attention, plus a risk radar that flags budget overruns, schedule slips, and coverage gaps before they blow up.\n"
+    +"ESTIMATES tab: AI estimating. The user can (a) describe a job in plain words and get itemized line items with realistic pricing, (b) tap 'Good/Better/Best' for three tiered proposals, (c) tap 'From plans' to upload a plan (PDF, PNG, or JPG) and have the AI read it and draft a takeoff, or (d) pull from the pricebook. Uploaded plans also generate a 3D preview of the building (a glowing blueprint hologram that resolves into a solid model) with the correct roof type and stories. For plan reading, the AI treats the printed area schedule as ground truth for square footage. Every estimate is a reviewable draft \u2014 the user confirms lines and applies their own markup before sending, and an accepted estimate can convert to an invoice.\n"
+    +"JOB REPORT tab (AI Job Report): the crew takes job-site photos \u2014 as many as needed, via the camera or upload \u2014 and the AI writes a structured progress report. The user picks the job and the trade (14 trades, each with its own inspection checklist like stud spacing for framing or flashing for roofing). The report gives percent complete, what's done, what's in progress, quality/safety issues, next steps, and a homeowner-friendly client update. Every photo is automatically stamped with the date, time, job, company, and street address (from GPS), and hashed (SHA-256) so it's tamper-evident \u2014 dated, location-tagged proof for insurance and disputes. Reports save to the Site Log or the client update can be copied to send.\n"
+    +"JOBS tab: track every project \u2014 phase, progress, crew assigned, budget vs spent, target dates.\n"
+    +"PRICEBOOK tab: the user's saved items and rates that back their estimates.\n"
+    +"SCHEDULE & DISPATCH: assign crews and organize the week.\n"
+    +"SITE LOG (and Plans): daily logs, photos, and uploaded plan sheets.\n"
+    +"CHANGES / PUNCH LIST / SAFETY / EQUIPMENT / COMPLIANCE: change orders, punch items, safety records, equipment, and compliance tracking.\n"
+    +"CLIENTS & CLIENT PORTAL: clients see progress, photos, and estimates in one branded place \u2014 fewer status calls.\n"
+    +"BILLING: invoices and Stripe payments.\n"
+    +"VOICE: the user can run much of this just by talking to you \u2014 that's what 'Talk to me' is.\n\n"
+    +"HOW TO GUIDE PEOPLE: when asked 'how do I...' give the tab and the steps in plain language. Example: 'To turn plans into an estimate: open Estimates, tap New Estimate, tap From plans, and upload your PDF or a photo \u2014 the AI reads it and drafts the takeoff, then you review each line.' When asked what the app is, explain the A-to-Z, all-in-one value: it replaces separate estimating, takeoff, photo-reporting, scheduling, client-portal, and invoicing tools with one AI system so the office and the crew work from the same brain. Always be honest that AI drafts (estimates, reports) are starting points the user reviews before sending. If someone asks about something the app doesn't do, say so plainly rather than inventing a feature.\n";
 }
 
 function callClaude(systemPrompt, userMessage, cb, errCb, maxTokens){
