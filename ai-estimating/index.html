@@ -298,7 +298,7 @@ footer a:hover{color:#1E6FE0;}
   var theta=0.6,raf;
   function frame(){
     var cv=document.getElementById('heroCanvas');
-    if(cv&&window.OrchaHouse3D){window.OrchaHouse3D.render({canvas:cv,geom:geom,theta:theta,zoom:1});theta+=0.005;}
+    if(cv&&window.OrchaHouse3D){window.OrchaHouse3D.render({canvas:cv,geom:geom,theta:theta,pitch:0.44+0.12*Math.sin(theta*0.6),zoom:1});theta+=0.005;}
     raf=requestAnimationFrame(frame);
   }
   if(document.getElementById('heroCanvas'))frame();

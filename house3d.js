@@ -13,10 +13,14 @@
       GLASS = '#93B6D6', DOOR = '#6B4E34', TRIM = 'rgba(70,58,42,0.35)',
       EDGE = 'rgba(40,32,22,0.55)';
 
-  // opts: { canvas, geom:{wallHeightFt,rooms:[{name,x,y,w,h}]}, theta, zoom }
+  // opts: { canvas, geom:{wallHeightFt,rooms:[{name,x,y,w,h}]}, theta, pitch, zoom }
   function render(o) {
     var cv = o.canvas, g = o.geom; if (!cv || !g || !g.rooms || !g.rooms.length) return;
     var theta = o.theta || 0, zoom = o.zoom || 1;
+    var pitch = o.pitch == null ? 0.5 : o.pitch;        // 0 = eye level, 1 = top-down
+    pitch = Math.max(0.12, Math.min(0.92, pitch));       // clamp so it never flips
+    var flat = pitch;               // vertical foreshortening of the ground plane
+    var zscale = 0.66 + (1 - pitch) * 0.55;              // taller elevation when lower angle
     var dpr = root.devicePixelRatio || 1;
     var W = cv.clientWidth, H = cv.clientHeight || 300;
     if (cv.width !== W * dpr) { cv.width = W * dpr; cv.height = H * dpr; }
@@ -37,7 +41,7 @@
     var cosT = Math.cos(theta), sinT = Math.sin(theta);
     function P(x, y, z) {
       var rx = (x - cx) * cosT - (y - cy) * sinT, ry = (x - cx) * sinT + (y - cy) * cosT;
-      return { x: W / 2 + rx * s, y: H * 0.68 + ry * s * 0.5 - z * s * 0.66, d: ry };
+      return { x: W / 2 + rx * s, y: H * 0.68 + ry * s * flat - z * s * zscale, d: ry };
     }
     function poly(pts, fill, st, lw) {
       ctx.beginPath(); ctx.moveTo(pts[0].x, pts[0].y);

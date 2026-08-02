@@ -986,6 +986,20 @@ button:active, .btn:active, .btn-ghost:active, .tab:active, [role="button"]:acti
 .est-ai{background:#F4F8FD;border:1px dashed #B7D3F0;border-radius:12px;padding:14px;margin:8px 0 16px;}
 .est-ai textarea{width:100%;border:1.5px solid var(--line);border-radius:9px;padding:10px;font-family:inherit;font-size:14px;margin:6px 0 8px;}
 .est-ai-msg{font-size:12.5px;color:var(--muted);margin-top:6px;min-height:16px;}
+.ptk{background:linear-gradient(180deg,#F4F8FD,#EAF2FB);border:1px solid #C7DCF0;border-radius:14px;padding:14px;margin-top:8px;animation:ptkIn .3s ease;}
+@keyframes ptkIn{from{opacity:0;transform:translateY(6px);}to{opacity:1;transform:none;}}
+.ptk-top{display:flex;align-items:center;gap:12px;}
+.ptk-title{font-weight:700;font-size:14.5px;color:var(--navy);}
+.ptk-sub{font-size:12px;color:#5A6B7D;margin-top:2px;}
+.ptk-spin{width:22px;height:22px;border-radius:50%;border:3px solid #D3E3F5;border-top-color:#1565C0;animation:ptkSpin .8s linear infinite;flex-shrink:0;}
+@keyframes ptkSpin{to{transform:rotate(360deg);}}
+.ptk-bar{height:6px;background:#DCE8F5;border-radius:99px;overflow:hidden;margin:12px 0 10px;}
+.ptk-bar-fill{height:100%;width:8%;background:linear-gradient(90deg,#1565C0,#5B9DFF);border-radius:99px;transition:width .8s ease;}
+.ptk-steps{display:flex;flex-wrap:wrap;gap:5px;}
+.ptk-chip{font-size:10.5px;padding:3px 8px;border-radius:99px;background:#fff;border:1px solid #DCE8F5;color:#8A97A5;transition:all .3s;}
+.ptk-chip.active{background:#1565C0;border-color:#1565C0;color:#fff;font-weight:600;}
+.ptk-chip.done{background:#E8F5EC;border-color:#B6E0C4;color:#2E9B5B;}
+.ptk-chip.done::before{content:'\2713 ';}
 .est-totals{display:flex;justify-content:flex-end;align-items:flex-end;gap:16px;margin:6px 0 4px;flex-wrap:wrap;}
 .est-tot-lines{text-align:right;font-size:14px;color:var(--muted);}
 .est-tot-lines b{color:var(--navy);margin-left:10px;}
@@ -3985,6 +3999,52 @@ function _planSys(){
   var company=(CURRENT_USER&&CURRENT_USER.name)||'';
   return 'You are a senior construction cost estimator'+(company?(' for '+company):'')+'. You are reading construction plans, blueprints, sketches or site drawings. First perform a quantity takeoff: identify the scope of work, rooms, dimensions, square footage, and counts of relevant elements (fixtures, outlets, windows, doors, panels, runs, squares of roofing, etc.). Then convert the takeoff into realistic itemized estimate line items using current California contractor pricing. Split labor and materials into separate lines where sensible, and include permit or fee lines if implied. CRITICAL: never silently guess. Anything you could not read or that the plans do not specify must appear as a plain-English entry in "assumptions" (what you assumed and why) or as a short clarifying question in "questions" (maximum 4, only ones that materially change price). Return ONLY a JSON object with no markdown, no code fences, and no commentary, in exactly this shape: {"items":[{"desc":"string","qty":number,"unit":"string","price":number}],"notes":"string","assumptions":["string"],"questions":["string"],"geometry":{"wallHeightFt":number,"rooms":[{"name":"string","x":number,"y":number,"w":number,"h":number}]}} where price is the dollar amount per unit. For geometry: approximate each room as an axis-aligned rectangle in FEET on a shared plan (x,y is the top-left corner, w is width, h is depth), keeping relative positions and proportions faithful to the drawing. Include geometry ONLY when the upload contains a readable floor plan; otherwise omit the geometry key entirely.';
 }
+var _planThinkTimer=null,_planThinkStep=0,_planThinkT0=0;
+var _PLAN_STEPS=[
+  {t:'Opening your plans\u2026',s:'Loading the pages'},
+  {t:'Reading the drawings\u2026',s:'Finding rooms and layout'},
+  {t:'Measuring rooms\u2026',s:'Square footage and dimensions'},
+  {t:'Counting fixtures\u2026',s:'Outlets, doors, windows, systems'},
+  {t:'Doing the takeoff\u2026',s:'Turning quantities into line items'},
+  {t:'Pricing the estimate\u2026',s:'Applying regional rates'},
+  {t:'Almost there\u2026',s:'Checking assumptions and totals'}
+];
+function _planThinkStart(files){
+  var host=document.getElementById('estAiMsg');if(!host)return;
+  _planThinkStep=0;_planThinkT0=Date.now();
+  var thumb='';
+  var img=(files||[]).filter(function(f){return f.type.indexOf('image/')===0;})[0];
+  if(img){try{thumb='<img id="ptkThumb" alt="your plan" style="width:52px;height:52px;object-fit:cover;border-radius:8px;border:1px solid #D9E4F0;flex-shrink:0;">';}catch(e){}}
+  else{thumb='<div style="width:52px;height:52px;border-radius:8px;background:#EAF1F9;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:22px;">&#128196;</div>';}
+  host.innerHTML='<div class="ptk"><div class="ptk-top">'+thumb+
+    '<div style="flex:1;min-width:0;"><div class="ptk-title" id="ptkTitle">Opening your plans&hellip;</div>'+
+    '<div class="ptk-sub" id="ptkSub">This usually takes 20&ndash;40 seconds &mdash; hang tight, the AI is reading every page.</div></div>'+
+    '<div class="ptk-spin"></div></div>'+
+    '<div class="ptk-bar"><div class="ptk-bar-fill" id="ptkFill"></div></div>'+
+    '<div class="ptk-steps" id="ptkSteps"></div></div>';
+  if(img){var rd=new FileReader();rd.onload=function(){var t=document.getElementById('ptkThumb');if(t)t.src=rd.result;};rd.readAsDataURL(img);}
+  var stepsEl=document.getElementById('ptkSteps');
+  stepsEl.innerHTML=_PLAN_STEPS.map(function(s,i){return '<span class="ptk-chip" data-i="'+i+'">'+s.t.replace('\u2026','')+'</span>';}).join('');
+  _planThinkTick();
+  _planThinkTimer=setInterval(_planThinkTick,1600);
+}
+function _planThinkTick(){
+  var el=Date.now()-_planThinkT0;
+  // advance step on a curve: fast at first, slows near the end (never quite completes until real result)
+  if(_planThinkStep<_PLAN_STEPS.length-1 && el> (_planThinkStep+1)*3200){_planThinkStep++;}
+  var st=_PLAN_STEPS[_planThinkStep];
+  var tt=document.getElementById('ptkTitle'),su=document.getElementById('ptkSub'),fl=document.getElementById('ptkFill');
+  if(tt)tt.textContent=st.t;if(su)su.textContent=st.s;
+  // progress eases toward ~92% and holds
+  var pct=Math.min(92,8+ (el/1000)*3.4);
+  if(fl)fl.style.width=pct.toFixed(0)+'%';
+  var chips=document.querySelectorAll('#ptkSteps .ptk-chip');
+  chips.forEach(function(c){var i=+c.getAttribute('data-i');c.className='ptk-chip'+(i<_planThinkStep?' done':(i===_planThinkStep?' active':''));});
+}
+function _planThinkStop(){
+  if(_planThinkTimer){clearInterval(_planThinkTimer);_planThinkTimer=null;}
+  var fl=document.getElementById('ptkFill');if(fl)fl.style.width='100%';
+}
 function aiEstimateFromPlans(files){
   var msg=document.getElementById('estAiMsg');var btn=document.getElementById('estPlanBtn');
   var list=Array.prototype.slice.call(files||[]);
@@ -3996,17 +4056,17 @@ function aiEstimateFromPlans(files){
   if(pdfs.length&&imgs.length){msg.textContent='Send either one PDF or up to 4 photos of the plans - not both at once.';return;}
   if(imgs.length>4){msg.textContent='Up to 4 plan photos at a time - pick the most important pages.';return;}
   if(pdfs.length&&pdfs[0].size>3000000){msg.textContent='That PDF is over 3 MB. Export a smaller version, or snap photos of the key pages instead.';return;}
-  btn.disabled=true;var old=btn.innerHTML;btn.innerHTML='Reading plans...';
-  msg.textContent='Reading your plans - doing the takeoff...';
+  btn.disabled=true;var old=btn.innerHTML;btn.innerHTML='Reading&hellip;';
   document.getElementById('estPlanQ').innerHTML='';_planDraft=null;
-  var fail=function(e){btn.disabled=false;btn.innerHTML=old;msg.textContent='Plan reading error: '+e;};
+  _planThinkStart(list);
+  var fail=function(e){_planThinkStop();btn.disabled=false;btn.innerHTML=old;msg.textContent='Plan reading error: '+e;};
   var blocks=[],done=0;
   var finish=function(){
     var scope=document.getElementById('estAiScope').value.trim();
     blocks.push({type:"text",text:'These are the plans for the job.'+(scope?(' Extra context from the contractor: '+scope):'')+' Do the takeoff and draft the estimate.'});
     _planBlocks=blocks;
     callClaudeBlocks(_planSys(),blocks,function(text){
-      btn.disabled=false;btn.innerHTML=old;_planApply(text,msg);
+      _planThinkStop();btn.disabled=false;btn.innerHTML=old;_planApply(text,msg);
     },fail,6000);
   };
   if(pdfs.length){
@@ -4021,6 +4081,7 @@ function aiEstimateFromPlans(files){
   }
 }
 function _planApply(text,msg){
+  _planThinkStop();
   var obj=_estParseJSON(text);
   if(!obj||!obj.items||!obj.items.length){msg.textContent='Could not read the AI takeoff - try clearer photos or add a short description.';return;}
   _planDraft=obj;
@@ -4069,11 +4130,11 @@ function estPlanRefine(){
   }).catch(function(e){btn.disabled=false;btn.innerHTML=old;msg.textContent='AI error: '+e.message;});
 }
 /* ---- 3D plan view ---- */
-var _planGeom=null,_p3dRAF=null,_p3dTheta=0.7,_p3dZoom=1,_p3dAuto=true;
+var _planGeom=null,_p3dRAF=null,_p3dTheta=0.7,_p3dPitch=0.46,_p3dZoom=1,_p3dAuto=true;
 var _P3D_COLORS=['#5B9DFF','#F9A825','#2E9B5B','#9B6BD6','#E8654F','#3AAFA9','#D66B9B','#8A97A5'];
 function _plan3dLoad(e){
   _planGeom=(e&&e.plan3d&&e.plan3d.rooms&&e.plan3d.rooms.length)?e.plan3d:null;
-  _p3dTheta=0.7;_p3dZoom=1;_p3dAuto=true;_epvSyncPreview();
+  _p3dTheta=0.7;_p3dPitch=0.46;_p3dZoom=1;_p3dAuto=true;_epvSyncPreview();
 }
 function _plan3dBtn(){_epvSyncPreview();}
 function _epvSyncPreview(){
@@ -4110,10 +4171,13 @@ function _epvSyncPreview(){
 function _p3dEnsureLoop(){
   var cv=document.getElementById('p3dCanvas');if(!cv)return;
   if(!cv._wired){
-    cv._wired=true;var dragging=false,lx=0,pd=0;
-    cv.addEventListener('pointerdown',function(ev){dragging=true;_p3dAuto=false;lx=ev.clientX;cv.setPointerCapture(ev.pointerId);cv.style.cursor='grabbing';});
-    cv.addEventListener('pointermove',function(ev){if(dragging){_p3dTheta+=(ev.clientX-lx)*0.01;lx=ev.clientX;}});
+    cv._wired=true;var dragging=false,lx=0,ly=0,pd=0,lastT=0,lastP=0;
+    function begin(x,y){dragging=true;_p3dAuto=false;lx=x;ly=y;lastT=x;lastP=y;cv.style.cursor='grabbing';}
+    function move(x,y){if(!dragging)return;_p3dTheta+=(x-lx)*0.011;_p3dPitch=Math.max(0.14,Math.min(0.9,_p3dPitch+(y-ly)*0.006));lx=x;ly=y;}
+    cv.addEventListener('pointerdown',function(ev){begin(ev.clientX,ev.clientY);cv.setPointerCapture(ev.pointerId);});
+    cv.addEventListener('pointermove',function(ev){move(ev.clientX,ev.clientY);});
     cv.addEventListener('pointerup',function(){dragging=false;cv.style.cursor='grab';});
+    cv.addEventListener('pointercancel',function(){dragging=false;cv.style.cursor='grab';});
     cv.addEventListener('wheel',function(ev){ev.preventDefault();_p3dZoom=Math.max(.4,Math.min(2.5,_p3dZoom*(ev.deltaY>0?0.92:1.08)));},{passive:false});
     cv.addEventListener('touchmove',function(ev){
       if(ev.touches.length===2){ev.preventDefault();var dx=ev.touches[0].clientX-ev.touches[1].clientX,dy=ev.touches[0].clientY-ev.touches[1].clientY,dd=Math.sqrt(dx*dx+dy*dy);if(pd){_p3dZoom=Math.max(.4,Math.min(2.5,_p3dZoom*dd/pd));}pd=dd;}
@@ -4121,7 +4185,14 @@ function _p3dEnsureLoop(){
     cv.addEventListener('touchend',function(){pd=0;});
   }
   if(_p3dRAF)return;
-  (function frame(){if(_p3dAuto)_p3dTheta+=0.004;_p3dRender();_p3dRAF=requestAnimationFrame(frame);})();
+  (function frame(){
+    if(_p3dAuto){
+      _p3dTheta+=0.005;
+      // gentle breathing tilt so it reads as a solid object being orbited, not a spinning disc
+      _p3dPitch=0.44+0.12*Math.sin(_p3dTheta*0.6);
+    }
+    _p3dRender();_p3dRAF=requestAnimationFrame(frame);
+  })();
 }
 
 function _p3dShade(hex,f){
@@ -4133,7 +4204,7 @@ function _p3dShade(hex,f){
 function _p3dRender(){
   var cv=document.getElementById('p3dCanvas');
   if(!cv||!_planGeom||!window.OrchaHouse3D)return;
-  window.OrchaHouse3D.render({canvas:cv,geom:_planGeom,theta:_p3dTheta,zoom:_p3dZoom});
+  window.OrchaHouse3D.render({canvas:cv,geom:_planGeom,theta:_p3dTheta,pitch:_p3dPitch,zoom:_p3dZoom});
 }
 function _hexA(hex,a){
   var n=parseInt(hex.slice(1),16);
