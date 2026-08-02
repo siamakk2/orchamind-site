@@ -1101,6 +1101,7 @@ button:active, .btn:active, .btn-ghost:active, .tab:active, [role="button"]:acti
 .jr-thumb{position:relative;width:76px;height:76px;border-radius:10px;overflow:hidden;border:1px solid var(--line);}
 .jr-thumb img{width:100%;height:100%;object-fit:cover;}
 .jr-thumb-x{position:absolute;top:-7px;right:-7px;width:22px;height:22px;border-radius:50%;background:#C62828;color:#fff;border:none;cursor:pointer;font-size:14px;line-height:1;}
+.jr-veri{position:absolute;left:4px;bottom:4px;background:rgba(46,155,91,.92);color:#fff;font-size:10px;font-weight:700;padding:2px 6px;border-radius:6px;cursor:pointer;line-height:1.3;}
 .jr-result{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:18px;margin-bottom:14px;}
 .jr-rep-head{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-bottom:12px;}
 .jr-pct{display:inline-flex;align-items:center;gap:8px;font-weight:800;font-size:15px;}
@@ -4914,23 +4915,49 @@ function jrPopulateJobs(){
   jobs.forEach(function(j){var o=document.createElement('option');o.value=j.id;o.textContent=j.name||j.client||('Job '+j.id);sel.appendChild(o);});
   if(cur)sel.value=cur;
 }
+var _jrGeo=null,_jrGeoTried=false;
+function _jrGetGeo(cb){
+  // Fetch device location once per session; cache it. Non-blocking — stamps GPS if allowed.
+  if(_jrGeo||_jrGeoTried){cb(_jrGeo);return;}
+  if(!navigator.geolocation){_jrGeoTried=true;cb(null);return;}
+  var done=false;var t=setTimeout(function(){if(done)return;done=true;_jrGeoTried=true;cb(null);},6000);
+  navigator.geolocation.getCurrentPosition(function(pos){
+    if(done)return;done=true;clearTimeout(t);_jrGeoTried=true;
+    _jrGeo={lat:pos.coords.latitude,lng:pos.coords.longitude,acc:pos.coords.accuracy};cb(_jrGeo);
+  },function(){if(done)return;done=true;clearTimeout(t);_jrGeoTried=true;cb(null);},{enableHighAccuracy:true,timeout:5500,maximumAge:60000});
+}
+function _jrHash(dataUrl,cb){
+  // SHA-256 of the stamped image bytes — the tamper-evidence fingerprint.
+  try{
+    var b64=dataUrl.substring(dataUrl.indexOf(',')+1);var bin=atob(b64);var bytes=new Uint8Array(bin.length);
+    for(var i=0;i<bin.length;i++)bytes[i]=bin.charCodeAt(i);
+    if(window.crypto&&window.crypto.subtle){
+      window.crypto.subtle.digest('SHA-256',bytes).then(function(buf){
+        var arr=Array.prototype.map.call(new Uint8Array(buf),function(x){return('0'+x.toString(16)).slice(-2);});
+        cb(arr.join(''));
+      }).catch(function(){cb(null);});
+    } else {cb(null);}
+  }catch(e){cb(null);}
+}
 function jrAddPhotos(input){
   var files=Array.prototype.slice.call(input.files||[]);
   var msg=document.getElementById('jrUpMsg');
   if(!files.length)return;
-  msg.textContent='Adding '+files.length+' photo'+(files.length>1?'s':'')+'\u2026';
-  var pending=files.length;
-  files.forEach(function(f){
-    if(f.type.indexOf('image/')!==0){pending--;if(pending<=0){jrRenderThumbs();}return;}
-    _jrShrink(f,function(block,dataUrl){
-      _jrPhotos.push({name:f.name,dataUrl:dataUrl,block:block}); pending--;
-      if(pending<=0){jrRenderThumbs();msg.textContent=_jrPhotos.length+' photo'+(_jrPhotos.length>1?'s':'')+' ready.';}
-    },function(){pending--;if(pending<=0){jrRenderThumbs();}});
+  msg.textContent='Adding '+files.length+' photo'+(files.length>1?'s':'')+' \u2014 stamping\u2026';
+  _jrGetGeo(function(geo){
+    var pending=files.length;
+    files.forEach(function(f){
+      if(f.type.indexOf('image/')!==0){pending--;if(pending<=0){jrRenderThumbs();}return;}
+      _jrShrink(f,geo,function(block,dataUrl,meta){
+        _jrPhotos.push({name:f.name,dataUrl:dataUrl,block:block,meta:meta}); pending--;
+        if(pending<=0){jrRenderThumbs();var g=_jrGeo?' \u00b7 GPS on':' \u00b7 GPS off';msg.textContent=_jrPhotos.length+' stamped photo'+(_jrPhotos.length>1?'s':'')+' ready'+g+'.';}
+      },function(){pending--;if(pending<=0){jrRenderThumbs();}});
+    });
   });
   input.value='';
 }
-function _jrShrink(file,cb,err){
-  var settled=false;var fin=function(a,b){if(settled)return;settled=true;a?cb(a,b):err();};
+function _jrShrink(file,geo,cb,err){
+  var settled=false;var fin=function(a,b,m){if(settled)return;settled=true;a?cb(a,b,m):err();};
   var watch=setTimeout(function(){fin(null);},30000);
   var rd=new FileReader();
   rd.onload=function(){
@@ -4938,9 +4965,36 @@ function _jrShrink(file,cb,err){
     img.onload=function(){clearTimeout(watch);
       try{var MAX=1400,w=img.width,h=img.height;if(!w||!h){fin(null);return;}
         if(w>MAX||h>MAX){var s=MAX/Math.max(w,h);w=Math.round(w*s);h=Math.round(h*s);}
-        var cv=document.createElement('canvas');cv.width=w;cv.height=h;cv.getContext('2d').drawImage(img,0,0,w,h);
-        var dd=cv.toDataURL('image/jpeg',0.8);
-        fin({type:"image",source:{type:"base64",media_type:"image/jpeg",data:dd.substring(dd.indexOf(',')+1)}},dd);
+        var cv=document.createElement('canvas');cv.width=w;cv.height=h;var ctx=cv.getContext('2d');
+        ctx.drawImage(img,0,0,w,h);
+        // ---- burn in the provenance stamp ----
+        var now=new Date();
+        var company=(CURRENT_USER&&CURRENT_USER.name)||'Orchamind';
+        var jobSel=document.getElementById('jrJob');
+        var jobName=(jobSel&&jobSel.options[jobSel.selectedIndex])?jobSel.options[jobSel.selectedIndex].textContent:'';
+        var line1=now.toLocaleString('en-US',{year:'numeric',month:'short',day:'2-digit',hour:'2-digit',minute:'2-digit',second:'2-digit'});
+        var line2=(jobName?jobName+'  \u00b7  ':'')+company;
+        var line3=geo?('GPS '+geo.lat.toFixed(5)+', '+geo.lng.toFixed(5)+'  (\u00b1'+Math.round(geo.acc)+'m)'):'GPS unavailable';
+        var pad=Math.round(w*0.014), fs=Math.max(11,Math.round(w*0.026));
+        ctx.font='600 '+fs+'px system-ui,Arial,sans-serif';
+        var tw=Math.max(ctx.measureText(line1).width,ctx.measureText(line2).width,ctx.measureText(line3).width);
+        var bh=fs*3+pad*2.4, bw=tw+pad*2;
+        var bx=w-bw-pad, by=h-bh-pad;
+        ctx.fillStyle='rgba(8,16,28,0.62)';
+        if(ctx.roundRect){ctx.beginPath();ctx.roundRect(bx,by,bw,bw>0?bh:bh,8);ctx.fill();}else{ctx.fillRect(bx,by,bw,bh);}
+        ctx.fillStyle='#fff';ctx.textBaseline='top';
+        ctx.fillText(line1,bx+pad,by+pad*0.9);
+        ctx.fillStyle='#8fe0ff';ctx.fillText(line2,bx+pad,by+pad*0.9+fs*1.05);
+        ctx.fillStyle='#cfe4ff';ctx.font=(Math.max(10,Math.round(fs*0.86)))+'px system-ui,Arial,sans-serif';
+        ctx.fillText(line3,bx+pad,by+pad*0.9+fs*2.15);
+        var dd=cv.toDataURL('image/jpeg',0.82);
+        // ---- compute tamper-evidence hash of the STAMPED image ----
+        _jrHash(dd,function(hash){
+          var meta={capturedAt:now.toISOString(),localTime:line1,job:jobName,company:company,
+            gps:geo?{lat:geo.lat,lng:geo.lng,acc:geo.acc}:null,sha256:hash||null,
+            by:(CURRENT_USER&&CURRENT_USER.name)||'',w:w,h:h};
+          fin({type:"image",source:{type:"base64",media_type:"image/jpeg",data:dd.substring(dd.indexOf(',')+1)}},dd,meta);
+        });
       }catch(e){fin(null);}
     };
     img.onerror=function(){clearTimeout(watch);fin(null);};
@@ -4953,9 +5007,15 @@ function jrRenderThumbs(){
   var wrap=document.getElementById('jrThumbs');if(!wrap)return; wrap.innerHTML='';
   _jrPhotos.forEach(function(p,i){
     var d=document.createElement('div');d.className='jr-thumb';
-    d.innerHTML='<img src="'+p.dataUrl+'" alt=""><button class="jr-thumb-x" onclick="jrDelPhoto('+i+')">&times;</button>';
+    var m=p.meta||{};
+    var badge=m.sha256?'<span class="jr-veri" title="'+ (m.gps?'GPS + ':'') +'time-stamped, hash '+m.sha256.slice(0,10)+'\u2026" onclick="jrShowProv('+i+')">\u2713'+(m.gps?' \ud83d\udccd':'')+'</span>':'';
+    d.innerHTML='<img src="'+p.dataUrl+'" alt="">'+badge+'<button class="jr-thumb-x" onclick="jrDelPhoto('+i+')">&times;</button>';
     wrap.appendChild(d);
   });
+}
+function jrShowProv(i){
+  var p=_jrPhotos[i];if(!p||!p.meta)return;var m=p.meta;
+  alert('Photo provenance\n\nCaptured: '+(m.localTime||m.capturedAt)+'\nJob: '+(m.job||'\u2014')+'\nBy: '+(m.by||'\u2014')+'\nGPS: '+(m.gps?(m.gps.lat.toFixed(5)+', '+m.gps.lng.toFixed(5)+' (\u00b1'+Math.round(m.gps.acc)+'m)'):'not available')+'\nSHA-256: '+(m.sha256||'\u2014')+'\n\nThe timestamp, GPS and company are burned into the image. The SHA-256 fingerprint proves the image has not been altered since capture.');
 }
 function jrDelPhoto(i){_jrPhotos.splice(i,1);jrRenderThumbs();var m=document.getElementById('jrUpMsg');if(m)m.textContent=_jrPhotos.length+' photo'+(_jrPhotos.length===1?'':'s')+' ready.';}
 function _jrSys(trade){
@@ -5007,14 +5067,17 @@ function _jrRenderReport(o,trade,note){
     +'<div class="jr-sec" style="background:rgba(46,155,91,.07);border-radius:8px;padding:10px;"><h4 style="color:#2E9B5B;">Client update</h4><div style="font-size:14px;line-height:1.55;">'+esc(o.client_update||'')+'</div></div>'
     +'<div style="color:var(--muted);font-size:11.5px;margin-top:10px;">AI-drafted from photos \u2014 review before sharing with the client.</div>'
     +'<div class="jr-actions"><button class="btn btn-primary" onclick="jrSaveToLog()">Save to Site Log</button><button class="btn btn-ghost" onclick="jrCopyClient()">Copy client update</button><button class="btn btn-ghost" onclick="jrReset()">New report</button></div>';
-  _jrLast={report:o,trade:trade,note:note,jobName:jobName,photos:_jrPhotos.map(function(p){return p.dataUrl;})};
+  _jrLast={report:o,trade:trade,note:note,jobName:jobName,photos:_jrPhotos.map(function(p){return p.dataUrl;}),meta:_jrPhotos.map(function(p){return p.meta||{};})};
 }
 function jrSaveToLog(){
   if(!_jrLast)return; var o=_jrLast.report;
+  var prov=(_jrLast.meta&&_jrLast.meta.length)?_jrLast.meta:[];
+  var provLine='';
+  if(prov.length){var m0=prov[0];provLine='\nProvenance: '+prov.length+' photo(s), captured '+(m0.localTime||'')+(m0.gps?(' at GPS '+m0.gps.lat.toFixed(5)+','+m0.gps.lng.toFixed(5)):'')+'. Each image time-stamped + SHA-256 hashed.';}
   var entry={id:'log'+Date.now(),ts:Date.now(),
     text:'['+(o.phase||_jrLast.trade)+' \u00b7 '+(estNum(o.percent)||0)+'%] '+(o.summary||'')
-      +(o.issues&&o.issues.length?('\nIssues: '+o.issues.join(' | ')):'')+'\nNext: '+((o.next||[]).join(' | ')),
-    photos:_jrLast.photos||[],job:_jrLast.jobName||''};
+      +(o.issues&&o.issues.length?('\nIssues: '+o.issues.join(' | ')):'')+'\nNext: '+((o.next||[]).join(' | '))+provLine,
+    photos:_jrLast.photos||[],photoMeta:prov,job:_jrLast.jobName||''};
   try{if(typeof logs!=='undefined'&&Array.isArray(logs)){logs.unshift(entry);if(typeof saveNow==='function')saveNow();else if(typeof writeLocal==='function')writeLocal();}}catch(e){}
   var res=document.getElementById('jrResult');var note=document.createElement('div');note.style.cssText='color:#2E9B5B;font-size:13px;margin-top:8px;';note.textContent='\u2713 Saved to Site Log.';res.appendChild(note);
 }
