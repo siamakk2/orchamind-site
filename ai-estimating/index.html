@@ -299,8 +299,9 @@ footer a:hover{color:#1E6FE0;}
   function frame(){
     var cv=document.getElementById('heroCanvas');
     if(cv&&window.OrchaHouse3D){
-      var e=(Date.now()-t0)/1400,grow=e>=1?1:(1-Math.pow(1-e,3));
-      window.OrchaHouse3D.render({canvas:cv,geom:geom,theta:theta,pitch:0.44+0.12*Math.sin(theta*0.6),zoom:1,grow:grow});
+      var e=(Date.now()-t0)/2400,grow=e>=1?1:(1-Math.pow(1-e,3));
+      var opt={canvas:cv,geom:geom,theta:theta,pitch:0.44+0.12*Math.sin(theta*0.6),zoom:1,grow:grow};
+      if(grow<1&&window.OrchaHouse3D.renderHologram){window.OrchaHouse3D.renderHologram(opt);}else{window.OrchaHouse3D.render(opt);}
       if(grow>=1)theta+=0.005;
     }
     raf=requestAnimationFrame(frame);

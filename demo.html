@@ -4166,7 +4166,7 @@ function _p3dEnsureLoop(){
   }
   if(_p3dRAF)return;
   (function frame(){
-    if(_p3dGrow<1){var e=(Date.now()-_p3dGrowT0)/1400;_p3dGrow=e>=1?1:(1-Math.pow(1-e,3));}
+    if(_p3dGrow<1){var e=(Date.now()-_p3dGrowT0)/2400;_p3dGrow=e>=1?1:(1-Math.pow(1-e,3));}
     if(_p3dAuto&&_p3dGrow>=1){
       _p3dTheta+=0.005;
       _p3dPitch=0.44+0.12*Math.sin(_p3dTheta*0.6);
@@ -4184,7 +4184,14 @@ function _p3dShade(hex,f){
 function _p3dRender(){
   var cv=document.getElementById('p3dCanvas');
   if(!cv||!_planGeom||!window.OrchaHouse3D)return;
-  window.OrchaHouse3D.render({canvas:cv,geom:_planGeom,theta:_p3dTheta,pitch:_p3dPitch,zoom:_p3dZoom,grow:_p3dGrow});
+  var opt={canvas:cv,geom:_planGeom,theta:_p3dTheta,pitch:_p3dPitch,zoom:_p3dZoom,grow:_p3dGrow};
+  // While it builds, the model materializes as a glowing blueprint hologram
+  // (the "plan becomes a building" reveal); once complete it becomes the solid house.
+  if(_p3dGrow<1 && window.OrchaHouse3D.renderHologram){
+    window.OrchaHouse3D.renderHologram(opt);
+  } else {
+    window.OrchaHouse3D.render(opt);
+  }
 }
 function _hexA(hex,a){
   var n=parseInt(hex.slice(1),16);

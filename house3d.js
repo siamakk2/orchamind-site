@@ -172,3 +172,114 @@
   }
   root.OrchaHouse3D = { render: render, shade: shade };
 })(typeof window !== 'undefined' ? window : this);
+
+/* Hologram / blueprint mode — glowing cyan wireframe on a dark grid,
+   matching the "plan becomes a building" reveal. Same geometry as render(). */
+(function (root) {
+  function renderHologram(o) {
+    var cv = o.canvas, g = o.geom; if (!cv || !g || !g.rooms || !g.rooms.length) return;
+    var theta = o.theta || 0, zoom = o.zoom || 1, grow = o.grow == null ? 1 : Math.max(0, Math.min(1, o.grow));
+    var pitch = o.pitch == null ? 0.5 : o.pitch; pitch = Math.max(0.14, Math.min(0.9, pitch));
+    var flat = pitch, zscale = 0.62 + (1 - pitch) * 0.5;
+    var dpr = root.devicePixelRatio || 1;
+    var W = cv.clientWidth, H = cv.clientHeight || 300;
+    if (cv.width !== W * dpr) { cv.width = W * dpr; cv.height = H * dpr; }
+    var ctx = cv.getContext('2d'); ctx.setTransform(dpr, 0, 0, dpr, 0, 0); ctx.clearRect(0, 0, W, H);
+
+    // dark backdrop with subtle radial glow
+    var bg = ctx.createRadialGradient(W / 2, H * 0.62, 10, W / 2, H * 0.62, Math.max(W, H) * 0.8);
+    bg.addColorStop(0, '#0d2740'); bg.addColorStop(0.5, '#081a2c'); bg.addColorStop(1, '#040d17');
+    ctx.fillStyle = bg; ctx.fillRect(0, 0, W, H);
+
+    var rooms = g.rooms, storyH = g.storyHeight || 9;
+    var stories = g.stories || Math.max(1, Math.round((g.wallHeightFt || storyH) / storyH));
+    var wallTop = storyH * stories;
+    var minX = 1e9, minY = 1e9, maxX = -1e9, maxY = -1e9;
+    rooms.forEach(function (r) { minX = Math.min(minX, r.x); minY = Math.min(minY, r.y); maxX = Math.max(maxX, r.x + r.w); maxY = Math.max(maxY, r.y + r.h); });
+    var Wd = maxX - minX, Dp = maxY - minY, cvirt = Math.max(Wd, Dp) || 1;
+    var span = cvirt * 1.9, s = (Math.min(W, H) * 0.92 / span) * zoom;
+    var cx = (minX + maxX) / 2, cy = (minY + maxY) / 2, cosT = Math.cos(theta), sinT = Math.sin(theta);
+    function P(x, y, z) {
+      var rx = (x - cx) * cosT - (y - cy) * sinT, ry = (x - cx) * sinT + (y - cy) * cosT;
+      return { x: W / 2 + rx * s, y: H * 0.70 + ry * s * flat - z * s * zscale, d: ry };
+    }
+    var CY = '#38d6ff', CY_DIM = 'rgba(56,214,255,0.28)', CY_SOFT = 'rgba(56,214,255,0.6)';
+    function line(a, b, color, w, glow) {
+      ctx.save();
+      if (glow) { ctx.shadowColor = CY; ctx.shadowBlur = glow; }
+      ctx.strokeStyle = color; ctx.lineWidth = w; ctx.lineCap = 'round';
+      ctx.beginPath(); ctx.moveTo(a.x, a.y); ctx.lineTo(b.x, b.y); ctx.stroke(); ctx.restore();
+    }
+
+    var o1 = Math.max(0.8, cvirt * 0.04), wt = wallTop * grow;
+
+    // ground grid (perspective), fading out
+    ctx.save(); ctx.globalAlpha = 0.5;
+    var gm = Math.max(3, cvirt * 0.6);
+    var gx0 = Math.floor((minX - gm) / 4) * 4, gx1 = Math.ceil((maxX + gm) / 4) * 4;
+    var gy0 = Math.floor((minY - gm) / 4) * 4, gy1 = Math.ceil((maxY + gm) / 4) * 4;
+    for (var gx = gx0; gx <= gx1; gx += 4) line(P(gx, gy0, 0), P(gx, gy1, 0), CY_DIM, 0.7, 0);
+    for (var gy = gy0; gy <= gy1; gy += 4) line(P(gx0, gy, 0), P(gx1, gy, 0), CY_DIM, 0.7, 0);
+    ctx.restore();
+
+    // footprint outline (bright)
+    var fp = [[minX, minY], [maxX, minY], [maxX, maxY], [minX, maxY]];
+    for (var i = 0; i < 4; i++) line(P(fp[i][0], fp[i][1], 0), P(fp[(i + 1) % 4][0], fp[(i + 1) % 4][1], 0), CY, 1.6, 8);
+
+    // interior room partitions on the floor (dimmer)
+    rooms.forEach(function (r) {
+      var a = [[r.x, r.y], [r.x + r.w, r.y], [r.x + r.w, r.y + r.h], [r.x, r.y + r.h]];
+      for (var i = 0; i < 4; i++) line(P(a[i][0], a[i][1], 0), P(a[(i + 1) % 4][0], a[(i + 1) % 4][1], 0), CY_SOFT, 0.9, 4);
+    });
+
+    // vertical edges + top ring rise with grow
+    var corners = [[minX, minY], [maxX, minY], [maxX, maxY], [minX, maxY]];
+    corners.forEach(function (c) { line(P(c[0], c[1], 0), P(c[0], c[1], wt), CY, 1.5, 8); });
+    // story rings
+    for (var st = 1; st <= stories; st++) {
+      var zz = Math.min(wt, st * storyH);
+      if (zz <= 0) continue;
+      for (var i = 0; i < 4; i++) line(P(corners[i][0], corners[i][1], zz), P(corners[(i + 1) % 4][0], corners[(i + 1) % 4][1], zz), st === stories ? CY : CY_SOFT, st === stories ? 1.6 : 1, st === stories ? 8 : 3);
+    }
+
+    // roof wireframe once walls are up
+    if (grow > 0.55) {
+      var ra = Math.min(1, (grow - 0.55) / 0.4);
+      var rise = Math.max(3, Math.min(Wd, Dp) * 0.5) * ra, zr = wallTop + rise;
+      var lx0 = minX - o1, lx1 = maxX + o1, ly0 = minY - o1, ly1 = maxY + o1;
+      if (Wd >= Dp) {
+        var midY = (minY + maxY) / 2;
+        var R1 = P(lx0, midY, zr), R2 = P(lx1, midY, zr);
+        line(R1, R2, CY, 1.6, 10); // ridge
+        [[lx0, ly0], [lx1, ly0], [lx1, ly1], [lx0, ly1]].forEach(function (e, i) {
+          var ridge = (e[0] === lx0) ? R1 : R2;
+          line(P(e[0], e[1], wallTop), ridge, CY, 1.2, 6);
+        });
+        // eave rectangle
+        var ev = [[lx0, ly0], [lx1, ly0], [lx1, ly1], [lx0, ly1]];
+        for (var i = 0; i < 4; i++) line(P(ev[i][0], ev[i][1], wallTop), P(ev[(i + 1) % 4][0], ev[(i + 1) % 4][1], wallTop), CY_SOFT, 1, 4);
+      } else {
+        var midX = (minX + maxX) / 2;
+        var Ra = P(midX, ly0, zr), Rb = P(midX, ly1, zr);
+        line(Ra, Rb, CY, 1.6, 10);
+        [[lx0, ly0], [lx1, ly0], [lx1, ly1], [lx0, ly1]].forEach(function (e) {
+          var ridge = (e[1] === ly0) ? Ra : Rb;
+          line(P(e[0], e[1], wallTop), ridge, CY, 1.2, 6);
+        });
+        var ev2 = [[lx0, ly0], [lx1, ly0], [lx1, ly1], [lx0, ly1]];
+        for (var i = 0; i < 4; i++) line(P(ev2[i][0], ev2[i][1], wallTop), P(ev2[(i + 1) % 4][0], ev2[(i + 1) % 4][1], wallTop), CY_SOFT, 1, 4);
+      }
+    }
+
+    // scan sweep line during build for the "materializing" feel
+    if (grow < 1) {
+      var zsw = wallTop * grow;
+      ctx.save(); ctx.globalAlpha = 0.9; ctx.shadowColor = CY; ctx.shadowBlur = 16;
+      var ring = [[minX - o1, minY - o1], [maxX + o1, minY - o1], [maxX + o1, maxY + o1], [minX - o1, maxY + o1]];
+      ctx.strokeStyle = '#8af0ff'; ctx.lineWidth = 2; ctx.beginPath();
+      for (var i = 0; i < 4; i++) { var p = P(ring[i][0], ring[i][1], zsw); if (i === 0) ctx.moveTo(p.x, p.y); else ctx.lineTo(p.x, p.y); }
+      ctx.closePath(); ctx.stroke(); ctx.restore();
+    }
+  }
+  root.OrchaHouse3D.renderHologram = renderHologram;
+})(typeof window !== 'undefined' ? window : this);
