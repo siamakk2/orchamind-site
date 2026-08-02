@@ -4165,7 +4165,7 @@ function _planSys(){
     +'- The geometry you return MUST be self-consistent with the area schedule: (sum of room areas) x stories should be within ~10% of the printed total enclosed SF. If it is not, re-check your room rectangles before answering.\n'
     +'- Report the printed total SF in "totalSqft" so the app displays the same number the plan states.\n\n'
     +'Return ONLY a JSON object, no markdown, no code fences, no commentary, in exactly this shape: {"items":[{"desc":"string","qty":number,"unit":"string","price":number}],"notes":"string","assumptions":["string"],"questions":["string"],"totalSqft":number,"geometry":{"stories":number,"storyHeight":number,"roof":"flat|low-slope|gable|hip","rooms":[{"name":"string","x":number,"y":number,"w":number,"h":number}]}} where price is per-unit dollars. '
-    +'For geometry: stories = number of floors from the area schedule (1, 2, ...). storyHeight = per-floor wall height in feet from the elevations if marked, else 9. roof = the roof form seen in the elevations ("flat" for flat/parapet modern roofs, "low-slope" for shallow mono-pitch/shed, "gable" for a pitched ridge, "hip" for a hipped roof). Lay out each room of ONE representative floor as an axis-aligned rectangle in FEET on a shared plan (x,y = top-left corner, w = width, h = depth), using the marked dimensions so the rectangles reproduce the true footprint and proportions. Include geometry and totalSqft ONLY when the upload contains a readable floor plan; otherwise omit both keys.';
+    +'For geometry: stories = number of floors from the area schedule (1, 2, ...). storyHeight = per-floor wall height in feet from the elevations if marked, else 9. roof = the roof form seen in the elevations ("flat" for flat/parapet modern roofs, "low-slope" for shallow mono-pitch/shed, "gable" for a pitched ridge, "hip" for a hipped roof). Lay out each room of ONE representative floor as an axis-aligned rectangle in FEET on a shared plan (x,y = top-left corner, w = width, h = depth), using the marked dimensions so the rectangles reproduce the true footprint and proportions. Name bedrooms explicitly as "Bedroom", "Master Bedroom", or "Guest Bedroom" (not vague labels) so they can be counted. Do NOT split a single room into multiple rectangles, and label outdoor or covered areas clearly (e.g. "Covered Patio", "Deck", "Porch", "Garage") since those are not interior rooms. Include geometry and totalSqft ONLY when the upload contains a readable floor plan; otherwise omit both keys.';
 }
 var _planThinkTimer=null,_planThinkStep=0,_planThinkT0=0;
 var _PLAN_STEPS=[
@@ -4338,11 +4338,21 @@ function _epvSyncPreview(){
     _p3dGrow=0;_p3dGrowT0=Date.now();
   }
   var area=0,rooms=0;
-  _planGeom.rooms.forEach(function(r){area+=r.w*r.h;});rooms=_planGeom.rooms.length;
+  // Classify zones: outdoor/covered areas (patios, decks, porches, garages, carports) are
+  // NOT interior rooms and shouldn't be counted or shown as rooms.
+  var _isOutdoor=function(nm){return /\b(patio|deck|porch|balcony|terrace|carport|breezeway)\b/i.test(nm||'');};
+  var _isBedroom=function(nm){return /\b(bedroom|bed rm|guest\s*room|guestroom|master\s*(suite|bed)|primary\s*(suite|bed)|br\b)\b/i.test(nm||'');};
+  var interior=_planGeom.rooms.filter(function(r){return !_isOutdoor(r.name);});
+  var bedrooms=_planGeom.rooms.filter(function(r){return _isBedroom(r.name);}).length;
+  _planGeom.rooms.forEach(function(r){area+=r.w*r.h;});rooms=interior.length;
   var totalArea=(_planGeom.totalSqft&&_planGeom.totalSqft>0)?_planGeom.totalSqft:(area*(_planGeom.stories||1));
   var mk=function(v,l){return '<div class="epv-metric"><div class="m-val">'+v+'</div><div class="m-lbl">'+l+'</div></div>';};
   var html=mk(estMoney(tot),'Total estimate');
-  if(realGeom){html+=mk(Math.round(totalArea).toLocaleString()+' sf','Floor area')+mk(estMoney(totalArea?tot/totalArea:0),'Per sq ft')+mk(rooms,'Rooms');}
+  if(realGeom){
+    html+=mk(Math.round(totalArea).toLocaleString()+' sf','Floor area')+mk(estMoney(totalArea?tot/totalArea:0),'Per sq ft');
+    // Show Bedrooms when we can identify them; otherwise fall back to interior Spaces.
+    html+=bedrooms>0?mk(bedrooms,bedrooms===1?'Bedroom':'Bedrooms'):mk(rooms,'Spaces');
+  }
   else{html+=mk(document.querySelectorAll('#estLines tr').length,'Line items')+mk((_planGeom.stories||1),'Stories');}
   document.getElementById('epvMetrics').innerHTML=html;
   var wrap=document.getElementById('epv3dWrap');
@@ -4423,9 +4433,16 @@ function _p3dRender(){
   var cv=document.getElementById('p3dCanvas');
   if(!cv||!_planGeom||!window.OrchaHouse3D)return;
   if(_epvView==='photo')return; // photo view is a static image, not the canvas
-  var opt={canvas:cv,geom:_planGeom,theta:_p3dTheta,pitch:_p3dPitch,zoom:_p3dZoom,grow:_p3dGrow};
-  // 'holo' forces hologram; 'solid' shows the realistic massing model.
-  // During the build-up both start as hologram then reveal.
+  // Build the massing from INTERIOR rooms only — patios/decks/porches inflate the
+  // footprint and squash the house. Keep the full list elsewhere for the chips.
+  var _out=/\b(patio|deck|porch|balcony|terrace|carport|breezeway)\b/i;
+  var interiorRooms=(_planGeom.rooms||[]).filter(function(r){return !_out.test(r.name||'');});
+  var geomForRender=_planGeom;
+  if(interiorRooms.length && interiorRooms.length!==_planGeom.rooms.length){
+    geomForRender={};for(var k in _planGeom){if(_planGeom.hasOwnProperty(k))geomForRender[k]=_planGeom[k];}
+    geomForRender.rooms=interiorRooms;
+  }
+  var opt={canvas:cv,geom:geomForRender,theta:_p3dTheta,pitch:_p3dPitch,zoom:_p3dZoom,grow:_p3dGrow};
   if(_epvView==='holo'){
     window.OrchaHouse3D.renderHologram(opt);
   } else if(_p3dGrow<1 && window.OrchaHouse3D.renderHologram){
