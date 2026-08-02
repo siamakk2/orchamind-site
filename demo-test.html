@@ -2269,7 +2269,7 @@ function renderAttention(){
     var leadsF=(window.leads||[]).filter(function(l){return l.stage==='new'||l.stage==='contacted';});
     if(leadsF.length) items.push({icon:'\u2728',txt:'<b>'+leadsF.length+'</b> lead'+(leadsF.length>1?'s':'')+' to follow up',tab:'leads'});
     var inv=(window.estimates||[]).filter(function(e){return e.kind==='invoice' && e.status!=='paid';});
-    if(inv.length){ var tt=0; inv.forEach(function(e){ try{ tt+=estTotals(e).total; }catch(x){} }); items.push({icon:'\ud83d\udcb0',txt:'<b>'+inv.length+'</b> unpaid invoice'+(inv.length>1?'s':'')+' \u2014 '+estMoney(tt),tab:'estimates'}); }
+    if(inv.length){ var tt=0; inv.forEach(function(e){ try{ tt+=estTotals(e).total; }catch(x){} }); items.push({icon:'\ud83d\udcb0',txt:'<b>'+inv.length+'</b> unpaid invoice'+(inv.length>1?'s':'')+' \u2014 '+((typeof estMoney==='function')?estMoney(tt):('$'+Math.round(tt).toLocaleString())),tab:'estimates'}); }
     try{ var losing=(window.jobs||[]).filter(function(j){ return _expJobRevenue(j)-_expJobCosts(j) < 0; }); if(losing.length) items.push({icon:'\u26a0\ufe0f',txt:'<b>'+losing.length+'</b> job'+(losing.length>1?'s':'')+' over budget',tab:'costs'}); }catch(x){}
   }
   if(!items.length){ el.innerHTML='<div class="attn-h">Needs your attention</div><div class="attn-empty">\u2705 You\u2019re all caught up. Nice work.</div>'; return; }
@@ -3634,7 +3634,10 @@ function startApp(){
   var _w=document.getElementById('whoami');if(_w)_w.textContent='Demo User';
   var _r=document.getElementById('roleLabel');if(_r)_r.textContent='manager';
   if(typeof applyRoleAccess==='function')applyRoleAccess();
-  startApp();
+  // Defer startApp until the whole document (all script blocks) has parsed, so
+  // cross-block render helpers (renderClock, estMoney, etc.) are guaranteed defined.
+  if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded',function(){try{startApp();}catch(e){if(window.console)console.error(e);}});}
+  else{try{startApp();}catch(e){if(window.console)console.error(e);}}
 })();
 
 // ====== DEMO MODE OVERRIDES (defined last so they win) ======
@@ -4105,6 +4108,8 @@ function _plan3dLoad(e){
 }
 function _plan3dBtn(){_epvSyncPreview();}
 function _epvSyncPreview(){
+ try{
+  if(typeof estMoney!=='function'||typeof estNum!=='function')return; // deps not ready yet
   var pv=document.getElementById('estPreview');if(!pv)return;
   var hasLines=document.querySelectorAll('#estLines tr').length>0;
   var realGeom=!!(_planGeom&&_planGeom.rooms&&_planGeom.rooms.length&&!_planGeom._synth);
@@ -4144,7 +4149,8 @@ function _epvSyncPreview(){
     note.textContent='Illustrative model. Upload plans on this estimate for an exact takeoff with cost per room.';
     list.appendChild(note);
   }
-  _p3dEnsureLoop();
+  if(_epvView!=='photo')_p3dEnsureLoop();
+ }catch(e){ if(window.console)console.warn('preview skipped:',e.message); }
 }
 // Pull a plausible building square footage from the line items (for representative sizing)
 function _estGuessSqft(){
