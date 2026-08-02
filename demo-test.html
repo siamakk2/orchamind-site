@@ -3927,10 +3927,12 @@ function _planDemoOk(){
 var _planBlocks=null,_planDraft=null;
 function callClaudeBlocks(systemPrompt,blocks,cb,errCb,maxTokens){
   var mt=maxTokens||6000,acc="",tries=0,settled=false;
+  var OVERALL_DEADLINE=Date.now()+90000; // total budget across any continuations
   function done(fn,arg){ if(settled)return; settled=true; fn&&fn(arg); }
   function go(messages){
+    if(Date.now()>OVERALL_DEADLINE){ done(acc?cb:errCb, acc||'The plan read is taking too long \u2014 try a single page or photos of the key sheets.'); return; }
     var ctrl=(typeof AbortController!=='undefined')?new AbortController():null;
-    var TIMEOUT_MS=75000; // hard ceiling so the overlay never spins forever
+    var TIMEOUT_MS=Math.max(8000, Math.min(75000, OVERALL_DEADLINE-Date.now())); // never exceed the overall budget
     var timer=setTimeout(function(){ if(ctrl){try{ctrl.abort();}catch(e){}}
       done(errCb,'The plan read is taking too long \u2014 the server may have timed out. Try a single page, or snap photos of the key sheets instead of a PDF.'); },TIMEOUT_MS);
     fetch("/api/claude",{method:"POST",headers:{"Content-Type":"application/json"},
@@ -4071,8 +4073,9 @@ function aiEstimateFromPlans(files){
     blocks.push({type:"text",text:'These are the plans for the job.'+(scope?(' Extra context from the contractor: '+scope):'')+' Do the takeoff and draft the estimate.'});
     _planBlocks=blocks;
     callClaudeBlocks(_planSys(),blocks,function(text){
-      _planThinkStop();btn.disabled=false;btn.innerHTML=old;_planApply(text,msg);
-    },fail,6000);
+      _planThinkStop();btn.disabled=false;btn.innerHTML=old;
+      try{_planApply(text,msg);}catch(e){msg.textContent='Read the plans but could not build the estimate ('+(e.message||'error')+'). Try again or add a short description.';}
+    },fail,8000);
   };
   if(pdfs.length){
     var rd=new FileReader();
