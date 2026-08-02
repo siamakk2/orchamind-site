@@ -199,6 +199,7 @@ footer a:hover{color:#1E6FE0;}
 .mid-cta{background:#F4F8FD;border:1px solid #B7D3F0;border-radius:16px;padding:28px;text-align:center;margin:30px 0;}
 .mid-cta a{background:#1565C0;color:#fff;font-weight:700;padding:13px 26px;border-radius:10px;text-decoration:none;display:inline-block;margin-top:12px;}
 </style>
+<script src="/house3d.js"></script>
 </head><body>
 <nav class="sk-nav">
 <div class="sk-nav-in">
@@ -291,34 +292,16 @@ footer a:hover{color:#1E6FE0;}
 
 
 <script>
-// Lightweight 3D hero — same massing renderer, standalone
+// Realistic house hero — shared renderer
 (function(){
-  var C=['#5B9DFF','#F9A825','#2E9B5B','#9B6BD6','#E8654F'];
-  var rooms=[{name:'Living / Kitchen',x:0,y:0,w:22,h:15},{name:'Bedroom',x:22,y:0,w:13,h:12},{name:'Bath',x:22,y:12,w:8,h:7},{name:'Mech',x:30,y:12,w:5,h:7},{name:'Flex / Office',x:0,y:15,w:12,h:13.7}];
-  var hFt=9,theta=0.7,raf;
-  function shade(hex,f){var n=parseInt(hex.slice(1),16),r=(n>>16)&255,g=(n>>8)&255,b=n&255;f=Math.max(.35,Math.min(1.25,f));return 'rgb('+Math.min(255,r*f|0)+','+Math.min(255,g*f|0)+','+Math.min(255,b*f|0)+')';}
-  function render(){
-    var cv=document.getElementById('heroCanvas');if(!cv)return;
-    var dpr=window.devicePixelRatio||1,W=cv.clientWidth,H=cv.clientHeight||260;
-    if(cv.width!==W*dpr){cv.width=W*dpr;cv.height=H*dpr;}
-    var ctx=cv.getContext('2d');ctx.setTransform(dpr,0,0,dpr,0,0);ctx.clearRect(0,0,W,H);
-    var minX=0,minY=0,maxX=35,maxY=28.7,cvirt=35,span=cvirt*1.55,s=Math.min(W,H)*0.95/span;
-    var cx=(minX+maxX)/2,cy=(minY+maxY)/2,cosT=Math.cos(theta),sinT=Math.sin(theta);
-    function P(x,y,z){var rx=(x-cx)*cosT-(y-cy)*sinT,ry=(x-cx)*sinT+(y-cy)*cosT;return{x:W/2+rx*s,y:H*0.60+ry*s*0.5-z*s*0.70,d:ry};}
-    function poly(p,fill,st,lw){ctx.beginPath();ctx.moveTo(p[0].x,p[0].y);for(var k=1;k<p.length;k++)ctx.lineTo(p[k].x,p[k].y);ctx.closePath();if(fill){ctx.fillStyle=fill;ctx.fill();}if(st){ctx.strokeStyle=st;ctx.lineWidth=lw||1;ctx.lineJoin='round';ctx.stroke();}}
-    var m=2.1;ctx.save();ctx.globalAlpha=.16;var sh=[P(minX-m,minY-m,0),P(maxX+m,minY-m,0),P(maxX+m,maxY+m,0),P(minX-m,maxY+m,0)];sh.forEach(function(p){p.x+=6;p.y+=8;});poly(sh,'#0A1628');ctx.restore();
-    poly([P(minX-m,minY-m,0),P(maxX+m,minY-m,0),P(maxX+m,maxY+m,0),P(minX-m,maxY+m,0)],'#E6EEF7','#CBD9E8',1);
-    ctx.strokeStyle='rgba(120,150,185,.28)';ctx.lineWidth=.5;
-    for(var gx=0;gx<=35;gx+=5){var a=P(gx,-m,0),b=P(gx,maxY+m,0);ctx.beginPath();ctx.moveTo(a.x,a.y);ctx.lineTo(b.x,b.y);ctx.stroke();}
-    for(var gy=0;gy<=30;gy+=5){var a2=P(-m,gy,0),b2=P(maxX+m,gy,0);ctx.beginPath();ctx.moveTo(a2.x,a2.y);ctx.lineTo(b2.x,b2.y);ctx.stroke();}
-    var lA=theta+0.9,lx=Math.cos(lA),ly=Math.sin(lA),faces=[];
-    rooms.forEach(function(r,i){var col=C[i%C.length],x0=r.x,y0=r.y,x1=r.x+r.w,y1=r.y+r.h;
-      faces.push({d:((x0+r.w/2-cx)*sinT+(y0+r.h/2-cy)*cosT)-.01,p:[P(x0,y0,0),P(x1,y0,0),P(x1,y1,0),P(x0,y1,0)],f:shade(col,.55),st:'rgba(10,22,40,.18)'});
-      [[x0,y0,x1,y0,0,-1],[x1,y0,x1,y1,1,0],[x1,y1,x0,y1,0,1],[x0,y1,x0,y0,-1,0]].forEach(function(sg){var lit=.72+.5*Math.max(0,sg[4]*lx+sg[5]*ly);var a=P(sg[0],sg[1],0),b=P(sg[2],sg[3],0),c=P(sg[2],sg[3],hFt),d=P(sg[0],sg[1],hFt);faces.push({d:(a.d+b.d)/2,p:[a,b,c,d],f:shade(col,lit),st:'rgba(10,22,40,.5)'});});});
-    faces.sort(function(a,b){return a.d-b.d;});faces.forEach(function(f){poly(f.p,f.f,f.st,1);});
-    theta+=0.005;raf=requestAnimationFrame(render);
+  var geom={wallHeightFt:9,rooms:[{name:'Living / Kitchen',x:0,y:0,w:22,h:15},{name:'Bedroom',x:22,y:0,w:13,h:12},{name:'Bath',x:22,y:12,w:8,h:7},{name:'Mech',x:30,y:12,w:5,h:7},{name:'Flex / Office',x:0,y:15,w:12,h:13.7}]};
+  var theta=0.6,raf;
+  function frame(){
+    var cv=document.getElementById('heroCanvas');
+    if(cv&&window.OrchaHouse3D){window.OrchaHouse3D.render({canvas:cv,geom:geom,theta:theta,zoom:1});theta+=0.005;}
+    raf=requestAnimationFrame(frame);
   }
-  if(document.getElementById('heroCanvas'))render();
+  if(document.getElementById('heroCanvas'))frame();
 })();
 </script>
 <section class="related"><div class="wrap-wide"><h2>Keep reading</h2><div class="related-grid"><a href="/ai-construction-takeoff/" class="rcard"><h3>AI takeoff from plans</h3><p>Snap the plans; AI drafts the estimate.</p></a><a href="/ai-construction-takeoff/" class="rcard"><h3>AI takeoff from plans</h3><p>Snap the plans; AI drafts the estimate.</p></a><a href="/how-to-estimate-a-job/" class="rcard"><h3>How to estimate a job</h3><p>The formula, markup and margin explained.</p></a><a href="/software-for-general-contractors/" class="rcard"><h3>Software for general contractors</h3><p>Run your whole operation in one place.</p></a></div></div></section><footer class="footer"><div class="wrap-wide"><p>&copy; 2026 <a href="/">Orchamind</a> &middot; AI operations for contractors &middot; Made by <a href="https://siamakconsulting.com" target="_blank">Siamak Kalhor</a></p></div></footer></body></html>
