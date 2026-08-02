@@ -35,6 +35,10 @@
     {
       "source": "/eula",
       "destination": "/eula.html"
+    },
+    {
+      "source": "/features",
+      "destination": "/features/index.html"
     }
   ],
   "headers": [
