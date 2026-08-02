@@ -821,6 +821,7 @@ button:active, .btn:active, .btn-ghost:active, .tab:active, [role="button"]:acti
   <button class="tab" data-tab="estimates" data-mgronly><svg class="ti" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M9 13h6"/><path d="M9 17h6"/></svg>Estimates</button>
   <div class="nav-sec">Work</div>
   <button class="tab" data-tab="jobs"><svg class="ti" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 7h20v13a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1z"/><path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>Jobs</button>
+  <button class="tab tab-hot" data-tab="jobreport"><svg class="ti" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>Job Report<span class="tab-badge" style="background:#F9A825;color:#0A1628;">AI</span></button>
   <button class="tab" data-tab="pricebook"><svg class="ti" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>Pricebook</button>
       <button class="tab" data-tab="selections"><svg class="ti" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>Selections</button>
       <button class="tab" data-tab="safety"><svg class="ti" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="M9 12l2 2 4-4"/></svg>Safety</button>
@@ -1091,8 +1092,82 @@ button:active, .btn:active, .btn-ghost:active, .tab:active, [role="button"]:acti
 .log-thumb img{width:80px;height:80px;object-fit:cover;border-radius:8px;border:1px solid var(--line);}
 .log-thumb-x{position:absolute;top:-8px;right:-8px;width:22px;height:22px;border-radius:50%;background:#C62828;color:#fff;border:none;cursor:pointer;font-size:14px;line-height:1;}
 .log-up-msg{font-size:12.5px;color:var(--muted);margin-top:6px;min-height:16px;}
+.jr-hero{background:linear-gradient(135deg,#0A1628,#1565C0);border-radius:16px;padding:20px;margin-bottom:16px;color:#fff;}
+.jr-hero-title{font-size:19px;font-weight:800;margin-bottom:6px;}
+.jr-hero-sub{font-size:13.5px;line-height:1.5;color:rgba(255,255,255,.85);}
+.jr-card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px;margin-bottom:14px;}
+.jr-criteria{margin-top:8px;font-size:12px;color:var(--muted);line-height:1.5;background:rgba(21,101,192,.06);border-left:3px solid #1565C0;border-radius:6px;padding:8px 10px;}
+.jr-thumbs{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px;}
+.jr-thumb{position:relative;width:76px;height:76px;border-radius:10px;overflow:hidden;border:1px solid var(--line);}
+.jr-thumb img{width:100%;height:100%;object-fit:cover;}
+.jr-thumb-x{position:absolute;top:-7px;right:-7px;width:22px;height:22px;border-radius:50%;background:#C62828;color:#fff;border:none;cursor:pointer;font-size:14px;line-height:1;}
+.jr-result{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:18px;margin-bottom:14px;}
+.jr-rep-head{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-bottom:12px;}
+.jr-pct{display:inline-flex;align-items:center;gap:8px;font-weight:800;font-size:15px;}
+.jr-pct-bar{width:120px;height:8px;border-radius:99px;background:var(--line);overflow:hidden;}
+.jr-pct-fill{height:100%;background:#2E9B5B;}
+.jr-sec{margin:12px 0;}
+.jr-sec h4{margin:0 0 6px;font-size:13px;text-transform:uppercase;letter-spacing:.04em;color:var(--muted);}
+.jr-sec ul{margin:0;padding-left:18px;}
+.jr-sec li{margin:3px 0;font-size:14px;line-height:1.5;}
+.jr-flag{background:rgba(198,40,40,.08);border-left:3px solid #C62828;border-radius:6px;padding:8px 10px;font-size:13.5px;margin:4px 0;}
+.jr-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px;}
+.tab-hot{position:relative;}
+.jr-hist-item{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px;margin-bottom:10px;}
 </style>
-  <div class="panel" id="panel-log">
+  <div class="panel" id="panel-jobreport">
+    <div class="panel-head">
+      <div><h2 style="margin:0;">&#128248; AI Job Report</h2><div style="color:var(--muted);font-size:13px;margin-top:2px;">Snap photos on site &mdash; AI writes the progress report. No typing.</div></div>
+    </div>
+    <div class="jr-hero">
+      <div class="jr-hero-txt">
+        <div class="jr-hero-title">Turn site photos into a progress report</div>
+        <div class="jr-hero-sub">Your crew takes pictures of the work. Orchamind reads them, judges progress against the trade, flags issues, and drafts a report for the office and the client &mdash; in seconds.</div>
+      </div>
+    </div>
+
+    <div class="jr-card">
+      <div class="field">
+        <label>Job</label>
+        <select id="jrJob"></select>
+      </div>
+      <div class="field">
+        <label>What kind of work is in these photos?</label>
+        <select id="jrTrade" onchange="jrTradeChanged()">
+          <option value="general">General / whole job</option>
+          <option value="sitework">Site work / excavation / grading</option>
+          <option value="foundation">Foundation / concrete</option>
+          <option value="framing">Framing</option>
+          <option value="roofing">Roofing</option>
+          <option value="exterior">Siding / exterior / windows</option>
+          <option value="plumbing">Plumbing rough-in</option>
+          <option value="electrical">Electrical rough-in</option>
+          <option value="hvac">HVAC</option>
+          <option value="insulation">Insulation</option>
+          <option value="drywall">Drywall</option>
+          <option value="interior">Interior finish / trim / paint</option>
+          <option value="flooring">Flooring / tile</option>
+          <option value="punch">Punch list / final walkthrough</option>
+        </select>
+        <div id="jrCriteria" class="jr-criteria"></div>
+      </div>
+      <div class="field">
+        <label>Photos of the work <span style="color:var(--muted);font-weight:400;">(add as many as you need)</span></label>
+        <input type="file" id="jrFiles" accept="image/*" multiple onchange="jrAddPhotos(this)">
+        <div class="log-up-msg" id="jrUpMsg"></div>
+        <div id="jrThumbs" class="jr-thumbs"></div>
+      </div>
+      <div class="field">
+        <label>Anything to add? <span style="color:var(--muted);font-weight:400;">(optional &mdash; type or use voice-to-text)</span></label>
+        <textarea id="jrNote" rows="2" placeholder="e.g. Finished the north wall, waiting on the window delivery, small leak under the sink"></textarea>
+      </div>
+      <button class="btn btn-primary" id="jrGoBtn" onclick="jrGenerate()" style="width:100%;font-size:15px;padding:13px;">&#10024; Write my job report</button>
+    </div>
+
+    <div id="jrResult" class="jr-result" style="display:none;"></div>
+    <div id="jrHistory"></div>
+  </div>
+
     <div class="panel-head">
       <h2>Site Log</h2>
       <button class="btn" onclick="newLog()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>New Entry</button>
@@ -2500,6 +2575,7 @@ function _omRender(n){
   if(n==='estimates'){renderEstimates();}
   if(n==='sketches'){renderSketches();}
   if(n==='log'){renderLog();}
+  if(n==='jobreport'){renderJobReport();}
   if(n==='schedule'){renderSchedule();}
   if(n==='dispatch'){renderDispatch();}
   if(n==='billing'){renderBilling();}
@@ -4798,6 +4874,148 @@ function uploadLogPhoto(dataUrl,name,job,cb,err){
     .then(function(d){ if(d&&d.ok&&d.url){cb(d.url);} else {err&&err((d&&d.error)||'upload failed');} })
     .catch(function(e){ err&&err(e.message); });
 }
+// ===== JOB REPORT (photo -> AI progress report) =====
+var _jrPhotos=[]; // {name, dataUrl, block}
+var JR_CRITERIA={
+  general:  'Overall job progress. What trades are visible, what looks complete vs in-progress, general workmanship, site cleanliness and safety.',
+  sitework: 'Excavation depth/extent, grading and slope, compaction, trenching, erosion control, spoil placement, access.',
+  foundation:'Formwork, rebar size/spacing and coverage, footings, slab prep, vapor barrier, embeds/anchor bolts, concrete finish, cracks or honeycombing.',
+  framing:  'Wall/floor/roof framing, stud spacing, headers, plumb/level/square, sheathing, nailing pattern, hangers/straps, blocking, openings match plan.',
+  roofing:  'Underlayment, flashing at penetrations/valleys, shingle/membrane coverage, fastening, ridge/eave detailing, ponding on low-slope, drip edge.',
+  exterior: 'Weather-resistive barrier, window/door flashing and integration, siding coverage and fastening, trim, caulking, penetrations sealed.',
+  plumbing: 'Pipe material/sizing, slope on drains, supports/strapping, venting, fixture rough locations, pressure-test signs, leaks or unsupported runs.',
+  electrical:'Panel/sub-panel, wire gauge, box fill, staples/supports, grounding, device rough-in locations, GFCI/AFCI areas, clearances.',
+  hvac:     'Equipment set, duct runs/sealing/support, refrigerant lines, condensate, register locations, combustion air/venting, clearances.',
+  insulation:'Coverage and R-value fit, gaps/compression, vapor retarder, fire-blocking, baffles at eaves, no missed cavities.',
+  drywall:  'Hanging, screw pattern, seams/joints, corner bead, tape/mud coats, sanding, ready-for-paint condition, any nail pops or gaps.',
+  interior: 'Trim/casing/base, doors, paint coverage and cut lines, caulk, hardware, surface prep, overall finish quality.',
+  flooring: 'Substrate prep/flatness, layout, tile spacing/lippage, grout, transitions, expansion gaps, adhesive coverage, protection.',
+  punch:    'Remaining defects, incomplete items, touch-ups, cleaning, anything blocking final sign-off. Be specific and location-based.'
+};
+function jrTradeChanged(){
+  var t=document.getElementById('jrTrade').value;
+  var el=document.getElementById('jrCriteria');
+  if(el)el.textContent='AI will check: '+(JR_CRITERIA[t]||JR_CRITERIA.general);
+}
+function jrPopulateJobs(){
+  var sel=document.getElementById('jrJob');if(!sel)return;
+  var cur=sel.value; sel.innerHTML='';
+  if(typeof jobs==='undefined'||!jobs||!jobs.length){var o=document.createElement('option');o.value='';o.textContent='(no jobs yet)';sel.appendChild(o);return;}
+  jobs.forEach(function(j){var o=document.createElement('option');o.value=j.id;o.textContent=j.name||j.client||('Job '+j.id);sel.appendChild(o);});
+  if(cur)sel.value=cur;
+}
+function jrAddPhotos(input){
+  var files=Array.prototype.slice.call(input.files||[]);
+  var msg=document.getElementById('jrUpMsg');
+  if(!files.length)return;
+  msg.textContent='Adding '+files.length+' photo'+(files.length>1?'s':'')+'\u2026';
+  var pending=files.length;
+  files.forEach(function(f){
+    if(f.type.indexOf('image/')!==0){pending--;if(pending<=0){jrRenderThumbs();}return;}
+    _jrShrink(f,function(block,dataUrl){
+      _jrPhotos.push({name:f.name,dataUrl:dataUrl,block:block}); pending--;
+      if(pending<=0){jrRenderThumbs();msg.textContent=_jrPhotos.length+' photo'+(_jrPhotos.length>1?'s':'')+' ready.';}
+    },function(){pending--;if(pending<=0){jrRenderThumbs();}});
+  });
+  input.value='';
+}
+function _jrShrink(file,cb,err){
+  var settled=false;var fin=function(a,b){if(settled)return;settled=true;a?cb(a,b):err();};
+  var watch=setTimeout(function(){fin(null);},30000);
+  var rd=new FileReader();
+  rd.onload=function(){
+    var img=new Image();
+    img.onload=function(){clearTimeout(watch);
+      try{var MAX=1400,w=img.width,h=img.height;if(!w||!h){fin(null);return;}
+        if(w>MAX||h>MAX){var s=MAX/Math.max(w,h);w=Math.round(w*s);h=Math.round(h*s);}
+        var cv=document.createElement('canvas');cv.width=w;cv.height=h;cv.getContext('2d').drawImage(img,0,0,w,h);
+        var dd=cv.toDataURL('image/jpeg',0.8);
+        fin({type:"image",source:{type:"base64",media_type:"image/jpeg",data:dd.substring(dd.indexOf(',')+1)}},dd);
+      }catch(e){fin(null);}
+    };
+    img.onerror=function(){clearTimeout(watch);fin(null);};
+    img.src=rd.result;
+  };
+  rd.onerror=function(){clearTimeout(watch);fin(null);};
+  rd.readAsDataURL(file);
+}
+function jrRenderThumbs(){
+  var wrap=document.getElementById('jrThumbs');if(!wrap)return; wrap.innerHTML='';
+  _jrPhotos.forEach(function(p,i){
+    var d=document.createElement('div');d.className='jr-thumb';
+    d.innerHTML='<img src="'+p.dataUrl+'" alt=""><button class="jr-thumb-x" onclick="jrDelPhoto('+i+')">&times;</button>';
+    wrap.appendChild(d);
+  });
+}
+function jrDelPhoto(i){_jrPhotos.splice(i,1);jrRenderThumbs();var m=document.getElementById('jrUpMsg');if(m)m.textContent=_jrPhotos.length+' photo'+(_jrPhotos.length===1?'':'s')+' ready.';}
+function _jrSys(trade){
+  var crit=JR_CRITERIA[trade]||JR_CRITERIA.general;
+  return 'You are an experienced construction superintendent writing a field progress report from job-site photos. '
+    +'The work shown is: '+trade.toUpperCase()+'. Judge it specifically against these criteria: '+crit+'\n\n'
+    +'Look carefully at EVERY photo. Base everything only on what is visible plus the crew note; never invent detail you cannot see. '
+    +'Estimate percent complete for this scope conservatively and say what that estimate is based on. '
+    +'Call out quality concerns, safety issues, and anything that looks wrong or incomplete. '
+    +'Write for two audiences: a short crew/office log, and a friendly homeowner-facing summary that avoids jargon.\n\n'
+    +'Return ONLY a JSON object, no markdown, no fences, exactly: '
+    +'{"phase":"string","percent":number,"summary":"string",'
+    +'"done":["string"],"inprogress":["string"],"issues":["string"],"next":["string"],'
+    +'"client_update":"string","photo_count":number}';
+}
+function jrGenerate(){
+  var btn=document.getElementById('jrGoBtn');var res=document.getElementById('jrResult');
+  if(!_jrPhotos.length){var m=document.getElementById('jrUpMsg');if(m)m.textContent='Add at least one photo of the work first.';return;}
+  if(typeof _planDemoOk==='function' && !_planDemoOk()){res.style.display='block';res.innerHTML='<div style="color:var(--muted);">You\u2019ve reached the demo\u2019s AI limit. The full version is unlimited \u2014 call Siamak at 323-657-7752.</div>';return;}
+  var trade=document.getElementById('jrTrade').value;
+  var note=document.getElementById('jrNote').value.trim();
+  btn.disabled=true;var old=btn.innerHTML;btn.innerHTML='Reading '+_jrPhotos.length+' photo'+(_jrPhotos.length>1?'s':'')+'\u2026';
+  res.style.display='block';res.innerHTML='<div class="briefing-loading"><div class="spinner"></div> Reading the photos and writing your report\u2026</div>';
+  var blocks=_jrPhotos.map(function(p){return p.block;});
+  blocks.push({type:"text",text:'These are '+_jrPhotos.length+' photos from the job site.'+(note?(' Crew note: '+note):'')+' Write the progress report as specified.'});
+  callClaudeBlocks(_jrSys(trade),blocks,function(text){
+    btn.disabled=false;btn.innerHTML=old;
+    var obj=_estParseJSON(text);
+    if(!obj){res.innerHTML='<div style="color:var(--muted);">Could not read a report from those photos. Try clearer shots or add a note.</div>';return;}
+    try{_jrRenderReport(obj,trade,note);}catch(e){res.innerHTML='<div style="color:var(--muted);">Report built but could not display ('+(e.message||'error')+').</div>';}
+  },function(e){btn.disabled=false;btn.innerHTML=old;res.innerHTML='<div style="color:var(--muted);">Report error: '+esc(e)+'</div>';},8000);
+}
+var _jrLast=null;
+function _jrRenderReport(o,trade,note){
+  var res=document.getElementById('jrResult');
+  var pct=Math.max(0,Math.min(100,estNum(o.percent)||0));
+  var jobSel=document.getElementById('jrJob');
+  var jobName=jobSel&&jobSel.options[jobSel.selectedIndex]?jobSel.options[jobSel.selectedIndex].textContent:'';
+  var list=function(a){return (a&&a.length)?('<ul>'+a.map(function(x){return '<li>'+esc(x)+'</li>';}).join('')+'</ul>'):'<div style="color:var(--muted);font-size:13px;">\u2014</div>';};
+  var issues=(o.issues&&o.issues.length)?o.issues.map(function(x){return '<div class="jr-flag">\u26a0\ufe0f '+esc(x)+'</div>';}).join(''):'<div style="color:var(--muted);font-size:13px;">No issues flagged.</div>';
+  res.innerHTML=
+    '<div class="jr-rep-head"><div><div style="font-weight:800;font-size:16px;">'+esc(jobName||'Job report')+'</div><div style="color:var(--muted);font-size:12.5px;">'+esc((o.phase||trade))+' \u00b7 '+new Date().toLocaleDateString()+' \u00b7 '+(estNum(o.photo_count)||_jrPhotos.length)+' photos</div></div>'
+    +'<div class="jr-pct"><div class="jr-pct-bar"><div class="jr-pct-fill" style="width:'+pct+'%"></div></div>'+pct+'%</div></div>'
+    +'<div style="font-size:14.5px;line-height:1.55;margin-bottom:6px;">'+esc(o.summary||'')+'</div>'
+    +'<div class="jr-sec"><h4>Completed</h4>'+list(o.done)+'</div>'
+    +'<div class="jr-sec"><h4>In progress</h4>'+list(o.inprogress)+'</div>'
+    +'<div class="jr-sec"><h4>Issues &amp; safety</h4>'+issues+'</div>'
+    +'<div class="jr-sec"><h4>Next steps</h4>'+list(o.next)+'</div>'
+    +'<div class="jr-sec" style="background:rgba(46,155,91,.07);border-radius:8px;padding:10px;"><h4 style="color:#2E9B5B;">Client update</h4><div style="font-size:14px;line-height:1.55;">'+esc(o.client_update||'')+'</div></div>'
+    +'<div style="color:var(--muted);font-size:11.5px;margin-top:10px;">AI-drafted from photos \u2014 review before sharing with the client.</div>'
+    +'<div class="jr-actions"><button class="btn btn-primary" onclick="jrSaveToLog()">Save to Site Log</button><button class="btn btn-ghost" onclick="jrCopyClient()">Copy client update</button><button class="btn btn-ghost" onclick="jrReset()">New report</button></div>';
+  _jrLast={report:o,trade:trade,note:note,jobName:jobName,photos:_jrPhotos.map(function(p){return p.dataUrl;})};
+}
+function jrSaveToLog(){
+  if(!_jrLast)return; var o=_jrLast.report;
+  var entry={id:'log'+Date.now(),ts:Date.now(),
+    text:'['+(o.phase||_jrLast.trade)+' \u00b7 '+(estNum(o.percent)||0)+'%] '+(o.summary||'')
+      +(o.issues&&o.issues.length?('\nIssues: '+o.issues.join(' | ')):'')+'\nNext: '+((o.next||[]).join(' | ')),
+    photos:_jrLast.photos||[],job:_jrLast.jobName||''};
+  try{if(typeof logs!=='undefined'&&Array.isArray(logs)){logs.unshift(entry);if(typeof saveNow==='function')saveNow();else if(typeof writeLocal==='function')writeLocal();}}catch(e){}
+  var res=document.getElementById('jrResult');var note=document.createElement('div');note.style.cssText='color:#2E9B5B;font-size:13px;margin-top:8px;';note.textContent='\u2713 Saved to Site Log.';res.appendChild(note);
+}
+function jrCopyClient(){
+  if(!_jrLast)return;var t=_jrLast.report.client_update||'';
+  try{if(navigator.clipboard)navigator.clipboard.writeText(t);}catch(e){}
+  var res=document.getElementById('jrResult');var n=document.createElement('div');n.style.cssText='color:#2E9B5B;font-size:13px;margin-top:8px;';n.textContent='\u2713 Client update copied.';res.appendChild(n);
+}
+function jrReset(){_jrPhotos=[];_jrLast=null;jrRenderThumbs();var r=document.getElementById('jrResult');if(r)r.style.display='none';var n=document.getElementById('jrNote');if(n)n.value='';var m=document.getElementById('jrUpMsg');if(m)m.textContent='';}
+function renderJobReport(){jrPopulateJobs();jrTradeChanged();}
+
 function addLogPhotos(input){
   var files=input.files; if(!files||!files.length) return;
   var job=document.getElementById('logJob').value.trim()||'general';
