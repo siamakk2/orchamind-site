@@ -3930,9 +3930,9 @@ function callClaudeBlocks(systemPrompt,blocks,cb,errCb,maxTokens){
   function done(fn,arg){ if(settled)return; settled=true; fn&&fn(arg); }
   function go(messages){
     var ctrl=(typeof AbortController!=='undefined')?new AbortController():null;
-    var TIMEOUT_MS=95000; // vision on a big plan is slow, but never infinite
+    var TIMEOUT_MS=75000; // hard ceiling so the overlay never spins forever
     var timer=setTimeout(function(){ if(ctrl){try{ctrl.abort();}catch(e){}}
-      done(errCb,'The plan read timed out. Try one clear page, or a smaller PDF/photo.'); },TIMEOUT_MS);
+      done(errCb,'The plan read is taking too long \u2014 the server may have timed out. Try a single page, or snap photos of the key sheets instead of a PDF.'); },TIMEOUT_MS);
     fetch("/api/claude",{method:"POST",headers:{"Content-Type":"application/json"},
       signal:ctrl?ctrl.signal:undefined,
       body:JSON.stringify({model:"claude-sonnet-4-6",max_tokens:mt,system:systemPrompt,messages:messages})
@@ -3948,7 +3948,7 @@ function callClaudeBlocks(systemPrompt,blocks,cb,errCb,maxTokens){
       } else { if(acc){done(cb,acc);}else{done(errCb,"No response from AI");} }
     }).catch(function(e){
       clearTimeout(timer);
-      var m=(e&&e.name==='AbortError')?'The plan read timed out. Try one clear page, or a smaller PDF/photo.':(e&&e.message||'Network error');
+      var m=(e&&e.name==='AbortError')?'The plan read is taking too long \u2014 the server may have timed out. Try a single page, or photos of the key sheets.':(e&&e.message||'Network error \u2014 check your connection and try again.');
       done(errCb,m);
     });
   }
@@ -4031,7 +4031,14 @@ function _planThinkTick(){
   if(_planThinkStep<_PLAN_STEPS.length-1 && el>(_planThinkStep+1)*3400){_planThinkStep++;}
   var st=_PLAN_STEPS[_planThinkStep];
   var tt=document.getElementById('ptkTitle'),su=document.getElementById('ptkSub'),fl=document.getElementById('ptkFill');
-  if(tt)tt.textContent=st.t;if(su)su.textContent=st.s;
+  // Once the scripted steps are done but the AI is still working, tell the truth
+  // instead of sitting on "Almost there" — big plans legitimately take up to a minute.
+  var atLast=(_planThinkStep>=_PLAN_STEPS.length-1);
+  if(tt)tt.textContent=st.t;
+  if(su){
+    if(atLast && el>16000){ su.textContent='Still reading your plans \u2014 detailed sheets can take up to a minute\u2026'; }
+    else { su.textContent=st.s; }
+  }
   var pct=Math.min(93,7+(el/1000)*3.6);
   if(fl)fl.style.width=pct.toFixed(0)+'%';
   var chips=document.querySelectorAll('#ptkSteps .ptk-chip');
@@ -4069,8 +4076,9 @@ function aiEstimateFromPlans(files){
   };
   if(pdfs.length){
     var rd=new FileReader();
-    rd.onload=function(){var d=rd.result;blocks.push({type:"document",source:{type:"base64",media_type:"application/pdf",data:d.substring(d.indexOf(',')+1)}});finish();};
-    rd.onerror=function(){fail('Could not read the PDF.');};
+    var pdfWatch=setTimeout(function(){try{rd.abort();}catch(e){}fail('That PDF was too slow to read. Export a smaller PDF or snap photos of the key pages.');},20000);
+    rd.onload=function(){clearTimeout(pdfWatch);var d=rd.result;if(!d||d.indexOf(',')<0){fail('That PDF could not be encoded. Try re-exporting it.');return;}blocks.push({type:"document",source:{type:"base64",media_type:"application/pdf",data:d.substring(d.indexOf(',')+1)}});finish();};
+    rd.onerror=function(){clearTimeout(pdfWatch);fail('Could not read the PDF.');};
     rd.readAsDataURL(pdfs[0]);
   } else {
     imgs.forEach(function(f,i){
