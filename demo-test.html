@@ -978,6 +978,15 @@ button:active, .btn:active, .btn-ghost:active, .tab:active, [role="button"]:acti
 .epv-metric .m-val{font-size:20px;font-weight:800;color:#fff;line-height:1.1;}
 .epv-metric .m-lbl{font-size:10.5px;color:#9DB2CC;text-transform:uppercase;letter-spacing:.4px;margin-top:3px;}
 .epv-canvas{width:100%;height:300px;background:linear-gradient(180deg,#EAF1F9,#F7F9FC);border-radius:12px;display:block;}
+.epv-viewtabs{display:flex;gap:6px;margin-bottom:10px;}
+.epv-vtab{flex:1;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.14);color:#C7D6E8;font-size:12px;font-weight:600;padding:7px 6px;border-radius:9px;cursor:pointer;transition:all .2s;}
+.epv-vtab:hover{background:rgba(255,255,255,.12);}
+.epv-vtab.active{background:#F9A825;border-color:#F9A825;color:#0A1628;font-weight:800;}
+.epv-photowrap{position:relative;}
+.epv-renderbtn{position:absolute;bottom:12px;left:50%;transform:translateX(-50%);background:rgba(10,22,40,.85);color:#fff;border:1px solid rgba(255,255,255,.25);font-size:12.5px;font-weight:600;padding:9px 16px;border-radius:99px;cursor:pointer;white-space:nowrap;backdrop-filter:blur(4px);}
+.epv-renderbtn:hover{background:#1565C0;}
+.epv-renderbtn:disabled{opacity:.7;cursor:default;}
+.epv-photolabel{position:absolute;top:10px;left:10px;background:rgba(10,22,40,.7);color:#C7D6E8;font-size:10.5px;padding:3px 9px;border-radius:99px;}
 .epv-3dhint{text-align:center;font-size:11px;color:#8FA6C2;margin-top:6px;}
 .epv-rooms{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px;}
 .epv-rooms span{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.12);border-radius:999px;padding:4px 10px;font-size:12px;color:#DCE7F4;display:inline-flex;align-items:center;gap:6px;}
@@ -1611,8 +1620,18 @@ button:active, .btn:active, .btn-ghost:active, .tab:active, [role="button"]:acti
     <div id="estPreview" class="est-preview" style="display:none;">
   <div class="epv-head"><span class="epv-badge">&#9889; AI Estimate</span><span id="epvTitle" class="epv-title"></span></div>
   <div class="epv-metrics" id="epvMetrics"></div>
+  <div class="epv-viewtabs" id="epvViewTabs">
+    <button type="button" class="epv-vtab active" data-view="holo" onclick="epvSetView('holo')">&#128225; Hologram</button>
+    <button type="button" class="epv-vtab" data-view="solid" onclick="epvSetView('solid')">&#127968; Model</button>
+    <button type="button" class="epv-vtab" data-view="photo" onclick="epvSetView('photo')">&#128247; Photoreal</button>
+  </div>
   <div class="epv-3dwrap" id="epv3dWrap" style="display:none;">
     <canvas id="p3dCanvas" class="epv-canvas" style="touch-action:none;cursor:grab;"></canvas>
+    <div class="epv-photowrap" id="epvPhotoWrap" style="display:none;">
+      <img id="epvPhoto" class="epv-canvas" alt="Representative render of the property" style="object-fit:cover;">
+      <button type="button" class="epv-renderbtn" id="epvRenderBtn" onclick="epvRenderReal()">&#10024; Generate a real render of this property</button>
+      <div class="epv-photolabel" id="epvPhotoLabel">Representative render</div>
+    </div>
     <div class="epv-3dhint" id="epv3dLabel">Drag to rotate &middot; pinch or scroll to zoom</div>
     <div id="p3dRooms" class="epv-rooms"></div>
   </div>
@@ -4184,14 +4203,64 @@ function _p3dShade(hex,f){
 function _p3dRender(){
   var cv=document.getElementById('p3dCanvas');
   if(!cv||!_planGeom||!window.OrchaHouse3D)return;
+  if(_epvView==='photo')return; // photo view is a static image, not the canvas
   var opt={canvas:cv,geom:_planGeom,theta:_p3dTheta,pitch:_p3dPitch,zoom:_p3dZoom,grow:_p3dGrow};
-  // While it builds, the model materializes as a glowing blueprint hologram
-  // (the "plan becomes a building" reveal); once complete it becomes the solid house.
-  if(_p3dGrow<1 && window.OrchaHouse3D.renderHologram){
+  // 'holo' forces hologram; 'solid' shows the realistic massing model.
+  // During the build-up both start as hologram then reveal.
+  if(_epvView==='holo'){
+    window.OrchaHouse3D.renderHologram(opt);
+  } else if(_p3dGrow<1 && window.OrchaHouse3D.renderHologram){
     window.OrchaHouse3D.renderHologram(opt);
   } else {
     window.OrchaHouse3D.render(opt);
   }
+}
+var _epvView='holo';
+var _PHOTO_SET=[
+  {k:'two',src:'/media/house-two-story.jpg',min:0},
+  {k:'ranch',src:'/media/house-ranch.jpg',min:0},
+  {k:'modern',src:'/media/house-modern.jpg',min:0}
+];
+function _epvPickPhoto(){
+  // choose a representative render by stories/size; real renders (epvRenderReal) override
+  if(_epvRealRender)return _epvRealRender;
+  var stories=(_planGeom&&_planGeom.stories)||1;
+  if(stories>=2)return '/media/house-two-story.jpg';
+  return '/media/house-ranch.jpg';
+}
+var _epvRealRender=null;
+function epvSetView(v){
+  _epvView=v;
+  document.querySelectorAll('#epvViewTabs .epv-vtab').forEach(function(b){b.classList.toggle('active',b.getAttribute('data-view')===v);});
+  var cv=document.getElementById('p3dCanvas'),pw=document.getElementById('epvPhotoWrap'),hint=document.getElementById('epv3dLabel'),rooms=document.getElementById('p3dRooms');
+  if(v==='photo'){
+    cv.style.display='none';pw.style.display='block';
+    var img=document.getElementById('epvPhoto');
+    img.onerror=function(){ // renders not uploaded yet -> show a friendly placeholder
+      img.onerror=null;
+      img.src='data:image/svg+xml;utf8,'+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="600" height="300"><defs><linearGradient id="g" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="%23dceaf7"/><stop offset="1" stop-color="%23eef0e8"/></linearGradient></defs><rect width="600" height="300" fill="url(%23g)"/><text x="300" y="150" font-family="sans-serif" font-size="16" fill="%235A6B7D" text-anchor="middle">Photoreal render</text><text x="300" y="174" font-family="sans-serif" font-size="12" fill="%238A97A5" text-anchor="middle">A realistic view of the finished property</text></svg>');
+    };
+    img.src=_epvPickPhoto();
+    document.getElementById('epvPhotoLabel').textContent=_epvRealRender?'Rendered from this estimate':'Representative render';
+    if(hint)hint.textContent='A realistic look at the finished property';
+    if(rooms)rooms.style.display='none';
+  } else {
+    cv.style.display='block';pw.style.display='none';
+    if(rooms)rooms.style.display='';
+    if(hint)hint.textContent='Drag to rotate \u00b7 pinch or scroll to zoom';
+    _p3dGrow=0;_p3dGrowT0=Date.now();_p3dEnsureLoop();
+  }
+}
+function epvRenderReal(){
+  var btn=document.getElementById('epvRenderBtn');
+  if(window.DEMO_MODE){
+    btn.textContent='Live render is a paid feature \u2014 call 323-657-7752';
+    btn.disabled=true;
+    return;
+  }
+  // In the real app this would POST the geometry + estimate to an image endpoint.
+  btn.disabled=true;btn.textContent='Rendering your property\u2026 (~1 min)';
+  // Placeholder: real implementation calls the render API and sets _epvRealRender.
 }
 function _hexA(hex,a){
   var n=parseInt(hex.slice(1),16);
