@@ -294,11 +294,15 @@ footer a:hover{color:#1E6FE0;}
 <script>
 // Realistic house hero — shared renderer
 (function(){
-  var geom={wallHeightFt:9,rooms:[{name:'Living / Kitchen',x:0,y:0,w:22,h:15},{name:'Bedroom',x:22,y:0,w:13,h:12},{name:'Bath',x:22,y:12,w:8,h:7},{name:'Mech',x:30,y:12,w:5,h:7},{name:'Flex / Office',x:0,y:15,w:12,h:13.7}]};
-  var theta=0.6,raf;
+  var geom={stories:2,storyHeight:9,rooms:[{name:'Living / Kitchen',x:0,y:0,w:22,h:15},{name:'Bedroom',x:22,y:0,w:13,h:12},{name:'Bath',x:22,y:12,w:8,h:7},{name:'Mech',x:30,y:12,w:5,h:7},{name:'Flex / Office',x:0,y:15,w:12,h:13.7}]};
+  var theta=0.6,raf,t0=Date.now();
   function frame(){
     var cv=document.getElementById('heroCanvas');
-    if(cv&&window.OrchaHouse3D){window.OrchaHouse3D.render({canvas:cv,geom:geom,theta:theta,pitch:0.44+0.12*Math.sin(theta*0.6),zoom:1});theta+=0.005;}
+    if(cv&&window.OrchaHouse3D){
+      var e=(Date.now()-t0)/1400,grow=e>=1?1:(1-Math.pow(1-e,3));
+      window.OrchaHouse3D.render({canvas:cv,geom:geom,theta:theta,pitch:0.44+0.12*Math.sin(theta*0.6),zoom:1,grow:grow});
+      if(grow>=1)theta+=0.005;
+    }
     raf=requestAnimationFrame(frame);
   }
   if(document.getElementById('heroCanvas'))frame();

@@ -986,18 +986,23 @@ button:active, .btn:active, .btn-ghost:active, .tab:active, [role="button"]:acti
 .est-ai{background:#F4F8FD;border:1px dashed #B7D3F0;border-radius:12px;padding:14px;margin:8px 0 16px;}
 .est-ai textarea{width:100%;border:1.5px solid var(--line);border-radius:9px;padding:10px;font-family:inherit;font-size:14px;margin:6px 0 8px;}
 .est-ai-msg{font-size:12.5px;color:var(--muted);margin-top:6px;min-height:16px;}
-.ptk{background:linear-gradient(180deg,#F4F8FD,#EAF2FB);border:1px solid #C7DCF0;border-radius:14px;padding:14px;margin-top:8px;animation:ptkIn .3s ease;}
-@keyframes ptkIn{from{opacity:0;transform:translateY(6px);}to{opacity:1;transform:none;}}
-.ptk-top{display:flex;align-items:center;gap:12px;}
-.ptk-title{font-weight:700;font-size:14.5px;color:var(--navy);}
-.ptk-sub{font-size:12px;color:#5A6B7D;margin-top:2px;}
-.ptk-spin{width:22px;height:22px;border-radius:50%;border:3px solid #D3E3F5;border-top-color:#1565C0;animation:ptkSpin .8s linear infinite;flex-shrink:0;}
-@keyframes ptkSpin{to{transform:rotate(360deg);}}
-.ptk-bar{height:6px;background:#DCE8F5;border-radius:99px;overflow:hidden;margin:12px 0 10px;}
-.ptk-bar-fill{height:100%;width:8%;background:linear-gradient(90deg,#1565C0,#5B9DFF);border-radius:99px;transition:width .8s ease;}
-.ptk-steps{display:flex;flex-wrap:wrap;gap:5px;}
-.ptk-chip{font-size:10.5px;padding:3px 8px;border-radius:99px;background:#fff;border:1px solid #DCE8F5;color:#8A97A5;transition:all .3s;}
-.ptk-chip.active{background:#1565C0;border-color:#1565C0;color:#fff;font-weight:600;}
+.ptk-overlay{position:fixed;inset:0;z-index:100000;background:rgba(8,16,30,0.72);backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);display:none;align-items:center;justify-content:center;padding:24px;}
+.ptk-overlay.show{display:flex;animation:ptkFade .25s ease;}
+@keyframes ptkFade{from{opacity:0;}to{opacity:1;}}
+.ptk-card{background:#fff;border-radius:20px;padding:26px 24px 24px;max-width:380px;width:100%;text-align:center;box-shadow:0 30px 80px rgba(0,0,0,.4);animation:ptkPop .35s cubic-bezier(.2,.9,.3,1.2);}
+@keyframes ptkPop{from{opacity:0;transform:scale(.9) translateY(10px);}to{opacity:1;transform:none;}}
+.ptk-thumb{position:relative;width:120px;height:120px;margin:0 auto 18px;border-radius:14px;overflow:hidden;border:2px solid #E1E8F0;background:#EAF1F9;display:flex;align-items:center;justify-content:center;}
+.ptk-thumb-img{width:100%;height:100%;object-fit:cover;}
+.ptk-thumb-doc{font-size:48px;}
+.ptk-scan{position:absolute;left:0;right:0;height:34%;top:-34%;background:linear-gradient(180deg,rgba(21,101,192,0)0%,rgba(21,101,192,.28)55%,rgba(91,157,255,.85)100%);border-bottom:2px solid #5B9DFF;animation:ptkScan 1.9s ease-in-out infinite;}
+@keyframes ptkScan{0%{top:-34%;}55%{top:100%;}100%{top:100%;}}
+.ptk-title{font-weight:800;font-size:19px;color:var(--navy);font-family:Sora,system-ui,sans-serif;}
+.ptk-sub{font-size:13px;color:#5A6B7D;margin:6px 0 16px;line-height:1.45;}
+.ptk-bar{height:8px;background:#E4ECF5;border-radius:99px;overflow:hidden;margin-bottom:16px;}
+.ptk-bar-fill{height:100%;width:7%;background:linear-gradient(90deg,#1565C0,#5B9DFF);border-radius:99px;transition:width .6s ease;box-shadow:0 0 12px rgba(91,157,255,.6);}
+.ptk-steps{display:flex;flex-wrap:wrap;gap:6px;justify-content:center;}
+.ptk-chip{font-size:11px;padding:4px 10px;border-radius:99px;background:#F4F7FB;border:1px solid #E1E8F0;color:#9AA7B4;transition:all .3s;}
+.ptk-chip.active{background:#1565C0;border-color:#1565C0;color:#fff;font-weight:700;transform:scale(1.05);}
 .ptk-chip.done{background:#E8F5EC;border-color:#B6E0C4;color:#2E9B5B;}
 .ptk-chip.done::before{content:'\2713 ';}
 .est-totals{display:flex;justify-content:flex-end;align-items:flex-end;gap:16px;margin:6px 0 4px;flex-wrap:wrap;}
@@ -1903,7 +1908,7 @@ var estimates=[
   {id:'e2',kind:'invoice',number:'INV-0001',client:'M. Reynolds',clientEmail:'',project:'Valley View Estate',location:'Sonoma, CA',date:'2026-06-20',validUntil:'',status:'sent',taxRate:0,notes:'Net 15. Thank you.',items:[{desc:'Progress billing - finishing phase (draw 4)',qty:1,unit:'ls',price:62000}]}
 ];
 var _e3={id:'e3',kind:'estimate',number:'EST-0002',client:'J. Castellano',clientEmail:'',project:'Hillside ADU Project',location:'Napa, CA',date:'2026-07-27',validUntil:'2026-08-26',status:'draft',taxRate:0,notes:'AI takeoff from uploaded plans (2 pages). Assumptions: 9 ft ceilings | standard-grade fixtures | slab on grade, no demo required. Review every line before sending.',items:[{desc:'Foundation - slab on grade (per plans, 748 sqft)',qty:748,unit:'sqft',price:12},{desc:'Wall framing - labor + material (takeoff from floor plan)',qty:2350,unit:'sqft',price:9},{desc:'Electrical rough-in + 14 recessed LED lights per lighting plan',qty:1,unit:'ls',price:9800},{desc:'Plumbing rough + fixtures (1 bath + kitchenette per plans)',qty:1,unit:'ls',price:11500},{desc:'Drywall installed',qty:2350,unit:'sqft',price:3.5},{desc:'Building permit',qty:1,unit:'ea',price:450}]};
-_e3.plan3d={wallHeightFt:9,rooms:[{name:'Living / Kitchen',x:0,y:0,w:22,h:15},{name:'Bedroom',x:22,y:0,w:13,h:12},{name:'Bath',x:22,y:12,w:8,h:7},{name:'Laundry / Mech',x:30,y:12,w:5,h:7},{name:'Flex / Office',x:0,y:15,w:12,h:13.7}]};
+_e3.plan3d={stories:2,storyHeight:9,rooms:[{name:'Living / Kitchen',x:0,y:0,w:22,h:15},{name:'Bedroom',x:22,y:0,w:13,h:12},{name:'Bath',x:22,y:12,w:8,h:7},{name:'Laundry / Mech',x:30,y:12,w:5,h:7},{name:'Flex / Office',x:0,y:15,w:12,h:13.7}]};
 estimates.push(_e3);
 var sketches=[];
 var schedule=[];
@@ -3997,46 +4002,48 @@ function _planShrinkImage(file,cb,err){
 }
 function _planSys(){
   var company=(CURRENT_USER&&CURRENT_USER.name)||'';
-  return 'You are a senior construction cost estimator'+(company?(' for '+company):'')+'. You are reading construction plans, blueprints, sketches or site drawings. First perform a quantity takeoff: identify the scope of work, rooms, dimensions, square footage, and counts of relevant elements (fixtures, outlets, windows, doors, panels, runs, squares of roofing, etc.). Then convert the takeoff into realistic itemized estimate line items using current California contractor pricing. Split labor and materials into separate lines where sensible, and include permit or fee lines if implied. CRITICAL: never silently guess. Anything you could not read or that the plans do not specify must appear as a plain-English entry in "assumptions" (what you assumed and why) or as a short clarifying question in "questions" (maximum 4, only ones that materially change price). Return ONLY a JSON object with no markdown, no code fences, and no commentary, in exactly this shape: {"items":[{"desc":"string","qty":number,"unit":"string","price":number}],"notes":"string","assumptions":["string"],"questions":["string"],"geometry":{"wallHeightFt":number,"rooms":[{"name":"string","x":number,"y":number,"w":number,"h":number}]}} where price is the dollar amount per unit. For geometry: approximate each room as an axis-aligned rectangle in FEET on a shared plan (x,y is the top-left corner, w is width, h is depth), keeping relative positions and proportions faithful to the drawing. Include geometry ONLY when the upload contains a readable floor plan; otherwise omit the geometry key entirely.';
+  return 'You are a senior construction cost estimator'+(company?(' for '+company):'')+'. You are reading construction plans, blueprints, sketches or site drawings. First perform a quantity takeoff: identify the scope of work, rooms, dimensions, square footage, and counts of relevant elements (fixtures, outlets, windows, doors, panels, runs, squares of roofing, etc.). Then convert the takeoff into realistic itemized estimate line items using current California contractor pricing. Split labor and materials into separate lines where sensible, and include permit or fee lines if implied. CRITICAL: never silently guess. Anything you could not read or that the plans do not specify must appear as a plain-English entry in "assumptions" (what you assumed and why) or as a short clarifying question in "questions" (maximum 4, only ones that materially change price). Return ONLY a JSON object with no markdown, no code fences, and no commentary, in exactly this shape: {"items":[{"desc":"string","qty":number,"unit":"string","price":number}],"notes":"string","assumptions":["string"],"questions":["string"],"geometry":{"stories":number,"storyHeight":number,"rooms":[{"name":"string","x":number,"y":number,"w":number,"h":number}]}} where price is the dollar amount per unit. For geometry: set stories to the number of floors (1, 2, ...) and storyHeight to the per-floor wall height in feet (default 9). Approximate each room on the MAIN floor as an axis-aligned rectangle in FEET on a shared plan (x,y is the top-left corner, w is width, h is depth), keeping relative positions and proportions faithful to the drawing. Include geometry ONLY when the upload contains a readable floor plan; otherwise omit the geometry key entirely.';
 }
 var _planThinkTimer=null,_planThinkStep=0,_planThinkT0=0;
 var _PLAN_STEPS=[
-  {t:'Opening your plans\u2026',s:'Loading the pages'},
-  {t:'Reading the drawings\u2026',s:'Finding rooms and layout'},
-  {t:'Measuring rooms\u2026',s:'Square footage and dimensions'},
-  {t:'Counting fixtures\u2026',s:'Outlets, doors, windows, systems'},
-  {t:'Doing the takeoff\u2026',s:'Turning quantities into line items'},
-  {t:'Pricing the estimate\u2026',s:'Applying regional rates'},
-  {t:'Almost there\u2026',s:'Checking assumptions and totals'}
+  {t:'Opening your plans',s:'Loading the pages'},
+  {t:'Reading the drawings',s:'Finding rooms and layout'},
+  {t:'Measuring rooms',s:'Square footage and dimensions'},
+  {t:'Counting fixtures',s:'Outlets, doors, windows, systems'},
+  {t:'Doing the takeoff',s:'Turning quantities into line items'},
+  {t:'Pricing the estimate',s:'Applying regional rates'},
+  {t:'Almost there',s:'Checking assumptions and totals'}
 ];
 function _planThinkStart(files){
-  var host=document.getElementById('estAiMsg');if(!host)return;
   _planThinkStep=0;_planThinkT0=Date.now();
-  var thumb='';
+  var ov=document.getElementById('planThinkOverlay');
+  if(!ov){
+    ov=document.createElement('div');ov.id='planThinkOverlay';ov.className='ptk-overlay';
+    document.body.appendChild(ov);
+  }
+  var thumbInner='<div class="ptk-thumb-doc">&#128196;</div>';
   var img=(files||[]).filter(function(f){return f.type.indexOf('image/')===0;})[0];
-  if(img){try{thumb='<img id="ptkThumb" alt="your plan" style="width:52px;height:52px;object-fit:cover;border-radius:8px;border:1px solid #D9E4F0;flex-shrink:0;">';}catch(e){}}
-  else{thumb='<div style="width:52px;height:52px;border-radius:8px;background:#EAF1F9;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:22px;">&#128196;</div>';}
-  host.innerHTML='<div class="ptk"><div class="ptk-top">'+thumb+
-    '<div style="flex:1;min-width:0;"><div class="ptk-title" id="ptkTitle">Opening your plans&hellip;</div>'+
-    '<div class="ptk-sub" id="ptkSub">This usually takes 20&ndash;40 seconds &mdash; hang tight, the AI is reading every page.</div></div>'+
-    '<div class="ptk-spin"></div></div>'+
+  if(img)thumbInner='<img id="ptkThumb" alt="your plan" class="ptk-thumb-img">';
+  ov.innerHTML='<div class="ptk-card">'+
+    '<div class="ptk-thumb">'+thumbInner+'<div class="ptk-scan"></div></div>'+
+    '<div class="ptk-title" id="ptkTitle">Opening your plans</div>'+
+    '<div class="ptk-sub" id="ptkSub">The AI is reading every page &mdash; this usually takes 20&ndash;40 seconds. Hang tight.</div>'+
     '<div class="ptk-bar"><div class="ptk-bar-fill" id="ptkFill"></div></div>'+
-    '<div class="ptk-steps" id="ptkSteps"></div></div>';
+    '<div class="ptk-steps" id="ptkSteps"></div>'+
+    '</div>';
+  ov.classList.add('show');
   if(img){var rd=new FileReader();rd.onload=function(){var t=document.getElementById('ptkThumb');if(t)t.src=rd.result;};rd.readAsDataURL(img);}
-  var stepsEl=document.getElementById('ptkSteps');
-  stepsEl.innerHTML=_PLAN_STEPS.map(function(s,i){return '<span class="ptk-chip" data-i="'+i+'">'+s.t.replace('\u2026','')+'</span>';}).join('');
+  document.getElementById('ptkSteps').innerHTML=_PLAN_STEPS.map(function(s,i){return '<span class="ptk-chip" data-i="'+i+'">'+s.t+'</span>';}).join('');
   _planThinkTick();
-  _planThinkTimer=setInterval(_planThinkTick,1600);
+  _planThinkTimer=setInterval(_planThinkTick,600);
 }
 function _planThinkTick(){
   var el=Date.now()-_planThinkT0;
-  // advance step on a curve: fast at first, slows near the end (never quite completes until real result)
-  if(_planThinkStep<_PLAN_STEPS.length-1 && el> (_planThinkStep+1)*3200){_planThinkStep++;}
+  if(_planThinkStep<_PLAN_STEPS.length-1 && el>(_planThinkStep+1)*3400){_planThinkStep++;}
   var st=_PLAN_STEPS[_planThinkStep];
   var tt=document.getElementById('ptkTitle'),su=document.getElementById('ptkSub'),fl=document.getElementById('ptkFill');
   if(tt)tt.textContent=st.t;if(su)su.textContent=st.s;
-  // progress eases toward ~92% and holds
-  var pct=Math.min(92,8+ (el/1000)*3.4);
+  var pct=Math.min(93,7+(el/1000)*3.6);
   if(fl)fl.style.width=pct.toFixed(0)+'%';
   var chips=document.querySelectorAll('#ptkSteps .ptk-chip');
   chips.forEach(function(c){var i=+c.getAttribute('data-i');c.className='ptk-chip'+(i<_planThinkStep?' done':(i===_planThinkStep?' active':''));});
@@ -4044,6 +4051,8 @@ function _planThinkTick(){
 function _planThinkStop(){
   if(_planThinkTimer){clearInterval(_planThinkTimer);_planThinkTimer=null;}
   var fl=document.getElementById('ptkFill');if(fl)fl.style.width='100%';
+  var ov=document.getElementById('planThinkOverlay');
+  if(ov){setTimeout(function(){ov.classList.remove('show');},350);}
 }
 function aiEstimateFromPlans(files){
   var msg=document.getElementById('estAiMsg');var btn=document.getElementById('estPlanBtn');
@@ -4093,7 +4102,7 @@ function _planApply(text,msg){
   if(extra&&!notes.value.trim()){notes.value=extra;}
   recalcEst();
   msg.textContent='Drafted '+obj.items.length+' line items from your plans - AI draft, review every line before sending.';
-  _planGeom=(obj.geometry&&obj.geometry.rooms&&obj.geometry.rooms.length)?obj.geometry:_planGeom;_plan3dBtn();
+  _planGeom=(obj.geometry&&obj.geometry.rooms&&obj.geometry.rooms.length)?obj.geometry:_planGeom;_p3dGrow=0;_p3dGrowT0=Date.now();_plan3dBtn();
   _planRenderQ(obj.questions||[]);
 }
 function _planRenderQ(qs){
@@ -4130,11 +4139,11 @@ function estPlanRefine(){
   }).catch(function(e){btn.disabled=false;btn.innerHTML=old;msg.textContent='AI error: '+e.message;});
 }
 /* ---- 3D plan view ---- */
-var _planGeom=null,_p3dRAF=null,_p3dTheta=0.7,_p3dPitch=0.46,_p3dZoom=1,_p3dAuto=true;
+var _planGeom=null,_p3dRAF=null,_p3dTheta=0.7,_p3dPitch=0.46,_p3dZoom=1,_p3dAuto=true,_p3dGrow=1,_p3dGrowT0=0;
 var _P3D_COLORS=['#5B9DFF','#F9A825','#2E9B5B','#9B6BD6','#E8654F','#3AAFA9','#D66B9B','#8A97A5'];
 function _plan3dLoad(e){
   _planGeom=(e&&e.plan3d&&e.plan3d.rooms&&e.plan3d.rooms.length)?e.plan3d:null;
-  _p3dTheta=0.7;_p3dPitch=0.46;_p3dZoom=1;_p3dAuto=true;_epvSyncPreview();
+  _p3dTheta=0.7;_p3dPitch=0.46;_p3dZoom=1;_p3dAuto=true;_p3dGrow=0;_p3dGrowT0=Date.now();_epvSyncPreview();
 }
 function _plan3dBtn(){_epvSyncPreview();}
 function _epvSyncPreview(){
@@ -4186,9 +4195,9 @@ function _p3dEnsureLoop(){
   }
   if(_p3dRAF)return;
   (function frame(){
-    if(_p3dAuto){
+    if(_p3dGrow<1){var e=(Date.now()-_p3dGrowT0)/1400;_p3dGrow=e>=1?1:(1-Math.pow(1-e,3));}
+    if(_p3dAuto&&_p3dGrow>=1){
       _p3dTheta+=0.005;
-      // gentle breathing tilt so it reads as a solid object being orbited, not a spinning disc
       _p3dPitch=0.44+0.12*Math.sin(_p3dTheta*0.6);
     }
     _p3dRender();_p3dRAF=requestAnimationFrame(frame);
@@ -4204,7 +4213,7 @@ function _p3dShade(hex,f){
 function _p3dRender(){
   var cv=document.getElementById('p3dCanvas');
   if(!cv||!_planGeom||!window.OrchaHouse3D)return;
-  window.OrchaHouse3D.render({canvas:cv,geom:_planGeom,theta:_p3dTheta,pitch:_p3dPitch,zoom:_p3dZoom});
+  window.OrchaHouse3D.render({canvas:cv,geom:_planGeom,theta:_p3dTheta,pitch:_p3dPitch,zoom:_p3dZoom,grow:_p3dGrow});
 }
 function _hexA(hex,a){
   var n=parseInt(hex.slice(1),16);
