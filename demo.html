@@ -1114,6 +1114,11 @@ button:active, .btn:active, .btn-ghost:active, .tab:active, [role="button"]:acti
 .jr-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px;}
 .tab-hot{position:relative;}
 .jr-hist-item{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px;margin-bottom:10px;}
+.jr-uploadrow{display:flex;gap:10px;margin-bottom:4px;}
+.jr-upbtn{flex:1;display:flex;align-items:center;justify-content:center;gap:6px;padding:14px 10px;border-radius:12px;border:1px solid var(--line);background:var(--card);color:var(--text);font-size:14.5px;font-weight:600;cursor:pointer;transition:all .15s;}
+.jr-upbtn:hover{border-color:#1565C0;background:rgba(21,101,192,.05);}
+.jr-upbtn-cam{background:#1565C0;color:#fff;border-color:#1565C0;}
+.jr-upbtn-cam:hover{background:#0d4c9c;color:#fff;}
 </style>
   <div class="panel" id="panel-jobreport">
     <div class="panel-head">
@@ -1153,7 +1158,12 @@ button:active, .btn:active, .btn-ghost:active, .tab:active, [role="button"]:acti
       </div>
       <div class="field">
         <label>Photos of the work <span style="color:var(--muted);font-weight:400;">(add as many as you need)</span></label>
-        <input type="file" id="jrFiles" accept="image/*" multiple onchange="jrAddPhotos(this)">
+        <div class="jr-uploadrow">
+          <button type="button" class="jr-upbtn jr-upbtn-cam" onclick="document.getElementById('jrCamera').click()">&#128247; Take photo</button>
+          <button type="button" class="jr-upbtn" onclick="document.getElementById('jrFiles').click()">&#128193; Upload photos</button>
+        </div>
+        <input type="file" id="jrCamera" accept="image/*" capture="environment" onchange="jrAddPhotos(this)" style="display:none;">
+        <input type="file" id="jrFiles" accept="image/*" multiple onchange="jrAddPhotos(this)" style="display:none;">
         <div class="log-up-msg" id="jrUpMsg"></div>
         <div id="jrThumbs" class="jr-thumbs"></div>
       </div>
