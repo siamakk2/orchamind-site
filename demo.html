@@ -2839,13 +2839,60 @@ function toggleSpeak(){
   b.innerHTML=b.innerHTML.replace(/Voice replies: (On|Off)/,'Voice replies: '+(_speakOn?'On':'Off'));
   if(_speakOn)speak('Voice replies are on. I\'ll read my answers out loud.');
 }
+var _omVoice=null,_omVoiceReady=false;
+function _pickNaturalVoice(){
+  if(!window.speechSynthesis)return null;
+  var vs=window.speechSynthesis.getVoices()||[];
+  if(!vs.length)return null;
+  var en=vs.filter(function(v){return /^en(-|_|$)/i.test(v.lang||'');});
+  var pool=en.length?en:vs;
+  // Prefer known warm, natural voices; avoid the robotic legacy defaults.
+  var preferred=[
+    'samantha','ava','allison','siri','aaron','nicky','evan',           // Apple natural
+    'google us english','google uk english female','natural','neural','online','enhanced','premium',
+    'zira','jenny','aria','guy'                                          // Windows/Edge natural
+  ];
+  var avoid=/(albert|zarvox|bad news|bahh|bells|boing|bubbles|cellos|deranged|hysterical|pipe|trinoids|whisper|wobble|fred|junior|ralph|kathy|compact|eloquence|espeak|robot)/i;
+  function score(v){
+    var n=(v.name||'').toLowerCase();
+    if(avoid.test(n))return -100;
+    var s=0;
+    for(var i=0;i<preferred.length;i++){ if(n.indexOf(preferred[i])>=0){ s+=(preferred.length-i)+5; } }
+    if(/female|samantha|ava|zira|jenny|aria|allison|nicky/.test(n))s+=3; // warm/neutral lean
+    if(v.localService)s+=1;            // on-device = lower latency, usually the good iOS ones
+    if(/en-us/i.test(v.lang||''))s+=2;
+    return s;
+  }
+  var best=pool.slice().sort(function(a,b){return score(b)-score(a);})[0];
+  return (best&&score(best)>-50)?best:pool[0];
+}
+function _ensureVoice(){
+  if(_omVoiceReady)return;
+  _omVoice=_pickNaturalVoice();
+  if(_omVoice)_omVoiceReady=true;
+}
+if(window.speechSynthesis){
+  try{ window.speechSynthesis.onvoiceschanged=function(){ _omVoice=_pickNaturalVoice(); if(_omVoice)_omVoiceReady=true; }; }catch(e){}
+  // some browsers populate lazily; nudge it
+  try{ window.speechSynthesis.getVoices(); }catch(e){}
+}
 function speak(text){
   if(!_speakOn||!window.speechSynthesis)return;
-  var clean=text.replace(/[#*_>`]/g,'').replace(/\n+/g,'. ');
-  var u=new SpeechSynthesisUtterance(clean);
-  u.rate=1.02;u.pitch=1;
+  var clean=text.replace(/[#*_>`]/g,'').replace(/\n+/g,'. ').replace(/\s+/g,' ').trim();
+  if(!clean)return;
+  _ensureVoice();
   window.speechSynthesis.cancel();
-  window.speechSynthesis.speak(u);
+  // Break into sentences so delivery has natural phrasing and pauses, not a monotone wall.
+  var parts=clean.match(/[^.!?]+[.!?]*/g)||[clean];
+  parts.forEach(function(seg){
+    seg=seg.trim(); if(!seg)return;
+    var u=new SpeechSynthesisUtterance(seg);
+    if(_omVoice){u.voice=_omVoice;u.lang=_omVoice.lang||'en-US';}else{u.lang='en-US';}
+    u.rate=0.96;    // a touch slower reads as calmer / more human
+    u.pitch=1.03;   // very slight lift = warmer, less flat
+    u.volume=1;
+    window.speechSynthesis.speak(u);
+  });
 }
 
 // ====== AI-POWERED VOICE COMMAND PARSER ======
