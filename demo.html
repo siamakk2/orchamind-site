@@ -833,6 +833,7 @@ button:active, .btn:active, .btn-ghost:active, .tab:active, [role="button"]:acti
       <button class="tab" data-tab="billing"><svg class="ti" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>Billing</button>
       <button class="tab" data-tab="dispatch"><svg class="ti" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>Dispatch</button>
       <button class="tab" data-tab="schedule"><svg class="ti" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>Schedule</button>
+      <button class="tab" data-tab="bookings"><svg class="ti" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 2v4"/><path d="M16 2v4"/><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M3 10h18"/><path d="m9 16 2 2 4-4"/></svg>Bookings</button>
   <button class="tab" data-tab="log"><svg class="ti" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>Site Log</button>
   <button class="tab" data-tab="sketches"><svg class="ti" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3h7v7H3z"/><path d="M14 3h7v4h-7z"/><path d="M14 11h7v10h-7z"/><path d="M3 14h7v7H3z"/></svg>Plans</button>
   <button class="tab" data-tab="changes" data-mgronly><svg class="ti" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M9 15l2 2 4-4"/></svg>Changes</button>
@@ -1092,6 +1093,8 @@ button:active, .btn:active, .btn-ghost:active, .tab:active, [role="button"]:acti
 .log-thumb img{width:80px;height:80px;object-fit:cover;border-radius:8px;border:1px solid var(--line);}
 .log-thumb-x{position:absolute;top:-8px;right:-8px;width:22px;height:22px;border-radius:50%;background:#C62828;color:#fff;border:none;cursor:pointer;font-size:14px;line-height:1;}
 .log-up-msg{font-size:12.5px;color:var(--muted);margin-top:6px;min-height:16px;}
+.bk-badge span{font-size:11px;font-weight:700;padding:3px 9px;border-radius:99px;}
+.bk-avail{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px;}
 .jr-hero{background:linear-gradient(135deg,#0A1628,#1565C0);border-radius:16px;padding:20px;margin-bottom:16px;color:#fff;}
 .jr-hero-title{font-size:19px;font-weight:800;margin-bottom:6px;}
 .jr-hero-sub{font-size:13.5px;line-height:1.5;color:rgba(255,255,255,.85);}
@@ -1282,7 +1285,16 @@ button:active, .btn:active, .btn-ghost:active, .tab:active, [role="button"]:acti
     <div id="dispSummary" class="disp-summary"></div>
     <div id="dispBoard" class="disp-board"></div>
   </div>
-  <div class="panel" id="panel-schedule">
+  <div class="panel" id="panel-bookings">
+    <div class="panel-head">
+      <div><h2 style="margin:0;">Bookings</h2><div style="color:var(--muted);font-size:13px;margin-top:2px;">Customer job requests &middot; real-time crew availability</div></div>
+      <button class="btn" onclick="bkCopyLink()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>Share booking link</button>
+    </div>
+    <div class="bk-avail" id="bkAvail"></div>
+    <h3 style="margin:18px 0 8px;font-size:15px;">Requests</h3>
+    <div id="bkRequests"></div>
+  </div>
+
     <div class="panel-head">
       <h2>Schedule</h2>
       <button class="btn" onclick="newSchedule()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Schedule Job</button>
@@ -2017,6 +2029,8 @@ _e3.plan3d={stories:2,storyHeight:9,roof:'gable',totalSqft:1480,rooms:[{name:'Li
 estimates.push(_e3);
 var sketches=[];
 var schedule=[];
+var bookings=[]; // {id, name, phone, email, service, date, slot, crewId, status:'requested|confirmed|declined', notes, ts}
+var bookingConfig={leadDays:2, horizonDays:21, slots:['8:00 AM','10:00 AM','1:00 PM','3:00 PM'], services:['Estimate / site visit','Repair','Maintenance','Consultation'], daysOff:[0]}; // daysOff: 0=Sun
 var changeOrders=[{id:'co1',number:'CO-0001',jobName:'Hillside Addition',jobId:'',date:'2026-06-25',title:'Upgrade to quartz countertops',desc:'Client requested quartz instead of laminate in the kitchen and primary bath.',items:[{desc:'Quartz material (kitchen + bath)',qty:1,price:4200},{desc:'Additional fabrication & install labor',qty:1,price:1400}],status:'sent'}];
 var plans=[{id:'pl1',client:'Nguyen Rentals',service:'Quarterly HVAC maintenance',every:'quarterly',nextDate:'2026-07-01',value:450,notes:'4 units \u2014 filters + coil clean'},{id:'pl2',client:'Oak Street HOA',service:'Monthly common-area upkeep',every:'monthly',nextDate:'2026-07-20',value:900,notes:'Lighting, gutters, minor repairs'}];
 var leads=[{id:'ld1',name:'Karen Mitchell',company:'',phone:'(707) 555-0182',email:'karen.m@example.com',source:'Referral',service:'Master bath remodel',value:28000,stage:'quoted',notes:'Wants walk-in shower + heated floors. Sent estimate 6/28.',date:'2026-06-22'},{id:'ld2',name:'Dave Nguyen',company:'Nguyen Rentals',phone:'(707) 555-0143',email:'dave@nguyenrentals.com',source:'Website',service:'Kitchen refresh (rental unit)',value:14500,stage:'new',notes:'Needs it before new tenant Aug 1.',date:'2026-06-29'},{id:'ld3',name:'The Alvarez Family',company:'',phone:'(707) 555-0117',email:'alvarez@example.com',source:'Google',service:'Deck rebuild',value:9800,stage:'contacted',notes:'Texted back, interested.',date:'2026-06-27'}];
@@ -2027,11 +2041,11 @@ function _acctKey(){return (typeof CURRENT_USER!=='undefined'&&CURRENT_USER&&CUR
 function dataKey(){return 'orcha_data_'+_acctKey();}
 function pendKey(){return 'orcha_pend_'+_acctKey();}
 var _pendingSync=false;
-function writeLocal(){try{localStorage.setItem(dataKey(),JSON.stringify({saved:true,jobs:jobs,crew:crew,hours:hours,subs:subs,estimates:estimates,sketches:sketches,logs:logs,schedule:schedule,changeOrders:changeOrders,expenses:expenses,leads:leads,plans:plans,clients:clients,portalMessages:portalMessages,_ts:Date.now()}));}catch(e){}}
+function writeLocal(){try{localStorage.setItem(dataKey(),JSON.stringify({saved:true,jobs:jobs,crew:crew,hours:hours,subs:subs,estimates:estimates,sketches:sketches,logs:logs,schedule:schedule,bookings:bookings,bookingConfig:bookingConfig,changeOrders:changeOrders,expenses:expenses,leads:leads,plans:plans,clients:clients,portalMessages:portalMessages,_ts:Date.now()}));}catch(e){}}
 function markPending(){_pendingSync=true;try{localStorage.setItem(pendKey(),'1');}catch(e){}updateSyncPill();}
 function markSynced(){_pendingSync=false;try{localStorage.removeItem(pendKey());}catch(e){}updateSyncPill();}
 function pushToServer(){
-  fetch('/api/data',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({data:{saved:true,jobs:jobs,crew:crew,hours:hours,subs:subs,estimates:estimates,sketches:sketches,logs:logs,schedule:schedule,changeOrders:changeOrders,expenses:expenses,leads:leads,plans:plans,clients:clients,portalMessages:portalMessages,pricebook:pricebook,selections:selections,safety:safety,punch:punch,equipment:equipment,clockSessions:clockSessions,certs:certs}})})
+  fetch('/api/data',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({data:{saved:true,jobs:jobs,crew:crew,hours:hours,subs:subs,estimates:estimates,sketches:sketches,logs:logs,schedule:schedule,bookings:bookings,bookingConfig:bookingConfig,changeOrders:changeOrders,expenses:expenses,leads:leads,plans:plans,clients:clients,portalMessages:portalMessages,pricebook:pricebook,selections:selections,safety:safety,punch:punch,equipment:equipment,clockSessions:clockSessions,certs:certs}})})
     .then(function(r){return r.json();})
     .then(function(o){if(o&&!o.error){_dbReady=true;markSynced();}else{markPending();}})
     .catch(function(){markPending();});
@@ -2050,7 +2064,7 @@ function load(cb){
   // 1) OFFLINE-FIRST: recall unsynced flag + hydrate instantly from this device
   try{_pendingSync=(localStorage.getItem(pendKey())==='1');}catch(e){_pendingSync=false;}
   var localHad=false;
-  try{var ls=localStorage.getItem(dataKey());if(ls){var d=JSON.parse(ls);if(d&&d.saved){jobs=Array.isArray(d.jobs)?d.jobs:jobs;crew=Array.isArray(d.crew)?d.crew:crew;clients=Array.isArray(d.clients)?d.clients:clients;portalMessages=(d.portalMessages&&typeof d.portalMessages==='object')?d.portalMessages:portalMessages;pricebook=Array.isArray(d.pricebook)?d.pricebook:pricebook;selections=Array.isArray(d.selections)?d.selections:selections;safety=Array.isArray(d.safety)?d.safety:safety;punch=Array.isArray(d.punch)?d.punch:punch;equipment=Array.isArray(d.equipment)?d.equipment:equipment;clockSessions=Array.isArray(d.clockSessions)?d.clockSessions:clockSessions;certs=Array.isArray(d.certs)?d.certs:certs;hours=Array.isArray(d.hours)?d.hours:hours;subs=Array.isArray(d.subs)?d.subs:subs;estimates=Array.isArray(d.estimates)?d.estimates:estimates;sketches=Array.isArray(d.sketches)?d.sketches:sketches;logs=Array.isArray(d.logs)?d.logs:logs;schedule=Array.isArray(d.schedule)?d.schedule:schedule;changeOrders=Array.isArray(d.changeOrders)?d.changeOrders:changeOrders;expenses=Array.isArray(d.expenses)?d.expenses:expenses;leads=Array.isArray(d.leads)?d.leads:leads;plans=(Array.isArray(d.plans)&&d.plans.length)?d.plans:plans;localHad=true;}}}catch(e){}
+  try{var ls=localStorage.getItem(dataKey());if(ls){var d=JSON.parse(ls);if(d&&d.saved){jobs=Array.isArray(d.jobs)?d.jobs:jobs;crew=Array.isArray(d.crew)?d.crew:crew;clients=Array.isArray(d.clients)?d.clients:clients;portalMessages=(d.portalMessages&&typeof d.portalMessages==='object')?d.portalMessages:portalMessages;pricebook=Array.isArray(d.pricebook)?d.pricebook:pricebook;selections=Array.isArray(d.selections)?d.selections:selections;safety=Array.isArray(d.safety)?d.safety:safety;punch=Array.isArray(d.punch)?d.punch:punch;equipment=Array.isArray(d.equipment)?d.equipment:equipment;clockSessions=Array.isArray(d.clockSessions)?d.clockSessions:clockSessions;certs=Array.isArray(d.certs)?d.certs:certs;hours=Array.isArray(d.hours)?d.hours:hours;subs=Array.isArray(d.subs)?d.subs:subs;estimates=Array.isArray(d.estimates)?d.estimates:estimates;sketches=Array.isArray(d.sketches)?d.sketches:sketches;logs=Array.isArray(d.logs)?d.logs:logs;schedule=Array.isArray(d.schedule)?d.schedule:schedule;bookings=Array.isArray(d.bookings)?d.bookings:bookings;bookingConfig=(d.bookingConfig&&typeof d.bookingConfig==='object')?d.bookingConfig:bookingConfig;changeOrders=Array.isArray(d.changeOrders)?d.changeOrders:changeOrders;expenses=Array.isArray(d.expenses)?d.expenses:expenses;leads=Array.isArray(d.leads)?d.leads:leads;plans=(Array.isArray(d.plans)&&d.plans.length)?d.plans:plans;localHad=true;}}}catch(e){}
   // 2) reach the shared database, but NEVER block the app
   var timer=setTimeout(function(){updateSyncPill();finish();},3000);
   fetch('/api/data').then(function(r){return r.json();}).then(function(out){
@@ -2608,6 +2622,7 @@ function _omRender(n){
   if(n==='log'){renderLog();}
   if(n==='jobreport'){renderJobReport();}
   if(n==='schedule'){renderSchedule();}
+  if(n==='bookings'){renderBookings();}
   if(n==='dispatch'){renderDispatch();}
   if(n==='billing'){renderBilling();}
   if(n==='invite'){renderInvite();}
@@ -2680,7 +2695,7 @@ function _dl(fn,txt,mime){var b=new Blob([txt],{type:mime||'text/plain'});var u=
 function _csvCell(v){v=(v==null?'':String(v));if(/[",\n]/.test(v))v='"'+v.replace(/"/g,'""')+'"';return v;}
 function _csv(rows){if(!rows||!rows.length)return '';var cols=Object.keys(rows[0]);var out=cols.join(',')+'\n';rows.forEach(function(r){out+=cols.map(function(k){return _csvCell(r[k]);}).join(',')+'\n';});return out;}
 function _stamp(){return new Date().toISOString().split('T')[0];}
-function exportJSON(){var data={exportedAt:new Date().toISOString(),company:(CURRENT_USER&&CURRENT_USER.name)||'',jobs:jobs,crew:crew,hours:hours,subs:subs,estimates:estimates,sketches:sketches,logs:logs,schedule:schedule,changeOrders:changeOrders,expenses:expenses,leads:leads,plans:plans,clients:clients,portalMessages:portalMessages,pricebook:pricebook,selections:selections,safety:safety,punch:punch,equipment:equipment,clockSessions:clockSessions,certs:certs};_dl('orchamind-export-'+_stamp()+'.json',JSON.stringify(data,null,2),'application/json');}
+function exportJSON(){var data={exportedAt:new Date().toISOString(),company:(CURRENT_USER&&CURRENT_USER.name)||'',jobs:jobs,crew:crew,hours:hours,subs:subs,estimates:estimates,sketches:sketches,logs:logs,schedule:schedule,bookings:bookings,bookingConfig:bookingConfig,changeOrders:changeOrders,expenses:expenses,leads:leads,plans:plans,clients:clients,portalMessages:portalMessages,pricebook:pricebook,selections:selections,safety:safety,punch:punch,equipment:equipment,clockSessions:clockSessions,certs:certs};_dl('orchamind-export-'+_stamp()+'.json',JSON.stringify(data,null,2),'application/json');}
 function exportCSV(which){var map={jobs:jobs,crew:crew,hours:hours,subs:subs};var rows=map[which]||[];if(!rows.length){alert('Nothing to export there yet.');return;}_dl('orchamind-'+which+'-'+_stamp()+'.csv',_csv(rows),'text/csv');}
 function renderExportCounts(){var el=document.getElementById('exportCounts');if(!el)return;el.textContent=jobs.length+' projects \u00b7 '+hours.length+' timesheet entries \u00b7 '+crew.length+' crew \u00b7 '+subs.length+' subcontractors';}
 document.querySelectorAll('.modal-bg').forEach(function(m){m.addEventListener('click',function(e){if(e.target===m)closeModal(m.id);});});
@@ -2725,7 +2740,7 @@ function clearAllData(){
 
 // Explicit, non-debounced save that reports success/failure
 function saveNow(cb){
-  fetch('/api/data',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({data:{saved:true,jobs:jobs,crew:crew,hours:hours,subs:subs,estimates:estimates,sketches:sketches,logs:logs,schedule:schedule,changeOrders:changeOrders,expenses:expenses,leads:leads,plans:plans,clients:clients,portalMessages:portalMessages,pricebook:pricebook,selections:selections,safety:safety,punch:punch,equipment:equipment,clockSessions:clockSessions,certs:certs}})})
+  fetch('/api/data',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({data:{saved:true,jobs:jobs,crew:crew,hours:hours,subs:subs,estimates:estimates,sketches:sketches,logs:logs,schedule:schedule,bookings:bookings,bookingConfig:bookingConfig,changeOrders:changeOrders,expenses:expenses,leads:leads,plans:plans,clients:clients,portalMessages:portalMessages,pricebook:pricebook,selections:selections,safety:safety,punch:punch,equipment:equipment,clockSessions:clockSessions,certs:certs}})})
     .then(function(r){return r.json();})
     .then(function(o){var ok=o&&!o.error;if(ok)_dbReady=true;if(cb)cb(ok);})
     .catch(function(){if(cb)cb(false);});
@@ -3758,6 +3773,12 @@ function loadDemo(cb){
   ];
   var today=new Date().toISOString().split('T')[0];
   var yest=new Date(Date.now()-86400000).toISOString().split('T')[0];
+  var _d3=new Date(Date.now()+3*86400000).toISOString().split('T')[0];
+  var _d5=new Date(Date.now()+5*86400000).toISOString().split('T')[0];
+  bookings=[
+    {id:'bk1',name:'Rachel Kim',phone:'(707) 555-0192',email:'rachel.k@example.com',service:'Estimate / site visit',date:_d3,slot:'10:00 AM',notes:'Kitchen remodel \u2014 want a quote.',status:'requested',ts:Date.now()-3600000},
+    {id:'bk2',name:'Mark Alvarez',phone:'(707) 555-0175',email:'',service:'Repair',date:_d5,slot:'1:00 PM',notes:'Deck board replacement.',status:'requested',ts:Date.now()-7200000}
+  ];
   hours=[
     {id:'h1',name:'Mike Torres',site:'Oak Street Remodel',date:today,amount:8},
     {id:'h2',name:'Mike Torres',site:'Oak Street Remodel',date:yest,amount:7.5},
@@ -5274,6 +5295,87 @@ function _schYmd(dt){ return dt.getFullYear()+'-'+String(dt.getMonth()+1).padSta
 function _schMonday(dt){ var d=new Date(dt.getFullYear(),dt.getMonth(),dt.getDate()); var k=(d.getDay()+6)%7; d.setDate(d.getDate()-k); return d; }
 function _schShort(dt){ return dt.toLocaleDateString('en-US',{month:'short',day:'numeric'}); }
 function _schCrewArr(s){ if(Array.isArray(s.crew)) return s.crew; if(typeof s.crew==='string'&&s.crew) return s.crew.split(',').map(function(x){return x.trim();}).filter(Boolean); return []; }
+
+// ===== BOOKINGS: real-time crew availability + customer job requests =====
+function _bkAvailableCrew(){
+  // A crew member is bookable when they are not currently tied to an active job.
+  return (crew||[]).filter(function(c){
+    var st=(c.status||'').toLowerCase();
+    return st==='available'||st==='off'||!c.assign||c.assign==='Unassigned';
+  });
+}
+function _bkDateStr(dt){return dt.getFullYear()+'-'+('0'+(dt.getMonth()+1)).slice(-2)+'-'+('0'+dt.getDate()).slice(-2);}
+function _bkOpenDates(){
+  // Dates the customer can pick: from leadDays out to horizonDays, excluding days off + fully-booked days.
+  var cfg=bookingConfig, out=[], today=new Date(); today.setHours(0,0,0,0);
+  var avail=_bkAvailableCrew().length||0;
+  for(var i=cfg.leadDays;i<=cfg.horizonDays;i++){
+    var dt=new Date(today.getFullYear(),today.getMonth(),today.getDate()+i);
+    if((cfg.daysOff||[]).indexOf(dt.getDay())>=0)continue;
+    var ds=_bkDateStr(dt);
+    var takenSlots=(bookings||[]).filter(function(b){return b.date===ds&&b.status!=='declined';}).length;
+    var capacity=Math.max(1,avail)*(cfg.slots.length||4);
+    if(takenSlots<capacity) out.push(ds);
+  }
+  return out;
+}
+function _bkSlotsFor(ds){
+  var taken={}; (bookings||[]).forEach(function(b){if(b.date===ds&&b.status!=='declined')taken[b.slot]=(taken[b.slot]||0)+1;});
+  var avail=Math.max(1,_bkAvailableCrew().length);
+  return (bookingConfig.slots||[]).filter(function(s){return (taken[s]||0)<avail;});
+}
+function renderBookings(){
+  var av=document.getElementById('bkAvail'); if(av){
+    var avail=_bkAvailableCrew();
+    av.innerHTML='<div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;">'
+      +'<span style="font-weight:700;font-size:14px;">Available now:</span>'
+      +(avail.length?avail.map(function(c){return '<span style="background:rgba(46,155,91,.1);color:#2E9B5B;border:1px solid rgba(46,155,91,.3);font-size:12.5px;font-weight:600;padding:4px 10px;border-radius:99px;">'+esc(c.name)+' \u00b7 '+esc(c.role||'')+'</span>';}).join(''):'<span style="color:var(--muted);">Everyone is currently assigned. Customers can still request future dates.</span>')
+      +'</div><div style="color:var(--muted);font-size:12px;margin-top:8px;">Availability updates automatically from crew status. Customers booking through your link see open dates '+bookingConfig.leadDays+'\u2013'+bookingConfig.horizonDays+' days out.</div>';
+  }
+  var wrap=document.getElementById('bkRequests'); if(!wrap)return;
+  var pend=(bookings||[]).filter(function(b){return b.status==='requested';});
+  var other=(bookings||[]).filter(function(b){return b.status!=='requested';}).sort(function(a,b){return (b.ts||0)-(a.ts||0);});
+  if(!bookings||!bookings.length){wrap.innerHTML='<div style="color:var(--muted);font-size:14px;padding:16px;background:var(--card);border:1px solid var(--line);border-radius:12px;">No booking requests yet. Share your booking link and customer requests will land here for you to approve.</div>';return;}
+  var row=function(b){
+    var badge=b.status==='requested'?'<span style="background:#F9A825;color:#0A1628;">Needs approval</span>':
+              b.status==='confirmed'?'<span style="background:#2E9B5B;color:#fff;">Confirmed</span>':
+              '<span style="background:#C62828;color:#fff;">Declined</span>';
+    var actions=b.status==='requested'?
+      '<div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap;"><button class="btn btn-primary" onclick="bkApprove(\''+b.id+'\')">Confirm &amp; assign</button><button class="btn btn-ghost" onclick="bkDecline(\''+b.id+'\')">Decline</button></div>':'';
+    return '<div style="background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px;margin-bottom:10px;">'
+      +'<div style="display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;align-items:center;"><div style="font-weight:700;">'+esc(b.name||'Customer')+' \u00b7 '+esc(b.service||'')+'</div><span class="bk-badge">'+badge+'</span></div>'
+      +'<div style="color:var(--muted);font-size:13px;margin-top:4px;">'+esc(b.date||'')+' at '+esc(b.slot||'')+(b.crewName?(' \u00b7 '+esc(b.crewName)):'')+'</div>'
+      +(b.phone||b.email?'<div style="color:var(--muted);font-size:12.5px;margin-top:2px;">'+esc(b.phone||'')+(b.phone&&b.email?' \u00b7 ':'')+esc(b.email||'')+'</div>':'')
+      +(b.notes?'<div style="font-size:13px;margin-top:6px;">'+esc(b.notes)+'</div>':'')
+      +actions+'</div>';
+  };
+  wrap.innerHTML=(pend.length?'<div style="margin-bottom:6px;font-size:12px;color:#F9A825;font-weight:700;text-transform:uppercase;letter-spacing:.04em;">'+pend.length+' awaiting approval</div>':'')
+    +pend.map(row).join('')+other.map(row).join('');
+}
+function bkApprove(id){
+  var b=(bookings||[]).find(function(x){return x.id===id;}); if(!b)return;
+  var avail=_bkAvailableCrew();
+  var c=avail[0]; // assign first available; office can reassign in Dispatch
+  b.status='confirmed'; if(c){b.crewId=c.id;b.crewName=c.name;}
+  // create a schedule entry so it shows on the calendar
+  schedule.push({id:'s'+Date.now(),title:(b.service||'Job')+' \u2014 '+(b.name||''),date:b.date,time:b.slot,crew:c?[c.name]:[],note:'Booked by customer'+(b.notes?(': '+b.notes):'')});
+  renderBookings();if(typeof saveNow==='function')saveNow();
+}
+function bkDecline(id){
+  var b=(bookings||[]).find(function(x){return x.id===id;}); if(!b)return;
+  b.status='declined'; renderBookings();if(typeof saveNow==='function')saveNow();
+}
+function bkCopyLink(){
+  var u=(location.origin||'https://orchamind.com')+'/book';
+  try{if(navigator.clipboard)navigator.clipboard.writeText(u);}catch(e){}
+  alert('Your customer booking link:\n\n'+u+'\n\nShare it on your website, texts, or email signature. Requests come here for you to approve.\n\n(Open it now to preview what customers see.)');
+}
+// Customer-facing: submit a booking request (used by /book page and portal)
+function bkSubmitRequest(req){
+  var b={id:'bk'+Date.now(),name:req.name||'',phone:req.phone||'',email:req.email||'',service:req.service||'',date:req.date||'',slot:req.slot||'',notes:req.notes||'',status:'requested',ts:Date.now()};
+  bookings.push(b); if(typeof saveNow==='function')saveNow();
+  return b;
+}
 function _schTimeStr(s){ if(s.start&&s.end) return s.start+' - '+s.end; return s.start||s.time||''; }
 function schToday(){ _schWeekStart=_schMonday(new Date()); renderSchedule(); }
 function schWeek(n){ if(!_schWeekStart)_schWeekStart=_schMonday(new Date()); _schWeekStart=new Date(_schWeekStart.getFullYear(),_schWeekStart.getMonth(),_schWeekStart.getDate()+7*n); renderSchedule(); }

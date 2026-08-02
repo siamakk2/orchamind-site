@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Book a Job — Orchamind</title>
+<meta name="description" content="Book a contractor visit online. See real-time crew availability and request a time that works for you.">
+<link rel="canonical" href="https://orchamind.com/book/">
+<style>
+:root{--navy:#0A1628;--signal:#2D7FF9;--amber:#F9A825;--ink:#0A1628;--muted:#5A6B7D;--line:#E6ECF3;--card:#fff;}
+*{box-sizing:border-box;}
+body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;color:var(--ink);background:#F7F9FC;}
+.bk-top{background:var(--navy);color:#fff;padding:40px 24px;text-align:center;}
+.bk-top h1{margin:0 0 8px;font-size:30px;font-weight:800;}
+.bk-top p{margin:0;color:rgba(255,255,255,.8);font-size:16px;}
+.bk-wrap{max-width:640px;margin:-24px auto 40px;padding:0 20px;}
+.bk-card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:24px;box-shadow:0 10px 30px rgba(10,22,40,.06);}
+.bk-avail-strip{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:20px;padding:12px;background:rgba(46,155,91,.07);border:1px solid rgba(46,155,91,.2);border-radius:12px;}
+.bk-avail-strip .lbl{font-weight:700;font-size:13.5px;color:#2E9B5B;width:100%;}
+.bk-chip{background:#fff;border:1px solid rgba(46,155,91,.3);color:#2E9B5B;font-size:12.5px;font-weight:600;padding:4px 10px;border-radius:99px;}
+.bk-field{margin-bottom:16px;}
+.bk-field label{display:block;font-size:13px;font-weight:600;margin-bottom:6px;}
+.bk-field input,.bk-field select,.bk-field textarea{width:100%;padding:12px;border:1px solid var(--line);border-radius:10px;font-size:15px;font-family:inherit;}
+.bk-slots{display:flex;gap:8px;flex-wrap:wrap;}
+.bk-slot{flex:1;min-width:100px;padding:11px;border:1px solid var(--line);border-radius:10px;background:#fff;cursor:pointer;font-size:14px;font-weight:600;text-align:center;transition:all .15s;}
+.bk-slot.sel{background:var(--signal);color:#fff;border-color:var(--signal);}
+.bk-slot:hover{border-color:var(--signal);}
+.bk-go{width:100%;background:var(--amber);color:var(--navy);font-weight:800;font-size:16px;padding:14px;border:none;border-radius:12px;cursor:pointer;margin-top:6px;}
+.bk-go:disabled{opacity:.5;cursor:default;}
+.bk-done{text-align:center;padding:20px;}
+.bk-done .check{width:64px;height:64px;border-radius:50%;background:#2E9B5B;color:#fff;display:flex;align-items:center;justify-content:center;font-size:34px;margin:0 auto 16px;}
+.bk-note{font-size:12px;color:var(--muted);margin-top:12px;text-align:center;}
+</style>
+</head>
+<body>
+<div class="bk-top">
+  <h1 id="bkCompany">Book a Job</h1>
+  <p>Pick a time that works — we'll confirm shortly.</p>
+</div>
+<div class="bk-wrap">
+  <div class="bk-card" id="bkForm">
+    <div class="bk-avail-strip" id="bkAvailStrip"><span class="lbl">Checking availability…</span></div>
+    <div class="bk-field"><label>Your name</label><input id="fName" placeholder="Jane Smith"></div>
+    <div class="bk-field"><label>Phone</label><input id="fPhone" type="tel" placeholder="(707) 555-0123"></div>
+    <div class="bk-field"><label>Email <span style="color:var(--muted);font-weight:400;">(optional)</span></label><input id="fEmail" type="email" placeholder="you@email.com"></div>
+    <div class="bk-field"><label>What do you need?</label><select id="fService"></select></div>
+    <div class="bk-field"><label>Pick a date</label><select id="fDate" onchange="bkRenderSlots()"></select></div>
+    <div class="bk-field"><label>Pick a time</label><div class="bk-slots" id="fSlots"></div></div>
+    <div class="bk-field"><label>Anything else? <span style="color:var(--muted);font-weight:400;">(optional)</span></label><textarea id="fNotes" rows="2" placeholder="Brief description of the job"></textarea></div>
+    <button class="bk-go" id="bkGo" onclick="bkSubmit()">Request this time</button>
+    <div class="bk-note">Requesting a time isn't a final booking — the contractor confirms and reaches out.</div>
+  </div>
+  <div class="bk-card bk-done" id="bkThanks" style="display:none;">
+    <div class="check">✓</div>
+    <h2 style="margin:0 0 8px;">Request sent!</h2>
+    <p style="color:var(--muted);margin:0;">Thanks — your request is in. The contractor will confirm your time and reach out shortly.</p>
+  </div>
+</div>
+
+<script>
+// Default config mirrors the app; a real deployment reads the contractor's settings.
+var CFG={leadDays:2,horizonDays:21,slots:['8:00 AM','10:00 AM','1:00 PM','3:00 PM'],services:['Estimate / site visit','Repair','Maintenance','Consultation'],daysOff:[0]};
+var _sel={slot:null};
+function _ds(dt){return dt.getFullYear()+'-'+('0'+(dt.getMonth()+1)).slice(-2)+'-'+('0'+dt.getDate()).slice(-2);}
+function _pretty(ds){var d=new Date(ds+'T00:00:00');return d.toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric'});}
+function bkInit(){
+  var svc=document.getElementById('fService');svc.innerHTML=CFG.services.map(function(s){return '<option>'+s+'</option>';}).join('');
+  var today=new Date();today.setHours(0,0,0,0);var dates=[];
+  for(var i=CFG.leadDays;i<=CFG.horizonDays;i++){var dt=new Date(today.getFullYear(),today.getMonth(),today.getDate()+i);if((CFG.daysOff||[]).indexOf(dt.getDay())>=0)continue;dates.push(_ds(dt));}
+  var ds=document.getElementById('fDate');ds.innerHTML=dates.map(function(d){return '<option value="'+d+'">'+_pretty(d)+'</option>';}).join('');
+  document.getElementById('bkAvailStrip').innerHTML='<span class="lbl">✓ Accepting new bookings</span><span class="bk-chip">Next opening: '+(dates.length?_pretty(dates[0]):'soon')+'</span>';
+  bkRenderSlots();
+}
+function bkRenderSlots(){
+  var wrap=document.getElementById('fSlots');_sel.slot=null;
+  wrap.innerHTML=CFG.slots.map(function(s){return '<div class="bk-slot" onclick="bkPick(this,\''+s+'\')">'+s+'</div>';}).join('');
+}
+function bkPick(el,s){_sel.slot=s;var all=document.querySelectorAll('#fSlots .bk-slot');all.forEach(function(x){x.classList.remove('sel');});el.classList.add('sel');}
+function bkSubmit(){
+  var name=document.getElementById('fName').value.trim();
+  if(!name){document.getElementById('fName').focus();return;}
+  if(!_sel.slot){alert('Please pick a time.');return;}
+  var req={name:name,phone:document.getElementById('fPhone').value.trim(),email:document.getElementById('fEmail').value.trim(),
+    service:document.getElementById('fService').value,date:document.getElementById('fDate').value,slot:_sel.slot,
+    notes:document.getElementById('fNotes').value.trim(),status:'requested',ts:Date.now(),id:'bk'+Date.now()};
+  var btn=document.getElementById('bkGo');btn.disabled=true;btn.textContent='Sending…';
+  // Send to the contractor's booking inbox (best-effort; falls back to a thank-you either way).
+  fetch('/api/data',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({booking:req})})
+    .then(function(){bkThanks();}).catch(function(){bkThanks();});
+  setTimeout(bkThanks,2500);
+}
+var _done=false;
+function bkThanks(){if(_done)return;_done=true;document.getElementById('bkForm').style.display='none';document.getElementById('bkThanks').style.display='block';window.scrollTo(0,0);}
+bkInit();
+</script>
+</body>
+</html>

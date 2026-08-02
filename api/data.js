@@ -52,9 +52,26 @@ module.exports = async function handler(req, res) {
     }
 
     if (req.method === 'POST') {
+      var body = readBody(req);
+      // Public customer booking request from /book — no session required.
+      if (body && body.booking) {
+        if (!SUPABASE_URL || !KEY) return res.status(200).json({ ok: true, queued: false });
+        try {
+          var bk = body.booking;
+          var ins = await fetch(base + '/bookings', {
+            method: 'POST',
+            headers: Object.assign({}, H, { 'Prefer': 'return=minimal' }),
+            body: JSON.stringify({
+              name: (bk.name||'').slice(0,120), phone: (bk.phone||'').slice(0,40), email: (bk.email||'').slice(0,120),
+              service: (bk.service||'').slice(0,120), date: bk.date||null, slot: (bk.slot||'').slice(0,40),
+              notes: (bk.notes||'').slice(0,1000), status: 'requested', created_at: new Date().toISOString()
+            })
+          });
+          return res.status(200).json({ ok: true, queued: ins.ok });
+        } catch (e) { return res.status(200).json({ ok: true, queued: false }); }
+      }
       // Demo or signed-out users: accept but don't persist.
       if (!sess || sess.role === 'demo') return res.status(200).json({ ok: true, skipped: true });
-      var body = readBody(req);
       var data = body.data || {};
       var up = await fetch(base + '/app_data', {
         method: 'POST',

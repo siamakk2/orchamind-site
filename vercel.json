@@ -47,6 +47,10 @@
     {
       "source": "/features/plan-takeoff",
       "destination": "/features/plan-takeoff/index.html"
+    },
+    {
+      "source": "/book",
+      "destination": "/book.html"
     }
   ],
   "headers": [
