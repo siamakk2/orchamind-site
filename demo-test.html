@@ -1613,7 +1613,7 @@ button:active, .btn:active, .btn-ghost:active, .tab:active, [role="button"]:acti
   <div class="epv-metrics" id="epvMetrics"></div>
   <div class="epv-3dwrap" id="epv3dWrap" style="display:none;">
     <canvas id="p3dCanvas" class="epv-canvas" style="touch-action:none;cursor:grab;"></canvas>
-    <div class="epv-3dhint">Drag to rotate &middot; pinch or scroll to zoom</div>
+    <div class="epv-3dhint" id="epv3dLabel">Drag to rotate &middot; pinch or scroll to zoom</div>
     <div id="p3dRooms" class="epv-rooms"></div>
   </div>
   <div class="epv-foot">Massing model &amp; pricing are an AI draft for visualization &mdash; review every line below before sending.</div>
@@ -3941,67 +3941,6 @@ function _planShrinkImage(file,cb,err){
 }
 function _planSys(){
   var company=(CURRENT_USER&&CURRENT_USER.name)||'';
-  return 'You are a senior construction cost estimator'+(company?(' for '+company):'')+'. You are reading construction plans, blueprints, sketches or site drawings. First perform a quantity takeoff: identify the scope of work, rooms, dimensions, square footage, and counts of relevant elements (fixtures, outlets, windows, doors, panels, runs, squares of roofing, etc.). Then convert the takeoff into realistic itemized estimate line items using current California contractor pricing. Split labor and materials into separate lines where sensible, and include permit or fee lines if implied. CRITICAL: never silently guess. Anything you could not read or that the plans do not specify must appear as a plain-English entry in "assumptions" (what you assumed and why) or as a short clarifying question in "questions" (maximum 4, only ones that materially change price). Return ONLY a JSON object with no markdown, no code fences, and no commentary, in exactly this shape: {"items":[{"desc":"string","pbId":"string or null","qty":number,"unit":"string","price":number}],"notes":"string"}';
-  callClaude(sys,'Job description: '+scope,function(text){
-    btn.disabled=false;btn.innerHTML=old;
-    var obj=_estParseJSON(text);
-    if(!obj||!obj.items||!obj.items.length){msg.textContent='Could not read the AI draft - try rephrasing the description.';return;}
-    document.getElementById('estLines').innerHTML='';
-    var _lines=_pbRepriceList(obj.items); _lines.forEach(function(it){addEstLine({desc:it.desc,qty:it.qty,unit:it.unit,price:it.price});});
-    if(obj.notes&&!document.getElementById('estNotes').value.trim()){document.getElementById('estNotes').value=obj.notes;}
-    recalcEst();
-    var _c=_pbCounts(_lines); msg.textContent='Drafted '+obj.items.length+' lines - '+_c.priced+' priced from your Pricebook'+(_c.unpriced?(', '+_c.unpriced+' NEED YOUR RATE'):'')+(_c.ai?(', '+_c.ai+' unconfirmed'):'')+'. Review, then Save.';
-  },function(err){btn.disabled=false;btn.innerHTML=old;msg.textContent='AI error: '+err;});
-}
-/* ===== Plans -> Estimate module ===== */
-function _planDemoOk(){
-  try{
-    if(window.DEMO_MODE && typeof IS_REAL_APP!=='undefined' && !IS_REAL_APP && typeof _demoAICount!=='undefined'){
-      if(_demoAICount>=DEMO_AI_LIMIT){return false;}
-      _demoAICount+=2; // plan reading is a heavier call
-    }
-  }catch(e){}
-  return true;
-}
-var _planBlocks=null,_planDraft=null;
-function callClaudeBlocks(systemPrompt,blocks,cb,errCb,maxTokens){
-  var mt=maxTokens||6000,acc="",tries=0;
-  function go(messages){
-    fetch("/api/claude",{method:"POST",headers:{"Content-Type":"application/json"},
-      body:JSON.stringify({model:"claude-sonnet-4-6",max_tokens:mt,system:systemPrompt,messages:messages})
-    }).then(function(r){return r.json();}).then(function(data){
-      if(data&&data.error){errCb&&errCb(typeof data.error==='string'?data.error:(data.error.message||'AI error'));return;}
-      var text="";
-      if(data&&data.content){text=data.content.filter(function(b){return b.type==="text";}).map(function(b){return b.text;}).join("\n");}
-      acc+=text;
-      if(data&&data.stop_reason==="max_tokens"&&tries<3&&text){
-        tries++;
-        go(messages.concat([{role:"assistant",content:text},{role:"user",content:"Continue your previous answer exactly where it left off. Do not repeat anything you already wrote."}]));
-      } else { if(acc){cb(acc);}else{errCb&&errCb("No response from AI");} }
-    }).catch(function(e){errCb&&errCb(e.message);});
-  }
-  go([{role:"user",content:blocks}]);
-}
-function _planShrinkImage(file,cb,err){
-  var rd=new FileReader();
-  rd.onload=function(){
-    var img=new Image();
-    img.onload=function(){
-      var MAX=1568,w=img.width,h=img.height;
-      if(w>MAX||h>MAX){var s=MAX/Math.max(w,h);w=Math.round(w*s);h=Math.round(h*s);}
-      var cv=document.createElement('canvas');cv.width=w;cv.height=h;
-      cv.getContext('2d').drawImage(img,0,0,w,h);
-      var d=cv.toDataURL('image/jpeg',0.82);
-      cb({type:"image",source:{type:"base64",media_type:"image/jpeg",data:d.substring(d.indexOf(',')+1)}});
-    };
-    img.onerror=function(){err('Could not read one of the images.');};
-    img.src=rd.result;
-  };
-  rd.onerror=function(){err('Could not read one of the files.');};
-  rd.readAsDataURL(file);
-}
-function _planSys(){
-  var company=(CURRENT_USER&&CURRENT_USER.name)||'';
   return 'You are a senior construction cost estimator'+(company?(' for '+company):'')+'. You are reading construction plans, blueprints, sketches or site drawings. First perform a quantity takeoff: identify the scope of work, rooms, dimensions, square footage, and counts of relevant elements (fixtures, outlets, windows, doors, panels, runs, squares of roofing, etc.). Then convert the takeoff into realistic itemized estimate line items using current California contractor pricing. Split labor and materials into separate lines where sensible, and include permit or fee lines if implied. CRITICAL: never silently guess. Anything you could not read or that the plans do not specify must appear as a plain-English entry in "assumptions" (what you assumed and why) or as a short clarifying question in "questions" (maximum 4, only ones that materially change price). Return ONLY a JSON object with no markdown, no code fences, and no commentary, in exactly this shape: {"items":[{"desc":"string","qty":number,"unit":"string","price":number}],"notes":"string","assumptions":["string"],"questions":["string"],"geometry":{"stories":number,"storyHeight":number,"rooms":[{"name":"string","x":number,"y":number,"w":number,"h":number}]}} where price is the dollar amount per unit. For geometry: set stories to the number of floors (1, 2, ...) and storyHeight to the per-floor wall height in feet (default 9). Approximate each room on the MAIN floor as an axis-aligned rectangle in FEET on a shared plan (x,y is the top-left corner, w is width, h is depth), keeping relative positions and proportions faithful to the drawing. Include geometry ONLY when the upload contains a readable floor plan; otherwise omit the geometry key entirely.';
 }
 var _planThinkTimer=null,_planThinkStep=0,_planThinkT0=0;
@@ -4149,33 +4088,65 @@ function _plan3dBtn(){_epvSyncPreview();}
 function _epvSyncPreview(){
   var pv=document.getElementById('estPreview');if(!pv)return;
   var hasLines=document.querySelectorAll('#estLines tr').length>0;
-  var hasGeom=!!(_planGeom&&_planGeom.rooms&&_planGeom.rooms.length);
-  if(!hasLines&&!hasGeom){pv.style.display='none';cancelAnimationFrame(_p3dRAF);_p3dRAF=null;return;}
+  var realGeom=!!(_planGeom&&_planGeom.rooms&&_planGeom.rooms.length&&!_planGeom._synth);
+  if(!hasLines&&!(_planGeom&&_planGeom.rooms&&_planGeom.rooms.length)){pv.style.display='none';cancelAnimationFrame(_p3dRAF);_p3dRAF=null;return;}
   pv.style.display='block';
   document.getElementById('epvTitle').textContent=(document.getElementById('estProject').value||document.getElementById('estClient').value||'').trim();
   // metrics
   var tt=(document.getElementById('estTotal')||{}).textContent||'$0';
   var tot=estNum(tt.replace(/[^0-9.]/g,''));
+  // Ensure there is ALWAYS a model to show: real takeoff geometry, or a representative house.
+  if(!(_planGeom&&_planGeom.rooms&&_planGeom.rooms.length)){
+    _planGeom=_synthHouse(_estGuessSqft());
+    _p3dGrow=0;_p3dGrowT0=Date.now();
+  }
   var area=0,rooms=0;
-  if(hasGeom){_planGeom.rooms.forEach(function(r){area+=r.w*r.h;});rooms=_planGeom.rooms.length;}
+  _planGeom.rooms.forEach(function(r){area+=r.w*r.h;});rooms=_planGeom.rooms.length;
+  var totalArea=area*(_planGeom.stories||1);
   var mk=function(v,l){return '<div class="epv-metric"><div class="m-val">'+v+'</div><div class="m-lbl">'+l+'</div></div>';};
   var html=mk(estMoney(tot),'Total estimate');
-  if(area){html+=mk(Math.round(area).toLocaleString()+' sf','Floor area')+mk(estMoney(area?tot/area:0),'Per sq ft')+mk(rooms,'Rooms');}
-  else{html+=mk(document.querySelectorAll('#estLines tr').length,'Line items');}
+  if(realGeom){html+=mk(Math.round(totalArea).toLocaleString()+' sf','Floor area')+mk(estMoney(totalArea?tot/totalArea:0),'Per sq ft')+mk(rooms,'Rooms');}
+  else{html+=mk(document.querySelectorAll('#estLines tr').length,'Line items')+mk((_planGeom.stories||1),'Stories');}
   document.getElementById('epvMetrics').innerHTML=html;
   var wrap=document.getElementById('epv3dWrap');
-  if(hasGeom){
-    wrap.style.display='block';
-    var list=document.getElementById('p3dRooms');list.innerHTML='';
+  wrap.style.display='block';
+  // label: real takeoff vs representative
+  var lblEl=document.getElementById('epv3dLabel');
+  if(lblEl){lblEl.textContent=realGeom?'3D from your plans \u00b7 drag to rotate':'Representative property \u00b7 drag to rotate';}
+  var list=document.getElementById('p3dRooms');list.innerHTML='';
+  if(realGeom){
     _planGeom.rooms.forEach(function(r,i){
       var a=r.w*r.h;var chip=document.createElement('span');
-      chip.innerHTML='<span style="width:9px;height:9px;border-radius:3px;background:'+_P3D_COLORS[i%_P3D_COLORS.length]+';display:inline-block;"></span>'+esc(r.name||('Room '+(i+1)))+' \u00b7 '+Math.round(a)+' sf'+(tot&&area?(' \u00b7 ~'+estMoney(tot*a/area)):'');
+      chip.innerHTML='<span style="width:9px;height:9px;border-radius:3px;background:'+_P3D_COLORS[i%_P3D_COLORS.length]+';display:inline-block;"></span>'+esc(r.name||('Room '+(i+1)))+' \u00b7 '+Math.round(a)+' sf'+(tot&&totalArea?(' \u00b7 ~'+estMoney(tot*a/totalArea)):'');
       list.appendChild(chip);
     });
-    _p3dEnsureLoop();
   } else {
-    wrap.style.display='none';cancelAnimationFrame(_p3dRAF);_p3dRAF=null;
+    var note=document.createElement('span');note.style.cssText='color:#8FA6C2;font-size:11.5px;';
+    note.textContent='Illustrative model. Upload plans on this estimate for an exact takeoff with cost per room.';
+    list.appendChild(note);
   }
+  _p3dEnsureLoop();
+}
+// Pull a plausible building square footage from the line items (for representative sizing)
+function _estGuessSqft(){
+  var best=0;
+  document.querySelectorAll('#estLines tr').forEach(function(tr){
+    var unit=(tr.querySelector('.li-unit')||{}).value||'';
+    var q=estNum((tr.querySelector('.li-qty')||{}).value);
+    if(/sq\s*ft|sqft|sf/i.test(unit)&&q>best)best=q;
+  });
+  return best;
+}
+// Build a representative house layout scaled to a target footprint area (sqft).
+function _synthHouse(sqft){
+  // base template ~741 sf footprint (the seed layout), scaled to target
+  var base=[{name:'Living',x:0,y:0,w:22,h:15},{name:'Kitchen',x:22,y:0,w:13,h:12},{name:'Bath',x:22,y:12,w:8,h:7},{name:'Utility',x:30,y:12,w:5,h:7},{name:'Room',x:0,y:15,w:12,h:13.7}];
+  var baseArea=741, stories=1, footprint=sqft;
+  if(sqft&&sqft>1600){stories=2;footprint=sqft/2;} // larger homes read as 2-story
+  var k=footprint&&footprint>120?Math.sqrt(footprint/baseArea):1;
+  k=Math.max(0.6,Math.min(2.2,k));
+  var rooms=base.map(function(r){return {name:r.name,x:r.x*k,y:r.y*k,w:r.w*k,h:r.h*k};});
+  return {stories:stories,storyHeight:9,rooms:rooms,_synth:true};
 }
 function _p3dEnsureLoop(){
   var cv=document.getElementById('p3dCanvas');if(!cv)return;
