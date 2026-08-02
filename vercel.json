@@ -39,6 +39,14 @@
     {
       "source": "/features",
       "destination": "/features/index.html"
+    },
+    {
+      "source": "/features/job-reports",
+      "destination": "/features/job-reports/index.html"
+    },
+    {
+      "source": "/features/plan-takeoff",
+      "destination": "/features/plan-takeoff/index.html"
     }
   ],
   "headers": [
