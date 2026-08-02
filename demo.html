@@ -3926,39 +3926,57 @@ function _planDemoOk(){
 }
 var _planBlocks=null,_planDraft=null;
 function callClaudeBlocks(systemPrompt,blocks,cb,errCb,maxTokens){
-  var mt=maxTokens||6000,acc="",tries=0;
+  var mt=maxTokens||6000,acc="",tries=0,settled=false;
+  function done(fn,arg){ if(settled)return; settled=true; fn&&fn(arg); }
   function go(messages){
+    var ctrl=(typeof AbortController!=='undefined')?new AbortController():null;
+    var TIMEOUT_MS=95000; // vision on a big plan is slow, but never infinite
+    var timer=setTimeout(function(){ if(ctrl){try{ctrl.abort();}catch(e){}}
+      done(errCb,'The plan read timed out. Try one clear page, or a smaller PDF/photo.'); },TIMEOUT_MS);
     fetch("/api/claude",{method:"POST",headers:{"Content-Type":"application/json"},
+      signal:ctrl?ctrl.signal:undefined,
       body:JSON.stringify({model:"claude-sonnet-4-6",max_tokens:mt,system:systemPrompt,messages:messages})
     }).then(function(r){return r.json();}).then(function(data){
-      if(data&&data.error){errCb&&errCb(typeof data.error==='string'?data.error:(data.error.message||'AI error'));return;}
+      clearTimeout(timer);
+      if(data&&data.error){done(errCb,typeof data.error==='string'?data.error:(data.error.message||'AI error'));return;}
       var text="";
       if(data&&data.content){text=data.content.filter(function(b){return b.type==="text";}).map(function(b){return b.text;}).join("\n");}
       acc+=text;
       if(data&&data.stop_reason==="max_tokens"&&tries<3&&text){
         tries++;
         go(messages.concat([{role:"assistant",content:text},{role:"user",content:"Continue your previous answer exactly where it left off. Do not repeat anything you already wrote."}]));
-      } else { if(acc){cb(acc);}else{errCb&&errCb("No response from AI");} }
-    }).catch(function(e){errCb&&errCb(e.message);});
+      } else { if(acc){done(cb,acc);}else{done(errCb,"No response from AI");} }
+    }).catch(function(e){
+      clearTimeout(timer);
+      var m=(e&&e.name==='AbortError')?'The plan read timed out. Try one clear page, or a smaller PDF/photo.':(e&&e.message||'Network error');
+      done(errCb,m);
+    });
   }
   go([{role:"user",content:blocks}]);
 }
 function _planShrinkImage(file,cb,err){
+  var settled=false; var fin=function(fn,a){if(settled)return;settled=true;fn(a);};
+  // Decode watchdog: some very large PNGs can stall the browser decoder.
+  var watch=setTimeout(function(){fin(err,'That image was too large or slow to read. Try a JPG or a smaller export.');},30000);
   var rd=new FileReader();
   rd.onload=function(){
     var img=new Image();
     img.onload=function(){
-      var MAX=1568,w=img.width,h=img.height;
-      if(w>MAX||h>MAX){var s=MAX/Math.max(w,h);w=Math.round(w*s);h=Math.round(h*s);}
-      var cv=document.createElement('canvas');cv.width=w;cv.height=h;
-      cv.getContext('2d').drawImage(img,0,0,w,h);
-      var d=cv.toDataURL('image/jpeg',0.82);
-      cb({type:"image",source:{type:"base64",media_type:"image/jpeg",data:d.substring(d.indexOf(',')+1)}});
+      clearTimeout(watch);
+      try{
+        var MAX=1568,w=img.width,h=img.height;
+        if(!w||!h){fin(err,'That image could not be decoded. Try a JPG or PNG re-export.');return;}
+        if(w>MAX||h>MAX){var s=MAX/Math.max(w,h);w=Math.round(w*s);h=Math.round(h*s);}
+        var cv=document.createElement('canvas');cv.width=w;cv.height=h;
+        cv.getContext('2d').drawImage(img,0,0,w,h);
+        var d=cv.toDataURL('image/jpeg',0.82); // always send JPEG — smaller, universally handled
+        fin(cb,{type:"image",source:{type:"base64",media_type:"image/jpeg",data:d.substring(d.indexOf(',')+1)}});
+      }catch(e){fin(err,'Could not process that image ('+(e.message||'decode error')+').');}
     };
-    img.onerror=function(){err('Could not read one of the images.');};
+    img.onerror=function(){clearTimeout(watch);fin(err,'Could not read one of the images. Try a JPG or PNG re-export.');};
     img.src=rd.result;
   };
-  rd.onerror=function(){err('Could not read one of the files.');};
+  rd.onerror=function(){clearTimeout(watch);fin(err,'Could not read one of the files.');};
   rd.readAsDataURL(file);
 }
 function _planSys(){

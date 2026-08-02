@@ -109,5 +109,13 @@
         }
       ]
     }
-  ]
+  ],
+  "functions": {
+    "api/claude.js": {
+      "maxDuration": 120
+    },
+    "api/render.js": {
+      "maxDuration": 120
+    }
+  }
 }
