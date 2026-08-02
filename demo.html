@@ -2876,9 +2876,27 @@ if(window.speechSynthesis){
   // some browsers populate lazily; nudge it
   try{ window.speechSynthesis.getVoices(); }catch(e){}
 }
+function _speakClean(text){
+  var t=String(text||'');
+  // strip markdown / symbols
+  t=t.replace(/[#*_>`~]/g,'');
+  t=t.replace(/\[([^\]]+)\]\([^)]+\)/g,'$1');   // markdown links -> label
+  t=t.replace(/https?:\/\/\S+/g,'');            // raw URLs
+  // drop UI/interface jargon so she explains, not reads the interface
+  t=t.replace(/\b(the\s+)?([A-Z][A-Za-z ]+?)\s+tab\b/g,'$2');   // "the Estimates tab" -> "Estimates"
+  t=t.replace(/\btab\b/gi,'');
+  t=t.replace(/\b(tap|click|button|menu|icon|toggle|dropdown|panel|screen|nav(igation)?)\b/gi,'');
+  t=t.replace(/\bAI\b/g,'A.I.');                // reads as letters, not "eye"
+  t=t.replace(/\bSF\b/g,'square feet');
+  t=t.replace(/\bGPS\b/g,'G.P.S.');
+  // collapse leftover punctuation/space
+  t=t.replace(/\s{2,}/g,' ').replace(/\s+([,.!?;:])/g,'$1').replace(/([,.!?;:]){2,}/g,'$1');
+  t=t.replace(/\n+/g,'. ').replace(/\s{2,}/g,' ').trim();
+  return t;
+}
 function speak(text){
   if(!_speakOn||!window.speechSynthesis)return;
-  var clean=text.replace(/[#*_>`]/g,'').replace(/\n+/g,'. ').replace(/\s+/g,' ').trim();
+  var clean=_speakClean(text);
   if(!clean)return;
   _ensureVoice();
   window.speechSynthesis.cancel();
