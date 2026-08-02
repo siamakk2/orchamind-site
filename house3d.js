@@ -134,9 +134,36 @@
 
     if (grow > 0.5) {
       var ra = Math.min(1, (grow - 0.5) / 0.4);
-      var rise = Math.max(3, Math.min(Wd, Dp) * 0.5) * ra, zr = wallTop + rise;
+      var roofType = (g.roof || 'gable').toLowerCase();
+      var pitchMul = roofType === 'flat' ? 0.06 : (roofType === 'low-slope' || roofType === 'shed' || roofType === 'lowslope') ? 0.16 : 0.5;
+      var rise = Math.max(roofType === 'flat' ? 0.6 : 1.5, Math.min(Wd, Dp) * pitchMul) * ra, zr = wallTop + rise;
       var lx0 = minX - o1, lx1 = maxX + o1, ly0 = minY - o1, ly1 = maxY + o1, faces = [];
-      if (Wd >= Dp) {
+      var flatCol = '#5A6472';
+      if (roofType === 'flat') {
+        // single flat slab with a slight parapet edge
+        faces.push({ pts: [P(lx0, ly0, wallTop), P(lx1, ly0, wallTop), P(lx1, ly1, wallTop), P(lx0, ly1, wallTop)], nx: 0, ny: 0, base: flatCol, flat: 1 });
+      } else if (roofType === 'shed' || roofType === 'low-slope' || roofType === 'lowslope') {
+        // mono-pitch: high edge on the -Y (front) side, sloping down to +Y
+        faces.push({ pts: [P(lx0, ly0, zr), P(lx1, ly0, zr), P(lx1, ly1, wallTop), P(lx0, ly1, wallTop)], nx: 0, ny: -0.3, base: flatCol, flat: 1 });
+        // side triangles filling the wedge
+        faces.push({ tri: 1, pts: [P(minX, ly0, wallTop), P(minX, ly0, zr), P(minX, ly1, wallTop)], nx: -1, ny: 0, base: GABLE });
+        faces.push({ tri: 1, pts: [P(maxX, ly0, wallTop), P(maxX, ly0, zr), P(maxX, ly1, wallTop)], nx: 1, ny: 0, base: GABLE });
+      } else if (roofType === 'hip') {
+        var ins = Math.min(Wd, Dp) / 2;
+        if (Wd >= Dp) {
+          var my = (minY + maxY) / 2, r1 = [lx0 + ins, my], r2 = [lx1 - ins, my];
+          faces.push({ pts: [P(lx0, ly0, wallTop), P(lx1, ly0, wallTop), P(r2[0], r2[1], zr), P(r1[0], r1[1], zr)], nx: 0, ny: -1, base: ROOF });
+          faces.push({ pts: [P(lx0, ly1, wallTop), P(lx1, ly1, wallTop), P(r2[0], r2[1], zr), P(r1[0], r1[1], zr)], nx: 0, ny: 1, base: ROOF });
+          faces.push({ tri: 1, pts: [P(lx0, ly0, wallTop), P(lx0, ly1, wallTop), P(r1[0], r1[1], zr)], nx: -1, ny: 0, base: ROOF });
+          faces.push({ tri: 1, pts: [P(lx1, ly0, wallTop), P(lx1, ly1, wallTop), P(r2[0], r2[1], zr)], nx: 1, ny: 0, base: ROOF });
+        } else {
+          var mx = (minX + maxX) / 2, ra1 = [mx, ly0 + ins], ra2 = [mx, ly1 - ins];
+          faces.push({ pts: [P(lx0, ly0, wallTop), P(lx0, ly1, wallTop), P(ra2[0], ra2[1], zr), P(ra1[0], ra1[1], zr)], nx: -1, ny: 0, base: ROOF });
+          faces.push({ pts: [P(lx1, ly0, wallTop), P(lx1, ly1, wallTop), P(ra2[0], ra2[1], zr), P(ra1[0], ra1[1], zr)], nx: 1, ny: 0, base: ROOF });
+          faces.push({ tri: 1, pts: [P(lx0, ly0, wallTop), P(lx1, ly0, wallTop), P(ra1[0], ra1[1], zr)], nx: 0, ny: -1, base: ROOF });
+          faces.push({ tri: 1, pts: [P(lx0, ly1, wallTop), P(lx1, ly1, wallTop), P(ra2[0], ra2[1], zr)], nx: 0, ny: 1, base: ROOF });
+        }
+      } else if (Wd >= Dp) {
         var midY = (minY + maxY) / 2;
         faces.push({ tri: 1, pts: [P(minX, minY, wallTop), P(minX, maxY, wallTop), P(minX, midY, zr)], nx: -1, ny: 0, base: GABLE });
         faces.push({ tri: 1, pts: [P(maxX, minY, wallTop), P(maxX, maxY, wallTop), P(maxX, midY, zr)], nx: 1, ny: 0, base: GABLE });
@@ -152,11 +179,12 @@
       faces.forEach(function (f) { f.d = f.pts.reduce(function (s2, p) { return s2 + p.d; }, 0) / f.pts.length; });
       faces.sort(function (a, b) { return a.d - b.d; });
       faces.forEach(function (f) {
-        var lit = 0.72 + 0.5 * Math.max(0, f.nx * lx + f.ny * ly);
+        var lit = f.flat ? 1.0 : (0.72 + 0.5 * Math.max(0, f.nx * lx + f.ny * ly));
         if (f.tri) { fillP(f.pts, shade(f.base, lit)); strokeP(f.pts, 'rgba(60,50,35,0.4)', 1); }
         else { grad(f.pts, f.base, lit * 0.92, lit * 1.08, 'rgba(30,34,42,0.65)'); }
       });
-      if (ra > 0.6) {
+      // chimney only on pitched (non-flat) traditional roofs
+      if (ra > 0.6 && roofType !== 'flat' && roofType !== 'shed' && roofType !== 'low-slope' && roofType !== 'lowslope' && g.chimney !== false) {
         var chx = lerp(minX, maxX, 0.72), chy = lerp(minY, maxY, 0.5), chw = Math.max(0.8, cvirt * 0.045), chTop = zr + 1.5, base = wallTop + rise * 0.5;
         var cf = [
           { pts: [P(chx - chw, chy - chw, base), P(chx + chw, chy - chw, base), P(chx + chw, chy - chw, chTop), P(chx - chw, chy - chw, chTop)], n: [0, -1] },
@@ -245,17 +273,26 @@
     // roof wireframe once walls are up
     if (grow > 0.55) {
       var ra = Math.min(1, (grow - 0.55) / 0.4);
-      var rise = Math.max(3, Math.min(Wd, Dp) * 0.5) * ra, zr = wallTop + rise;
+      var hRoof = (g.roof || 'gable').toLowerCase();
+      var hMul = hRoof === 'flat' ? 0.06 : (hRoof === 'low-slope' || hRoof === 'shed' || hRoof === 'lowslope') ? 0.16 : 0.5;
+      var rise = Math.max(hRoof === 'flat' ? 0.6 : 1.5, Math.min(Wd, Dp) * hMul) * ra, zr = wallTop + rise;
       var lx0 = minX - o1, lx1 = maxX + o1, ly0 = minY - o1, ly1 = maxY + o1;
-      if (Wd >= Dp) {
+      if (hRoof === 'flat' || hRoof === 'low-slope' || hRoof === 'shed' || hRoof === 'lowslope') {
+        // top slab rectangle (flat) or tilted slab (low-slope: front edge raised)
+        var frontZ = (hRoof === 'flat') ? wallTop : zr, backZ = wallTop;
+        var tp = [P(lx0, ly0, frontZ), P(lx1, ly0, frontZ), P(lx1, ly1, backZ), P(lx0, ly1, backZ)];
+        for (var i = 0; i < 4; i++) line(tp[i], tp[(i + 1) % 4], CY, 1.5, 8);
+        // eave rectangle at wall top
+        var evf = [[lx0, ly0], [lx1, ly0], [lx1, ly1], [lx0, ly1]];
+        for (var i = 0; i < 4; i++) line(P(evf[i][0], evf[i][1], wallTop), P(evf[(i + 1) % 4][0], evf[(i + 1) % 4][1], wallTop), CY_SOFT, 1, 4);
+      } else if (Wd >= Dp) {
         var midY = (minY + maxY) / 2;
         var R1 = P(lx0, midY, zr), R2 = P(lx1, midY, zr);
-        line(R1, R2, CY, 1.6, 10); // ridge
+        line(R1, R2, CY, 1.6, 10);
         [[lx0, ly0], [lx1, ly0], [lx1, ly1], [lx0, ly1]].forEach(function (e, i) {
           var ridge = (e[0] === lx0) ? R1 : R2;
           line(P(e[0], e[1], wallTop), ridge, CY, 1.2, 6);
         });
-        // eave rectangle
         var ev = [[lx0, ly0], [lx1, ly0], [lx1, ly1], [lx0, ly1]];
         for (var i = 0; i < 4; i++) line(P(ev[i][0], ev[i][1], wallTop), P(ev[(i + 1) % 4][0], ev[(i + 1) % 4][1], wallTop), CY_SOFT, 1, 4);
       } else {
