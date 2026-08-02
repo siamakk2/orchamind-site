@@ -4920,11 +4920,34 @@ function _jrGetGeo(cb){
   // Fetch device location once per session; cache it. Non-blocking — stamps GPS if allowed.
   if(_jrGeo||_jrGeoTried){cb(_jrGeo);return;}
   if(!navigator.geolocation){_jrGeoTried=true;cb(null);return;}
-  var done=false;var t=setTimeout(function(){if(done)return;done=true;_jrGeoTried=true;cb(null);},6000);
+  var done=false;var t=setTimeout(function(){if(done)return;done=true;_jrGeoTried=true;cb(null);},9000);
   navigator.geolocation.getCurrentPosition(function(pos){
-    if(done)return;done=true;clearTimeout(t);_jrGeoTried=true;
-    _jrGeo={lat:pos.coords.latitude,lng:pos.coords.longitude,acc:pos.coords.accuracy};cb(_jrGeo);
+    if(done)return;clearTimeout(t);
+    _jrGeo={lat:pos.coords.latitude,lng:pos.coords.longitude,acc:pos.coords.accuracy,addr:null};
+    // Reverse-geocode coordinates -> street address for the stamp (best-effort).
+    _jrReverseGeocode(_jrGeo.lat,_jrGeo.lng,function(addr){
+      if(done)return;done=true;_jrGeoTried=true;
+      if(addr)_jrGeo.addr=addr;cb(_jrGeo);
+    });
+    // Safety: if geocode stalls, still return with coords after a moment.
+    setTimeout(function(){if(done)return;done=true;_jrGeoTried=true;cb(_jrGeo);},4000);
   },function(){if(done)return;done=true;clearTimeout(t);_jrGeoTried=true;cb(null);},{enableHighAccuracy:true,timeout:5500,maximumAge:60000});
+}
+function _jrReverseGeocode(lat,lng,cb){
+  // OpenStreetMap Nominatim (no key). Best-effort; falls back to coords if it fails.
+  try{
+    var url='https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat='+lat+'&lon='+lng+'&zoom=18&addressdetails=1';
+    fetch(url,{headers:{'Accept':'application/json'}}).then(function(r){return r.json();}).then(function(d){
+      if(!d||!d.address){cb(null);return;}
+      var a=d.address;
+      var street=((a.house_number?a.house_number+' ':'')+(a.road||a.pedestrian||a.footway||'')).trim();
+      var city=a.city||a.town||a.village||a.hamlet||a.suburb||a.county||'';
+      var st=a.state_code||a.state||'';
+      var zip=a.postcode||'';
+      var country=a.country||'';
+      cb({street:street,cityline:(city?city:'')+(st?(', '+st):'')+(zip?(' '+zip):''),country:country});
+    }).catch(function(){cb(null);});
+  }catch(e){cb(null);}
 }
 function _jrHash(dataUrl,cb){
   // SHA-256 of the stamped image bytes — the tamper-evidence fingerprint.
@@ -4967,31 +4990,39 @@ function _jrShrink(file,geo,cb,err){
         if(w>MAX||h>MAX){var s=MAX/Math.max(w,h);w=Math.round(w*s);h=Math.round(h*s);}
         var cv=document.createElement('canvas');cv.width=w;cv.height=h;var ctx=cv.getContext('2d');
         ctx.drawImage(img,0,0,w,h);
-        // ---- burn in the provenance stamp ----
+        // ---- burn in the provenance stamp (right-aligned white, shadowed, address like iOS geotag) ----
         var now=new Date();
         var company=(CURRENT_USER&&CURRENT_USER.name)||'Orchamind';
         var jobSel=document.getElementById('jrJob');
         var jobName=(jobSel&&jobSel.options[jobSel.selectedIndex])?jobSel.options[jobSel.selectedIndex].textContent:'';
-        var line1=now.toLocaleString('en-US',{year:'numeric',month:'short',day:'2-digit',hour:'2-digit',minute:'2-digit',second:'2-digit'});
-        var line2=(jobName?jobName+'  \u00b7  ':'')+company;
-        var line3=geo?('GPS '+geo.lat.toFixed(5)+', '+geo.lng.toFixed(5)+'  (\u00b1'+Math.round(geo.acc)+'m)'):'GPS unavailable';
-        var pad=Math.round(w*0.014), fs=Math.max(11,Math.round(w*0.026));
-        ctx.font='600 '+fs+'px system-ui,Arial,sans-serif';
-        var tw=Math.max(ctx.measureText(line1).width,ctx.measureText(line2).width,ctx.measureText(line3).width);
-        var bh=fs*3+pad*2.4, bw=tw+pad*2;
-        var bx=w-bw-pad, by=h-bh-pad;
-        ctx.fillStyle='rgba(8,16,28,0.62)';
-        if(ctx.roundRect){ctx.beginPath();ctx.roundRect(bx,by,bw,bw>0?bh:bh,8);ctx.fill();}else{ctx.fillRect(bx,by,bw,bh);}
-        ctx.fillStyle='#fff';ctx.textBaseline='top';
-        ctx.fillText(line1,bx+pad,by+pad*0.9);
-        ctx.fillStyle='#8fe0ff';ctx.fillText(line2,bx+pad,by+pad*0.9+fs*1.05);
-        ctx.fillStyle='#cfe4ff';ctx.font=(Math.max(10,Math.round(fs*0.86)))+'px system-ui,Arial,sans-serif';
-        ctx.fillText(line3,bx+pad,by+pad*0.9+fs*2.15);
-        var dd=cv.toDataURL('image/jpeg',0.82);
+        var dateStr=now.toLocaleString('en-US',{month:'short',day:'numeric',year:'numeric'})+' at '+now.toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit',second:'2-digit'});
+        var lines=[dateStr];
+        if(geo&&geo.addr){
+          if(geo.addr.street)lines.push(geo.addr.street);
+          if(geo.addr.cityline)lines.push(geo.addr.cityline);
+          if(geo.addr.country)lines.push(geo.addr.country);
+        } else if(geo){
+          lines.push('GPS '+geo.lat.toFixed(5)+', '+geo.lng.toFixed(5));
+          lines.push('\u00b1'+Math.round(geo.acc)+'m');
+        }
+        var fs=Math.max(15,Math.round(w*0.033));
+        var lh=Math.round(fs*1.28);
+        var margin=Math.round(w*0.03);
+        var rx=w-margin;               // right edge for right-aligned text
+        var ty=Math.round(h*0.045);    // top offset, like the reference
+        ctx.textAlign='right';ctx.textBaseline='top';
+        ctx.font='500 '+fs+'px system-ui,-apple-system,Arial,sans-serif';
+        ctx.shadowColor='rgba(0,0,0,0.55)';ctx.shadowBlur=Math.max(3,Math.round(fs*0.28));ctx.shadowOffsetX=0;ctx.shadowOffsetY=1;
+        ctx.fillStyle='#ffffff';
+        for(var li=0;li<lines.length;li++){ ctx.fillText(lines[li], rx, ty+li*lh); }
+        // reset shadow/alignment so nothing else inherits it
+        ctx.shadowColor='transparent';ctx.shadowBlur=0;ctx.shadowOffsetY=0;ctx.textAlign='left';
+        var dd=cv.toDataURL('image/jpeg',0.85);
         // ---- compute tamper-evidence hash of the STAMPED image ----
         _jrHash(dd,function(hash){
-          var meta={capturedAt:now.toISOString(),localTime:line1,job:jobName,company:company,
-            gps:geo?{lat:geo.lat,lng:geo.lng,acc:geo.acc}:null,sha256:hash||null,
+          var addrStr=(geo&&geo.addr)?[geo.addr.street,geo.addr.cityline,geo.addr.country].filter(Boolean).join(', '):'';
+          var meta={capturedAt:now.toISOString(),localTime:dateStr,job:jobName,company:company,
+            gps:geo?{lat:geo.lat,lng:geo.lng,acc:geo.acc}:null,address:addrStr||null,sha256:hash||null,
             by:(CURRENT_USER&&CURRENT_USER.name)||'',w:w,h:h};
           fin({type:"image",source:{type:"base64",media_type:"image/jpeg",data:dd.substring(dd.indexOf(',')+1)}},dd,meta);
         });
