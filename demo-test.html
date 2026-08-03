@@ -3349,7 +3349,23 @@ function renderActivity(events, counts){
   }
   var feed=document.getElementById('actFeed'); if(!feed) return;
   if(!events.length){ feed.innerHTML='<div style="color:#9aa7b4;font-size:13px;padding:8px 2px;">No activity yet. Logins, signups, quote requests, and errors show up here as they happen.</div>'; return; }
-  feed.innerHTML=events.map(function(e){ return '<div style="display:flex;align-items:center;gap:10px;padding:9px 4px;border-bottom:1px solid #F0F3F7;"><span style="font-size:16px;width:22px;text-align:center;">'+_actIcon(e.type)+'</span><span style="flex:1;color:#0A1628;font-size:13.5px;">'+esc(e.detail||e.type)+(e.username?(' <span style="color:#9aa7b4;">\u00b7 '+esc(e.username)+'</span>'):'')+'</span><span style="color:#9aa7b4;font-size:12px;white-space:nowrap;">'+_actAgo(e.ts)+'</span></div>'; }).join('');
+  // Collapse repetitive consecutive events (e.g. the same user logging in over and over)
+  // into a single row with a count, so the feed stays readable instead of an endless wall.
+  var rolled=[]; 
+  events.forEach(function(e){
+    var last=rolled[rolled.length-1];
+    var sameKind=last && last.type===e.type && (last.username||'')===(e.username||'') && (last.detail||'')===(e.detail||'');
+    if(sameKind){ last._n=(last._n||1)+1; last.ts=Math.max(last.ts||0,e.ts||0); }
+    else{ rolled.push(Object.assign({},e,{_n:1})); }
+  });
+  var shown=rolled.slice(0,40); // keep the feed tight; scroll for the rest
+  // ensure the feed area scrolls instead of stretching the whole page
+  feed.style.maxHeight='340px'; feed.style.overflowY='auto'; feed.style.paddingRight='4px';
+  feed.innerHTML=shown.map(function(e){
+    var mult=(e._n>1)?(' <span style="background:#EEF2F7;color:#5A6B7D;font-size:11px;font-weight:700;padding:1px 6px;border-radius:10px;">\u00d7'+e._n+'</span>'):'';
+    return '<div style="display:flex;align-items:center;gap:10px;padding:8px 4px;border-bottom:1px solid #F0F3F7;"><span style="font-size:15px;width:20px;text-align:center;">'+_actIcon(e.type)+'</span><span style="flex:1;color:#0A1628;font-size:13px;">'+esc(e.detail||e.type)+mult+(e.username?(' <span style="color:#9aa7b4;">\u00b7 '+esc(e.username)+'</span>'):'')+'</span><span style="color:#9aa7b4;font-size:12px;white-space:nowrap;">'+_actAgo(e.ts)+'</span></div>';
+  }).join('')
+  + (rolled.length>40?('<div style="color:#9aa7b4;font-size:12px;padding:8px 2px;text-align:center;">Showing latest 40 of '+rolled.length+' \u2014 scroll for more</div>'):'');
 }
 setInterval(function(){ try{ if(typeof isAdmin==='function' && isAdmin() && document.getElementById('actFeed')){ loadActivity(); if(typeof loadSupport==='function') loadSupport(); } }catch(e){} }, 25000);
 function editUserOpen(username){
