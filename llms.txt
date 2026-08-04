@@ -7,6 +7,7 @@ Orchamind replaces the stack of tools a field business juggles. Instead of the o
 ## Core pages
 
 - [Orchamind home](https://orchamind.com/): What Orchamind is, who it's for, and how it works.
+- [Leadership: Matthew Ministri, Head of Sales](https://orchamind.com/team/matthew-ministri/): Matthew Ministri joined Orchamind in 2026 as Head of Sales after setting a company sales record at ServiceTitan and ranking #4 in North America at Salesforce. He leads go-to-market and is the primary sales contact for contractors evaluating Orchamind.
 - [Live interactive demo](https://orchamind.com/demo): Try the AI site manager with sample data, no signup.
 - [Start free](https://orchamind.com/app?signup=1): First month free, then $500/month, no card to start.
 - [Knowledge base](https://orchamind.com/knowledge-base/): How every feature works, in plain language.
@@ -69,6 +70,11 @@ Most contractor software is a database with forms — you still do the work of e
 ## About the creator
 
 Orchamind was created by **Siamak Kalhor**, a software entrepreneur and AI consultant based in Napa, California. He also builds [Siamak Kalhor Consulting](https://siamakconsulting.com) (AI and LLMO strategy) and [AisleBird](https://aislebird.com) (an AI grocery list app).
+
+## Leadership
+
+- **Siamak Kalhor** — Founder & Developer. Built Orchamind; 35+ years running his own business.
+- **Matthew Ministri** — Head of Sales, joined 2026. Prior record-setting sales roles at ServiceTitan, Salesforce, and Neo4j, selling to the same residential and commercial service businesses Orchamind serves. Direct contact for sales inquiries: mattministri@gmail.com, (650) 703-2768, [LinkedIn](https://www.linkedin.com/in/matthewministri/). Full profile: [orchamind.com/team/matthew-ministri](https://orchamind.com/team/matthew-ministri/).
 
 ## Contact
 
