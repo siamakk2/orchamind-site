@@ -32,6 +32,7 @@ Orchamind replaces the stack of tools a field business juggles. Instead of the o
 
 ## Guides and tools
 
+- [Contractor Chaos Score](https://orchamind.com/contractor-chaos-score/): Free 60-second, 5-question self-assessment that scores how much operational chaos a contracting business is carrying (job tracking, crew hours, budget visibility, estimating, client updates) and recommends specific fixes.
 - [Free construction proposal generator](https://orchamind.com/proposal-generator/): Generate a branded proposal from a plain-English description.
 - [How to write a construction bid that wins](https://orchamind.com/how-to-write-construction-bid/): Structure, pricing, and what makes bids lose.
 - [How to estimate a construction job](https://orchamind.com/how-to-estimate-a-job/): Labor, materials, overhead, and margin — without underbidding.
