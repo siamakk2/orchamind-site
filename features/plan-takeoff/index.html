@@ -514,31 +514,108 @@ footer a:hover{color:#1E6FE0;}
 }
 </style>
 </head>
-<body><nav>
-  <div class="nav-inner">
-    <a href="#top" class="logo">
-      <span class="logo-mark"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12h4l3 8 4-16 3 8h4"/></svg></span>
-      Orchamind
-    </a>
-    <div class="nav-links" id="navLinks">
-      <a href="#what">What is it</a>
-      <a href="#how">How it works</a>
+<body><!-- ORCHAMIND_UNIFIED_NAV -->
+<style>
+.ocnav{position:sticky;top:0;z-index:99999;background:#0A1628;border-bottom:1px solid rgba(255,255,255,.08);font-family:'Sora','Inter',system-ui,sans-serif;}
+.ocnav *{box-sizing:border-box;}
+.ocnav-in{display:flex;align-items:center;gap:6px;max-width:1180px;margin:0 auto;padding:12px 20px;position:relative;}
+.ocnav-logo{display:flex;align-items:center;gap:9px;color:#fff;font-weight:800;font-size:19px;text-decoration:none;margin-right:18px;font-family:'Sora',sans-serif;flex-shrink:0;}
+.ocnav-mark{width:30px;height:30px;border-radius:8px;background:linear-gradient(135deg,#2D7FF9,#5B9DFF);display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.ocnav-mark svg{width:18px;height:18px;}
+.ocnav-links{display:flex;align-items:center;gap:4px;flex:1;}
+.ocnav-links>a,.ocnav-drop>button{color:rgba(255,255,255,.78);text-decoration:none;font:500 14px/1 'Inter',sans-serif;white-space:nowrap;padding:9px 10px;border-radius:8px;background:none;border:none;cursor:pointer;display:flex;align-items:center;gap:4px;}
+.ocnav-links>a:hover,.ocnav-drop>button:hover{color:#fff;background:rgba(255,255,255,.06);}
+.ocnav-drop{position:relative;}
+.ocnav-drop svg{width:11px;height:11px;transition:transform .15s;}
+.ocnav-drop.open>button svg{transform:rotate(180deg);}
+.ocnav-menu{position:absolute;top:calc(100% + 8px);left:0;background:#101f36;border:1px solid rgba(255,255,255,.1);border-radius:12px;padding:8px;min-width:220px;box-shadow:0 20px 45px rgba(0,0,0,.4);display:none;}
+.ocnav-drop.open .ocnav-menu{display:block;}
+.ocnav-menu a{display:block;padding:10px 12px;border-radius:8px;color:rgba(255,255,255,.82);text-decoration:none;font:500 14px/1 'Inter',sans-serif;}
+.ocnav-menu a:hover{background:rgba(255,255,255,.07);color:#fff;}
+.ocnav-cta-group{display:flex;align-items:center;gap:10px;flex-shrink:0;}
+.ocnav-demo{color:#fff;border:1px solid rgba(255,255,255,.3);padding:9px 15px;border-radius:9px;font:600 14px/1 'Inter',sans-serif;text-decoration:none;white-space:nowrap;}
+.ocnav-start{background:#2D7FF9;color:#fff;padding:10px 16px;border-radius:9px;font:700 14px/1 'Inter',sans-serif;text-decoration:none;white-space:nowrap;}
+.ocnav-toggle{display:none;background:none;border:none;color:#fff;font-size:22px;cursor:pointer;line-height:1;padding:4px 6px;margin-left:auto;}
+@media(max-width:980px){
+  .ocnav-links{display:none;position:absolute;top:100%;left:0;right:0;background:#0A1628;flex-direction:column;align-items:stretch;gap:2px;padding:10px 14px 16px;border-bottom:1px solid rgba(255,255,255,.08);}
+  .ocnav.ocnav-open .ocnav-links{display:flex;}
+  .ocnav-drop{width:100%;}
+  .ocnav-drop>button{width:100%;justify-content:space-between;}
+  .ocnav-menu{position:static;box-shadow:none;border:none;background:rgba(255,255,255,.03);display:none;margin-top:2px;}
+  .ocnav-drop.open .ocnav-menu{display:block;}
+  .ocnav-toggle{display:block;}
+  .ocnav-cta-group{display:none;}
+  .ocnav.ocnav-open .ocnav-cta-group{display:flex;position:absolute;top:100%;left:0;right:0;margin-top:0;padding:0 14px 16px;background:#0A1628;transform:translateY(calc(100% - 1px));}
+}
+</style>
+<nav class="ocnav" id="ocnavRoot">
+  <div class="ocnav-in">
+    <a href="/" class="ocnav-logo"><span class="ocnav-mark"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12h4l3 8 4-16 3 8h4"/></svg></span>Orchamind</a>
+    <div class="ocnav-links" id="ocnavLinks">
+      <a href="/#what">What is it</a>
+      <a href="/#how">How it works</a>
       <a href="/features/">Features</a>
-      <a href="#industries">Industries</a>
-      <a href="#founder">About</a>
-      <a href="#proof">Proof</a>
-      <a href="/best-contractor-software/">Compare</a>
-<a href="#pricing">Pricing</a>
-      <a href="#askai">Ask AI</a>
-      <a href="#faq">FAQ</a>
-      <a href="/knowledge-base">Knowledge Base</a>
-      <a href="/audit" style="color:var(--amber) !important;font-weight:700;">Free Site Audit</a>
-      <a href="demo.html?demo=1" style="color:#fff !important;border:1px solid rgba(255,255,255,0.3);padding:9px 16px;border-radius:9px;font-weight:600;font-size:14px;">Try Demo</a>
-      <a href="/app?signup=1" class="nav-cta">Start free</a>
+      <div class="ocnav-drop" data-drop>
+        <button type="button" aria-expanded="false">Industries <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></button>
+        <div class="ocnav-menu">
+          <a href="/for/general-contractors/">General Contractors</a>
+          <a href="/for/electricians/">Electricians</a>
+          <a href="/for/hvac/">HVAC</a>
+          <a href="/for/plumbers/">Plumbers</a>
+          <a href="/for/roofers/">Roofers</a>
+        </div>
+      </div>
+      <a href="/#pricing">Pricing</a>
+      <div class="ocnav-drop" data-drop>
+        <button type="button" aria-expanded="false">Resources <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></button>
+        <div class="ocnav-menu">
+          <a href="/contractor-chaos-score/">Chaos Score Quiz</a>
+          <a href="/best-contractor-software/">Compare</a>
+          <a href="/faq/">FAQ</a>
+          <a href="/knowledge-base/">Knowledge Base</a>
+          <a href="/audit" style="color:#F9A825;">Free Site Audit &rarr;</a>
+        </div>
+      </div>
+      <a href="/#founder">About</a>
+      <a href="/team/matthew-ministri/">Team</a>
     </div>
-    <button class="nav-toggle" onclick="document.getElementById('navLinks').classList.toggle('open')">☰</button>
+    <div class="ocnav-cta-group">
+      <a href="/demo.html?demo=1" class="ocnav-demo">Try Demo</a>
+      <a href="/app?signup=1" class="ocnav-start">Start free</a>
+    </div>
+    <button class="ocnav-toggle" id="ocnavToggle" aria-label="Menu" aria-expanded="false">&#9776;</button>
   </div>
 </nav>
+<script>
+(function(){
+  var root = document.getElementById('ocnavRoot');
+  var toggle = document.getElementById('ocnavToggle');
+  if (toggle) {
+    toggle.addEventListener('click', function(){
+      var open = root.classList.toggle('ocnav-open');
+      toggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+    });
+  }
+  var drops = root.querySelectorAll('[data-drop]');
+  drops.forEach(function(d){
+    var btn = d.querySelector('button');
+    btn.addEventListener('click', function(e){
+      e.stopPropagation();
+      var wasOpen = d.classList.contains('open');
+      drops.forEach(function(x){ x.classList.remove('open'); x.querySelector('button').setAttribute('aria-expanded','false'); });
+      if (!wasOpen) { d.classList.add('open'); btn.setAttribute('aria-expanded','true'); }
+    });
+  });
+  document.addEventListener('click', function(e){
+    if (!root.contains(e.target)) { drops.forEach(function(x){ x.classList.remove('open'); }); }
+  });
+  document.addEventListener('keydown', function(e){
+    if (e.key === 'Escape') { drops.forEach(function(x){ x.classList.remove('open'); }); root.classList.remove('ocnav-open'); }
+  });
+})();
+</script>
+<!-- /ORCHAMIND_UNIFIED_NAV -->
+
 
 <script type="application/ld+json">{"@context": "https://schema.org", "@type": "WebPage", "name": "AI Construction Plan Takeoff Software", "url": "https://orchamind.com/features/plan-takeoff/", "description": "Upload construction plans as PDF, PNG, or JPG. Orchamind reads the printed area schedule as ground truth, uses marked dimensions, identifies roof type and stories, and drafts an itemized estimate with a 3D preview."}</script>
 <script type="application/ld+json">{"@context": "https://schema.org", "@type": "HowTo", "name": "How to do a construction takeoff from plans with AI", "step": [{"@type": "HowToStep", "name": "Upload the plans", "text": "Add the plan as a PDF, PNG, or JPG \u2014 or snap photos of the key sheets."}, {"@type": "HowToStep", "name": "AI reads the area schedule", "text": "Orchamind finds the printed area schedule and treats it as the source of truth for square footage, and reads the marked dimensions."}, {"@type": "HowToStep", "name": "Review the itemized draft", "text": "Get an itemized estimate with a 3D preview of the building. Anything the plans don't specify comes back as a question, not a silent guess."}, {"@type": "HowToStep", "name": "Price and send", "text": "Apply your rates, choose Good/Better/Best, and send \u2014 or convert to an invoice."}]}</script>
