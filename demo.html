@@ -731,7 +731,7 @@ button:active, .btn:active, .btn-ghost:active, .tab:active, [role="button"]:acti
 .aicp-form button{background:#2D7FF9;color:#fff;border:none;width:42px;height:42px;border-radius:50%;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
 .aicp-form button svg{width:18px;height:18px;}
 </style>
-<script src="/house3d.js?v=5"></script>
+<script src="/house3d.js?v=6"></script>
 </head>
 <body class="locked">
 <div id="demoBanner" style="position:relative;z-index:1;background:linear-gradient(90deg,#0A1628,#1565C0);color:#fff;padding:10px 16px;display:flex;align-items:center;justify-content:center;gap:16px;flex-wrap:wrap;font-family:'Outfit',sans-serif;font-size:14px;box-shadow:0 2px 12px rgba(0,0,0,0.2);">
@@ -4349,11 +4349,14 @@ function _planPrepareImage(file,tileBudget,cb,err){
         var w=img.width,h=img.height;
         if(!w||!h){fin(err,'That image could not be decoded. Try a JPG or PNG re-export.');return;}
         var budget=Math.max(1,tileBudget||1);
-        var cols=Math.ceil(w/1500),rows=Math.ceil(h/1500);
+        var cols=Math.ceil(w/1000),rows=Math.ceil(h/1000);
         while(cols*rows>budget){ if(cols>=rows&&cols>1)cols--; else if(rows>1)rows--; else break; }
         var blocks=[];
         function frame(sx,sy,sw,sh){
-          var scale=Math.min(1,1568/Math.max(sw,sh));
+          // UPSCALE small tiles toward 1568 (capped 2.5x): printed schedules are
+          // ~8px tall at native sheet resolution - magnification is what makes
+          // them legible, the same way a human zooms in to read them.
+          var scale=Math.min(2.5,1568/Math.max(sw,sh));
           var cv=document.createElement('canvas');cv.width=Math.round(sw*scale);cv.height=Math.round(sh*scale);
           cv.getContext('2d').drawImage(img,sx,sy,sw,sh,0,0,cv.width,cv.height);
           var d=cv.toDataURL('image/jpeg',0.85);

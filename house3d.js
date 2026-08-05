@@ -32,10 +32,22 @@
     var stories = g.stories || Math.max(1, Math.round((g.wallHeightFt || storyH) / storyH));
     var wallTop = storyH * stories;
     // --- Volume composition: real buildings are multiple prisms, not one box ---
+    // Plausibility envelope from the room layout: AI-described volumes/porches
+    // that land far outside it are coordinate errors - drop them rather than
+    // letting one bad rectangle explode the scene bounds.
+    var rbx0 = 1e9, rby0 = 1e9, rbx1 = -1e9, rby1 = -1e9;
+    rooms.forEach(function (r) { rbx0 = Math.min(rbx0, r.x); rby0 = Math.min(rby0, r.y); rbx1 = Math.max(rbx1, r.x + r.w); rby1 = Math.max(rby1, r.y + r.h); });
+    var spanR = Math.max(rbx1 - rbx0, rby1 - rby0) || 1;
+    function plausible(x0, y0, x1, y1) {
+      var pad = spanR * 0.8;
+      return x1 > rbx0 - pad && x0 < rbx1 + pad && y1 > rby0 - pad && y0 < rby1 + pad
+        && (x1 - x0) <= spanR * 2.2 && (y1 - y0) <= spanR * 2.2;
+    }
     var solids = [];
     if (g.volumes && g.volumes.length) {
       g.volumes.slice(0, 4).forEach(function (v) {
         if (!(v && isFinite(v.x) && isFinite(v.y) && v.w > 0 && v.h > 0)) return;
+        if (!plausible(v.x, v.y, v.x + v.w, v.y + v.h)) return;
         solids.push({ x0: v.x, y0: v.y, x1: v.x + v.w, y1: v.y + v.h,
           top: Math.max(6, Math.min(40, v.heightFt || wallTop)),
           roof: (v.roof || g.roof || 'flat'), glazing: v.glazing || null, name: v.name || '' });
@@ -44,6 +56,7 @@
     var porches = [];
     (g.porches || []).slice(0, 3).forEach(function (p) {
       if (!(p && isFinite(p.x) && isFinite(p.y) && p.w > 0 && p.h > 0)) return;
+      if (!plausible(p.x, p.y, p.x + p.w, p.y + p.h)) return;
       porches.push({ x0: p.x, y0: p.y, x1: p.x + p.w, y1: p.y + p.h, top: Math.max(7, Math.min(16, p.heightFt || 9)) });
     });
 

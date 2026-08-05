@@ -12,10 +12,10 @@ module.exports = async function handler(req, res) {
     if (!apiKey) return res.status(200).json({ error: 'no key' });
 
     var dir = path.join(process.cwd(), 'selftest');
-    var files = ['floor_0.jpg','floor_1.jpg','floor_2.jpg','floor_3.jpg','elev_0.jpg','elev_1.jpg','elev_2.jpg','elev_3.jpg'];
+    var files = ['floor_0.jpg','floor_1.jpg','floor_2.jpg','floor_3.jpg','floor_4.jpg','floor_5.jpg','elev_0.jpg','elev_1.jpg','elev_2.jpg','elev_3.jpg'];
     var content = [{ type: 'text', text:
       'This plan set has 2 files, in this order:\n' +
-      'File 1: Floor plan (image, "Main_Residence_floor_plan") — provided as 4 overlapping high-resolution tiles (2 across × 2 down, reading order left→right then top→bottom). ALL these tiles are pieces of ONE single sheet; stitch them mentally and read every table at full detail.\n' +
+      'File 1: Floor plan (image, "Main_Residence_floor_plan") — provided as 6 overlapping high-resolution magnified tiles (3 across × 2 down, reading order left→right then top→bottom). ALL these tiles are pieces of ONE single sheet; stitch them mentally and read every table at full detail.\n' +
       'File 2: Elevation (image, "55_Longhorn_Main_Residence_Elevations") — provided as 4 overlapping high-resolution tiles (2 across × 2 down, reading order left→right then top→bottom). ALL these tiles are pieces of ONE single sheet; each tile contains one elevation view.\n' +
       'Use each sheet for its purpose: floor plans for rooms, dimensions and square footage; elevations for stories, roof form, glazing style and window counts.' }];
     files.forEach(function (f) {
