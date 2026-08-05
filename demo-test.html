@@ -731,7 +731,7 @@ button:active, .btn:active, .btn-ghost:active, .tab:active, [role="button"]:acti
 .aicp-form button{background:#2D7FF9;color:#fff;border:none;width:42px;height:42px;border-radius:50%;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
 .aicp-form button svg{width:18px;height:18px;}
 </style>
-<script src="/house3d.js?v=2"></script>
+<script src="/house3d.js?v=3"></script>
 </head>
 <body class="locked">
 <div id="demoBanner" style="position:relative;z-index:1;background:linear-gradient(90deg,#0A1628,#1565C0);color:#fff;padding:10px 16px;display:flex;align-items:center;justify-content:center;gap:16px;flex-wrap:wrap;font-family:'Outfit',sans-serif;font-size:14px;box-shadow:0 2px 12px rgba(0,0,0,0.2);">
@@ -4322,6 +4322,18 @@ function _planShrinkImage(file,cb,err){
   rd.onerror=function(){clearTimeout(watch);fin(err,'Could not read one of the files.');};
   rd.readAsDataURL(file);
 }
+function _planExtractSys(){
+  return 'You are a construction plan TRANSCRIBER. Your ONLY job is to read what is printed and drawn on these plan sheets and transcribe it exactly. Do NOT compute, estimate, price, or infer anything.\n\n'
+    +'WORK METHODICALLY, one sheet at a time:\n'
+    +'1. AREA SCHEDULE: find any printed area/enclosed-space table or level breakdown. Transcribe each row exactly as printed (label + square footage). If none is printed, use null.\n'
+    +'2. ROOM SCHEDULE: from the floor plan, list every labeled room with its printed name, printed dimensions if marked, and which level it is on if stated. Transcribe names EXACTLY as printed (e.g. "Master Bedroom", "Bedroom 2", "Office").\n'
+    +'3. BEDROOMS: list the names of rooms that are explicitly labeled as bedrooms. Do not count a den/office/flex room as a bedroom unless the plan labels it one.\n'
+    +'4. WINDOW & DOOR SCHEDULES: if the plans include printed window/door schedules, transcribe them (mark, size, count).\n'
+    +'5. ELEVATIONS: for EACH elevation drawing present, look at it carefully and count the windows visible on that face, one elevation at a time. State which elevation has the main entry door (that is "front"). Also note the roof form (flat / low-slope / gable / hip) and story height if dimensioned.\n'
+    +'6. STORIES: the number of floors, from the area schedule or level names.\n\n'
+    +'RULES: transcribe only what is actually printed or drawn. Anything absent or unreadable = null. Never guess. If two sheets disagree, report both in "conflicts".\n\n'
+    +'Return ONLY JSON, no markdown, no commentary: {"areaSchedule":[{"label":"string","sqft":number}]|null,"totalPrintedSqft":number|null,"stories":number|null,"rooms":[{"name":"string","level":"string|null","dims":"string|null"}]|null,"bedrooms":["string"]|null,"windowSchedule":[{"mark":"string","size":"string","count":number}]|null,"elevations":{"present":true|false,"front":{"windows":number,"door":true},"back":{"windows":number},"left":{"windows":number},"right":{"windows":number}}|null,"roof":"flat|low-slope|gable|hip"|null,"storyHeightFt":number|null,"conflicts":["string"]|null}';
+}
 function _planSys(){
   var company=(CURRENT_USER&&CURRENT_USER.name)||'';
   return 'You are a senior construction cost estimator'+(company?(' for '+company):'')+'. You are reading construction plans, blueprints, sketches or site drawings. Work carefully and measure, do not eyeball.\n\n'
@@ -4340,12 +4352,12 @@ function _planSys(){
 var _planThinkTimer=null,_planThinkStep=0,_planThinkT0=0;
 var _PLAN_STEPS=[
   {t:'Opening your plans',s:'Loading the pages'},
-  {t:'Reading the drawings',s:'Finding rooms and layout'},
-  {t:'Measuring rooms',s:'Square footage and dimensions'},
-  {t:'Counting fixtures',s:'Outlets, doors, windows, systems'},
-  {t:'Doing the takeoff',s:'Turning quantities into line items'},
+  {t:'Pass 1: transcribing',s:'Reading printed schedules exactly'},
+  {t:'Counting windows',s:'One elevation at a time'},
+  {t:'Listing rooms',s:'Bedrooms, levels, dimensions'},
+  {t:'Pass 2: takeoff',s:'Locked to the transcribed data'},
   {t:'Pricing the estimate',s:'Applying regional rates'},
-  {t:'Almost there',s:'Checking assumptions and totals'}
+  {t:'Cross-checking',s:'Totals vs the printed schedule'}
 ];
 function _planThinkStart(files){
   _planThinkStep=0;_planThinkT0=Date.now();
@@ -4454,14 +4466,22 @@ function _planAnalyzeStaged(){
   function oneReady(){
     done++;
     if(failed||done<staged.length)return;
-    var blocks=[{type:"text",text:manifest}].concat(mediaBlocks.filter(Boolean));
+    var media=mediaBlocks.filter(Boolean);
     var scope=document.getElementById('estAiScope').value.trim();
-    blocks.push({type:"text",text:'These are the plans for the job.'+(scope?(' Extra context from the contractor: '+scope):'')+' Do the takeoff and draft the estimate.'});
-    _planBlocks=blocks;
-    callClaudeBlocks(_planSys(),blocks,function(text){
-      _planThinkStop();if(btn){btn.disabled=false;btn.innerHTML='\u2728 Read plan set &amp; draft estimate';}
-      try{_planApply(text,msg);_planStageClear();}catch(e){msg.textContent='Read the plans but could not build the estimate ('+(e.message||'error')+'). Try again or add a short description.';}
-    },fail,8000);
+    // PASS 1 — pure transcription: read the printed schedules, count windows
+    // elevation-by-elevation, name the bedrooms. No math, no pricing.
+    var blocks1=[{type:"text",text:manifest}].concat(media).concat([{type:"text",text:'Transcribe these plan sheets per your instructions. JSON only.'}]);
+    callClaudeBlocks(_planExtractSys(),blocks1,function(extText){
+      var extracted=_estParseJSON(extText);
+      var extNote=extracted?('VERIFIED TRANSCRIPTION OF THE PRINTED PLAN DATA (a careful first pass already read these exact sheets — treat this as ground truth and stay consistent with it; if you see a clear transcription error, correct it and say so in "assumptions"):\n'+JSON.stringify(extracted)):'';
+      // PASS 2 — the takeoff & estimate, locked to the transcription
+      var blocks2=[{type:"text",text:manifest+(extNote?('\n\n'+extNote):'')}].concat(media).concat([{type:"text",text:'These are the plans for the job.'+(scope?(' Extra context from the contractor: '+scope):'')+' Do the takeoff and draft the estimate. Your totalSqft MUST equal the transcription\u2019s totalPrintedSqft when present; geometry.windows MUST match the transcription\u2019s per-elevation window counts when present; bedroom room names MUST come from the transcription.'}]);
+      _planBlocks=blocks2;
+      callClaudeBlocks(_planSys(),blocks2,function(text){
+        _planThinkStop();if(btn){btn.disabled=false;btn.innerHTML='\u2728 Read plan set &amp; draft estimate';}
+        try{_planApply(text,msg);_planStageClear();}catch(e){msg.textContent='Read the plans but could not build the estimate ('+(e.message||'error')+'). Try again or add a short description.';}
+      },fail,8000);
+    },fail,3500);
   }
   staged.forEach(function(s,i){
     if(s.f.type==='application/pdf'){

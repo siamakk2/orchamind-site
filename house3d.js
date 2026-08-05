@@ -10,9 +10,9 @@
     f = Math.max(0.28, Math.min(1.32, f));
     return 'rgb(' + Math.min(255, r * f | 0) + ',' + Math.min(255, g * f | 0) + ',' + Math.min(255, b * f | 0) + ')';
   }
-  var WALL = '#EAE3D6', ROOF = '#495060', GABLE = '#E4DCCD',
-      GLASS_TOP = '#B9D3EA', GLASS_BOT = '#6E97BE', FRAME = '#F4F1EA',
-      DOOR = '#5E4631', CHIM = '#8A5A44', GROUND = '#D9E2CF';
+  var WALL = '#F6F3ED', ROOF = '#ABA396', GABLE = '#EFEBE2',
+      GLASS = '#7E93A8', REVEAL = 'rgba(52,60,72,0.55)',
+      DOOR = '#736A5F', GROUND = '#E7E9E1';
 
   function render(o) {
     var cv = o.canvas, g = o.geom; if (!cv || !g || !g.rooms || !g.rooms.length) return;
@@ -25,7 +25,7 @@
     var ctx = cv.getContext('2d'); ctx.setTransform(dpr, 0, 0, dpr, 0, 0); ctx.clearRect(0, 0, W, H);
 
     var sky = ctx.createLinearGradient(0, 0, 0, H);
-    sky.addColorStop(0, '#CFE3F5'); sky.addColorStop(0.5, '#E4EFF8'); sky.addColorStop(1, '#EFEBE0');
+    sky.addColorStop(0, '#F4F5F2'); sky.addColorStop(1, '#E8E9E3');
     ctx.fillStyle = sky; ctx.fillRect(0, 0, W, H);
 
     var rooms = g.rooms, storyH = g.storyHeight || 9;
@@ -68,7 +68,7 @@
 
     ctx.save(); ctx.globalAlpha = 0.20 * grow + 0.05;
     var sh = [P(minX - o1, minY - o1, 0), P(maxX + o1, minY - o1, 0), P(maxX + o1, maxY + o1, 0), P(minX - o1, maxY + o1, 0)];
-    sh.forEach(function (p) { p.x += 8; p.y += 10; }); fillP(sh, '#243'); ctx.restore();
+    sh.forEach(function (p) { p.x += 8; p.y += 10; }); fillP(sh, '#3A4038'); ctx.restore();
 
     var gm = Math.max(3, cvirt * 0.55);
     var gpts = [P(minX - gm, minY - gm, 0), P(maxX + gm, minY - gm, 0), P(maxX + gm, maxY + gm, 0), P(minX - gm, maxY + gm, 0)];
@@ -99,7 +99,7 @@
 
     wallFaces.forEach(function (wf) {
       var w = wf.w, lit = wf.lit, isFront = w[6];
-      grad(wf.quad, WALL, lit * 0.9, lit * 1.06, 'rgba(60,50,35,0.4)');
+      grad(wf.quad, WALL, lit * 0.9, lit * 1.06, 'rgba(90,92,88,0.45)');
       if (grow < 0.55) return;
       var wa = Math.min(1, (grow - 0.55) / 0.35); ctx.save(); ctx.globalAlpha = wa;
       var dxx = w[2] - w[0], dyy = w[3] - w[1], L = Math.hypot(dxx, dyy), ux = dxx / L, uy = dyy / L;
@@ -111,16 +111,16 @@
         ? Math.max(0, Math.min(24, Math.round(winData[elev]))) : null;
       for (var st = 0; st < stories; st++) {
         var z0 = st * storyH, sill = z0 + 3, head = z0 + 6.6;
-        if (st > 0) { fillP([P(w[0], w[1], z0 - 0.25), P(w[2], w[3], z0 - 0.25), P(w[2], w[3], z0 + 0.25), P(w[0], w[1], z0 + 0.25)], shade('#D8CFBE', lit)); }
+        if (st > 0) { fillP([P(w[0], w[1], z0 - 0.25), P(w[2], w[3], z0 - 0.25), P(w[2], w[3], z0 + 0.25), P(w[0], w[1], z0 + 0.25)], shade('#E4DFD4', lit)); }
         var perStory;
         if (totalForWall !== null) {
           // distribute the plan's real count across stories, extras on lower floors
           var base = Math.floor(totalForWall / stories), rem = totalForWall % stories;
           perStory = base + (st < rem ? 1 : 0);
         } else {
-          // no elevation data — keep the model recognizably a house, but sparse:
-          // this is decorative massing, not a claim about the real plan
-          perStory = Math.max(1, Math.round(L / 14));
+          // no elevation data — draw NO windows rather than inventing them;
+          // a clean massing model is honest, fabricated openings are not
+          perStory = 0;
         }
         var slots = perStory, doorSlot = -1;
         if (st === 0 && isFront) { slots = perStory + 1; doorSlot = Math.ceil(slots / 2); }
@@ -128,21 +128,14 @@
           var px = w[0] + ux * (L * k / (slots + 1)), py = w[1] + uy * (L * k / (slots + 1));
           if (k === doorSlot) {
             var dh = 0.85;
-            fillP([P(px - ux * (dh + .3), py - uy * (dh + .3), z0), P(px + ux * (dh + .3), py + uy * (dh + .3), z0), P(px + ux * (dh + .3), py + uy * (dh + .3), z0 + 7.2), P(px - ux * (dh + .3), py - uy * (dh + .3), z0 + 7.2)], FRAME);
-            fillP([P(px - ux * dh, py - uy * dh, z0), P(px + ux * dh, py + uy * dh, z0), P(px + ux * dh, py + uy * dh, z0 + 6.9), P(px - ux * dh, py - uy * dh, z0 + 6.9)], shade(DOOR, lit));
+            fillP([P(px - ux * dh, py - uy * dh, z0), P(px + ux * dh, py + uy * dh, z0), P(px + ux * dh, py + uy * dh, z0 + 7.0), P(px - ux * dh, py - uy * dh, z0 + 7.0)], REVEAL);
+            fillP([P(px - ux * (dh - .12), py - uy * (dh - .12), z0), P(px + ux * (dh - .12), py + uy * (dh - .12), z0), P(px + ux * (dh - .12), py + uy * (dh - .12), z0 + 6.85), P(px - ux * (dh - .12), py - uy * (dh - .12), z0 + 6.85)], shade(DOOR, lit));
             continue;
           }
           var hw = Math.min(1.5, L / (slots + 1) * 0.34);
-          fillP([P(px - ux * (hw + .25), py - uy * (hw + .25), sill - .25), P(px + ux * (hw + .25), py + uy * (hw + .25), sill - .25), P(px + ux * (hw + .25), py + uy * (hw + .25), head + .25), P(px - ux * (hw + .25), py - uy * (hw + .25), head + .25)], FRAME);
-          var gp = [P(px - ux * hw, py - uy * hw, sill), P(px + ux * hw, py + uy * hw, sill), P(px + ux * hw, py + uy * hw, head), P(px - ux * hw, py - uy * hw, head)];
-          var gy2 = ctx.createLinearGradient(0, gp[0].y, 0, gp[2].y);
-          gy2.addColorStop(0, shade(GLASS_BOT, lit)); gy2.addColorStop(1, shade(GLASS_TOP, lit + .2));
-          ctx.beginPath(); ctx.moveTo(gp[0].x, gp[0].y); for (var m = 1; m < 4; m++)ctx.lineTo(gp[m].x, gp[m].y); ctx.closePath(); ctx.fillStyle = gy2; ctx.fill();
-          var mv1 = P(px, py, sill), mv2 = P(px, py, head);
-          ctx.strokeStyle = 'rgba(244,241,234,0.9)'; ctx.lineWidth = 1;
-          ctx.beginPath(); ctx.moveTo(mv1.x, mv1.y); ctx.lineTo(mv2.x, mv2.y); ctx.stroke();
-          var mh1 = P(px - ux * hw, py - uy * hw, (sill + head) / 2), mh2 = P(px + ux * hw, py + uy * hw, (sill + head) / 2);
-          ctx.beginPath(); ctx.moveTo(mh1.x, mh1.y); ctx.lineTo(mh2.x, mh2.y); ctx.stroke();
+          // recessed opening: dark reveal, then flat glass inset — clean, architectural
+          fillP([P(px - ux * hw, py - uy * hw, sill - .15), P(px + ux * hw, py + uy * hw, sill - .15), P(px + ux * hw, py + uy * hw, head + .15), P(px - ux * hw, py - uy * hw, head + .15)], REVEAL);
+          fillP([P(px - ux * (hw - .12), py - uy * (hw - .12), sill), P(px + ux * (hw - .12), py + uy * (hw - .12), sill), P(px + ux * (hw - .12), py + uy * (hw - .12), head), P(px - ux * (hw - .12), py - uy * (hw - .12), head)], shade(GLASS, lit * 1.02));
         }
       }
       ctx.restore();
@@ -196,22 +189,10 @@
       faces.sort(function (a, b) { return a.d - b.d; });
       faces.forEach(function (f) {
         var lit = f.flat ? 1.0 : (0.72 + 0.5 * Math.max(0, f.nx * lx + f.ny * ly));
-        if (f.tri) { fillP(f.pts, shade(f.base, lit)); strokeP(f.pts, 'rgba(60,50,35,0.4)', 1); }
-        else { grad(f.pts, f.base, lit * 0.92, lit * 1.08, 'rgba(30,34,42,0.65)'); }
+        if (f.tri) { fillP(f.pts, shade(f.base, lit)); strokeP(f.pts, 'rgba(90,92,88,0.45)', 1); }
+        else { grad(f.pts, f.base, lit * 0.92, lit * 1.08, 'rgba(96,98,94,0.55)'); }
       });
       // chimney only on pitched (non-flat) traditional roofs
-      if (ra > 0.6 && roofType !== 'flat' && roofType !== 'shed' && roofType !== 'low-slope' && roofType !== 'lowslope' && g.chimney !== false) {
-        var chx = lerp(minX, maxX, 0.72), chy = lerp(minY, maxY, 0.5), chw = Math.max(0.8, cvirt * 0.045), chTop = zr + 1.5, base = wallTop + rise * 0.5;
-        var cf = [
-          { pts: [P(chx - chw, chy - chw, base), P(chx + chw, chy - chw, base), P(chx + chw, chy - chw, chTop), P(chx - chw, chy - chw, chTop)], n: [0, -1] },
-          { pts: [P(chx + chw, chy - chw, base), P(chx + chw, chy + chw, base), P(chx + chw, chy + chw, chTop), P(chx + chw, chy - chw, chTop)], n: [1, 0] },
-          { pts: [P(chx - chw, chy + chw, base), P(chx + chw, chy + chw, base), P(chx + chw, chy + chw, chTop), P(chx - chw, chy + chw, chTop)], n: [0, 1] }
-        ];
-        cf.forEach(function (f) { f.d = f.pts.reduce(function (s2, p) { return s2 + p.d; }, 0) / 4; });
-        cf.sort(function (a, b) { return a.d - b.d; });
-        cf.forEach(function (f) { var lit = 0.7 + 0.5 * Math.max(0, f.n[0] * lx + f.n[1] * ly); fillP(f.pts, shade(CHIM, lit)); strokeP(f.pts, 'rgba(40,25,18,0.5)', 1); });
-        fillP([P(chx - chw - .3, chy - chw - .3, chTop), P(chx + chw + .3, chy - chw - .3, chTop), P(chx + chw + .3, chy + chw + .3, chTop), P(chx - chw - .3, chy + chw + .3, chTop)], shade(CHIM, 1.15));
-      }
     }
   }
   root.OrchaHouse3D = { render: render, shade: shade };
