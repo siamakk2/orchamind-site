@@ -129,6 +129,14 @@
     }
     var mainIdx = 0, mainArea = -1;
     solids.forEach(function (s2, i2) { var a2 = (s2.x1 - s2.x0) * (s2.y1 - s2.y0); if (a2 > mainArea) { mainArea = a2; mainIdx = i2; } });
+    // Height-semantics safety net: a clerestory/raised volume reported SHORTER than
+    // the main volume is a delta, not an absolute height - reinterpret it as such.
+    solids.forEach(function (s2, i2) {
+      if (i2 === mainIdx) return;
+      if (s2.glazing === 'clerestory' && s2.top <= solids[mainIdx].top) {
+        s2.top = Math.min(40, solids[mainIdx].top + Math.max(1.5, s2.top - 0));
+      }
+    });
 
     function drawGlassStrip(x0, y0, x1, y1, sillZ, headZ, lit, panels) {
       var dxx = x1 - x0, dyy = y1 - y0, Ls = Math.hypot(dxx, dyy), uxs = dxx / Ls, uys = dyy / Ls;
