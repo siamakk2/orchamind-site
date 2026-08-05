@@ -10,6 +10,14 @@
     f = Math.max(0.28, Math.min(1.32, f));
     return 'rgb(' + Math.min(255, r * f | 0) + ',' + Math.min(255, g * f | 0) + ',' + Math.min(255, b * f | 0) + ')';
   }
+  function roofN(s) {
+    s = String(s || '').toLowerCase();
+    if (s.indexOf('flat') >= 0) return 'flat';
+    if (s.indexOf('shed') >= 0 || s.indexOf('slope') >= 0 || s.indexOf('mono') >= 0 || s.indexOf('step') >= 0) return 'low-slope';
+    if (s.indexOf('hip') >= 0) return 'hip';
+    if (s.indexOf('gab') >= 0) return 'gable';
+    return s ? 'flat' : 'gable';
+  }
   var WALL = '#F6F3ED', ROOF = '#ABA396', GABLE = '#EFEBE2',
       GLASS = '#7E93A8', REVEAL = 'rgba(52,60,72,0.55)',
       DOOR = '#736A5F', GROUND = '#E7E9E1';
@@ -50,7 +58,7 @@
         if (!plausible(v.x, v.y, v.x + v.w, v.y + v.h)) return;
         solids.push({ x0: v.x, y0: v.y, x1: v.x + v.w, y1: v.y + v.h,
           top: Math.max(6, Math.min(40, v.heightFt || wallTop)),
-          roof: (v.roof || g.roof || 'flat'), glazing: v.glazing || null, name: v.name || '' });
+          roof: roofN(v.roof || g.roof || 'flat'), glazing: v.glazing || null, name: v.name || '' });
       });
     }
     var porches = [];
@@ -117,7 +125,7 @@
     if (!solids.length) {
       var rb = { x0: 1e9, y0: 1e9, x1: -1e9, y1: -1e9 };
       rooms.forEach(function (r) { rb.x0 = Math.min(rb.x0, r.x); rb.y0 = Math.min(rb.y0, r.y); rb.x1 = Math.max(rb.x1, r.x + r.w); rb.y1 = Math.max(rb.y1, r.y + r.h); });
-      solids.push({ x0: rb.x0, y0: rb.y0, x1: rb.x1, y1: rb.y1, top: wallTop, roof: (g.roof || 'gable'), glazing: null, name: 'main' });
+      solids.push({ x0: rb.x0, y0: rb.y0, x1: rb.x1, y1: rb.y1, top: wallTop, roof: roofN(g.roof || 'gable'), glazing: null, name: 'main' });
     }
     var mainIdx = 0, mainArea = -1;
     solids.forEach(function (s2, i2) { var a2 = (s2.x1 - s2.x0) * (s2.y1 - s2.y0); if (a2 > mainArea) { mainArea = a2; mainIdx = i2; } });

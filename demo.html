@@ -731,7 +731,7 @@ button:active, .btn:active, .btn-ghost:active, .tab:active, [role="button"]:acti
 .aicp-form button{background:#2D7FF9;color:#fff;border:none;width:42px;height:42px;border-radius:50%;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
 .aicp-form button svg{width:18px;height:18px;}
 </style>
-<script src="/house3d.js?v=6"></script>
+<script src="/house3d.js?v=7"></script>
 </head>
 <body class="locked">
 <div id="demoBanner" style="position:relative;z-index:1;background:linear-gradient(90deg,#0A1628,#1565C0);color:#fff;padding:10px 16px;display:flex;align-items:center;justify-content:center;gap:16px;flex-wrap:wrap;font-family:'Outfit',sans-serif;font-size:14px;box-shadow:0 2px 12px rgba(0,0,0,0.2);">
@@ -4327,12 +4327,12 @@ function _planExtractSys(){
     +'WORK METHODICALLY. FIRST, inventory: for each file, list to yourself every distinct drawing, view, and table it contains (title block, floor plan, individual elevation views \u2014 one image often holds several \u2014 sections, details, area/window/door/room schedules, general notes). THEN transcribe, one identified item at a time:\n'
     +'1. AREA SCHEDULE: find any printed area table — titles vary by architect: "SQUARE FOOTAGE", "AREA SCHEDULE", "BUILDING AREA", "AREA TABULATION", "GROSS/NET AREA", or a per-level breakdown. Transcribe each row exactly as printed (label + square footage). CRITICAL: conditioned floor area (e.g. "MAIN FLOOR") is separate from covered porches, patios, decks, and garages — transcribe every row, and set totalPrintedSqft to the CONDITIONED floor total only (sum of floor levels), never including porch/patio/garage rows. If no table is printed, use null. READ NUMBERS DIGIT-BY-DIGIT: schedule figures like "1,156" are easy to misread as "156" - re-read every area number twice, and when the drawing also prints the dimensions of that space, cross-check (length × width ≈ printed area); if they disagree by roughly 10×, you dropped a leading digit - re-read it.\n'
     +'2. ROOM SCHEDULE: from the floor plan, list every labeled room with its printed name, printed dimensions if marked, and which level it is on if stated. Transcribe names EXACTLY as printed (e.g. "Master Bedroom", "Bedroom 2", "Office").\n'
-    +'3. BEDROOMS: list the names of rooms that are explicitly labeled as bedrooms. Do not count a den/office/flex room as a bedroom unless the plan labels it one.\n'
+    +'3. BEDROOMS: list the names of rooms that are explicitly labeled as bedrooms. Do not count a den/office/flex room as a bedroom unless the plan labels it one. SEPARATELY, list rooms NOT labeled as bedrooms that could plausibly serve as one (office, den, study, flex, loft, bonus room) as potentialBedrooms — the owner decides, not you.\n'
     +'4. WINDOW & DOOR SCHEDULES: if the plans include printed window/door schedules, transcribe them (mark, size, count).\n'
     +'5. ELEVATIONS: for EACH elevation drawing present, examine it carefully one elevation at a time. First identify the GLAZING STYLE of that face: "punched" (discrete individual windows in solid wall), "window-wall" (continuous floor-to-header glazing bands / storefront-style glass, common in modern homes), or "mixed". Then count the window UNITS visible (for window-walls, count the major glazed panels). Also note whether that face has a CLERESTORY — a separate horizontal band of glazing up high, above the main glazing, typically under a raised roof section — as true/false. State which elevation has the main entry door (that is "front"). Also note the roof form (flat / low-slope / gable / hip) and story height if dimensioned.\n'
     +'6. STORIES: the number of floors, from the area schedule or level names.\n\n'
     +'RULES: transcribe only what is actually printed or drawn. Anything absent or unreadable = null. Never guess. If two sheets disagree, report both in "conflicts".\n\n'
-    +'Return ONLY JSON, no markdown, no commentary: {"areaSchedule":[{"label":"string","sqft":number}]|null,"totalPrintedSqft":number|null,"stories":number|null,"rooms":[{"name":"string","level":"string|null","dims":"string|null"}]|null,"bedrooms":["string"]|null,"windowSchedule":[{"mark":"string","size":"string","count":number}]|null,"elevations":{"present":true|false,"front":{"windows":number,"style":"punched|window-wall|mixed","clerestory":true|false,"door":true},"back":{"windows":number,"style":"punched|window-wall|mixed","clerestory":true|false},"left":{"windows":number,"style":"punched|window-wall|mixed","clerestory":true|false},"right":{"windows":number,"style":"punched|window-wall|mixed","clerestory":true|false}}|null,"roof":"flat|low-slope|gable|hip"|null,"storyHeightFt":number|null,"conflicts":["string"]|null}';
+    +'Return ONLY JSON, no markdown, no commentary: {"areaSchedule":[{"label":"string","sqft":number}]|null,"totalPrintedSqft":number|null,"stories":number|null,"rooms":[{"name":"string","level":"string|null","dims":"string|null"}]|null,"bedrooms":["string"]|null,"potentialBedrooms":["string"]|null,"windowSchedule":[{"mark":"string","size":"string","count":number}]|null,"elevations":{"present":true|false,"front":{"windows":number,"style":"punched|window-wall|mixed","clerestory":true|false,"door":true},"back":{"windows":number,"style":"punched|window-wall|mixed","clerestory":true|false},"left":{"windows":number,"style":"punched|window-wall|mixed","clerestory":true|false},"right":{"windows":number,"style":"punched|window-wall|mixed","clerestory":true|false}}|null,"roof":"flat|low-slope|gable|hip"|null,"storyHeightFt":number|null,"conflicts":["string"]|null}';
 }
 function _planPrepareImage(file,tileBudget,cb,err){
   // Large architectural sheets get TILED into overlapping full-resolution pieces
@@ -4531,7 +4531,7 @@ function _planAnalyzeStaged(){
       var extracted=_estParseJSON(extText);
       var extNote=extracted?('VERIFIED TRANSCRIPTION OF THE PRINTED PLAN DATA (a careful first pass already read these exact sheets — treat this as ground truth and stay consistent with it; if you see a clear transcription error, correct it and say so in "assumptions"):\n'+JSON.stringify(extracted)):'';
       // PASS 2 — the takeoff & estimate, locked to the transcription
-      var blocks2=[{type:"text",text:manifest+(extNote?('\n\n'+extNote):'')}].concat(media).concat([{type:"text",text:'These are the plans for the job.'+(scope?(' Extra context from the contractor: '+scope):'')+' Do the takeoff and draft the estimate. Your totalSqft MUST equal the transcription\u2019s totalPrintedSqft when present; geometry.windows MUST match the transcription\u2019s per-elevation counts and styles when present; bedroom room names MUST come from the transcription. Before you answer, VERIFY your own output: sum of room areas \u00d7 stories vs the printed total, window counts vs the transcription, bedroom list vs the transcription \u2014 fix any mismatch first.'}]);
+      var blocks2=[{type:"text",text:manifest+(extNote?('\n\n'+extNote):'')}].concat(media).concat([{type:"text",text:'These are the plans for the job.'+(scope?(' Extra context from the contractor: '+scope):'')+' Do the takeoff and draft the estimate. Your totalSqft MUST equal the transcription\u2019s totalPrintedSqft when present; geometry.windows MUST match the transcription\u2019s per-elevation counts and styles when present; bedroom room names MUST come from the transcription. If the transcription lists potentialBedrooms, keep the bedroom count at the printed labels BUT add a question like \u201cOffice/Den could serve as a 3rd bedroom (needs closet + egress) \u2014 count it as one?\u201d so the owner decides. geometry.volumes MUST follow the transcription: roof form from its roof field, volume heights from its printed height dimensions (a raised/stepped section is its own taller volume with glazing \u201cclerestory\u201d when the transcription shows a clerestory). Before you answer, VERIFY your own output: sum of room areas \u00d7 stories vs the printed total, window counts vs the transcription, bedroom list vs the transcription, volume heights vs the printed heights \u2014 fix any mismatch first.'}]);
       _planBlocks=blocks2;
       callClaudeBlocks(_planSys(),blocks2,function(text){
         _planThinkStop();if(btn){btn.disabled=false;btn.innerHTML='\u2728 Read plan set &amp; draft estimate';}
@@ -4789,11 +4789,22 @@ function epvSetView(v){
 }
 function _planRenderPrompt(){
   var g=_planGeom||{};
-  var stories=g.stories||1, roof=g.roof||'gable';
+  var stories=g.stories||1;
+  var rs=String(g.roof||'gable').toLowerCase();
+  var roof=rs.indexOf('flat')>=0?'flat':(rs.indexOf('shed')>=0||rs.indexOf('slope')>=0||rs.indexOf('mono')>=0||rs.indexOf('step')>=0)?'low-slope':rs.indexOf('hip')>=0?'hip':'gable';
   var sqft=(g.totalSqft&&g.totalSqft>0)?g.totalSqft:0;
   var scope=(document.getElementById('estAiScope')&&document.getElementById('estAiScope').value||'').trim();
-  var roofWord=roof==='flat'?'flat parapet roof':roof==='low-slope'||roof==='shed'?'shallow mono-pitch shed roof':roof==='hip'?'hipped roof':'gabled roof';
-  return 'Photorealistic architectural exterior rendering of a '+(stories>=2?'two-story':'single-story')+' house with a '+roofWord+
+  var roofWord=roof==='flat'?'flat parapet roof':roof==='low-slope'?'shallow mono-pitch roof with deep overhangs':roof==='hip'?'hipped roof':'gabled roof';
+  // Describe the real massing the takeoff found — volumes, glazing, porches
+  var feats=[];
+  var vols=g.volumes||[];
+  if(vols.some(function(v){return v&&v.glazing==='clerestory';}))feats.push('a raised central roof section with a continuous clerestory window band');
+  if(vols.some(function(v){return v&&v.glazing==='band';})||(g.windows&&Object.keys(g.windows).some(function(k){var w=g.windows[k];return w&&w.style==='window-wall';})))feats.push('floor-to-ceiling window-wall glazing bands');
+  if((g.porches||[]).length)feats.push('a deep covered porch on slender posts running along the house');
+  var storyLine=stories>=2?('a '+(stories>=3?stories+'-story':'two-story')+' house'):
+    'a STRICTLY SINGLE-STORY house — one floor only, a long low horizontal profile, absolutely no second story and no upper-floor windows';
+  return 'Photorealistic architectural exterior rendering of '+storyLine+' with a '+roofWord+
+    (feats.length?(', featuring '+feats.join(', ')):'')+
     (sqft?(', approximately '+Math.round(sqft)+' square feet'):'')+'. '+
     (scope?('Design context: '+scope+'. '):'')+
     'Real estate photography style, three-quarter front angle, neat landscaping and driveway, clear sky, soft daylight, ultra realistic, high detail, no people, no text, no watermark.';
