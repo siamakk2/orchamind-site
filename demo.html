@@ -1993,6 +1993,8 @@ window.DEMO_MODE = true;
 var IS_REAL_APP=false; try{ IS_REAL_APP=((new URLSearchParams(location.search).get('app')==='1')||/^\/app\/?$/.test(location.pathname)); }catch(e){}
 var DEMO_AI_LIMIT = 5; // real AI calls allowed
 var _demoAICount = 0;
+var DEMO_RENDER_LIMIT = 1; // one free photoreal render per demo session — a real taste of the paid feature, cost-capped
+var _demoRenderCount = 0;
 
 var STATUS_LABELS={planning:'Planning',foundation:'Foundation',framing:'Framing',rough:'Rough-In',finishing:'Finishing',inspection:'Inspection',complete:'Complete'};
 
@@ -4674,11 +4676,12 @@ function _planRenderPrompt(){
 }
 function epvRenderReal(){
   var btn=document.getElementById('epvRenderBtn');
-  if(window.DEMO_MODE){
-    btn.textContent='Live render is a paid feature \u2014 call 323-657-7752';
+  if(window.DEMO_MODE && _demoRenderCount>=DEMO_RENDER_LIMIT){
+    btn.textContent='You\u2019ve used your free demo render \u2014 call 323-657-7752 for unlimited';
     btn.disabled=true;
     return;
   }
+  if(window.DEMO_MODE)_demoRenderCount++;
   btn.disabled=true;btn.textContent='Rendering your property\u2026 (~1 min)';
   fetch('/api/render',{method:'POST',headers:{'Content-Type':'application/json'},
     body:JSON.stringify({prompt:_planRenderPrompt(),geometry:_planGeom})
