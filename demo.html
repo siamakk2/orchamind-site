@@ -4461,7 +4461,7 @@ function _planAnalyzeStaged(){
     callClaudeBlocks(_planSys(),blocks,function(text){
       _planThinkStop();if(btn){btn.disabled=false;btn.innerHTML='\u2728 Read plan set &amp; draft estimate';}
       try{_planApply(text,msg);_planStageClear();}catch(e){msg.textContent='Read the plans but could not build the estimate ('+(e.message||'error')+'). Try again or add a short description.';}
-    },fail,6000);
+    },fail,8000);
   }
   staged.forEach(function(s,i){
     if(s.f.type==='application/pdf'){

@@ -77,6 +77,15 @@ module.exports = async function handler(req, res) {
       body: JSON.stringify({ model: 'claude-sonnet-4-6', max_tokens: maxTokens, system: system, messages: messages })
     });
     const data = await r.json();
+    if (media > 0) {
+      // Plan reads are the expensive, failure-prone path — log enough to diagnose from Vercel logs.
+      var _size = 0; try { _size = JSON.stringify(data.content || '').length; } catch (e) {}
+      if (data && data.error) {
+        console.error('[claude] media req FAILED:', media, 'blocks; anthropic error:', (data.error.message || JSON.stringify(data.error)).slice(0, 300));
+      } else {
+        console.log('[claude] media req ok:', media, 'blocks; stop:', data && data.stop_reason, '; content chars:', _size);
+      }
+    }
     return res.status(200).json(data);
   } catch (err) {
     return res.status(200).json({ error: 'Demo AI error: ' + err.message });
