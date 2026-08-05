@@ -107,11 +107,48 @@
       // front = wall with the entry door; back/left/right mapped by wall normal.
       var elev = isFront ? 'front' : (w[5] === 1 ? 'back' : (w[4] === -1 ? 'left' : 'right'));
       var winData = (g.windows && typeof g.windows === 'object') ? g.windows : null;
-      var totalForWall = (winData && typeof winData[elev] === 'number' && isFinite(winData[elev]))
-        ? Math.max(0, Math.min(24, Math.round(winData[elev]))) : null;
+      var raw = winData ? winData[elev] : null;
+      // Accept both shapes: a plain number (older data) or {count, style, clerestory}
+      var wInfo = null;
+      if (typeof raw === 'number' && isFinite(raw)) wInfo = { count: Math.max(0, Math.min(24, Math.round(raw))), style: 'punched', clerestory: false };
+      else if (raw && typeof raw === 'object' && typeof raw.count === 'number' && isFinite(raw.count)) wInfo = { count: Math.max(0, Math.min(24, Math.round(raw.count))), style: raw.style || 'punched', clerestory: !!raw.clerestory };
+      var totalForWall = wInfo ? wInfo.count : null;
+      var isBand = wInfo && (wInfo.style === 'window-wall' || wInfo.style === 'mixed') && wInfo.count > 0;
+      // Continuous glazing band for window-wall / storefront-style elevations —
+      // drawn once per story as a recessed strip with panel divisions, matching
+      // how modern glass homes actually read, instead of scattered punched holes.
+      function drawBand(z0) {
+        var t0 = 0.06, t1 = 0.94, sillB = z0 + 1.2, headB = z0 + storyH - 1.4;
+        var ax = w[0] + ux * L * t0, ay = w[1] + uy * L * t0, bx = w[0] + ux * L * t1, by = w[1] + uy * L * t1;
+        fillP([P(ax, ay, sillB - .15), P(bx, by, sillB - .15), P(bx, by, headB + .15), P(ax, ay, headB + .15)], REVEAL);
+        fillP([P(ax + ux * .12, ay + uy * .12, sillB), P(bx - ux * .12, by - uy * .12, sillB), P(bx - ux * .12, by - uy * .12, headB), P(ax + ux * .12, ay + uy * .12, headB)], shade(GLASS, lit * 1.02));
+        var panels = Math.max(2, Math.min(12, wInfo.count));
+        ctx.strokeStyle = 'rgba(60,68,78,0.5)'; ctx.lineWidth = 1;
+        for (var pi = 1; pi < panels; pi++) {
+          var tt = t0 + (t1 - t0) * pi / panels;
+          var mx1 = P(w[0] + ux * L * tt, w[1] + uy * L * tt, sillB), mx2 = P(w[0] + ux * L * tt, w[1] + uy * L * tt, headB);
+          ctx.beginPath(); ctx.moveTo(mx1.x, mx1.y); ctx.lineTo(mx2.x, mx2.y); ctx.stroke();
+        }
+      }
+      function drawClerestory() {
+        // thin glazing strip just under the roof line — the raised-center band
+        var t0 = 0.14, t1 = 0.86, sillC = wallTop - 1.7, headC = wallTop - 0.35;
+        var ax = w[0] + ux * L * t0, ay = w[1] + uy * L * t0, bx = w[0] + ux * L * t1, by = w[1] + uy * L * t1;
+        fillP([P(ax, ay, sillC - .1), P(bx, by, sillC - .1), P(bx, by, headC + .1), P(ax, ay, headC + .1)], REVEAL);
+        fillP([P(ax + ux * .1, ay + uy * .1, sillC), P(bx - ux * .1, by - uy * .1, sillC), P(bx - ux * .1, by - uy * .1, headC), P(ax + ux * .1, ay + uy * .1, headC)], shade(GLASS, lit * 1.06));
+      }
       for (var st = 0; st < stories; st++) {
         var z0 = st * storyH, sill = z0 + 3, head = z0 + 6.6;
         if (st > 0) { fillP([P(w[0], w[1], z0 - 0.25), P(w[2], w[3], z0 - 0.25), P(w[2], w[3], z0 + 0.25), P(w[0], w[1], z0 + 0.25)], shade('#E4DFD4', lit)); }
+        if (isBand) {
+          drawBand(z0);
+          if (st === 0 && isFront) {
+            // entry door reads through the band as a solid panel
+            var dpx = w[0] + ux * L * 0.5, dpy = w[1] + uy * L * 0.5, ddh = 0.85;
+            fillP([P(dpx - ux * ddh, dpy - uy * ddh, z0), P(dpx + ux * ddh, dpy + uy * ddh, z0), P(dpx + ux * ddh, dpy + uy * ddh, z0 + 7.0), P(dpx - ux * ddh, dpy - uy * ddh, z0 + 7.0)], shade(DOOR, lit));
+          }
+          continue;
+        }
         var perStory;
         if (totalForWall !== null) {
           // distribute the plan's real count across stories, extras on lower floors
@@ -138,6 +175,7 @@
           fillP([P(px - ux * (hw - .12), py - uy * (hw - .12), sill), P(px + ux * (hw - .12), py + uy * (hw - .12), sill), P(px + ux * (hw - .12), py + uy * (hw - .12), head), P(px - ux * (hw - .12), py - uy * (hw - .12), head)], shade(GLASS, lit * 1.02));
         }
       }
+      if (wInfo && wInfo.clerestory) drawClerestory();
       ctx.restore();
     });
 
