@@ -4530,7 +4530,7 @@ function _planAnalyzeStaged(){
       var extracted=_estParseJSON(extText);
       var extNote=extracted?('VERIFIED TRANSCRIPTION OF THE PRINTED PLAN DATA (a careful first pass already read these exact sheets — treat this as ground truth and stay consistent with it; if you see a clear transcription error, correct it and say so in "assumptions"):\n'+JSON.stringify(extracted)):'';
       // PASS 2 — the takeoff & estimate, locked to the transcription
-      var blocks2=[{type:"text",text:manifest+(extNote?('\n\n'+extNote):'')}].concat(media).concat([{type:"text",text:'These are the plans for the job.'+(scope?(' Extra context from the contractor: '+scope):'')+' Do the takeoff and draft the estimate. Your totalSqft MUST equal the transcription\u2019s totalPrintedSqft when present; geometry.windows MUST match the transcription\u2019s per-elevation counts and styles when present; bedroom room names MUST come from the transcription. If the transcription lists potentialBedrooms, keep the bedroom count at the printed labels BUT add a question like \u201cOffice/Den could serve as a 3rd bedroom (needs closet + egress) \u2014 count it as one?\u201d so the owner decides. geometry.volumes MUST follow the transcription: roof form from its roof field, volume heights from its printed height dimensions (a raised/stepped section is its own taller volume with glazing \u201cclerestory\u201d when the transcription shows a clerestory). Before you answer, VERIFY your own output: sum of room areas \u00d7 stories vs the printed total, window counts vs the transcription, bedroom list vs the transcription, volume heights vs the printed heights \u2014 fix any mismatch first.'}]);
+      var blocks2=[{type:"text",text:manifest+(extNote?('\n\n'+extNote):'')}].concat(media).concat([{type:"text",text:'These are the plans for the job.'+(scope?(' Extra context from the contractor: '+scope):'')+' Do the takeoff and draft the estimate. Your totalSqft MUST equal the transcription\u2019s totalPrintedSqft when present; geometry.windows MUST match the transcription\u2019s per-elevation counts and styles when present; bedroom room names MUST come from the transcription. If the transcription lists potentialBedrooms, keep the bedroom count at the printed labels BUT add a question like \u201cOffice/Den could serve as a 3rd bedroom (needs closet + egress) \u2014 count it as one?\u201d so the owner decides. geometry.volumes MUST follow the transcription: roof form from its roof field, volume heights from its printed height dimensions (a raised/stepped section is its own taller volume with glazing \u201cclerestory\u201d when the transcription shows a clerestory). Do your verification INSIDE your thinking (sum of room areas vs the printed total, window counts vs the transcription, bedroom list, volume heights vs printed heights) and fix mismatches there. Your visible output must be EXACTLY ONE JSON object \u2014 no draft version, no commentary, no verification notes, nothing before or after the JSON.'}]);
       _planBlocks=blocks2;
       callClaudeBlocks(_planSys(),blocks2,function(text){
         _planThinkStop();if(btn){btn.disabled=false;btn.innerHTML='\u2728 Read plan set &amp; draft estimate';}
@@ -4910,9 +4910,20 @@ function printProposal(){
 function _estParseJSON(text){
   if(!text)return null;
   var t=text.replace(/```json/gi,'').replace(/```/g,'').trim();
+  // Collect every balanced top-level {...} candidate, tolerant of strings/escapes
+  var cands=[],depth=0,start=-1,inStr=false,esc=false;
+  for(var i=0;i<t.length;i++){
+    var c=t[i];
+    if(inStr){ if(esc)esc=false; else if(c==='\\')esc=true; else if(c==='"')inStr=false; continue; }
+    if(c==='"'){inStr=true;continue;}
+    if(c==='{'){ if(depth===0)start=i; depth++; }
+    else if(c==='}'){ depth--; if(depth===0&&start>=0){cands.push(t.substring(start,i+1));start=-1;} if(depth<0)depth=0; }
+  }
+  // Prefer the LAST parseable candidate (a corrected version supersedes a draft)
+  for(var j=cands.length-1;j>=0;j--){ try{return JSON.parse(cands[j]);}catch(e){} }
   var a=t.indexOf('{');var b=t.lastIndexOf('}');
-  if(a>=0&&b>a){t=t.substring(a,b+1);}
-  try{return JSON.parse(t);}catch(e){return null;}
+  if(a>=0&&b>a){ try{return JSON.parse(t.substring(a,b+1));}catch(e){} }
+  return null;
 }
 
 /* ---- Document delivery: in-page viewer with real PDF download + share (replaces blocked pop-ups) ---- */
