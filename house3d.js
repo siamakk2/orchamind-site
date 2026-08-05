@@ -31,9 +31,25 @@
     var rooms = g.rooms, storyH = g.storyHeight || 9;
     var stories = g.stories || Math.max(1, Math.round((g.wallHeightFt || storyH) / storyH));
     var wallTop = storyH * stories;
+    // --- Volume composition: real buildings are multiple prisms, not one box ---
+    var solids = [];
+    if (g.volumes && g.volumes.length) {
+      g.volumes.slice(0, 4).forEach(function (v) {
+        if (!(v && isFinite(v.x) && isFinite(v.y) && v.w > 0 && v.h > 0)) return;
+        solids.push({ x0: v.x, y0: v.y, x1: v.x + v.w, y1: v.y + v.h,
+          top: Math.max(6, Math.min(40, v.heightFt || wallTop)),
+          roof: (v.roof || g.roof || 'flat'), glazing: v.glazing || null, name: v.name || '' });
+      });
+    }
+    var porches = [];
+    (g.porches || []).slice(0, 3).forEach(function (p) {
+      if (!(p && isFinite(p.x) && isFinite(p.y) && p.w > 0 && p.h > 0)) return;
+      porches.push({ x0: p.x, y0: p.y, x1: p.x + p.w, y1: p.y + p.h, top: Math.max(7, Math.min(16, p.heightFt || 9)) });
+    });
 
     var minX = 1e9, minY = 1e9, maxX = -1e9, maxY = -1e9;
     rooms.forEach(function (r) { minX = Math.min(minX, r.x); minY = Math.min(minY, r.y); maxX = Math.max(maxX, r.x + r.w); maxY = Math.max(maxY, r.y + r.h); });
+    solids.concat(porches).forEach(function (s2) { minX = Math.min(minX, s2.x0); minY = Math.min(minY, s2.y0); maxX = Math.max(maxX, s2.x1); maxY = Math.max(maxY, s2.y1); });
     var Wd = maxX - minX, Dp = maxY - minY, cvirt = Math.max(Wd, Dp) || 1;
     var span = cvirt * 1.9;
     var s = (Math.min(W, H) * 0.92 / span) * zoom;
@@ -84,154 +100,190 @@
 
     var lightAng = theta + 0.7, lx = Math.cos(lightAng), ly = Math.sin(lightAng);
 
-    var ex = [
-      [minX, minY, maxX, minY, 0, -1, 1],
-      [maxX, minY, maxX, maxY, 1, 0, 0],
-      [maxX, maxY, minX, maxY, 0, 1, 0],
-      [minX, maxY, minX, minY, -1, 0, 0]
-    ];
-    var wallFaces = ex.map(function (w) {
-      var nx = w[4], ny = w[5];
-      var lit = 0.86 + 0.38 * Math.max(0, nx * lx + ny * ly);
-      var a = P(w[0], w[1], 0), b = P(w[2], w[3], 0);
-      return { w: w, lit: lit, d: (a.d + b.d) / 2, quad: [a, b, P(w[2], w[3], wt), P(w[0], w[1], wt)] };
-    }).sort(function (p, q) { return p.d - q.d; });
+    // Back-compat: no volumes described -> one solid from the rooms bounding box
+    if (!solids.length) {
+      var rb = { x0: 1e9, y0: 1e9, x1: -1e9, y1: -1e9 };
+      rooms.forEach(function (r) { rb.x0 = Math.min(rb.x0, r.x); rb.y0 = Math.min(rb.y0, r.y); rb.x1 = Math.max(rb.x1, r.x + r.w); rb.y1 = Math.max(rb.y1, r.y + r.h); });
+      solids.push({ x0: rb.x0, y0: rb.y0, x1: rb.x1, y1: rb.y1, top: wallTop, roof: (g.roof || 'gable'), glazing: null, name: 'main' });
+    }
+    var mainIdx = 0, mainArea = -1;
+    solids.forEach(function (s2, i2) { var a2 = (s2.x1 - s2.x0) * (s2.y1 - s2.y0); if (a2 > mainArea) { mainArea = a2; mainIdx = i2; } });
 
-    wallFaces.forEach(function (wf) {
-      var w = wf.w, lit = wf.lit, isFront = w[6];
-      grad(wf.quad, WALL, lit * 0.9, lit * 1.06, 'rgba(90,92,88,0.45)');
-      if (grow < 0.55) return;
-      var wa = Math.min(1, (grow - 0.55) / 0.35); ctx.save(); ctx.globalAlpha = wa;
-      var dxx = w[2] - w[0], dyy = w[3] - w[1], L = Math.hypot(dxx, dyy), ux = dxx / L, uy = dyy / L;
-      // Real window counts from the plan's elevations, when the takeoff read them.
-      // front = wall with the entry door; back/left/right mapped by wall normal.
-      var elev = isFront ? 'front' : (w[5] === 1 ? 'back' : (w[4] === -1 ? 'left' : 'right'));
-      var winData = (g.windows && typeof g.windows === 'object') ? g.windows : null;
-      var raw = winData ? winData[elev] : null;
-      // Accept both shapes: a plain number (older data) or {count, style, clerestory}
-      var wInfo = null;
-      if (typeof raw === 'number' && isFinite(raw)) wInfo = { count: Math.max(0, Math.min(24, Math.round(raw))), style: 'punched', clerestory: false };
-      else if (raw && typeof raw === 'object' && typeof raw.count === 'number' && isFinite(raw.count)) wInfo = { count: Math.max(0, Math.min(24, Math.round(raw.count))), style: raw.style || 'punched', clerestory: !!raw.clerestory };
-      var totalForWall = wInfo ? wInfo.count : null;
-      var isBand = wInfo && (wInfo.style === 'window-wall' || wInfo.style === 'mixed') && wInfo.count > 0;
-      // Continuous glazing band for window-wall / storefront-style elevations —
-      // drawn once per story as a recessed strip with panel divisions, matching
-      // how modern glass homes actually read, instead of scattered punched holes.
-      function drawBand(z0) {
-        var t0 = 0.06, t1 = 0.94, sillB = z0 + 1.2, headB = z0 + storyH - 1.4;
-        var ax = w[0] + ux * L * t0, ay = w[1] + uy * L * t0, bx = w[0] + ux * L * t1, by = w[1] + uy * L * t1;
-        fillP([P(ax, ay, sillB - .15), P(bx, by, sillB - .15), P(bx, by, headB + .15), P(ax, ay, headB + .15)], REVEAL);
-        fillP([P(ax + ux * .12, ay + uy * .12, sillB), P(bx - ux * .12, by - uy * .12, sillB), P(bx - ux * .12, by - uy * .12, headB), P(ax + ux * .12, ay + uy * .12, headB)], shade(GLASS, lit * 1.02));
-        var panels = Math.max(2, Math.min(12, wInfo.count));
+    function drawGlassStrip(x0, y0, x1, y1, sillZ, headZ, lit, panels) {
+      var dxx = x1 - x0, dyy = y1 - y0, Ls = Math.hypot(dxx, dyy), uxs = dxx / Ls, uys = dyy / Ls;
+      fillP([P(x0, y0, sillZ - .15), P(x1, y1, sillZ - .15), P(x1, y1, headZ + .15), P(x0, y0, headZ + .15)], REVEAL);
+      fillP([P(x0 + uxs * .12, y0 + uys * .12, sillZ), P(x1 - uxs * .12, y1 - uys * .12, sillZ), P(x1 - uxs * .12, y1 - uys * .12, headZ), P(x0 + uxs * .12, y0 + uys * .12, headZ)], shade(GLASS, lit * 1.03));
+      if (panels > 1) {
         ctx.strokeStyle = 'rgba(60,68,78,0.5)'; ctx.lineWidth = 1;
         for (var pi = 1; pi < panels; pi++) {
-          var tt = t0 + (t1 - t0) * pi / panels;
-          var mx1 = P(w[0] + ux * L * tt, w[1] + uy * L * tt, sillB), mx2 = P(w[0] + ux * L * tt, w[1] + uy * L * tt, headB);
-          ctx.beginPath(); ctx.moveTo(mx1.x, mx1.y); ctx.lineTo(mx2.x, mx2.y); ctx.stroke();
+          var tt = pi / panels;
+          var m1 = P(x0 + dxx * tt, y0 + dyy * tt, sillZ), m2 = P(x0 + dxx * tt, y0 + dyy * tt, headZ);
+          ctx.beginPath(); ctx.moveTo(m1.x, m1.y); ctx.lineTo(m2.x, m2.y); ctx.stroke();
         }
       }
-      function drawClerestory() {
-        // thin glazing strip just under the roof line — the raised-center band
-        var t0 = 0.14, t1 = 0.86, sillC = wallTop - 1.7, headC = wallTop - 0.35;
-        var ax = w[0] + ux * L * t0, ay = w[1] + uy * L * t0, bx = w[0] + ux * L * t1, by = w[1] + uy * L * t1;
-        fillP([P(ax, ay, sillC - .1), P(bx, by, sillC - .1), P(bx, by, headC + .1), P(ax, ay, headC + .1)], REVEAL);
-        fillP([P(ax + ux * .1, ay + uy * .1, sillC), P(bx - ux * .1, by - uy * .1, sillC), P(bx - ux * .1, by - uy * .1, headC), P(ax + ux * .1, ay + uy * .1, headC)], shade(GLASS, lit * 1.06));
-      }
-      for (var st = 0; st < stories; st++) {
-        var z0 = st * storyH, sill = z0 + 3, head = z0 + 6.6;
-        if (st > 0) { fillP([P(w[0], w[1], z0 - 0.25), P(w[2], w[3], z0 - 0.25), P(w[2], w[3], z0 + 0.25), P(w[0], w[1], z0 + 0.25)], shade('#E4DFD4', lit)); }
-        if (isBand) {
-          drawBand(z0);
-          if (st === 0 && isFront) {
-            // entry door reads through the band as a solid panel
-            var dpx = w[0] + ux * L * 0.5, dpy = w[1] + uy * L * 0.5, ddh = 0.85;
-            fillP([P(dpx - ux * ddh, dpy - uy * ddh, z0), P(dpx + ux * ddh, dpy + uy * ddh, z0), P(dpx + ux * ddh, dpy + uy * ddh, z0 + 7.0), P(dpx - ux * ddh, dpy - uy * ddh, z0 + 7.0)], shade(DOOR, lit));
+    }
+
+    function drawSolid(s2, isMain) {
+      var sx0 = s2.x0, sy0 = s2.y0, sx1 = s2.x1, sy1 = s2.y1;
+      var topS = s2.top, wtS = topS * grow;
+      var storiesS = Math.max(1, Math.min(3, Math.round(topS / storyH)));
+      var ex2 = [
+        [sx0, sy0, sx1, sy0, 0, -1, 1],
+        [sx1, sy0, sx1, sy1, 1, 0, 0],
+        [sx1, sy1, sx0, sy1, 0, 1, 0],
+        [sx0, sy1, sx0, sy0, -1, 0, 0]
+      ];
+      var wallFaces = ex2.map(function (w) {
+        var a = P(w[0], w[1], 0), b = P(w[2], w[3], 0);
+        return { w: w, lit: 0.86 + 0.38 * Math.max(0, w[4] * lx + w[5] * ly), d: (a.d + b.d) / 2, quad: [a, b, P(w[2], w[3], wtS), P(w[0], w[1], wtS)] };
+      }).sort(function (p, q) { return p.d - q.d; });
+
+      wallFaces.forEach(function (wf) {
+        var w = wf.w, lit = wf.lit, isFront = w[6];
+        grad(wf.quad, WALL, lit * 0.9, lit * 1.06, 'rgba(90,92,88,0.45)');
+        if (grow < 0.55) return;
+        var wa = Math.min(1, (grow - 0.55) / 0.35); ctx.save(); ctx.globalAlpha = wa;
+        var dxx = w[2] - w[0], dyy = w[3] - w[1], L = Math.hypot(dxx, dyy), ux = dxx / L, uy = dyy / L;
+        var elev = isFront ? 'front' : (w[5] === 1 ? 'back' : (w[4] === -1 ? 'left' : 'right'));
+
+        var mode = null, count = 0, cler = false;
+        if (s2.glazing === 'band') { mode = 'band'; count = Math.max(2, Math.round(L / 8)); }
+        else if (s2.glazing === 'clerestory') { mode = 'clerestory'; }
+        else if (s2.glazing === 'punched') { mode = 'punched'; count = Math.max(1, Math.round(L / 14)); }
+        else if (s2.glazing === 'none') { mode = null; }
+        else if (isMain && g.windows && typeof g.windows === 'object') {
+          var raw = g.windows[elev];
+          if (typeof raw === 'number' && isFinite(raw)) { mode = 'punched'; count = Math.max(0, Math.min(24, Math.round(raw))); }
+          else if (raw && typeof raw === 'object' && typeof raw.count === 'number') {
+            count = Math.max(0, Math.min(24, Math.round(raw.count)));
+            mode = (raw.style === 'window-wall' || raw.style === 'mixed') && count > 0 ? 'band' : (count > 0 ? 'punched' : null);
+            cler = !!raw.clerestory;
           }
-          continue;
         }
-        var perStory;
-        if (totalForWall !== null) {
-          // distribute the plan's real count across stories, extras on lower floors
-          var base = Math.floor(totalForWall / stories), rem = totalForWall % stories;
-          perStory = base + (st < rem ? 1 : 0);
-        } else {
-          // no elevation data — draw NO windows rather than inventing them;
-          // a clean massing model is honest, fabricated openings are not
-          perStory = 0;
-        }
-        var slots = perStory, doorSlot = -1;
-        if (st === 0 && isFront) { slots = perStory + 1; doorSlot = Math.ceil(slots / 2); }
-        for (var k = 1; k <= slots; k++) {
-          var px = w[0] + ux * (L * k / (slots + 1)), py = w[1] + uy * (L * k / (slots + 1));
-          if (k === doorSlot) {
-            var dh = 0.85;
-            fillP([P(px - ux * dh, py - uy * dh, z0), P(px + ux * dh, py + uy * dh, z0), P(px + ux * dh, py + uy * dh, z0 + 7.0), P(px - ux * dh, py - uy * dh, z0 + 7.0)], REVEAL);
-            fillP([P(px - ux * (dh - .12), py - uy * (dh - .12), z0), P(px + ux * (dh - .12), py + uy * (dh - .12), z0), P(px + ux * (dh - .12), py + uy * (dh - .12), z0 + 6.85), P(px - ux * (dh - .12), py - uy * (dh - .12), z0 + 6.85)], shade(DOOR, lit));
+
+        for (var st = 0; st < storiesS; st++) {
+          var z0 = st * storyH;
+          if (st > 0) { fillP([P(w[0], w[1], z0 - 0.25), P(w[2], w[3], z0 - 0.25), P(w[2], w[3], z0 + 0.25), P(w[0], w[1], z0 + 0.25)], shade('#E4DFD4', lit)); }
+          if (mode === 'band') {
+            drawGlassStrip(w[0] + ux * L * 0.06, w[1] + uy * L * 0.06, w[0] + ux * L * 0.94, w[1] + uy * L * 0.94,
+              z0 + 1.2, Math.min(z0 + storyH - 1.4, wtS - 0.6), lit, Math.max(2, Math.min(12, count)));
+            if (st === 0 && isFront && isMain) {
+              var dpx = w[0] + ux * L * 0.5, dpy = w[1] + uy * L * 0.5, ddh = 0.85;
+              fillP([P(dpx - ux * ddh, dpy - uy * ddh, z0), P(dpx + ux * ddh, dpy + uy * ddh, z0), P(dpx + ux * ddh, dpy + uy * ddh, z0 + 7.0), P(dpx - ux * ddh, dpy - uy * ddh, z0 + 7.0)], shade(DOOR, lit));
+            }
             continue;
           }
-          var hw = Math.min(1.5, L / (slots + 1) * 0.34);
-          // recessed opening: dark reveal, then flat glass inset — clean, architectural
-          fillP([P(px - ux * hw, py - uy * hw, sill - .15), P(px + ux * hw, py + uy * hw, sill - .15), P(px + ux * hw, py + uy * hw, head + .15), P(px - ux * hw, py - uy * hw, head + .15)], REVEAL);
-          fillP([P(px - ux * (hw - .12), py - uy * (hw - .12), sill), P(px + ux * (hw - .12), py + uy * (hw - .12), sill), P(px + ux * (hw - .12), py + uy * (hw - .12), head), P(px - ux * (hw - .12), py - uy * (hw - .12), head)], shade(GLASS, lit * 1.02));
+          if (mode === 'clerestory') continue;
+          if (mode === 'punched' && count > 0) {
+            var base = Math.floor(count / storiesS), rem = count % storiesS;
+            var perStory = base + (st < rem ? 1 : 0);
+            var slots = perStory, doorSlot = -1;
+            if (st === 0 && isFront && isMain) { slots = perStory + 1; doorSlot = Math.ceil(slots / 2); }
+            for (var k = 1; k <= slots; k++) {
+              var px = w[0] + ux * (L * k / (slots + 1)), py = w[1] + uy * (L * k / (slots + 1));
+              if (k === doorSlot) {
+                var dh = 0.85;
+                fillP([P(px - ux * dh, py - uy * dh, z0), P(px + ux * dh, py + uy * dh, z0), P(px + ux * dh, py + uy * dh, z0 + 7.0), P(px - ux * dh, py - uy * dh, z0 + 7.0)], REVEAL);
+                fillP([P(px - ux * (dh - .12), py - uy * (dh - .12), z0), P(px + ux * (dh - .12), py + uy * (dh - .12), z0), P(px + ux * (dh - .12), py + uy * (dh - .12), z0 + 6.85), P(px - ux * (dh - .12), py - uy * (dh - .12), z0 + 6.85)], shade(DOOR, lit));
+                continue;
+              }
+              var hw = Math.min(1.5, L / (slots + 1) * 0.34), sill = z0 + 3, head = Math.min(z0 + 6.6, wtS - 0.8);
+              fillP([P(px - ux * hw, py - uy * hw, sill - .15), P(px + ux * hw, py + uy * hw, sill - .15), P(px + ux * hw, py + uy * hw, head + .15), P(px - ux * hw, py - uy * hw, head + .15)], REVEAL);
+              fillP([P(px - ux * (hw - .12), py - uy * (hw - .12), sill), P(px + ux * (hw - .12), py + uy * (hw - .12), sill), P(px + ux * (hw - .12), py + uy * (hw - .12), head), P(px - ux * (hw - .12), py - uy * (hw - .12), head)], shade(GLASS, lit * 1.02));
+            }
+          } else if (st === 0 && isFront && isMain && mode === null) {
+            var dpx2 = w[0] + ux * L * 0.5, dpy2 = w[1] + uy * L * 0.5, ddh2 = 0.85;
+            fillP([P(dpx2 - ux * ddh2, dpy2 - uy * ddh2, z0), P(dpx2 + ux * ddh2, dpy2 + uy * ddh2, z0), P(dpx2 + ux * ddh2, dpy2 + uy * ddh2, z0 + 7.0), P(dpx2 - ux * ddh2, dpy2 - uy * ddh2, z0 + 7.0)], shade(DOOR, lit));
+          }
         }
-      }
-      if (wInfo && wInfo.clerestory) drawClerestory();
-      ctx.restore();
-    });
-
-    if (grow > 0.5) {
-      var ra = Math.min(1, (grow - 0.5) / 0.4);
-      var roofType = (g.roof || 'gable').toLowerCase();
-      var pitchMul = roofType === 'flat' ? 0.06 : (roofType === 'low-slope' || roofType === 'shed' || roofType === 'lowslope') ? 0.16 : 0.5;
-      var rise = Math.max(roofType === 'flat' ? 0.6 : 1.5, Math.min(Wd, Dp) * pitchMul) * ra, zr = wallTop + rise;
-      var lx0 = minX - o1, lx1 = maxX + o1, ly0 = minY - o1, ly1 = maxY + o1, faces = [];
-      var flatCol = '#5A6472';
-      if (roofType === 'flat') {
-        // single flat slab with a slight parapet edge
-        faces.push({ pts: [P(lx0, ly0, wallTop), P(lx1, ly0, wallTop), P(lx1, ly1, wallTop), P(lx0, ly1, wallTop)], nx: 0, ny: 0, base: flatCol, flat: 1 });
-      } else if (roofType === 'shed' || roofType === 'low-slope' || roofType === 'lowslope') {
-        // mono-pitch: high edge on the -Y (front) side, sloping down to +Y
-        faces.push({ pts: [P(lx0, ly0, zr), P(lx1, ly0, zr), P(lx1, ly1, wallTop), P(lx0, ly1, wallTop)], nx: 0, ny: -0.3, base: flatCol, flat: 1 });
-        // side triangles filling the wedge
-        faces.push({ tri: 1, pts: [P(minX, ly0, wallTop), P(minX, ly0, zr), P(minX, ly1, wallTop)], nx: -1, ny: 0, base: GABLE });
-        faces.push({ tri: 1, pts: [P(maxX, ly0, wallTop), P(maxX, ly0, zr), P(maxX, ly1, wallTop)], nx: 1, ny: 0, base: GABLE });
-      } else if (roofType === 'hip') {
-        var ins = Math.min(Wd, Dp) / 2;
-        if (Wd >= Dp) {
-          var my = (minY + maxY) / 2, r1 = [lx0 + ins, my], r2 = [lx1 - ins, my];
-          faces.push({ pts: [P(lx0, ly0, wallTop), P(lx1, ly0, wallTop), P(r2[0], r2[1], zr), P(r1[0], r1[1], zr)], nx: 0, ny: -1, base: ROOF });
-          faces.push({ pts: [P(lx0, ly1, wallTop), P(lx1, ly1, wallTop), P(r2[0], r2[1], zr), P(r1[0], r1[1], zr)], nx: 0, ny: 1, base: ROOF });
-          faces.push({ tri: 1, pts: [P(lx0, ly0, wallTop), P(lx0, ly1, wallTop), P(r1[0], r1[1], zr)], nx: -1, ny: 0, base: ROOF });
-          faces.push({ tri: 1, pts: [P(lx1, ly0, wallTop), P(lx1, ly1, wallTop), P(r2[0], r2[1], zr)], nx: 1, ny: 0, base: ROOF });
-        } else {
-          var mx = (minX + maxX) / 2, ra1 = [mx, ly0 + ins], ra2 = [mx, ly1 - ins];
-          faces.push({ pts: [P(lx0, ly0, wallTop), P(lx0, ly1, wallTop), P(ra2[0], ra2[1], zr), P(ra1[0], ra1[1], zr)], nx: -1, ny: 0, base: ROOF });
-          faces.push({ pts: [P(lx1, ly0, wallTop), P(lx1, ly1, wallTop), P(ra2[0], ra2[1], zr), P(ra1[0], ra1[1], zr)], nx: 1, ny: 0, base: ROOF });
-          faces.push({ tri: 1, pts: [P(lx0, ly0, wallTop), P(lx1, ly0, wallTop), P(ra1[0], ra1[1], zr)], nx: 0, ny: -1, base: ROOF });
-          faces.push({ tri: 1, pts: [P(lx0, ly1, wallTop), P(lx1, ly1, wallTop), P(ra2[0], ra2[1], zr)], nx: 0, ny: 1, base: ROOF });
+        if (mode === 'clerestory' || cler) {
+          drawGlassStrip(w[0] + ux * L * 0.1, w[1] + uy * L * 0.1, w[0] + ux * L * 0.9, w[1] + uy * L * 0.9,
+            wtS - 1.7, wtS - 0.35, lit, Math.max(4, Math.round(L / 6)));
         }
-      } else if (Wd >= Dp) {
-        var midY = (minY + maxY) / 2;
-        faces.push({ tri: 1, pts: [P(minX, minY, wallTop), P(minX, maxY, wallTop), P(minX, midY, zr)], nx: -1, ny: 0, base: GABLE });
-        faces.push({ tri: 1, pts: [P(maxX, minY, wallTop), P(maxX, maxY, wallTop), P(maxX, midY, zr)], nx: 1, ny: 0, base: GABLE });
-        faces.push({ pts: [P(lx0, ly0, wallTop), P(lx1, ly0, wallTop), P(lx1, midY, zr), P(lx0, midY, zr)], nx: 0, ny: -1, base: ROOF });
-        faces.push({ pts: [P(lx0, ly1, wallTop), P(lx1, ly1, wallTop), P(lx1, midY, zr), P(lx0, midY, zr)], nx: 0, ny: 1, base: ROOF });
-      } else {
-        var midX = (minX + maxX) / 2;
-        faces.push({ tri: 1, pts: [P(minX, minY, wallTop), P(maxX, minY, wallTop), P(midX, minY, zr)], nx: 0, ny: -1, base: GABLE });
-        faces.push({ tri: 1, pts: [P(minX, maxY, wallTop), P(maxX, maxY, wallTop), P(midX, maxY, zr)], nx: 0, ny: 1, base: GABLE });
-        faces.push({ pts: [P(lx0, ly0, wallTop), P(lx0, ly1, wallTop), P(midX, ly1, zr), P(midX, ly0, zr)], nx: -1, ny: 0, base: ROOF });
-        faces.push({ pts: [P(lx1, ly0, wallTop), P(lx1, ly1, wallTop), P(midX, ly1, zr), P(midX, ly0, zr)], nx: 1, ny: 0, base: ROOF });
-      }
-      faces.forEach(function (f) { f.d = f.pts.reduce(function (s2, p) { return s2 + p.d; }, 0) / f.pts.length; });
-      faces.sort(function (a, b) { return a.d - b.d; });
-      faces.forEach(function (f) {
-        var lit = f.flat ? 1.0 : (0.72 + 0.5 * Math.max(0, f.nx * lx + f.ny * ly));
-        if (f.tri) { fillP(f.pts, shade(f.base, lit)); strokeP(f.pts, 'rgba(90,92,88,0.45)', 1); }
-        else { grad(f.pts, f.base, lit * 0.92, lit * 1.08, 'rgba(96,98,94,0.55)'); }
+        ctx.restore();
       });
-      // chimney only on pitched (non-flat) traditional roofs
+
+      if (grow > 0.5) {
+        var ra = Math.min(1, (grow - 0.5) / 0.4);
+        var roofType = (s2.roof || 'flat').toLowerCase();
+        var Wd2 = sx1 - sx0, Dp2 = sy1 - sy0;
+        var o2 = Math.max(0.7, Math.min(Wd2, Dp2) * 0.05);
+        var pitchMul = roofType === 'flat' ? 0.06 : (roofType === 'low-slope' || roofType === 'shed' || roofType === 'lowslope') ? 0.16 : 0.5;
+        var rise = Math.max(roofType === 'flat' ? 0.5 : 1.2, Math.min(Wd2, Dp2) * pitchMul) * ra, zr = topS + rise;
+        var lx0 = sx0 - o2, lx1 = sx1 + o2, ly0 = sy0 - o2, ly1 = sy1 + o2, faces = [];
+        var flatCol = '#9C958A';
+        if (roofType === 'flat') {
+          faces.push({ pts: [P(lx0, ly0, topS), P(lx1, ly0, topS), P(lx1, ly1, topS), P(lx0, ly1, topS)], nx: 0, ny: 0, base: flatCol, flat: 1 });
+        } else if (roofType === 'shed' || roofType === 'low-slope' || roofType === 'lowslope') {
+          faces.push({ pts: [P(lx0, ly0, zr), P(lx1, ly0, zr), P(lx1, ly1, topS), P(lx0, ly1, topS)], nx: 0, ny: -0.3, base: flatCol, flat: 1 });
+          faces.push({ tri: 1, pts: [P(sx0, ly0, topS), P(sx0, ly0, zr), P(sx0, ly1, topS)], nx: -1, ny: 0, base: GABLE });
+          faces.push({ tri: 1, pts: [P(sx1, ly0, topS), P(sx1, ly0, zr), P(sx1, ly1, topS)], nx: 1, ny: 0, base: GABLE });
+        } else if (roofType === 'hip') {
+          var ins = Math.min(Wd2, Dp2) / 2;
+          if (Wd2 >= Dp2) {
+            var my = (sy0 + sy1) / 2, r1 = [lx0 + ins, my], r2 = [lx1 - ins, my];
+            faces.push({ pts: [P(lx0, ly0, topS), P(lx1, ly0, topS), P(r2[0], r2[1], zr), P(r1[0], r1[1], zr)], nx: 0, ny: -1, base: ROOF });
+            faces.push({ pts: [P(lx0, ly1, topS), P(lx1, ly1, topS), P(r2[0], r2[1], zr), P(r1[0], r1[1], zr)], nx: 0, ny: 1, base: ROOF });
+            faces.push({ tri: 1, pts: [P(lx0, ly0, topS), P(lx0, ly1, topS), P(r1[0], r1[1], zr)], nx: -1, ny: 0, base: ROOF });
+            faces.push({ tri: 1, pts: [P(lx1, ly0, topS), P(lx1, ly1, topS), P(r2[0], r2[1], zr)], nx: 1, ny: 0, base: ROOF });
+          } else {
+            var mx = (sx0 + sx1) / 2, ra1 = [mx, ly0 + ins], ra2 = [mx, ly1 - ins];
+            faces.push({ pts: [P(lx0, ly0, topS), P(lx0, ly1, topS), P(ra2[0], ra2[1], zr), P(ra1[0], ra1[1], zr)], nx: -1, ny: 0, base: ROOF });
+            faces.push({ pts: [P(lx1, ly0, topS), P(lx1, ly1, topS), P(ra2[0], ra2[1], zr), P(ra1[0], ra1[1], zr)], nx: 1, ny: 0, base: ROOF });
+            faces.push({ tri: 1, pts: [P(lx0, ly0, topS), P(lx1, ly0, topS), P(ra1[0], ra1[1], zr)], nx: 0, ny: -1, base: ROOF });
+            faces.push({ tri: 1, pts: [P(lx0, ly1, topS), P(lx1, ly1, topS), P(ra2[0], ra2[1], zr)], nx: 0, ny: 1, base: ROOF });
+          }
+        } else if (Wd2 >= Dp2) {
+          var midY = (sy0 + sy1) / 2;
+          faces.push({ tri: 1, pts: [P(sx0, sy0, topS), P(sx0, sy1, topS), P(sx0, midY, zr)], nx: -1, ny: 0, base: GABLE });
+          faces.push({ tri: 1, pts: [P(sx1, sy0, topS), P(sx1, sy1, topS), P(sx1, midY, zr)], nx: 1, ny: 0, base: GABLE });
+          faces.push({ pts: [P(lx0, ly0, topS), P(lx1, ly0, topS), P(lx1, midY, zr), P(lx0, midY, zr)], nx: 0, ny: -1, base: ROOF });
+          faces.push({ pts: [P(lx0, ly1, topS), P(lx1, ly1, topS), P(lx1, midY, zr), P(lx0, midY, zr)], nx: 0, ny: 1, base: ROOF });
+        } else {
+          var midX = (sx0 + sx1) / 2;
+          faces.push({ tri: 1, pts: [P(sx0, sy0, topS), P(sx1, sy0, topS), P(midX, sy0, zr)], nx: 0, ny: -1, base: GABLE });
+          faces.push({ tri: 1, pts: [P(sx0, sy1, topS), P(sx1, sy1, topS), P(midX, sy1, zr)], nx: 0, ny: 1, base: GABLE });
+          faces.push({ pts: [P(lx0, ly0, topS), P(lx0, ly1, topS), P(midX, ly1, zr), P(midX, ly0, zr)], nx: -1, ny: 0, base: ROOF });
+          faces.push({ pts: [P(lx1, ly0, topS), P(lx1, ly1, topS), P(midX, ly1, zr), P(midX, ly0, zr)], nx: 1, ny: 0, base: ROOF });
+        }
+        faces.forEach(function (f) { f.d = f.pts.reduce(function (s3, p) { return s3 + p.d; }, 0) / f.pts.length; });
+        faces.sort(function (a, b) { return a.d - b.d; });
+        faces.forEach(function (f) {
+          var lit = f.flat ? 1.0 : (0.72 + 0.5 * Math.max(0, f.nx * lx + f.ny * ly));
+          if (f.tri) { fillP(f.pts, shade(f.base, lit)); strokeP(f.pts, 'rgba(90,92,88,0.45)', 1); }
+          else { grad(f.pts, f.base, lit * 0.92, lit * 1.08, 'rgba(96,98,94,0.55)'); }
+        });
+      }
     }
+
+    function drawPorch(p2) {
+      if (grow < 0.6) return;
+      var pa = Math.min(1, (grow - 0.6) / 0.35);
+      var topP = p2.top * pa;
+      var spanX = p2.x1 - p2.x0, spanY = p2.y1 - p2.y0;
+      var nx2 = Math.max(2, Math.round(spanX / 10) + 1), ny2 = Math.max(2, Math.round(spanY / 12) + 1);
+      var posts = [];
+      for (var ix = 0; ix < nx2; ix++) for (var iy = 0; iy < ny2; iy++) {
+        if (ix > 0 && ix < nx2 - 1 && iy > 0 && iy < ny2 - 1) continue;
+        posts.push([p2.x0 + spanX * ix / (nx2 - 1), p2.y0 + spanY * iy / (ny2 - 1)]);
+      }
+      posts.sort(function (a, b) { return P(a[0], a[1], 0).d - P(b[0], b[1], 0).d; });
+      posts.forEach(function (pt) {
+        var pw = 0.32;
+        fillP([P(pt[0] - pw, pt[1], 0), P(pt[0] + pw, pt[1], 0), P(pt[0] + pw, pt[1], topP), P(pt[0] - pw, pt[1], topP)], shade('#CFC8BC', 0.95));
+      });
+      var slab = [P(p2.x0, p2.y0, topP), P(p2.x1, p2.y0, topP), P(p2.x1, p2.y1, topP), P(p2.x0, p2.y1, topP)];
+      fillP(slab, '#A8A296'); strokeP(slab, 'rgba(90,92,88,0.5)', 1);
+      fillP([P(p2.x0, p2.y1, topP), P(p2.x1, p2.y1, topP), P(p2.x1, p2.y1, topP - 0.5), P(p2.x0, p2.y1, topP - 0.5)], shade('#A8A296', 0.85));
+    }
+
+    var drawables = solids.map(function (s2, i2) {
+      return { kind: 'solid', ref: s2, isMain: i2 === mainIdx, d: P((s2.x0 + s2.x1) / 2, (s2.y0 + s2.y1) / 2, 0).d - s2.top * 0.02 };
+    }).concat(porches.map(function (p2) {
+      return { kind: 'porch', ref: p2, d: P((p2.x0 + p2.x1) / 2, (p2.y0 + p2.y1) / 2, 0).d - 0.5 };
+    }));
+    drawables.sort(function (a, b) { return a.d - b.d; });
+    drawables.forEach(function (dr) { if (dr.kind === 'solid') drawSolid(dr.ref, dr.isMain); else drawPorch(dr.ref); });
   }
   root.OrchaHouse3D = { render: render, shade: shade };
 })(typeof window !== 'undefined' ? window : this);
