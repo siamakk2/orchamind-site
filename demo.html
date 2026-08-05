@@ -4264,14 +4264,14 @@ function _planDemoOk(){
 var _planBlocks=null,_planDraft=null;
 function callClaudeBlocks(systemPrompt,blocks,cb,errCb,maxTokens){
   var mt=maxTokens||6000,acc="",tries=0,settled=false;
-  var OVERALL_DEADLINE=Date.now()+90000; // total budget across any continuations
+  var OVERALL_DEADLINE=Date.now()+115000; // total budget across any continuations — just under the server's 120s cap, so we don't quit on requests that would have succeeded
   function done(fn,arg){ if(settled)return; settled=true; fn&&fn(arg); }
   function go(messages){
-    if(Date.now()>OVERALL_DEADLINE){ done(acc?cb:errCb, acc||'The plan read is taking too long \u2014 try a single page or photos of the key sheets.'); return; }
+    if(Date.now()>OVERALL_DEADLINE){ done(acc?cb:errCb, acc||'This plan is taking longer than usual to read. Try a single page at a time, or snap clear photos of the key sheets instead of the full PDF.'); return; }
     var ctrl=(typeof AbortController!=='undefined')?new AbortController():null;
-    var TIMEOUT_MS=Math.max(8000, Math.min(75000, OVERALL_DEADLINE-Date.now())); // never exceed the overall budget
+    var TIMEOUT_MS=Math.max(8000, Math.min(110000, OVERALL_DEADLINE-Date.now())); // never exceed the overall budget
     var timer=setTimeout(function(){ if(ctrl){try{ctrl.abort();}catch(e){}}
-      done(errCb,'The plan read is taking too long \u2014 the server may have timed out. Try a single page, or snap photos of the key sheets instead of a PDF.'); },TIMEOUT_MS);
+      done(errCb,'This plan is taking longer than the AI\u2019s current limit to read. Large, detailed PDFs are the most common cause \u2014 try a single page at a time, or snap clear photos of the key sheets instead.'); },TIMEOUT_MS);
     fetch("/api/claude",{method:"POST",headers:{"Content-Type":"application/json"},
       signal:ctrl?ctrl.signal:undefined,
       body:JSON.stringify({model:"claude-sonnet-4-6",max_tokens:mt,system:systemPrompt,messages:messages})
@@ -4287,7 +4287,7 @@ function callClaudeBlocks(systemPrompt,blocks,cb,errCb,maxTokens){
       } else { if(acc){done(cb,acc);}else{done(errCb,"No response from AI");} }
     }).catch(function(e){
       clearTimeout(timer);
-      var m=(e&&e.name==='AbortError')?'The plan read is taking too long \u2014 the server may have timed out. Try a single page, or photos of the key sheets.':(e&&e.message||'Network error \u2014 check your connection and try again.');
+      var m=(e&&e.name==='AbortError')?'This plan is taking longer than the AI\u2019s current limit to read. Large, detailed PDFs are the most common cause \u2014 try a single page at a time, or snap clear photos of the key sheets instead.':(e&&e.message||'Network error \u2014 check your connection and try again.');
       done(errCb,m);
     });
   }
