@@ -58,7 +58,7 @@ module.exports = async function handler(req, res) {
     if (typeof body === 'string') { try { body = JSON.parse(body); } catch (e) { body = {}; } }
     if (!body || typeof body !== 'object') body = {};
 
-    const maxTokens = Math.min(body.max_tokens || 800, 8000);
+    const maxTokens = Math.min(body.max_tokens || 800, 16000);
     const messages = Array.isArray(body.messages) ? body.messages : [];
     const system = (body.system || '').toString().slice(0, 12000);
 
@@ -71,10 +71,18 @@ module.exports = async function handler(req, res) {
       return res.status(429).json({ error: 'Too many AI requests from your connection — give it a few minutes and try again.' });
     }
 
+    const payload = { model: 'claude-sonnet-4-6', max_tokens: maxTokens, system: system, messages: messages };
+    // Extended thinking: lets the model reason step-by-step through complex plan
+    // sets before answering — the difference between a skim and a careful read.
+    if (body.thinking && body.thinking.type === 'enabled') {
+      var bt = Math.min(Math.max(parseInt(body.thinking.budget_tokens, 10) || 0, 1024), 8000);
+      if (bt < maxTokens) payload.thinking = { type: 'enabled', budget_tokens: bt };
+    }
+
     const r = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'x-api-key': apiKey, 'anthropic-version': '2023-06-01' },
-      body: JSON.stringify({ model: 'claude-sonnet-4-6', max_tokens: maxTokens, system: system, messages: messages })
+      body: JSON.stringify(payload)
     });
     const data = await r.json();
     if (media > 0) {

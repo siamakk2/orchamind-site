@@ -4266,7 +4266,7 @@ function _planDemoOk(){
   return true;
 }
 var _planBlocks=null,_planDraft=null;
-function callClaudeBlocks(systemPrompt,blocks,cb,errCb,maxTokens){
+function callClaudeBlocks(systemPrompt,blocks,cb,errCb,maxTokens,thinkBudget){
   var mt=maxTokens||6000,acc="",tries=0,settled=false;
   var OVERALL_DEADLINE=Date.now()+290000; // just under the server's 300s cap — big multi-sheet plan sets legitimately take minutes
   function done(fn,arg){ if(settled)return; settled=true; fn&&fn(arg); }
@@ -4278,7 +4278,7 @@ function callClaudeBlocks(systemPrompt,blocks,cb,errCb,maxTokens){
       done(errCb,'This plan is taking longer than the AI\u2019s current limit to read. Large, detailed PDFs are the most common cause \u2014 try a single page at a time, or snap clear photos of the key sheets instead.'); },TIMEOUT_MS);
     fetch("/api/claude",{method:"POST",headers:{"Content-Type":"application/json"},
       signal:ctrl?ctrl.signal:undefined,
-      body:JSON.stringify({model:"claude-sonnet-4-6",max_tokens:mt,system:systemPrompt,messages:messages})
+      body:JSON.stringify((function(){var p={model:"claude-sonnet-4-6",max_tokens:mt,system:systemPrompt,messages:messages};if(thinkBudget)p.thinking={type:"enabled",budget_tokens:thinkBudget};return p;})())
     }).then(function(r){return r.json();}).then(function(data){
       clearTimeout(timer);
       if(data&&data.error){done(errCb,typeof data.error==='string'?data.error:(data.error.message||'AI error'));return;}
@@ -4324,8 +4324,8 @@ function _planShrinkImage(file,cb,err){
 }
 function _planExtractSys(){
   return 'You are a construction plan TRANSCRIBER. Your ONLY job is to read what is printed and drawn on these plan sheets and transcribe it exactly. Do NOT compute, estimate, price, or infer anything.\n\n'
-    +'WORK METHODICALLY, one sheet at a time:\n'
-    +'1. AREA SCHEDULE: find any printed area table — often titled "SQUARE FOOTAGE", "AREA SCHEDULE", or a level breakdown. Transcribe each row exactly as printed (label + square footage). CRITICAL: conditioned floor area (e.g. "MAIN FLOOR") is separate from covered porches, patios, decks, and garages — transcribe every row, and set totalPrintedSqft to the CONDITIONED floor total only (sum of floor levels), never including porch/patio/garage rows. If no table is printed, use null.\n'
+    +'WORK METHODICALLY. FIRST, inventory: for each file, list to yourself every distinct drawing, view, and table it contains (title block, floor plan, individual elevation views \u2014 one image often holds several \u2014 sections, details, area/window/door/room schedules, general notes). THEN transcribe, one identified item at a time:\n'
+    +'1. AREA SCHEDULE: find any printed area table — titles vary by architect: "SQUARE FOOTAGE", "AREA SCHEDULE", "BUILDING AREA", "AREA TABULATION", "GROSS/NET AREA", or a per-level breakdown. Transcribe each row exactly as printed (label + square footage). CRITICAL: conditioned floor area (e.g. "MAIN FLOOR") is separate from covered porches, patios, decks, and garages — transcribe every row, and set totalPrintedSqft to the CONDITIONED floor total only (sum of floor levels), never including porch/patio/garage rows. If no table is printed, use null.\n'
     +'2. ROOM SCHEDULE: from the floor plan, list every labeled room with its printed name, printed dimensions if marked, and which level it is on if stated. Transcribe names EXACTLY as printed (e.g. "Master Bedroom", "Bedroom 2", "Office").\n'
     +'3. BEDROOMS: list the names of rooms that are explicitly labeled as bedrooms. Do not count a den/office/flex room as a bedroom unless the plan labels it one.\n'
     +'4. WINDOW & DOOR SCHEDULES: if the plans include printed window/door schedules, transcribe them (mark, size, count).\n'
@@ -4475,13 +4475,13 @@ function _planAnalyzeStaged(){
       var extracted=_estParseJSON(extText);
       var extNote=extracted?('VERIFIED TRANSCRIPTION OF THE PRINTED PLAN DATA (a careful first pass already read these exact sheets — treat this as ground truth and stay consistent with it; if you see a clear transcription error, correct it and say so in "assumptions"):\n'+JSON.stringify(extracted)):'';
       // PASS 2 — the takeoff & estimate, locked to the transcription
-      var blocks2=[{type:"text",text:manifest+(extNote?('\n\n'+extNote):'')}].concat(media).concat([{type:"text",text:'These are the plans for the job.'+(scope?(' Extra context from the contractor: '+scope):'')+' Do the takeoff and draft the estimate. Your totalSqft MUST equal the transcription\u2019s totalPrintedSqft when present; geometry.windows MUST match the transcription\u2019s per-elevation window counts when present; bedroom room names MUST come from the transcription.'}]);
+      var blocks2=[{type:"text",text:manifest+(extNote?('\n\n'+extNote):'')}].concat(media).concat([{type:"text",text:'These are the plans for the job.'+(scope?(' Extra context from the contractor: '+scope):'')+' Do the takeoff and draft the estimate. Your totalSqft MUST equal the transcription\u2019s totalPrintedSqft when present; geometry.windows MUST match the transcription\u2019s per-elevation counts and styles when present; bedroom room names MUST come from the transcription. Before you answer, VERIFY your own output: sum of room areas \u00d7 stories vs the printed total, window counts vs the transcription, bedroom list vs the transcription \u2014 fix any mismatch first.'}]);
       _planBlocks=blocks2;
       callClaudeBlocks(_planSys(),blocks2,function(text){
         _planThinkStop();if(btn){btn.disabled=false;btn.innerHTML='\u2728 Read plan set &amp; draft estimate';}
         try{_planApply(text,msg);_planStageClear();}catch(e){msg.textContent='Read the plans but could not build the estimate ('+(e.message||'error')+'). Try again or add a short description.';}
-      },fail,8000);
-    },fail,3500);
+      },fail,12000,4000);
+    },fail,10000,4000);
   }
   staged.forEach(function(s,i){
     if(s.f.type==='application/pdf'){
