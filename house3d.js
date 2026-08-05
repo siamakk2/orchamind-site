@@ -103,20 +103,36 @@
       if (grow < 0.55) return;
       var wa = Math.min(1, (grow - 0.55) / 0.35); ctx.save(); ctx.globalAlpha = wa;
       var dxx = w[2] - w[0], dyy = w[3] - w[1], L = Math.hypot(dxx, dyy), ux = dxx / L, uy = dyy / L;
-      var perStory = Math.max(1, Math.round(L / 9));
-      var doorAt = isFront ? Math.ceil((perStory + 1) / 2) : -1;
+      // Real window counts from the plan's elevations, when the takeoff read them.
+      // front = wall with the entry door; back/left/right mapped by wall normal.
+      var elev = isFront ? 'front' : (w[5] === 1 ? 'back' : (w[4] === -1 ? 'left' : 'right'));
+      var winData = (g.windows && typeof g.windows === 'object') ? g.windows : null;
+      var totalForWall = (winData && typeof winData[elev] === 'number' && isFinite(winData[elev]))
+        ? Math.max(0, Math.min(24, Math.round(winData[elev]))) : null;
       for (var st = 0; st < stories; st++) {
         var z0 = st * storyH, sill = z0 + 3, head = z0 + 6.6;
         if (st > 0) { fillP([P(w[0], w[1], z0 - 0.25), P(w[2], w[3], z0 - 0.25), P(w[2], w[3], z0 + 0.25), P(w[0], w[1], z0 + 0.25)], shade('#D8CFBE', lit)); }
-        for (var k = 1; k <= perStory; k++) {
-          var px = w[0] + ux * (L * k / (perStory + 1)), py = w[1] + uy * (L * k / (perStory + 1));
-          if (st === 0 && k === doorAt) {
+        var perStory;
+        if (totalForWall !== null) {
+          // distribute the plan's real count across stories, extras on lower floors
+          var base = Math.floor(totalForWall / stories), rem = totalForWall % stories;
+          perStory = base + (st < rem ? 1 : 0);
+        } else {
+          // no elevation data — keep the model recognizably a house, but sparse:
+          // this is decorative massing, not a claim about the real plan
+          perStory = Math.max(1, Math.round(L / 14));
+        }
+        var slots = perStory, doorSlot = -1;
+        if (st === 0 && isFront) { slots = perStory + 1; doorSlot = Math.ceil(slots / 2); }
+        for (var k = 1; k <= slots; k++) {
+          var px = w[0] + ux * (L * k / (slots + 1)), py = w[1] + uy * (L * k / (slots + 1));
+          if (k === doorSlot) {
             var dh = 0.85;
             fillP([P(px - ux * (dh + .3), py - uy * (dh + .3), z0), P(px + ux * (dh + .3), py + uy * (dh + .3), z0), P(px + ux * (dh + .3), py + uy * (dh + .3), z0 + 7.2), P(px - ux * (dh + .3), py - uy * (dh + .3), z0 + 7.2)], FRAME);
             fillP([P(px - ux * dh, py - uy * dh, z0), P(px + ux * dh, py + uy * dh, z0), P(px + ux * dh, py + uy * dh, z0 + 6.9), P(px - ux * dh, py - uy * dh, z0 + 6.9)], shade(DOOR, lit));
             continue;
           }
-          var hw = Math.min(1.5, L / (perStory + 1) * 0.34);
+          var hw = Math.min(1.5, L / (slots + 1) * 0.34);
           fillP([P(px - ux * (hw + .25), py - uy * (hw + .25), sill - .25), P(px + ux * (hw + .25), py + uy * (hw + .25), sill - .25), P(px + ux * (hw + .25), py + uy * (hw + .25), head + .25), P(px - ux * (hw + .25), py - uy * (hw + .25), head + .25)], FRAME);
           var gp = [P(px - ux * hw, py - uy * hw, sill), P(px + ux * hw, py + uy * hw, sill), P(px + ux * hw, py + uy * hw, head), P(px - ux * hw, py - uy * hw, head)];
           var gy2 = ctx.createLinearGradient(0, gp[0].y, 0, gp[2].y);
