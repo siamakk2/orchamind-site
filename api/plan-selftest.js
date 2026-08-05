@@ -103,6 +103,8 @@ module.exports = async function handler(req, res) {
         score.raisedInside = !!(rz && m && rz.x >= m.x - 2 && (rz.x + rz.w) <= (m.x + m.w) + 2 && rz.heightFt > m.heightFt);
       }
     }
+    console.log('[selftest] SCORE:', JSON.stringify(score));
+    console.log('[selftest] EST:', JSON.stringify(est ? { totalSqft: est.totalSqft, questions: est.questions, volumes: est.geometry && est.geometry.volumes, porches: est.geometry && est.geometry.porches } : { unparsed: text2.slice(0, 400) }));
     return res.status(200).json({ score: score, extractionOk: { sqft: extracted.totalPrintedSqft, bedrooms: extracted.bedrooms, potential: extracted.potentialBedrooms, raised: extracted.raisedSection, porch: extracted.porchInfo }, estimate: est ? { totalSqft: est.totalSqft, questions: est.questions, volumes: est.geometry && est.geometry.volumes, porches: est.geometry && est.geometry.porches, roof: est.geometry && est.geometry.roof } : null, raw2: est ? undefined : text2.slice(0, 1500) });
   } catch (e) {
     return res.status(200).json({ error: e.message });
