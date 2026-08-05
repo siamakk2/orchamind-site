@@ -25,10 +25,11 @@
   function render(o) {
     var cv = o.canvas, g = o.geom; if (!cv || !g || !g.rooms || !g.rooms.length) return;
     var theta = o.theta || 0, zoom = o.zoom || 1, grow = o.grow == null ? 1 : Math.max(0, Math.min(1, o.grow));
+    // o.width/o.height allow offscreen snapshot rendering (detached canvases have no clientWidth)
     var pitch = o.pitch == null ? 0.5 : o.pitch; pitch = Math.max(0.14, Math.min(0.9, pitch));
     var flat = pitch, zscale = 0.62 + (1 - pitch) * 0.5;
     var dpr = root.devicePixelRatio || 1;
-    var W = cv.clientWidth, H = cv.clientHeight || 300;
+    var W = o.width || cv.clientWidth, H = o.height || cv.clientHeight || 300;
     if (cv.width !== W * dpr) { cv.width = W * dpr; cv.height = H * dpr; }
     var ctx = cv.getContext('2d'); ctx.setTransform(dpr, 0, 0, dpr, 0, 0); ctx.clearRect(0, 0, W, H);
 

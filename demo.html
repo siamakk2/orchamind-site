@@ -731,7 +731,7 @@ button:active, .btn:active, .btn-ghost:active, .tab:active, [role="button"]:acti
 .aicp-form button{background:#2D7FF9;color:#fff;border:none;width:42px;height:42px;border-radius:50%;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
 .aicp-form button svg{width:18px;height:18px;}
 </style>
-<script src="/house3d.js?v=9"></script>
+<script src="/house3d.js?v=10"></script>
 </head>
 <body class="locked">
 <div id="demoBanner" style="position:relative;z-index:1;background:linear-gradient(90deg,#0A1628,#1565C0);color:#fff;padding:10px 16px;display:flex;align-items:center;justify-content:center;gap:16px;flex-wrap:wrap;font-family:'Outfit',sans-serif;font-size:14px;box-shadow:0 2px 12px rgba(0,0,0,0.2);">
@@ -4816,9 +4816,21 @@ function epvRenderReal(){
     return;
   }
   if(window.DEMO_MODE)_demoRenderCount++;
-  btn.disabled=true;btn.textContent='Rendering your property\u2026 (~1 min)';
+  btn.disabled=true;btn.textContent='Rendering your property\u2026 (~1\u20132 min)';
+  // Geometry anchor: snapshot the verified massing model and send it as the
+  // reference image, so the photoreal render matches THIS building's massing
+  // instead of a text-prompt guess.
+  var ref=null;
+  try{
+    if(window.OrchaHouse3D && _planGeom && _planGeom.rooms && _planGeom.rooms.length){
+      var off=document.createElement('canvas');
+      OrchaHouse3D.render({canvas:off,geom:_planGeom,theta:0.85,grow:1,width:960,height:540});
+      ref=off.toDataURL('image/jpeg',0.85);
+      if(!ref || ref.indexOf('data:image')!==0 || ref.length>1800000) ref=null;
+    }
+  }catch(e){ref=null;}
   fetch('/api/render',{method:'POST',headers:{'Content-Type':'application/json'},
-    body:JSON.stringify({prompt:_planRenderPrompt(),geometry:_planGeom})
+    body:JSON.stringify({prompt:_planRenderPrompt(),geometry:_planGeom,reference:ref})
   }).then(function(r){return r.json();}).then(function(d){
     if(d&&d.url){
       _epvRealRender=d.url;
