@@ -72,10 +72,29 @@
     rooms.forEach(function (r) { minX = Math.min(minX, r.x); minY = Math.min(minY, r.y); maxX = Math.max(maxX, r.x + r.w); maxY = Math.max(maxY, r.y + r.h); });
     solids.concat(porches).forEach(function (s2) { minX = Math.min(minX, s2.x0); minY = Math.min(minY, s2.y0); maxX = Math.max(maxX, s2.x1); maxY = Math.max(maxY, s2.y1); });
     var Wd = maxX - minX, Dp = maxY - minY, cvirt = Math.max(Wd, Dp) || 1;
-    var span = cvirt * 1.9;
-    var s = (Math.min(W, H) * 0.92 / span) * zoom;
     var cx = (minX + maxX) / 2, cy = (minY + maxY) / 2;
     var cosT = Math.cos(theta), sinT = Math.sin(theta);
+    // Tight auto-fit: project the composition's actual corners (base + tops)
+    // at the current rotation and scale to fill the canvas - long bar buildings
+    // no longer shrink to a sliver.
+    var topMax = wallTop;
+    solids.forEach(function (s2) { topMax = Math.max(topMax, s2.top); });
+    porches.forEach(function (p2) { topMax = Math.max(topMax, p2.top); });
+    var pMinX = 1e9, pMaxX = -1e9, pMinY = 1e9, pMaxY = -1e9;
+    var boxes = solids.concat(porches);
+    if (!boxes.length) boxes = [{ x0: minX, y0: minY, x1: maxX, y1: maxY, top: wallTop }];
+    boxes.forEach(function (b) {
+      [[b.x0, b.y0], [b.x1, b.y0], [b.x1, b.y1], [b.x0, b.y1]].forEach(function (c) {
+        [0, b.top || topMax].forEach(function (z) {
+          var rx = (c[0] - cx) * cosT - (c[1] - cy) * sinT, ry = (c[0] - cx) * sinT + (c[1] - cy) * cosT;
+          var px = rx, py = ry * flat - z * (0.62 + (1 - flat) * 0.5);
+          pMinX = Math.min(pMinX, px); pMaxX = Math.max(pMaxX, px);
+          pMinY = Math.min(pMinY, py); pMaxY = Math.max(pMaxY, py);
+        });
+      });
+    });
+    var margin = Math.max(2, cvirt * 0.06);
+    var s = Math.min(W * 0.90 / Math.max(1e-6, (pMaxX - pMinX) + margin), H * 0.62 / Math.max(1e-6, (pMaxY - pMinY) + margin)) * zoom;
     function P(x, y, z) {
       var rx = (x - cx) * cosT - (y - cy) * sinT, ry = (x - cx) * sinT + (y - cy) * cosT;
       return { x: W / 2 + rx * s, y: H * 0.70 + ry * s * flat - z * s * zscale, d: ry };
@@ -338,11 +357,56 @@
     var rooms = g.rooms, storyH = g.storyHeight || 9;
     var stories = g.stories || Math.max(1, Math.round((g.wallHeightFt || storyH) / storyH));
     var wallTop = storyH * stories;
-    var minX = 1e9, minY = 1e9, maxX = -1e9, maxY = -1e9;
-    rooms.forEach(function (r) { minX = Math.min(minX, r.x); minY = Math.min(minY, r.y); maxX = Math.max(maxX, r.x + r.w); maxY = Math.max(maxY, r.y + r.h); });
+    // Volume composition (same normalization as the solid renderer)
+    function hRoofN(sr) {
+      sr = String(sr || '').toLowerCase();
+      if (sr.indexOf('flat') >= 0) return 'flat';
+      if (sr.indexOf('shed') >= 0 || sr.indexOf('slope') >= 0 || sr.indexOf('mono') >= 0 || sr.indexOf('step') >= 0) return 'low-slope';
+      if (sr.indexOf('hip') >= 0) return 'hip';
+      if (sr.indexOf('gab') >= 0) return 'gable';
+      return sr ? 'flat' : 'gable';
+    }
+    var hbx0 = 1e9, hby0 = 1e9, hbx1 = -1e9, hby1 = -1e9;
+    rooms.forEach(function (r) { hbx0 = Math.min(hbx0, r.x); hby0 = Math.min(hby0, r.y); hbx1 = Math.max(hbx1, r.x + r.w); hby1 = Math.max(hby1, r.y + r.h); });
+    var hSpan = Math.max(hbx1 - hbx0, hby1 - hby0) || 1;
+    function hPlaus(x0, y0, x1, y1) {
+      var pad = hSpan * 0.8;
+      return x1 > hbx0 - pad && x0 < hbx1 + pad && y1 > hby0 - pad && y0 < hby1 + pad && (x1 - x0) <= hSpan * 2.2 && (y1 - y0) <= hSpan * 2.2;
+    }
+    var solids = [];
+    (g.volumes || []).slice(0, 4).forEach(function (v) {
+      if (!(v && isFinite(v.x) && isFinite(v.y) && v.w > 0 && v.h > 0)) return;
+      if (!hPlaus(v.x, v.y, v.x + v.w, v.y + v.h)) return;
+      solids.push({ x0: v.x, y0: v.y, x1: v.x + v.w, y1: v.y + v.h, top: Math.max(6, Math.min(40, v.heightFt || wallTop)), roof: hRoofN(v.roof || g.roof || 'flat'), glazing: v.glazing || null });
+    });
+    if (!solids.length) solids.push({ x0: hbx0, y0: hby0, x1: hbx1, y1: hby1, top: wallTop, roof: hRoofN(g.roof || 'gable'), glazing: null });
+    var hMainIdx = 0, hMA = -1;
+    solids.forEach(function (s2, i2) { var a2 = (s2.x1 - s2.x0) * (s2.y1 - s2.y0); if (a2 > hMA) { hMA = a2; hMainIdx = i2; } });
+    solids.forEach(function (s2, i2) { if (i2 !== hMainIdx && s2.glazing === 'clerestory' && s2.top <= solids[hMainIdx].top) s2.top = Math.min(40, solids[hMainIdx].top + Math.max(1.5, s2.top)); });
+    var porches = [];
+    (g.porches || []).slice(0, 3).forEach(function (p) {
+      if (!(p && isFinite(p.x) && isFinite(p.y) && p.w > 0 && p.h > 0)) return;
+      if (!hPlaus(p.x, p.y, p.x + p.w, p.y + p.h)) return;
+      porches.push({ x0: p.x, y0: p.y, x1: p.x + p.w, y1: p.y + p.h, top: Math.max(7, Math.min(16, p.heightFt || 9)) });
+    });
+    var minX = hbx0, minY = hby0, maxX = hbx1, maxY = hby1;
+    solids.concat(porches).forEach(function (b) { minX = Math.min(minX, b.x0); minY = Math.min(minY, b.y0); maxX = Math.max(maxX, b.x1); maxY = Math.max(maxY, b.y1); });
     var Wd = maxX - minX, Dp = maxY - minY, cvirt = Math.max(Wd, Dp) || 1;
-    var span = cvirt * 1.9, s = (Math.min(W, H) * 0.92 / span) * zoom;
     var cx = (minX + maxX) / 2, cy = (minY + maxY) / 2, cosT = Math.cos(theta), sinT = Math.sin(theta);
+    // Tight auto-fit on projected extents (same as the solid renderer)
+    var pMinX = 1e9, pMaxX = -1e9, pMinY = 1e9, pMaxY = -1e9;
+    solids.concat(porches).forEach(function (b) {
+      [[b.x0, b.y0], [b.x1, b.y0], [b.x1, b.y1], [b.x0, b.y1]].forEach(function (c) {
+        [0, b.top].forEach(function (z) {
+          var rx = (c[0] - cx) * cosT - (c[1] - cy) * sinT, ry = (c[0] - cx) * sinT + (c[1] - cy) * cosT;
+          var px = rx, py = ry * flat - z * zscale;
+          pMinX = Math.min(pMinX, px); pMaxX = Math.max(pMaxX, px);
+          pMinY = Math.min(pMinY, py); pMaxY = Math.max(pMaxY, py);
+        });
+      });
+    });
+    var hMargin = Math.max(2, cvirt * 0.06);
+    var s = Math.min(W * 0.90 / Math.max(1e-6, (pMaxX - pMinX) + hMargin), H * 0.62 / Math.max(1e-6, (pMaxY - pMinY) + hMargin)) * zoom;
     function P(x, y, z) {
       var rx = (x - cx) * cosT - (y - cy) * sinT, ry = (x - cx) * sinT + (y - cy) * cosT;
       return { x: W / 2 + rx * s, y: H * 0.70 + ry * s * flat - z * s * zscale, d: ry };
@@ -366,73 +430,90 @@
     for (var gy = gy0; gy <= gy1; gy += 4) line(P(gx0, gy, 0), P(gx1, gy, 0), CY_DIM, 0.7, 0);
     ctx.restore();
 
-    // footprint outline (bright)
-    var fp = [[minX, minY], [maxX, minY], [maxX, maxY], [minX, maxY]];
-    for (var i = 0; i < 4; i++) line(P(fp[i][0], fp[i][1], 0), P(fp[(i + 1) % 4][0], fp[(i + 1) % 4][1], 0), CY, 1.6, 8);
-
-    // interior room partitions on the floor (dimmer)
-    rooms.forEach(function (r) {
-      var a = [[r.x, r.y], [r.x + r.w, r.y], [r.x + r.w, r.y + r.h], [r.x, r.y + r.h]];
-      for (var i = 0; i < 4; i++) line(P(a[i][0], a[i][1], 0), P(a[(i + 1) % 4][0], a[(i + 1) % 4][1], 0), CY_SOFT, 0.9, 4);
-    });
-
-    // vertical edges + top ring rise with grow
-    var corners = [[minX, minY], [maxX, minY], [maxX, maxY], [minX, maxY]];
-    corners.forEach(function (c) { line(P(c[0], c[1], 0), P(c[0], c[1], wt), CY, 1.5, 8); });
-    // story rings
-    for (var st = 1; st <= stories; st++) {
-      var zz = Math.min(wt, st * storyH);
-      if (zz <= 0) continue;
-      for (var i = 0; i < 4; i++) line(P(corners[i][0], corners[i][1], zz), P(corners[(i + 1) % 4][0], corners[(i + 1) % 4][1], zz), st === stories ? CY : CY_SOFT, st === stories ? 1.6 : 1, st === stories ? 8 : 3);
-    }
-
-    // roof wireframe once walls are up
-    if (grow > 0.55) {
-      var ra = Math.min(1, (grow - 0.55) / 0.4);
-      var hRoof = (g.roof || 'gable').toLowerCase();
-      var hMul = hRoof === 'flat' ? 0.06 : (hRoof === 'low-slope' || hRoof === 'shed' || hRoof === 'lowslope') ? 0.16 : 0.5;
-      var rise = Math.max(hRoof === 'flat' ? 0.6 : 1.5, Math.min(Wd, Dp) * hMul) * ra, zr = wallTop + rise;
-      var lx0 = minX - o1, lx1 = maxX + o1, ly0 = minY - o1, ly1 = maxY + o1;
-      if (hRoof === 'flat' || hRoof === 'low-slope' || hRoof === 'shed' || hRoof === 'lowslope') {
-        // top slab rectangle (flat) or tilted slab (low-slope: front edge raised)
-        var frontZ = (hRoof === 'flat') ? wallTop : zr, backZ = wallTop;
-        var tp = [P(lx0, ly0, frontZ), P(lx1, ly0, frontZ), P(lx1, ly1, backZ), P(lx0, ly1, backZ)];
-        for (var i = 0; i < 4; i++) line(tp[i], tp[(i + 1) % 4], CY, 1.5, 8);
-        // eave rectangle at wall top
-        var evf = [[lx0, ly0], [lx1, ly0], [lx1, ly1], [lx0, ly1]];
-        for (var i = 0; i < 4; i++) line(P(evf[i][0], evf[i][1], wallTop), P(evf[(i + 1) % 4][0], evf[(i + 1) % 4][1], wallTop), CY_SOFT, 1, 4);
-      } else if (Wd >= Dp) {
-        var midY = (minY + maxY) / 2;
-        var R1 = P(lx0, midY, zr), R2 = P(lx1, midY, zr);
-        line(R1, R2, CY, 1.6, 10);
-        [[lx0, ly0], [lx1, ly0], [lx1, ly1], [lx0, ly1]].forEach(function (e, i) {
-          var ridge = (e[0] === lx0) ? R1 : R2;
-          line(P(e[0], e[1], wallTop), ridge, CY, 1.2, 6);
+    // ===== Volume-aware wireframe composition =====
+    function wireBox(b, bright) {
+      var t = b.top * grow; if (t <= 0.2) return;
+      var cs = [[b.x0, b.y0], [b.x1, b.y0], [b.x1, b.y1], [b.x0, b.y1]];
+      // base ring
+      for (var i = 0; i < 4; i++) line(P(cs[i][0], cs[i][1], 0), P(cs[(i + 1) % 4][0], cs[(i + 1) % 4][1], 0), bright ? CY : CY_SOFT, bright ? 1.6 : 1.1, bright ? 8 : 4);
+      // verticals
+      cs.forEach(function (c) { line(P(c[0], c[1], 0), P(c[0], c[1], t), bright ? CY : CY_SOFT, bright ? 1.5 : 1.1, bright ? 8 : 4); });
+      // top ring
+      for (var i = 0; i < 4; i++) line(P(cs[i][0], cs[i][1], t), P(cs[(i + 1) % 4][0], cs[(i + 1) % 4][1], t), CY, 1.5, 8);
+      // roof plane
+      if (grow > 0.55) {
+        var o2 = Math.max(0.5, Math.min(b.x1 - b.x0, b.y1 - b.y0) * 0.05);
+        var ra = Math.min(1, (grow - 0.55) / 0.4);
+        var Wd2 = b.x1 - b.x0, Dp2 = b.y1 - b.y0;
+        if (b.roof === 'flat') {
+          var rr = [[b.x0 - o2, b.y0 - o2], [b.x1 + o2, b.y0 - o2], [b.x1 + o2, b.y1 + o2], [b.x0 - o2, b.y1 + o2]];
+          for (var i = 0; i < 4; i++) line(P(rr[i][0], rr[i][1], t), P(rr[(i + 1) % 4][0], rr[(i + 1) % 4][1], t), CY, 1.3, 6);
+        } else if (b.roof === 'low-slope') {
+          var rise = Math.max(0.8, Math.min(Wd2, Dp2) * 0.16) * ra;
+          var tp = [P(b.x0 - o2, b.y0 - o2, t + rise), P(b.x1 + o2, b.y0 - o2, t + rise), P(b.x1 + o2, b.y1 + o2, t), P(b.x0 - o2, b.y1 + o2, t)];
+          for (var i = 0; i < 4; i++) line(tp[i], tp[(i + 1) % 4], CY, 1.3, 6);
+        } else {
+          var rise2 = Math.max(1.5, Math.min(Wd2, Dp2) * 0.5) * ra;
+          if (Wd2 >= Dp2) {
+            var my = (b.y0 + b.y1) / 2, R1 = P(b.x0 - o2, my, t + rise2), R2 = P(b.x1 + o2, my, t + rise2);
+            line(R1, R2, CY, 1.5, 8);
+            [[b.x0 - o2, b.y0 - o2], [b.x1 + o2, b.y0 - o2], [b.x1 + o2, b.y1 + o2], [b.x0 - o2, b.y1 + o2]].forEach(function (e) {
+              line(P(e[0], e[1], t), (Math.abs(e[0] - (b.x0 - o2)) < 1e-6) ? R1 : R2, CY_SOFT, 1.1, 4);
+            });
+          } else {
+            var mx = (b.x0 + b.x1) / 2, Ra = P(mx, b.y0 - o2, t + rise2), Rb = P(mx, b.y1 + o2, t + rise2);
+            line(Ra, Rb, CY, 1.5, 8);
+            [[b.x0 - o2, b.y0 - o2], [b.x1 + o2, b.y0 - o2], [b.x1 + o2, b.y1 + o2], [b.x0 - o2, b.y1 + o2]].forEach(function (e) {
+              line(P(e[0], e[1], t), (Math.abs(e[1] - (b.y0 - o2)) < 1e-6) ? Ra : Rb, CY_SOFT, 1.1, 4);
+            });
+          }
+        }
+      }
+      // glazing hints on the two long faces
+      if (grow > 0.7 && b.glazing) {
+        var faces = (b.x1 - b.x0) >= (b.y1 - b.y0)
+          ? [[[b.x0, b.y0], [b.x1, b.y0]], [[b.x0, b.y1], [b.x1, b.y1]]]
+          : [[[b.x0, b.y0], [b.x0, b.y1]], [[b.x1, b.y0], [b.x1, b.y1]]];
+        faces.forEach(function (f) {
+          var ax = f[0][0], ay = f[0][1], bx = f[1][0], by = f[1][1];
+          function lerp2(tt) { return [ax + (bx - ax) * tt, ay + (by - ay) * tt]; }
+          if (b.glazing === 'band') {
+            var lo = 1.2, hi = Math.max(lo + 1.5, t - 1.4);
+            var a1 = lerp2(0.06), a2 = lerp2(0.94);
+            line(P(a1[0], a1[1], lo), P(a2[0], a2[1], lo), CY_SOFT, 1, 4);
+            line(P(a1[0], a1[1], hi), P(a2[0], a2[1], hi), CY_SOFT, 1, 4);
+            for (var k = 1; k <= 5; k++) { var mk = lerp2(0.06 + 0.88 * k / 6); line(P(mk[0], mk[1], lo), P(mk[0], mk[1], hi), CY_DIM, 0.8, 0); }
+          } else if (b.glazing === 'clerestory') {
+            var c1 = lerp2(0.1), c2 = lerp2(0.9);
+            line(P(c1[0], c1[1], t - 1.7), P(c2[0], c2[1], t - 1.7), CY, 1.1, 5);
+            line(P(c1[0], c1[1], t - 0.35), P(c2[0], c2[1], t - 0.35), CY, 1.1, 5);
+          }
         });
-        var ev = [[lx0, ly0], [lx1, ly0], [lx1, ly1], [lx0, ly1]];
-        for (var i = 0; i < 4; i++) line(P(ev[i][0], ev[i][1], wallTop), P(ev[(i + 1) % 4][0], ev[(i + 1) % 4][1], wallTop), CY_SOFT, 1, 4);
-      } else {
-        var midX = (minX + maxX) / 2;
-        var Ra = P(midX, ly0, zr), Rb = P(midX, ly1, zr);
-        line(Ra, Rb, CY, 1.6, 10);
-        [[lx0, ly0], [lx1, ly0], [lx1, ly1], [lx0, ly1]].forEach(function (e) {
-          var ridge = (e[1] === ly0) ? Ra : Rb;
-          line(P(e[0], e[1], wallTop), ridge, CY, 1.2, 6);
-        });
-        var ev2 = [[lx0, ly0], [lx1, ly0], [lx1, ly1], [lx0, ly1]];
-        for (var i = 0; i < 4; i++) line(P(ev2[i][0], ev2[i][1], wallTop), P(ev2[(i + 1) % 4][0], ev2[(i + 1) % 4][1], wallTop), CY_SOFT, 1, 4);
       }
     }
-
-    // scan sweep line during build for the "materializing" feel
-    if (grow < 1) {
-      var zsw = wallTop * grow;
-      ctx.save(); ctx.globalAlpha = 0.9; ctx.shadowColor = CY; ctx.shadowBlur = 16;
-      var ring = [[minX - o1, minY - o1], [maxX + o1, minY - o1], [maxX + o1, maxY + o1], [minX - o1, maxY + o1]];
-      ctx.strokeStyle = '#8af0ff'; ctx.lineWidth = 2; ctx.beginPath();
-      for (var i = 0; i < 4; i++) { var p = P(ring[i][0], ring[i][1], zsw); if (i === 0) ctx.moveTo(p.x, p.y); else ctx.lineTo(p.x, p.y); }
-      ctx.closePath(); ctx.stroke(); ctx.restore();
+    function wirePorch(p2) {
+      if (grow < 0.6) return;
+      var t = p2.top * Math.min(1, (grow - 0.6) / 0.35); if (t <= 0.2) return;
+      var cs = [[p2.x0, p2.y0], [p2.x1, p2.y0], [p2.x1, p2.y1], [p2.x0, p2.y1]];
+      for (var i = 0; i < 4; i++) line(P(cs[i][0], cs[i][1], t), P(cs[(i + 1) % 4][0], cs[(i + 1) % 4][1], t), CY, 1.3, 6);
+      var spanX = p2.x1 - p2.x0, spanY = p2.y1 - p2.y0;
+      var nx2 = Math.max(2, Math.round(spanX / 10) + 1), ny2 = Math.max(2, Math.round(spanY / 12) + 1);
+      for (var ix = 0; ix < nx2; ix++) for (var iy = 0; iy < ny2; iy++) {
+        if (ix > 0 && ix < nx2 - 1 && iy > 0 && iy < ny2 - 1) continue;
+        var px = p2.x0 + spanX * ix / (nx2 - 1), py = p2.y0 + spanY * iy / (ny2 - 1);
+        line(P(px, py, 0), P(px, py, t), CY_SOFT, 1, 3);
+      }
     }
+    // interior room partitions on the floor (dim, inside main volume)
+    rooms.forEach(function (r) {
+      var a = [[r.x, r.y], [r.x + r.w, r.y], [r.x + r.w, r.y + r.h], [r.x, r.y + r.h]];
+      for (var i = 0; i < 4; i++) line(P(a[i][0], a[i][1], 0), P(a[(i + 1) % 4][0], a[(i + 1) % 4][1], 0), CY_DIM, 0.8, 2);
+    });
+    // draw far-first: porches and solids sorted by projected depth, taller biased later
+    var hDraw = solids.map(function (s2, i2) { return { kind: 's', ref: s2, d: P((s2.x0 + s2.x1) / 2, (s2.y0 + s2.y1) / 2, 0).d - s2.top * 0.02, bright: i2 === hMainIdx }; })
+      .concat(porches.map(function (p2) { return { kind: 'p', ref: p2, d: P((p2.x0 + p2.x1) / 2, (p2.y0 + p2.y1) / 2, 0).d - 0.5 }; }));
+    hDraw.sort(function (a, b) { return a.d - b.d; });
+    hDraw.forEach(function (dr) { if (dr.kind === 's') wireBox(dr.ref, dr.bright); else wirePorch(dr.ref); });
   }
   root.OrchaHouse3D.renderHologram = renderHologram;
 })(typeof window !== 'undefined' ? window : this);
