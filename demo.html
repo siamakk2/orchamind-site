@@ -412,6 +412,14 @@ button:active, .btn:active, .btn-ghost:active, .tab:active, [role="button"]:acti
 </style>
 <style id="disp-css">
 .disp-summary{display:flex;gap:16px;flex-wrap:wrap;margin:2px 0 16px;font-size:12.5px;color:var(--muted,#5A6B7D);}
+.disp-suggest{background:#F4F8FD;border:1px solid var(--line,#e1e8f0);border-radius:12px;padding:12px 14px;margin-bottom:14px;}
+.disp-suggest-h{font-size:12px;font-weight:600;color:var(--navy,#0A1628);margin-bottom:10px;}
+.disp-suggest-empty{font-size:12.5px;color:#1B8A4B;font-weight:600;}
+.disp-sugg-row{display:flex;justify-content:space-between;align-items:center;gap:12px;background:#fff;border:1px solid var(--line,#e1e8f0);border-radius:9px;padding:9px 12px;margin-bottom:8px;font-size:13px;}
+.disp-sugg-row:last-child{margin-bottom:0;}
+.disp-sugg-role{color:var(--muted,#5A6B7D);font-size:11.5px;}
+.disp-sugg-why{color:var(--muted,#5A6B7D);font-size:11.5px;margin-top:3px;}
+.disp-sugg-row .btn{white-space:nowrap;padding:6px 12px;font-size:12px;}
 .disp-stat b{color:var(--navy,#0A1628);font-size:15px;}
 .dp{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:5px;vertical-align:middle;}
 .dp.available{background:#8A9AAC;}.dp.enroute{background:#2D7FF9;}.dp.onsite{background:#F9A825;}.dp.done{background:#2E9B5B;}
@@ -1285,7 +1293,10 @@ button:active, .btn:active, .btn-ghost:active, .tab:active, [role="button"]:acti
     <button class="btn" id="billBtn" onclick="manageBilling()" style="margin-top:16px;">Add payment method / Manage billing</button></div>
   </div>
   <div class="panel" id="panel-dispatch">
-    <div class="panel-head"><h2>Dispatch Board</h2></div>
+    <div class="panel-head"><h2>Dispatch Board</h2>
+      <button class="btn" onclick="aiSuggestDispatch()">✨ AI Suggest</button>
+    </div>
+    <div id="dispSuggest" class="disp-suggest" style="display:none;"></div>
     <div id="dispSummary" class="disp-summary"></div>
     <div id="dispBoard" class="disp-board"></div>
   </div>
@@ -5535,6 +5546,79 @@ function renderDispatch(){
   if(!crew.length)html='<div class="disp-empty-all">No crew yet. Add crew in the Crew tab, then dispatch them to jobs here.</div>';
   board.innerHTML=html;
 }
+// ====== AI DISPATCH SUGGESTIONS ======
+// Deterministic scoring over real crew workload + coverage data. Never auto-applies —
+// every suggestion requires an explicit tap, and applying one calls the same
+// _dispReassign() the manual dropdown already uses, so behavior stays identical.
+function _dispWorkloadHours(name){
+  var first=(name||'').toLowerCase().split(' ')[0];
+  if(!first)return 0;
+  return (window.hours||[]).filter(function(h){return (h.name||'').toLowerCase().indexOf(first)>=0;})
+    .reduce(function(s,h){return s+(parseFloat(h.amount)||0);},0);
+}
+function aiSuggestDispatch(){
+  var box=document.getElementById('dispSuggest');
+  if(!box)return;
+  box.style.display='block';
+  box.innerHTML='<div class="briefing-loading" style="color:var(--muted);"><div class="spinner" style="border-color:var(--line);border-top-color:var(--blue);"></div> Checking coverage and crew workload...</div>';
+
+  var crewList=(window.crew||[]);
+  var jobList=(window.jobs||[]).filter(function(j){return j.status!=='complete';});
+  var suggestions=[];
+
+  // 1. Coverage gaps — active jobs with nobody assigned, matched to the best-fit available crew
+  jobList.forEach(function(j){
+    var assigned=crewList.filter(function(c){return (c.assign||'')===j.name;});
+    if((j.status==='active'||j.status==='in-progress') && assigned.length===0){
+      var candidates=crewList.filter(function(c){return _dispStatusOf(c)==='available' || !(c.assign||'');});
+      if(candidates.length){
+        var jobText=((j.name||'')+' '+(j.notes||'')).toLowerCase();
+        candidates.forEach(function(c){
+          c._score=_dispWorkloadHours(c.name);
+          if(c.role && jobText.indexOf((c.role||'').toLowerCase())>=0) c._score-=20;
+        });
+        candidates.sort(function(a,b){return a._score-b._score;});
+        var pick=candidates[0];
+        var isMatch = pick.role && jobText.indexOf((pick.role||'').toLowerCase())>=0;
+        suggestions.push({crewId:pick.id, crewName:pick.name, role:pick.role, job:j.name,
+          reason:'No crew currently assigned to this active job. '+pick.name+' has the lightest week so far ('+_dispWorkloadHours(pick.name)+'h logged)'+(isMatch?' and is a trade match.':'.')});
+      }
+    }
+  });
+
+  // 2. Workload rebalancing — one person heavily loaded while someone else sits unassigned
+  var withHours=crewList.map(function(c){return {c:c, h:_dispWorkloadHours(c.name)};});
+  if(withHours.length>=2){
+    withHours.sort(function(a,b){return b.h-a.h;});
+    var top=withHours[0], bottom=withHours[withHours.length-1];
+    if(top.h - bottom.h >= 15 && !(bottom.c.assign||'') && top.c.assign){
+      suggestions.push({crewId:bottom.c.id, crewName:bottom.c.name, role:bottom.c.role, job:top.c.assign,
+        reason:top.c.name+' has logged '+top.h+'h this week vs '+bottom.h+'h for '+bottom.c.name+' — consider splitting the load on '+top.c.assign+'.'});
+    }
+  }
+
+  suggestions=suggestions.slice(0,5);
+  if(!suggestions.length){
+    box.innerHTML='<div class="disp-suggest-empty">✓ Coverage and workload look balanced. No suggestions right now.</div>';
+    return;
+  }
+  box.innerHTML='<div class="disp-suggest-h">✨ Suggested moves — computed from current assignments &amp; logged hours. Nothing changes until you tap Apply.</div>'+
+    suggestions.map(function(s){
+      return '<div class="disp-sugg-row"><div><b>'+esc(s.crewName)+'</b>'+(s.role?' <span class="disp-sugg-role">'+esc(s.role)+'</span>':'')+' &rarr; <b>'+esc(s.job||'Unassigned')+'</b><div class="disp-sugg-why">'+esc(s.reason)+'</div></div>'+
+        '<button class="btn" data-suggapply data-crew="'+esc(s.crewId)+'" data-job="'+esc(s.job||'')+'">Apply</button></div>';
+    }).join('');
+}
+if(!window._dispSuggWired){
+  window._dispSuggWired=true;
+  document.addEventListener('click',function(e){
+    var b=e.target.closest&&e.target.closest('[data-suggapply]');
+    if(!b)return;
+    _dispReassign(b.getAttribute('data-crew'), b.getAttribute('data-job'));
+    b.textContent='Applied ✓'; b.disabled=true;
+    var row=b.closest('.disp-sugg-row'); if(row) row.style.opacity='.55';
+  });
+}
+
 function _pbCats(){var s={};(window.pricebook||[]).forEach(function(i){s[i.category||'Other']=1;});return Object.keys(s);}
 function renderPricebook(){
   var list=document.getElementById('pbList');if(!list)return;
