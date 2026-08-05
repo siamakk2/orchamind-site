@@ -1,10 +1,11 @@
-// Photoreal property render for Orchamind estimates.
-// Front end (demo.html epvRenderReal) POSTs { prompt, geometry }.
-// Server calls the image model (Arcads Seedream) and returns { url }.
-// Cost-protected: origin allowlist + per-IP rate limit. Paid-tier feature.
+// Photoreal property render for Orchamind estimates — geometry-anchored.
+// Front end POSTs { prompt, geometry, reference (massing-model snapshot data URL) }.
+// Server calls Google's image model (gemini-2.5-flash-image) with the snapshot as
+// an image input, so the output follows the verified massing instead of guessing.
+// Single-call generation: no asset polling, no third-party render fees.
 var BUCKET = {};
 var WINDOW_MS = 10 * 60 * 1000;
-var MAX_PER_WINDOW = 6; // renders are expensive — cap hard per IP
+var MAX_PER_WINDOW = 6; // renders are cost-capped hard per IP
 
 function allowedOrigin(o) {
   if (!o) return true;
@@ -45,72 +46,62 @@ module.exports = async function handler(req, res) {
     var prompt = (body.prompt || '').toString().slice(0, 1500);
     if (!prompt) return res.status(200).json({ error: 'Nothing to render.' });
 
-    var apiKey = process.env.ARCADS_API_KEY;
-    var base = process.env.ARCADS_API_BASE || 'https://api.arcads.ai';
-    if (!apiKey) {
-      // Not yet configured — front end shows a graceful retry state.
-      return res.status(200).json({ error: 'Live render is not configured yet.' });
-    }
+    var apiKey = process.env.GEMINI_API_KEY;
+    if (!apiKey) return res.status(200).json({ error: 'Live render is not configured yet.' });
     if (!take(clientIp(req))) {
       return res.status(429).json({ error: 'Render limit reached — give it a few minutes.' });
     }
 
-    // Geometry anchor: the client sends a snapshot of the verified massing model
-    // (data URL) and/or a public reference URL. With a reference we use
-    // nano-banana-2 (reference-conditioned); without, Seedream text-to-image.
-    var refs = [];
-    var refUrl = (body.referenceUrl || '').toString();
-    if (/^https:\/\//.test(refUrl) && refUrl.length < 500) refs.push(refUrl);
+    // Geometry anchor: massing-model snapshot (data URL) or a public reference URL.
+    var parts = [];
+    var anchored = false;
     var refData = (body.reference || '').toString();
-    if (refs.length === 0 && refData.indexOf('data:image') === 0 && refData.length <= 2000000) refs.push(refData);
-    console.log('[render] req; refs:', refs.length, 'prompt chars:', prompt.length);
-
-    async function generate(useRefs) {
-      var payload = { prompt: prompt, aspectRatio: '16:9', nbGenerations: 1 };
-      if (useRefs && refs.length) { payload.model = 'nano-banana-2'; payload.referenceImages = refs; }
-      else { payload.model = 'seedream_5_pro'; }
-      var genRes = await fetch(base + '/v1/images/generate', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + apiKey },
-        body: JSON.stringify(payload)
-      });
-      var gen = await genRes.json();
-      var url = gen && (gen.url || (gen.images && gen.images[0] && gen.images[0].url) ||
-                 (gen.data && gen.data[0] && gen.data[0].url));
-      var assetId = gen && (gen.id || gen.assetId || (gen.asset && gen.asset.id) ||
-                    (gen.assets && gen.assets[0] && gen.assets[0].id) ||
-                    (gen.data && gen.data[0] && gen.data[0].id));
-      if (!url && assetId) {
-        // Poll up to ~90s — reference-conditioned generation takes about a minute.
-        for (var i = 0; i < 36 && !url; i++) {
-          await new Promise(function (r) { setTimeout(r, 2500); });
-          var pr = await fetch(base + '/v1/assets/' + assetId, {
-            headers: { 'Authorization': 'Bearer ' + apiKey }
-          });
-          var pd = await pr.json();
-          url = pd && (pd.url || (pd.output && pd.output.url) ||
-                (pd.assets && pd.assets[0] && pd.assets[0].url));
-          if (pd && (pd.status === 'failed' || pd.error)) {
-            console.error('[render] asset failed:', (pd.error && (pd.error.message || JSON.stringify(pd.error)) || pd.status || '').toString().slice(0, 200));
-            break;
-          }
+    var refUrl = (body.referenceUrl || '').toString();
+    if (refData.indexOf('data:image') === 0 && refData.length <= 2500000) {
+      var comma = refData.indexOf(',');
+      var mime = refData.substring(5, refData.indexOf(';'));
+      parts.push({ inlineData: { mimeType: mime || 'image/jpeg', data: refData.substring(comma + 1) } });
+      anchored = true;
+    } else if (/^https:\/\//.test(refUrl) && refUrl.length < 500) {
+      var rf = await fetch(refUrl);
+      if (rf.ok) {
+        var buf = Buffer.from(await rf.arrayBuffer());
+        if (buf.length <= 3000000) {
+          parts.push({ inlineData: { mimeType: rf.headers.get('content-type') || 'image/jpeg', data: buf.toString('base64') } });
+          anchored = true;
         }
       }
-      if (!url && gen && gen.error) console.error('[render] generate error (refs=' + (useRefs && refs.length) + '):', (gen.error.message || JSON.stringify(gen.error)).slice(0, 300));
-      return url;
     }
+    parts.push({ text: (anchored
+      ? 'The attached image is the verified massing model of the building — its exact volumes, proportions, roof forms, glazing bands and porch. Generate a photorealistic render of THIS building, matching the massing precisely. '
+      : '') + prompt });
 
-    var url = await generate(true);
-    if (!url && refs.length) {
-      // Reference path failed — fall back to text-only so the user still gets an image.
-      console.log('[render] reference attempt failed; retrying text-only');
-      url = await generate(false);
+    console.log('[render] req; anchored:', anchored, 'prompt chars:', prompt.length);
+    var r = await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-image:generateContent', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'x-goog-api-key': apiKey },
+      body: JSON.stringify({ contents: [{ parts: parts }] })
+    });
+    var data = await r.json();
+    if (data && data.error) {
+      console.error('[render] api error:', (data.error.message || JSON.stringify(data.error)).slice(0, 300));
+      return res.status(200).json({ error: 'Render error: ' + (data.error.message || 'API error').slice(0, 200) });
     }
-
-    if (!url) return res.status(200).json({ error: 'Render did not complete — please try again.' });
-    console.log('[render] ok; anchored:', refs.length > 0);
-    return res.status(200).json({ url: url, anchored: refs.length > 0 });
+    var outParts = (data && data.candidates && data.candidates[0] && data.candidates[0].content && data.candidates[0].content.parts) || [];
+    var img = null;
+    for (var i = 0; i < outParts.length; i++) {
+      var p = outParts[i];
+      var inl = p.inlineData || p.inline_data;
+      if (inl && inl.data) { img = 'data:' + (inl.mimeType || inl.mime_type || 'image/png') + ';base64,' + inl.data; break; }
+    }
+    if (!img) {
+      console.error('[render] no image in response; finish:', data && data.candidates && data.candidates[0] && data.candidates[0].finishReason);
+      return res.status(200).json({ error: 'Render did not complete — please try again.' });
+    }
+    console.log('[render] ok; anchored:', anchored, 'bytes:', img.length);
+    return res.status(200).json({ url: img, anchored: anchored });
   } catch (err) {
+    console.error('[render] exception:', err.message);
     return res.status(200).json({ error: 'Render error: ' + err.message });
   }
 };
