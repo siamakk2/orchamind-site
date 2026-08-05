@@ -4719,6 +4719,7 @@ function epvRenderGemini(){
     }
   }).catch(function(e){btn.disabled=false;btn.textContent=oldBtnText;alert('Gemini render error: '+e.message);});
 }
+function _hexA(hex,a){
   var n=parseInt(hex.slice(1),16);
   return 'rgba('+((n>>16)&255)+','+((n>>8)&255)+','+(n&255)+','+a+')';
 }
