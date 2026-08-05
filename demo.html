@@ -90,6 +90,9 @@ body{font-family:'Outfit',system-ui,sans-serif;background:var(--bg);color:var(--
 .risk-body{flex:1;}
 .risk-title{font-weight:700;font-size:14.5px;color:var(--navy);margin-bottom:3px;}
 .risk-job{font-size:12px;color:var(--blue);font-weight:600;margin-bottom:5px;}
+.risk-src{display:inline-block;font-size:9.5px;font-weight:700;letter-spacing:.03em;padding:2px 7px;border-radius:99px;margin-left:6px;vertical-align:middle;}
+.risk-src.verified{background:#E6F6EC;color:#1B8A4B;}
+.risk-src.judgment{background:#EEF2F7;color:#5B6B7A;}
 .risk-desc{font-size:13.5px;color:var(--muted);line-height:1.55;}
 .risk-sev{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;padding:3px 9px;border-radius:100px;align-self:flex-start;}
 .risk.high .risk-sev{background:rgba(211,47,47,0.12);color:var(--red);}
@@ -2219,11 +2222,89 @@ function generateBriefing(){
 }
 
 // ====== RISK RADAR ======
+// Real anomaly detection: compute mathematically verified risk signals from
+// actual budget, schedule, and expense data (not an AI guess from a text blob).
+// The AI's job is then to narrate/prioritize these verified numbers and add
+// judgment-based risks (inspections, sequencing) that numbers alone can't catch.
+function computeRiskSignals(){
+  var signals=[];
+  jobs.forEach(function(j){
+    if(j.status==='complete') return;
+    var progress=parseFloat(j.progress)||0;
+    var budget=parseFloat(j.budget)||0;
+    var spent=parseFloat(j.spent)||0;
+    var spentPct = budget ? Math.round(spent/budget*100) : null;
+    var d = daysUntil(j.date);
+
+    // 1. Budget pace vs completion pace — the core margin-erosion check
+    if(spentPct!==null){
+      var gap = spentPct - progress;
+      if(gap >= 15){
+        signals.push({
+          job:j.name, type:'budget',
+          severity: gap>=30?'high':(gap>=20?'med':'low'),
+          verifiedMetric: spentPct+'% of budget spent vs '+progress+'% of work complete ('+gap+'-point gap)',
+          verifiedDetail: '$'+spent.toLocaleString()+' spent of $'+budget.toLocaleString()+' budget, but only '+progress+'% of the work is done.'
+        });
+      }
+    }
+    // 2. Schedule pace vs deadline — computed from target date, not vibes
+    if(d!==null && progress<100){
+      if(d<0){
+        signals.push({job:j.name, type:'schedule', severity:'high',
+          verifiedMetric: Math.abs(d)+' days overdue at '+progress+'% complete',
+          verifiedDetail:'Target date has already passed and the job is not finished.'});
+      } else if(d<=14 && progress<70){
+        signals.push({job:j.name, type:'schedule', severity: d<=7?'high':'med',
+          verifiedMetric: d+' day(s) left with '+(100-progress)+'% of the work still remaining',
+          verifiedDetail:'At the current pace the remaining scope may not fit in the time left.'});
+      }
+    }
+    // 3. Expense concentration — flags likely waste/overage/miscoded spend early in a job
+    var jobExpenses = (typeof expenses!=='undefined'?expenses:[]).filter(function(e){
+      return e.jobName===j.name || (e.jobId && e.jobId===j.id);
+    });
+    if(jobExpenses.length){
+      var byCat={}, totalExp=0;
+      jobExpenses.forEach(function(e){
+        var amt=parseFloat(e.amount)||0;
+        totalExp+=amt;
+        byCat[e.category]=(byCat[e.category]||0)+amt;
+      });
+      Object.keys(byCat).forEach(function(cat){
+        var catPct = totalExp ? Math.round(byCat[cat]/totalExp*100) : 0;
+        if(catPct>=65 && totalExp>=1000 && progress<70){
+          signals.push({job:j.name, type:'cost-concentration', severity:'med',
+            verifiedMetric: catPct+'% of logged costs on this job are '+cat+' ($'+byCat[cat].toLocaleString()+' of $'+totalExp.toLocaleString()+')',
+            verifiedDetail: cat+' spend is unusually concentrated this early in the job — worth checking for waste, a pricing miss, or miscoded expenses.'});
+        }
+      });
+    }
+    // 4. Crew coverage gap — active job, nobody currently on-site
+    if((j.status==='active'||j.status==='in-progress') && progress<100 && progress>0){
+      var onThisJob = crew.filter(function(c){return c.status==='on-site' && c.assign===j.name;});
+      if(onThisJob.length===0){
+        signals.push({job:j.name, type:'coverage', severity:'med',
+          verifiedMetric:'No crew currently logged on-site',
+          verifiedDetail:'This active, in-progress job shows nobody assigned on-site right now.'});
+      }
+    }
+  });
+  // highest severity first
+  var order={high:0,med:1,low:2};
+  signals.sort(function(a,b){return (order[a.severity]||1)-(order[b.severity]||1);});
+  return signals;
+}
+
 function generateRisks(){
   var el=document.getElementById('riskList');
   el.innerHTML='<div class="briefing-loading" style="color:var(--muted);"><div class="spinner" style="border-color:var(--line);border-top-color:var(--blue);"></div> Scanning all jobs for risks...</div>';
-  var sys=buildContext()+'\n\nAnalyze every project for risks. Return ONLY a JSON array (no other text, no markdown fences). Each item: {"severity":"high|med|low","job":"project name","title":"short risk title","desc":"one sentence explaining the risk and what to do"}. Consider: budget overruns (spent vs budget vs progress), schedule slips (days to deadline vs progress), inspection timing, crew coverage gaps, change orders, weather delays, material lead times. Order by severity, high first. Max 6 risks.';
-  callClaude(sys,"Scan for risks and return the JSON array.",function(text){
+  var verified = computeRiskSignals();
+  var sys=buildContext()
+    +'\n\nVERIFIED RISK SIGNALS (computed directly from real budget, schedule, and expense data — these numbers are ground truth, do not second-guess or recompute them):\n'
+    +JSON.stringify(verified,null,0)
+    +'\n\nReturn ONLY a JSON array (no other text, no markdown fences). First, turn each verified signal above into one risk item — use its exact numbers in the description, do not invent different ones, and set "source":"verified". Then, separately, scan the project notes and context for 1-2 additional judgment-based risks the numbers can\'t show (inspection timing, weather, sequencing, material lead times, change orders) if any are genuinely evident — do not invent risks that aren\'t supported by the data, and set "source":"judgment" for these. Each item: {"severity":"high|med|low","job":"project name","title":"short risk title","desc":"one sentence explaining the risk and what to do, referencing the real numbers","source":"verified|judgment"}. Order by severity, high first. Max 6 risks total.';
+  callClaude(sys,"Turn the verified signals into a prioritized risk list and add any additional judgment-based risks the notes support.",function(text){
     try{
       var jsonText=text.replace(/```json/g,'').replace(/```/g,'').trim();
       var start=jsonText.indexOf('[');var end=jsonText.lastIndexOf(']');
@@ -2245,7 +2326,10 @@ function renderRisks(risks){
   el.innerHTML=risks.map(function(r){
     var sev=(r.severity||'med').toLowerCase();
     if(['high','med','low'].indexOf(sev)<0)sev='med';
-    return '<div class="risk '+sev+'"><div class="risk-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">'+icons[sev]+'</svg></div><div class="risk-body"><div class="risk-job">'+esc(r.job||'')+'</div><div class="risk-title">'+esc(r.title||'')+'</div><div class="risk-desc">'+esc(r.desc||'')+'</div></div><span class="risk-sev">'+sev+'</span></div>';
+    var badge = r.source==='verified'
+      ? '<span class="risk-src verified" title="Computed directly from real budget/schedule/expense data">✓ verified</span>'
+      : '<span class="risk-src judgment" title="AI judgment from notes and context">◇ judgment</span>';
+    return '<div class="risk '+sev+'"><div class="risk-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">'+icons[sev]+'</svg></div><div class="risk-body"><div class="risk-job">'+esc(r.job||'')+' '+badge+'</div><div class="risk-title">'+esc(r.title||'')+'</div><div class="risk-desc">'+esc(r.desc||'')+'</div></div><span class="risk-sev">'+sev+'</span></div>';
   }).join('');
 }
 
