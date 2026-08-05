@@ -47,8 +47,63 @@ module.exports = async function handler(req, res) {
     var data = await r.json();
     var text = '';
     if (data && data.content) text = data.content.filter(function (b) { return b.type === 'text'; }).map(function (b) { return b.text; }).join('\n');
-    console.log('[selftest] stop:', data && data.stop_reason, 'chars:', text.length);
-    return res.status(200).json({ stop: data && data.stop_reason, extraction: text, error: data && data.error });
+    console.log('[selftest] pass1 stop:', data && data.stop_reason, 'chars:', text.length);
+    if (data && data.error) return res.status(200).json({ phase: 1, error: data.error });
+
+    // Parse extraction exactly like the client: last balanced JSON candidate wins
+    function parseJSON(s) {
+      if (!s) return null;
+      s = s.replace(/```json/gi, '').replace(/```/g, '').trim();
+      var cands = [], depth = 0, start = -1, inStr = false, esc = false;
+      for (var i = 0; i < s.length; i++) {
+        var c = s[i];
+        if (inStr) { if (esc) esc = false; else if (c === '\\') esc = true; else if (c === '"') inStr = false; continue; }
+        if (c === '"') { inStr = true; continue; }
+        if (c === '{') { if (depth === 0) start = i; depth++; }
+        else if (c === '}') { depth--; if (depth === 0 && start >= 0) { cands.push(s.substring(start, i + 1)); start = -1; } if (depth < 0) depth = 0; }
+      }
+      for (var j = cands.length - 1; j >= 0; j--) { try { return JSON.parse(cands[j]); } catch (e) {} }
+      return null;
+    }
+    var extracted = parseJSON(text);
+    if (!extracted) return res.status(200).json({ phase: 1, error: 'extraction unparseable', raw: text.slice(0, 2000) });
+
+    // PASS 2 — the estimate, under the production consistency contract
+    var sys2 = 'You are an expert construction estimator. Using the plan sheets and the VERIFIED TRANSCRIPTION, produce a takeoff and estimate as JSON. '
+      + 'HARD RULES: totalSqft MUST equal the transcription totalPrintedSqft. Bedroom names MUST come from the transcription; if potentialBedrooms exist, keep the printed count and add a question asking the owner whether to count them. '
+      + 'geometry.volumes: 1-4 volumes in feet; the MAIN volume footprint MUST be the full conditioned footprint (match overall printed dims); a raised/stepped section is a SUB-RECTANGLE INSIDE the main footprint at the transcribed raisedSection extent, glazing "clerestory", height from printed heights - NEVER a separate box beside it; porches attach FLUSH on the side porchInfo shows with printed dims. Roof strings must be exactly flat, low-slope, gable, or hip. '
+      + 'Do verification inside your thinking. Output EXACTLY ONE JSON object, nothing else: {"items":[{"desc":"string","qty":number,"unit":"string","price":number}],"totalSqft":number,"questions":["string"],"geometry":{"stories":number,"storyHeight":number,"roof":"flat|low-slope|gable|hip","windows":{"front":{"count":number,"style":"string","clerestory":true},"back":{},"left":{},"right":{}},"volumes":[{"name":"string","x":number,"y":number,"w":number,"h":number,"heightFt":number,"roof":"string","glazing":"band|clerestory|punched|none"}],"porches":[{"x":number,"y":number,"w":number,"h":number,"heightFt":number}],"rooms":[{"name":"string","x":number,"y":number,"w":number,"h":number}]}}';
+    var content2 = content.slice(0, content.length - 1);
+    content2.push({ type: 'text', text: 'VERIFIED TRANSCRIPTION (ground truth):\n' + JSON.stringify(extracted) + '\nDo the takeoff and draft the estimate.' });
+    var r2 = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'x-api-key': apiKey, 'anthropic-version': '2023-06-01' },
+      body: JSON.stringify({ model: 'claude-sonnet-4-6', max_tokens: 12000, thinking: { type: 'enabled', budget_tokens: 4000 }, system: sys2, messages: [{ role: 'user', content: content2 }] })
+    });
+    var data2 = await r2.json();
+    var text2 = '';
+    if (data2 && data2.content) text2 = data2.content.filter(function (b) { return b.type === 'text'; }).map(function (b) { return b.text; }).join('\n');
+    console.log('[selftest] pass2 stop:', data2 && data2.stop_reason, 'chars:', text2.length);
+    var est = parseJSON(text2);
+
+    // SELF-SCORING against the printed ground truth
+    var score = {
+      sqft_2616: !!(est && est.totalSqft === 2616),
+      parsed: !!est,
+      bedroomQuestion: !!(est && (est.questions || []).some(function (q) { return /bedroom/i.test(q); })),
+      volumes: est && est.geometry && est.geometry.volumes ? est.geometry.volumes.length : 0,
+      mainIsFullBar: false, raisedInside: false, hasPorch: !!(est && est.geometry && (est.geometry.porches || []).length)
+    };
+    if (est && est.geometry && est.geometry.volumes && est.geometry.volumes.length) {
+      var vs = est.geometry.volumes.slice().sort(function (a, b) { return (b.w * b.h) - (a.w * a.h); });
+      var m = vs[0];
+      score.mainIsFullBar = !!(m && m.w >= 90 && m.w <= 102 && m.h >= 24 && m.h <= 31);
+      if (vs.length > 1) {
+        var rz = vs[1];
+        score.raisedInside = !!(rz && m && rz.x >= m.x - 2 && (rz.x + rz.w) <= (m.x + m.w) + 2 && rz.heightFt > m.heightFt);
+      }
+    }
+    return res.status(200).json({ score: score, extractionOk: { sqft: extracted.totalPrintedSqft, bedrooms: extracted.bedrooms, potential: extracted.potentialBedrooms, raised: extracted.raisedSection, porch: extracted.porchInfo }, estimate: est ? { totalSqft: est.totalSqft, questions: est.questions, volumes: est.geometry && est.geometry.volumes, porches: est.geometry && est.geometry.porches, roof: est.geometry && est.geometry.roof } : null, raw2: est ? undefined : text2.slice(0, 1500) });
   } catch (e) {
     return res.status(200).json({ error: e.message });
   }
