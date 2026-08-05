@@ -128,7 +128,7 @@
   ],
   "functions": {
     "api/claude.js": {
-      "maxDuration": 120
+      "maxDuration": 300
     },
     "api/render.js": {
       "maxDuration": 120
