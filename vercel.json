@@ -132,6 +132,9 @@
     },
     "api/render.js": {
       "maxDuration": 120
+    },
+    "api/gemini-render.js": {
+      "maxDuration": 120
     }
   }
 }

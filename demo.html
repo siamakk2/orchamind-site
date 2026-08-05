@@ -1745,6 +1745,7 @@ button:active, .btn:active, .btn-ghost:active, .tab:active, [role="button"]:acti
     <div class="epv-photowrap" id="epvPhotoWrap" style="display:none;">
       <img id="epvPhoto" class="epv-canvas" alt="Representative render of the property" style="object-fit:cover;">
       <button type="button" class="epv-renderbtn" id="epvRenderBtn" onclick="epvRenderReal()">&#10024; Generate a real render of this property</button>
+      <button type="button" class="epv-renderbtn" id="epvGeminiBtn" onclick="epvRenderGemini()" style="background:#F4F8FD;color:var(--navy,#0A1628);border:1px solid var(--line,#e1e8f0);margin-top:6px;">&#10024; Try Gemini render (comparison)</button>
       <div class="epv-photolabel" id="epvPhotoLabel">Representative render</div>
     </div>
     <div class="epv-3dhint" id="epv3dLabel">Drag to rotate &middot; pinch or scroll to zoom</div>
@@ -4696,7 +4697,28 @@ function epvRenderReal(){
     }
   }).catch(function(){btn.disabled=false;btn.textContent='Render failed \u2014 try again';});
 }
-function _hexA(hex,a){
+function epvRenderGemini(){
+  var btn=document.getElementById('epvGeminiBtn');
+  if(window.DEMO_MODE && _demoRenderCount>=DEMO_RENDER_LIMIT){
+    btn.textContent='You\u2019ve used your free demo render \u2014 call 323-657-7752 for unlimited';
+    btn.disabled=true;
+    return;
+  }
+  if(window.DEMO_MODE)_demoRenderCount++;
+  btn.disabled=true;var oldBtnText=btn.textContent;btn.textContent='Rendering with Gemini\u2026 (~30s)';
+  fetch('/api/gemini-render',{method:'POST',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({prompt:_planRenderPrompt()})
+  }).then(function(r){return r.json();}).then(function(d){
+    btn.disabled=false;btn.textContent=oldBtnText;
+    if(d&&d.url){
+      _epvRealRender=d.url;
+      var img=document.getElementById('epvPhoto');img.src=d.url;
+      document.getElementById('epvPhotoLabel').textContent='Rendered from this estimate (Gemini)';
+    } else {
+      alert((d&&d.error)||'Gemini render failed \u2014 try again.');
+    }
+  }).catch(function(e){btn.disabled=false;btn.textContent=oldBtnText;alert('Gemini render error: '+e.message);});
+}
   var n=parseInt(hex.slice(1),16);
   return 'rgba('+((n>>16)&255)+','+((n>>8)&255)+','+(n&255)+','+a+')';
 }
