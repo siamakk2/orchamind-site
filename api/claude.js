@@ -3,9 +3,9 @@
 var BUCKET = {}; // ip -> [{t,w}] — per warm instance; cheap first line of defense
 var WINDOW_MS = 5 * 60 * 1000;
 var MAX_UNITS = 25;          // weighted units per IP per window
-var MEDIA_WEIGHT = 5;        // an image/PDF request costs 5 units
+var MEDIA_WEIGHT = 8;        // an image/PDF request costs 8 units (plan sets are heavy)
 var TEXT_WEIGHT = 1;
-var MAX_MEDIA_BLOCKS = 5;    // max images/documents in one request
+var MAX_MEDIA_BLOCKS = 16;   // large sheets are tiled into multiple hi-res images so printed schedules stay legible
 
 function allowedOrigin(o) {
   if (!o) return true; // same-origin/no-origin (server tools) — rate limit still applies

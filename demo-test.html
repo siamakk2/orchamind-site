@@ -4334,6 +4334,47 @@ function _planExtractSys(){
     +'RULES: transcribe only what is actually printed or drawn. Anything absent or unreadable = null. Never guess. If two sheets disagree, report both in "conflicts".\n\n'
     +'Return ONLY JSON, no markdown, no commentary: {"areaSchedule":[{"label":"string","sqft":number}]|null,"totalPrintedSqft":number|null,"stories":number|null,"rooms":[{"name":"string","level":"string|null","dims":"string|null"}]|null,"bedrooms":["string"]|null,"windowSchedule":[{"mark":"string","size":"string","count":number}]|null,"elevations":{"present":true|false,"front":{"windows":number,"style":"punched|window-wall|mixed","clerestory":true|false,"door":true},"back":{"windows":number,"style":"punched|window-wall|mixed","clerestory":true|false},"left":{"windows":number,"style":"punched|window-wall|mixed","clerestory":true|false},"right":{"windows":number,"style":"punched|window-wall|mixed","clerestory":true|false}}|null,"roof":"flat|low-slope|gable|hip"|null,"storyHeightFt":number|null,"conflicts":["string"]|null}';
 }
+function _planPrepareImage(file,tileBudget,cb,err){
+  // Large architectural sheets get TILED into overlapping full-resolution pieces
+  // so small printed text (area schedules, room dims) stays legible to the AI.
+  // Small images pass through as a single frame, same as before.
+  var settled=false; var fin=function(fn,a,b){if(settled)return;settled=true;fn(a,b);};
+  var watch=setTimeout(function(){fin(err,'That image was too large or slow to read. Try a JPG or a smaller export.');},30000);
+  var rd=new FileReader();
+  rd.onload=function(){
+    var img=new Image();
+    img.onload=function(){
+      clearTimeout(watch);
+      try{
+        var w=img.width,h=img.height;
+        if(!w||!h){fin(err,'That image could not be decoded. Try a JPG or PNG re-export.');return;}
+        var budget=Math.max(1,tileBudget||1);
+        var cols=Math.ceil(w/1500),rows=Math.ceil(h/1500);
+        while(cols*rows>budget){ if(cols>=rows&&cols>1)cols--; else if(rows>1)rows--; else break; }
+        var blocks=[];
+        function frame(sx,sy,sw,sh){
+          var scale=Math.min(1,1568/Math.max(sw,sh));
+          var cv=document.createElement('canvas');cv.width=Math.round(sw*scale);cv.height=Math.round(sh*scale);
+          cv.getContext('2d').drawImage(img,sx,sy,sw,sh,0,0,cv.width,cv.height);
+          var d=cv.toDataURL('image/jpeg',0.85);
+          blocks.push({type:"image",source:{type:"base64",media_type:"image/jpeg",data:d.substring(d.indexOf(',')+1)}});
+        }
+        if(cols*rows<=1){ frame(0,0,w,h); fin(cb,blocks,{cols:1,rows:1}); return; }
+        var tw=Math.ceil(w/cols),th=Math.ceil(h/rows),ox=Math.round(tw*0.06),oy=Math.round(th*0.06);
+        for(var r=0;r<rows;r++)for(var c=0;c<cols;c++){
+          var sx=Math.max(0,c*tw-ox),sy=Math.max(0,r*th-oy);
+          var sw=Math.min(w-sx,tw+2*ox),sh=Math.min(h-sy,th+2*oy);
+          frame(sx,sy,sw,sh);
+        }
+        fin(cb,blocks,{cols:cols,rows:rows});
+      }catch(e){fin(err,'Could not process that image ('+(e.message||'tile error')+').');}
+    };
+    img.onerror=function(){clearTimeout(watch);fin(err,'Could not read one of the images. Try a JPG or PNG re-export.');};
+    img.src=rd.result;
+  };
+  rd.onerror=function(){clearTimeout(watch);fin(err,'Could not read one of the files.');};
+  rd.readAsDataURL(file);
+}
 function _planSys(){
   var company=(CURRENT_USER&&CURRENT_USER.name)||'';
   return 'You are a senior construction cost estimator'+(company?(' for '+company):'')+'. You are reading construction plans, blueprints, sketches or site drawings. Work carefully and measure, do not eyeball.\n\n'
@@ -4460,13 +4501,25 @@ function _planAnalyzeStaged(){
   var staged=_planStaged.slice();
   _planThinkStart(staged.map(function(s){return s.f;}));
   var fail=function(e){_planThinkStop();if(btn){btn.disabled=false;btn.innerHTML='\u2728 Read plan set &amp; draft estimate';}msg.textContent='Plan reading error: '+e;};
-  var manifest='This plan set has '+staged.length+' file(s), in this order:\n'+staged.map(function(s,i){return 'File '+(i+1)+': '+_planKindLabel(s.kind)+' ('+(s.f.type==='application/pdf'?'PDF':'photo')+', "'+s.f.name+'")';}).join('\n')+
-    '\nUse each sheet for its purpose: floor plans for rooms, dimensions and square footage; elevations for stories, roof form and window counts; site plans for setbacks, drives and site work; blueprints/structural for framing and systems. Auto-detect means identify the sheet type yourself. Cross-check the sheets against each other and combine everything into ONE takeoff and estimate.';
-  var mediaBlocks=new Array(staged.length),done=0,failed=false;
+  // Tile budget across the whole set: big single sheets get more tiles, big sets share
+  var perFileBudget=Math.max(1,Math.floor(12/staged.length));
+  var prepared=new Array(staged.length),done=0,failed=false;
   function oneReady(){
     done++;
     if(failed||done<staged.length)return;
-    var media=mediaBlocks.filter(Boolean);
+    var media=[],manifestLines=[];
+    staged.forEach(function(s,i){
+      var p=prepared[i]||{blocks:[],desc:{cols:1,rows:1}};
+      var isPdf=s.f.type==='application/pdf';
+      var tileNote='';
+      if(!isPdf&&p.blocks.length>1){
+        tileNote=' \u2014 provided as '+p.blocks.length+' overlapping high-resolution tiles ('+p.desc.cols+' across \u00d7 '+p.desc.rows+' down, reading order left\u2192right then top\u2192bottom). ALL these tiles are pieces of ONE single sheet; stitch them mentally and read every table at full detail.';
+      }
+      manifestLines.push('File '+(i+1)+': '+_planKindLabel(s.kind)+' ('+(isPdf?'PDF':'image')+', "'+s.f.name+'")'+tileNote);
+      media=media.concat(p.blocks);
+    });
+    var manifest='This plan set has '+staged.length+' file(s), in this order:\n'+manifestLines.join('\n')+
+      '\nUse each sheet for its purpose: floor plans for rooms, dimensions and square footage; elevations for stories, roof form, glazing style and window counts; site plans for setbacks, drives and site work; blueprints/structural for framing and systems. Auto-detect means identify the sheet type yourself. Cross-check the sheets against each other and combine everything into ONE takeoff and estimate.';
     var scope=document.getElementById('estAiScope').value.trim();
     // PASS 1 — pure transcription: read the printed schedules, count windows
     // elevation-by-elevation, name the bedrooms. No math, no pricing.
@@ -4487,11 +4540,11 @@ function _planAnalyzeStaged(){
     if(s.f.type==='application/pdf'){
       var rd=new FileReader();
       var watch=setTimeout(function(){try{rd.abort();}catch(e){}if(!failed){failed=true;fail('That PDF was too slow to read. Export a smaller PDF or snap photos of the key pages.');}},20000);
-      rd.onload=function(){clearTimeout(watch);var d=rd.result;if(!d||d.indexOf(',')<0){if(!failed){failed=true;fail('That PDF could not be encoded. Try re-exporting it.');}return;}mediaBlocks[i]={type:"document",source:{type:"base64",media_type:"application/pdf",data:d.substring(d.indexOf(',')+1)}};oneReady();};
+      rd.onload=function(){clearTimeout(watch);var d=rd.result;if(!d||d.indexOf(',')<0){if(!failed){failed=true;fail('That PDF could not be encoded. Try re-exporting it.');}return;}prepared[i]={blocks:[{type:"document",source:{type:"base64",media_type:"application/pdf",data:d.substring(d.indexOf(',')+1)}}],desc:{cols:1,rows:1}};oneReady();};
       rd.onerror=function(){clearTimeout(watch);if(!failed){failed=true;fail('Could not read the PDF.');}};
       rd.readAsDataURL(s.f);
     } else {
-      _planShrinkImage(s.f,function(b){mediaBlocks[i]=b;oneReady();},function(e){if(!failed){failed=true;fail(e);}});
+      _planPrepareImage(s.f,perFileBudget,function(blocks,desc){prepared[i]={blocks:blocks,desc:desc};oneReady();},function(e){if(!failed){failed=true;fail(e);}});
     }
   });
 }
