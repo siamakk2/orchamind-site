@@ -2489,6 +2489,8 @@ function renderAttention(){
     try{ var duePlans=(window.plans||[]).filter(function(p){return (p.nextDate||'') && p.nextDate<=today;}); if(duePlans.length) items.push({icon:'🔁',txt:'<b>'+duePlans.length+'</b> recurring service'+(duePlans.length>1?'s':'')+' due',tab:'plans'}); }catch(x){}
     var leadsF=(window.leads||[]).filter(function(l){return l.stage==='new'||l.stage==='contacted';});
     if(leadsF.length) items.push({icon:'\u2728',txt:'<b>'+leadsF.length+'</b> lead'+(leadsF.length>1?'s':'')+' to follow up',tab:'leads'});
+    var estF=(window.estimates||[]).filter(function(e){return (typeof _estStaleDays==='function')&&_estStaleDays(e)>0;});
+    if(estF.length) items.push({icon:'\u23f0',txt:'<b>'+estF.length+'</b> sent estimate'+(estF.length>1?'s':'')+' need'+(estF.length>1?'':'s')+' a follow-up',tab:'estimates'});
     var inv=(window.estimates||[]).filter(function(e){return e.kind==='invoice' && e.status!=='paid';});
     if(inv.length){ var tt=0; inv.forEach(function(e){ try{ tt+=estTotals(e).total; }catch(x){} }); items.push({icon:'\ud83d\udcb0',txt:'<b>'+inv.length+'</b> unpaid invoice'+(inv.length>1?'s':'')+' \u2014 '+((typeof estMoney==='function')?estMoney(tt):('$'+Math.round(tt).toLocaleString())),tab:'estimates'}); }
     try{ var losing=(window.jobs||[]).filter(function(j){ return _expJobRevenue(j)-_expJobCosts(j) < 0; }); if(losing.length) items.push({icon:'\u26a0\ufe0f',txt:'<b>'+losing.length+'</b> job'+(losing.length>1?'s':'')+' over budget',tab:'costs'}); }catch(x){}
@@ -4056,6 +4058,10 @@ function renderEstimates(){
   });
   if(sum){sum.innerHTML=estChip('Pipeline',estMoney(pipeline),'Open estimates')+estChip('Won',estMoney(won),'Accepted')+estChip('Outstanding',estMoney(outstanding),'Unpaid invoices')+estChip('Collected',estMoney(paid),'Paid');}
   var html='';
+  var staleList=ests.filter(function(e){return _estStaleDays(e)>0;});
+  if(staleList.length){
+    html+='<div style="background:#FFF7E6;border:1px solid #F0C05A;border-radius:12px;padding:12px 14px;margin-bottom:12px;font-size:13.5px;color:#6B4E00;"><b>\u23f0 '+staleList.length+' estimate'+(staleList.length>1?'s':'')+' waiting on a reply</b> \u2014 sent 3+ days ago with no acceptance. A quick follow-up wins jobs: tap \u201cFollow up\u201d on the highlighted card'+(staleList.length>1?'s':'')+' below.</div>';
+  }
   html+='<div class="est-grp-h">Estimates ('+ests.length+')</div>';
   html+= ests.length? ests.map(estCard).join('') : omEmpty('jobs','No estimates yet','Create a polished, professional estimate in seconds with AI.');
   html+='<div class="est-grp-h" style="margin-top:22px;">Invoices ('+invs.length+')</div>';
@@ -4063,9 +4069,16 @@ function renderEstimates(){
   list.innerHTML=html;
 }
 function estChip(l,v,s){return '<div class="est-chip"><div class="lbl">'+esc(l)+'</div><div class="val">'+v+'</div><div style="font-size:11px;color:var(--muted);margin-top:2px;">'+esc(s)+'</div></div>';}
+function _estStaleDays(e){
+  if(e.kind==='invoice'||e.status!=='sent'||e.followedUpAt)return 0;
+  var d=Math.floor((Date.now()-new Date(e.date||Date.now()).getTime())/86400000);
+  return d>=3?d:0;
+}
 function estCard(e){
   var t=estTotals(e);var st=e.status||'draft';
+  var stale=_estStaleDays(e);
   var acts='<div class="est-acts">';
+  if(stale){acts+='<button data-act="followup" data-id="'+esc(e.id)+'" style="background:#FFF4DC;border-color:#F0C05A;color:#7A5A00;font-weight:700;">\u23f0 Follow up ('+stale+'d)</button>';}
   acts+='<button data-act="edit" data-id="'+esc(e.id)+'">Edit</button>';
   acts+='<button data-act="pdf" data-id="'+esc(e.id)+'">PDF / Print</button>';
   acts+='<button data-act="email" data-id="'+esc(e.id)+'">Email</button>';
@@ -4092,7 +4105,19 @@ document.addEventListener('click',function(ev){
   else if(act==='paid')setEstStatus(id,'paid');
   else if(act==='invoice')convertToInvoice(id);
   else if(act==='del')delEstimate(id);
+  else if(act==='followup')estFollowUp(id);
 });
+function estFollowUp(id){
+  var e=estimates.find(function(x){return x.id===id;});if(!e)return;
+  var NL=String.fromCharCode(10);var t=estTotals(e);
+  var company=(CURRENT_USER&&CURRENT_USER.name)||'our team';
+  var body='Hi '+(e.client||'there')+','+NL+NL+'Just checking in on estimate '+(e.number||'')+(e.project?(' for '+e.project):'')+' ('+estMoney(t.total)+')'+(e.validUntil?(' \u2014 it\u2019s valid through '+e.validUntil):'')+'.'+NL+NL+'Happy to walk through any line, adjust scope, or get you on the schedule. What works for you?'+NL+NL+'\u2014 '+company;
+  var to=e.clientEmail||'';
+  if(!to){ to=prompt('Client email for the follow-up:','')||''; if(to){e.clientEmail=to;} }
+  e.followedUpAt=Date.now(); save(); renderEstimates();
+  if(to){ location.href='mailto:'+encodeURIComponent(to)+'?subject='+encodeURIComponent('Following up \u2014 '+(e.number||'your estimate'))+'&body='+encodeURIComponent(body); }
+  else { try{navigator.clipboard.writeText(body);}catch(x){} alert('Follow-up message copied \u2014 paste it into a text or email.'); }
+}
 
 function _estFill(e){
   document.getElementById('estId').value=e.id||'';
@@ -4177,6 +4202,10 @@ function createProgressInvoice(jobId){
   if(!src){ alert('No estimate found for "'+j.name+'". Create (and ideally accept) an estimate for this job first \u2014 progress billing bills a percentage of that contract total.'); return; }
   var contractTotal=0; try{contractTotal=estTotals(src).total;}catch(x){}
   if(!contractTotal){ alert('That estimate has no total to bill against yet.'); return; }
+  // Approved change orders are part of the contract - bill against the TRUE total.
+  var coApproved=(window.changeOrders||[]).filter(function(c){return c.status==='approved' && (c.jobId===j.id || c.jobName===j.name);});
+  var coTotal=0; coApproved.forEach(function(c){ try{coTotal+=coTotals(c);}catch(x){} });
+  var baseContract=contractTotal; contractTotal+=coTotal;
   var progress=Math.max(0,Math.min(100,parseFloat(j.progress)||0));
   var earned=contractTotal*(progress/100);
   var priorInvoices=(estimates||[]).filter(function(e){return e.kind==='invoice' && e.project===j.name;});
@@ -4189,9 +4218,9 @@ function createProgressInvoice(jobId){
   }
   var inv={id:uid(),kind:'invoice',number:estNextNumber('invoice'),client:src.client,clientEmail:src.clientEmail,project:src.project,location:src.location,
     date:(new Date().toISOString().split('T')[0]),validUntil:'',status:'sent',taxRate:0,
-    notes:'Progress billing \u2014 job is '+progress+'% complete. Contract total '+estMoney(contractTotal)+'. Previously invoiced '+estMoney(priorTotal)+' ('+pctBilled+'%).',
+    notes:'Progress billing \u2014 job is '+progress+'% complete. Contract total '+estMoney(contractTotal)+(coTotal?(' (base '+estMoney(baseContract)+' + '+coApproved.length+' approved change order'+(coApproved.length>1?'s':'')+' '+estMoney(coTotal)+')'):'')+'. Previously invoiced '+estMoney(priorTotal)+' ('+pctBilled+'%).',
     createdFrom:src.id, milestonePct:progress,
-    items:[{desc:'Progress billing \u2014 '+progress+'% complete (of '+estMoney(contractTotal)+' contract)',qty:1,unit:'ea',price:due}]};
+    items:[{desc:'Progress billing \u2014 '+progress+'% complete (of '+estMoney(contractTotal)+' contract'+(coTotal?' incl. approved change orders':'')+')',qty:1,unit:'ea',price:due}]};
   estimates.unshift(inv);save();renderEstimates();renderJobs();
   alert('Created '+inv.number+' for '+estMoney(due)+' \u2014 billing '+j.name+' up to '+progress+'% complete. Review it under Invoices before sending, same as any other draft.');
 }
