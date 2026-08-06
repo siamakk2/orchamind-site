@@ -731,6 +731,17 @@ button:active, .btn:active, .btn-ghost:active, .tab:active, [role="button"]:acti
 .aicp-form button{background:#2D7FF9;color:#fff;border:none;width:42px;height:42px;border-radius:50%;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
 .aicp-form button svg{width:18px;height:18px;}
 </style>
+<div class="modal-bg" id="omniModal"><div class="modal" style="max-width:580px;">
+  <input id="omniQ" placeholder="Search jobs, clients, estimates, invoices, leads…" oninput="omniRun()" onkeydown="if(event.key==='Enter'&&window._omniFirst){omniGo(_omniFirst[0],_omniFirst[1]);}if(event.key==='Escape'){closeModal('omniModal');}" autocomplete="off" style="width:100%;font-size:16px;padding:12px 14px;border:2px solid var(--blue,#2D7FF9);border-radius:11px;margin-bottom:10px;font-family:inherit;">
+  <div id="omniRes" style="max-height:56vh;overflow:auto;"></div>
+</div></div>
+<div class="modal-bg" id="wrapModal"><div class="modal" style="max-width:640px;">
+  <h3 style="margin:0 0 4px;">🌇 Wrap up today</h3>
+  <div style="font-size:13px;color:var(--muted,#5A6B7D);margin-bottom:12px;">One pass over today’s jobs — then go home with a clear head.</div>
+  <div id="wrapList" style="max-height:56vh;overflow:auto;"></div>
+  <div id="wrapSummary" style="font-size:13px;color:var(--muted,#5A6B7D);margin:10px 0 12px;"></div>
+  <button class="btn" style="background:var(--green,#1B8A4B);color:#fff;width:100%;" onclick="closeModal('wrapModal')">Done for today ✅</button>
+</div></div>
 <script src="/house3d.js?v=10"></script>
 </head>
 <body class="locked">
@@ -812,7 +823,7 @@ button:active, .btn:active, .btn-ghost:active, .tab:active, [role="button"]:acti
     <div class="topbar-right">
       <span class="crew-badge">Site Manager AI</span><span style="font-size:9px;color:#9aa7b4;" title="version">v7-inline</span>
       <span style="font-size:12px;color:#5A6B7D;">Hi, <b id="whoami" style="color:#1565C0;">there</b> <span id="roleLabel" style="background:#EEF3F8;color:#5A6B7D;font-size:10px;padding:2px 7px;border-radius:10px;text-transform:uppercase;font-weight:700;margin-left:3px;"></span></span>
-      <button onclick="globalVoice()" title="Talk to your site manager" style="font-size:12px;color:#1565C0;background:none;border:1px solid #E1E8F0;border-radius:7px;padding:5px 9px;cursor:pointer;margin-right:6px;vertical-align:middle;"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="2" width="6" height="12" rx="3"/><path d="M5 11a7 7 0 0 0 14 0"/><line x1="12" y1="18" x2="12" y2="22"/></svg></button><button onclick="logout()" style="font-size:12px;color:#D32F2F;background:none;border:1px solid #E1E8F0;border-radius:7px;padding:5px 11px;cursor:pointer;font-family:inherit;font-weight:600;">Log Out</button>
+      <button onclick="openOmni()" title="Search everything (press /)" style="font-size:12px;color:#1565C0;background:none;border:1px solid #E1E8F0;border-radius:7px;padding:5px 9px;cursor:pointer;margin-right:6px;vertical-align:middle;"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.5" y2="16.5"/></svg></button><button onclick="globalVoice()" title="Talk to your site manager" style="font-size:12px;color:#1565C0;background:none;border:1px solid #E1E8F0;border-radius:7px;padding:5px 9px;cursor:pointer;margin-right:6px;vertical-align:middle;"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="2" width="6" height="12" rx="3"/><path d="M5 11a7 7 0 0 0 14 0"/><line x1="12" y1="18" x2="12" y2="22"/></svg></button><button onclick="logout()" style="font-size:12px;color:#D32F2F;background:none;border:1px solid #E1E8F0;border-radius:7px;padding:5px 11px;cursor:pointer;font-family:inherit;font-weight:600;">Log Out</button>
       <a href="https://orchamind-site.vercel.app" class="back-link">&larr; Back to Orchamind</a>
     </div>
   </div>
@@ -875,6 +886,12 @@ button:active, .btn:active, .btn-ghost:active, .tab:active, [role="button"]:acti
 
   <!-- TODAY PANEL -->
   <div class="panel active" id="panel-today">
+    <div style="display:flex;gap:10px;flex-wrap:wrap;margin:0 0 14px;">
+      <button onclick="wrapUpToday()" style="flex:1;min-width:220px;display:flex;align-items:center;gap:10px;background:linear-gradient(135deg,#0F2138,#1B3A5C);color:#fff;border:none;border-radius:14px;padding:14px 16px;cursor:pointer;text-align:left;font-family:inherit;">
+        <span style="font-size:22px;">🌇</span>
+        <span><b style="font-size:14.5px;">Wrap up today</b><br><span style="font-size:12px;color:rgba(255,255,255,0.7);">Hours, photos, client updates — close the day in 2 minutes</span></span>
+      </button>
+    </div>
     <div id="onboardCard" style="display:none;"></div>
     <div class="stats" style="margin-bottom:20px;">
       <div class="stat"><div class="stat-num" id="statActive">0</div><div class="stat-lbl">Active Jobs</div></div>
@@ -7198,5 +7215,112 @@ function createJobFromPlan(id){
   <div class="aicp-dots" id="aicpDots" style="display:none;"><span></span><span></span><span></span></div>
   <div class="aicp-form"><input type="text" id="aicpInput" placeholder="Type your question…" onkeydown="if(event.key==='+Q+'Enter'+Q+')fabSend()"><button onclick="fabSend()" aria-label="Send"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg></button></div>
 </div>
-</body></body>
+</body><script>
+/* ===== Universal search - find anything by name, from anywhere ===== */
+function openOmni(){openModal('omniModal');setTimeout(function(){var q=document.getElementById('omniQ');q.value='';q.focus();omniRun();},60);}
+document.addEventListener('keydown',function(ev){
+  if(ev.key!=='/'||ev.metaKey||ev.ctrlKey)return;
+  var t=ev.target;var tag=(t&&t.tagName||'').toLowerCase();
+  if(tag==='input'||tag==='textarea'||(t&&t.isContentEditable))return;
+  ev.preventDefault();openOmni();
+});
+function _omniRow(icon,main,sub,type,id){
+  return '<div onclick="omniGo(\''+type+'\',\''+esc(String(id))+'\')" style="display:flex;align-items:center;gap:10px;padding:10px 10px;border-radius:9px;cursor:pointer;" onmouseover="this.style.background=\'#F0F6FF\'" onmouseout="this.style.background=\'\'">'+
+    '<span style="font-size:17px;width:24px;text-align:center;">'+icon+'</span>'+
+    '<span style="flex:1;min-width:0;"><b style="font-size:14px;">'+esc(main)+'</b><br><span style="font-size:12px;color:var(--muted,#5A6B7D);">'+esc(sub)+'</span></span>'+
+    '<span style="color:#B8C2CE;font-size:13px;">\u203a</span></div>';
+}
+function omniRun(){
+  var q=(document.getElementById('omniQ').value||'').trim().toLowerCase();
+  var groups=[];window._omniFirst=null;
+  function grp(title,rows){if(rows.length)groups.push('<div style="font-size:11px;font-weight:800;color:#8A97A6;text-transform:uppercase;letter-spacing:.6px;padding:8px 10px 2px;">'+title+'</div>'+rows.join(''));}
+  function M(s){return q&&String(s||'').toLowerCase().indexOf(q)>=0;}
+  if(!q){
+    var act=(window.jobs||[]).filter(function(j){return j.status!=='complete';}).slice(0,4);
+    grp('Jump back in',act.map(function(j){if(!window._omniFirst)window._omniFirst=['job',j.id];return _omniRow('\ud83d\udd28',j.name,(j.client||'')+' \u00b7 '+((typeof STATUS_LABELS!=='undefined'&&STATUS_LABELS[j.status])||j.status),'job',j.id);}));
+    document.getElementById('omniRes').innerHTML=groups.join('')+'<div style="font-size:12px;color:#9AA7B4;padding:12px 10px 4px;">Type to search everything \u2014 jobs, clients, estimates, invoices, leads, change orders, agreements. Tip: press <b>/</b> anywhere to open this.</div>';
+    return;
+  }
+  grp('Jobs',(window.jobs||[]).filter(function(j){return M(j.name)||M(j.client)||M(j.location);}).slice(0,6).map(function(j){if(!window._omniFirst)window._omniFirst=['job',j.id];return _omniRow('\ud83d\udd28',j.name,(j.client||'')+' \u00b7 '+((typeof STATUS_LABELS!=='undefined'&&STATUS_LABELS[j.status])||j.status||''),'job',j.id);}));
+  grp('Estimates',(window.estimates||[]).filter(function(e){return e.kind!=='invoice'&&(M(e.number)||M(e.client)||M(e.project));}).slice(0,6).map(function(e){if(!window._omniFirst)window._omniFirst=['est',e.id];return _omniRow('\ud83d\udcc4',(e.number||'Estimate')+' \u00b7 '+(e.client||''),(e.project||'')+' \u00b7 '+(e.status||'draft'),'est',e.id);}));
+  grp('Invoices',(window.estimates||[]).filter(function(e){return e.kind==='invoice'&&(M(e.number)||M(e.client)||M(e.project));}).slice(0,6).map(function(e){if(!window._omniFirst)window._omniFirst=['est',e.id];return _omniRow('\ud83e\uddfe',(e.number||'Invoice')+' \u00b7 '+(e.client||''),(e.project||'')+' \u00b7 '+(e.status||''),'est',e.id);}));
+  grp('Clients',(window.clients||[]).filter(function(c){return M(c.name)||M(c.phone)||M(c.email);}).slice(0,6).map(function(c){if(!window._omniFirst)window._omniFirst=['client',c.id||c.name];return _omniRow('\ud83d\udc64',c.name||'',(c.phone||c.email||''),'client',c.id||c.name);}));
+  grp('Leads',(window.leads||[]).filter(function(l){return M(l.name)||M(l.phone)||M(l.note);}).slice(0,6).map(function(l){if(!window._omniFirst)window._omniFirst=['lead',l.id||l.name];return _omniRow('\u2728',l.name||'',(l.note||l.phone||''),'lead',l.id||l.name);}));
+  grp('Change orders',(window.changeOrders||[]).filter(function(c){return M(c.number)||M(c.title)||M(c.jobName);}).slice(0,4).map(function(c){if(!window._omniFirst)window._omniFirst=['co',c.id];return _omniRow('\ud83d\udcdd',(c.number||'CO')+' \u00b7 '+(c.title||''),(c.jobName||'')+' \u00b7 '+(c.status||''),'co',c.id);}));
+  grp('Service agreements',(window.agreements||[]).filter(function(a){return M(a.client)||M(a.plan);}).slice(0,4).map(function(a){if(!window._omniFirst)window._omniFirst=['ag',a.id];return _omniRow('\ud83d\udd01',a.client||'',(a.plan||''),'ag',a.id);}));
+  document.getElementById('omniRes').innerHTML=groups.length?groups.join(''):'<div style="padding:18px 10px;color:#9AA7B4;font-size:14px;">Nothing matches \u201c'+esc(q)+'\u201d \u2014 try a client name, job name, or estimate number.</div>';
+}
+function omniGo(type,id){
+  closeModal('omniModal');
+  if(type==='job'){openJobDetail(id);return;}
+  if(type==='est'){goTab('estimates');setTimeout(function(){try{editEstimate(id);}catch(e){}},120);return;}
+  if(type==='client'){goTab('customers');return;}
+  if(type==='lead'){goTab('leads');return;}
+  if(type==='ag'){goTab('customers');return;}
+  if(type==='co'){
+    var c=(window.changeOrders||[]).find(function(x){return x.id===id;});
+    var j=c?(window.jobs||[]).find(function(x){return x.id===c.jobId||x.name===c.jobName;}):null;
+    if(j){openJobDetail(j.id);}else{goTab('changes');}
+    return;
+  }
+}
+/* ===== Wrap up today - close the day in one guided pass ===== */
+var _wrapPinged={};
+function _todayIso(){return new Date().toISOString().split('T')[0];}
+function _visJobsForMe(){
+  var vis=(window.jobs||[]).filter(function(j){return j.status!=='complete';});
+  if(typeof isCrew==='function'&&isCrew()){
+    var myName=(CURRENT_USER&&CURRENT_USER.name)?CURRENT_USER.name.toLowerCase():'';
+    var mine={};
+    (window.crew||[]).forEach(function(cm){if(cm.name&&myName&&cm.name.toLowerCase().indexOf(myName.split(' ')[0])>=0&&cm.assign){mine[cm.assign.toLowerCase()]=1;}});
+    vis=vis.filter(function(j){return mine[(j.name||'').toLowerCase()];});
+  }
+  return vis;
+}
+function wrapUpToday(){openModal('wrapModal');wrapRefresh();}
+function wrapRefresh(){
+  var today=_todayIso();var vis=_visJobsForMe();
+  var totalH=0,notes=0,pings=0;
+  var rows=vis.map(function(j){
+    var hs=(window.hours||[]).filter(function(x){return x.site===j.name&&x.date===today;});
+    var hSum=hs.reduce(function(s,x){return s+(parseFloat(x.amount)||0);},0);totalH+=hSum;
+    var hasNote=(window.logs||[]).some(function(l){
+      var jn=l.job||l.site||'';var d=l.date||(l.ts?new Date(l.ts).toISOString().split('T')[0]:'');
+      return jn===j.name&&d===today;
+    });
+    if(hasNote)notes++;
+    var pinged=!!_wrapPinged[j.id];if(pinged)pings++;
+    function chip(ok,okTxt,noTxt){return '<span style="font-size:11.5px;font-weight:700;border-radius:14px;padding:3px 9px;'+(ok?'background:#E6F6EC;color:#1B8A4B;':'background:#F4F6F9;color:#9AA7B4;')+'">'+(ok?'\u2713 '+okTxt:noTxt)+'</span>';}
+    return '<div style="border:1px solid var(--line,#E1E8F0);border-radius:12px;padding:12px 13px;margin-bottom:9px;background:#fff;">'+
+      '<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:8px;"><b style="font-size:14px;flex:1;">'+esc(j.name)+'</b>'+
+      chip(hSum>0,hSum+' hrs','no hours')+chip(hasNote,'note/photo','no note')+chip(pinged,'client updated','client not updated')+'</div>'+
+      '<div style="display:flex;gap:7px;flex-wrap:wrap;">'+
+      '<button class="btn btn-ghost" style="font-size:12px;padding:6px 11px;" onclick="_wrapHours(\''+j.id+'\')">\uff0b Hours</button>'+
+      '<button class="btn btn-ghost" style="font-size:12px;padding:6px 11px;" onclick="closeModal(\'wrapModal\');openJobDetail(\''+j.id+'\')">\uff0b Note / photo</button>'+
+      '<button class="btn btn-ghost" style="font-size:12px;padding:6px 11px;" onclick="_wrapSms(\''+j.id+'\')">\u2709\ufe0f Update client</button></div></div>';
+  }).join('');
+  document.getElementById('wrapList').innerHTML=rows||'<div style="padding:16px 8px;color:#9AA7B4;">No open jobs \u2014 enjoy the evening.</div>';
+  document.getElementById('wrapSummary').innerHTML=vis.length?('<b>'+totalH+'</b> hrs logged today \u00b7 <b>'+notes+'</b> of '+vis.length+' jobs have a note \u00b7 <b>'+pings+'</b> client update'+(pings===1?'':'s')+' sent'):'';
+}
+function _wrapHours(jobId){
+  var j=(window.jobs||[]).find(function(x){return x.id===jobId;});if(!j)return;
+  closeModal('wrapModal');
+  try{
+    var s=document.getElementById('hoursSite');if(s)s.value=j.name;
+    var d=document.getElementById('hoursDate');if(d)d.value=_todayIso();
+  }catch(e){}
+  openModal('hoursModal');
+}
+function _wrapSms(jobId){
+  var j=(window.jobs||[]).find(function(x){return x.id===jobId;});if(!j)return;
+  var c=(window.clients||[]).find(function(x){return x.name&&j.client&&x.name.toLowerCase()===j.client.toLowerCase();});
+  var phone=c&&c.phone?String(c.phone).replace(/[^0-9+]/g,''):'';
+  var company=(CURRENT_USER&&CURRENT_USER.name)||'us';
+  var body='Quick update on '+j.name+': '+((typeof STATUS_LABELS!=='undefined'&&STATUS_LABELS[j.status])||j.status||'in progress')+', about '+(j.progress||0)+'% along. Any questions, just reply here. \u2014 '+company;
+  _wrapPinged[jobId]=1;wrapRefresh();
+  location.href='sms:'+(phone?encodeURIComponent(phone):'')+'?&body='+encodeURIComponent(body);
+}
+
+</script>
+</body>
 </html>
