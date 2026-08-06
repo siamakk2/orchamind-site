@@ -7472,5 +7472,56 @@ function toggleMoreTabs(){
   };
 })();
 </script>
+<script>
+/* One-line orientation for every screen - what this page does for you */
+(function(){
+  var INTRO={
+    today:'Your day at a glance \u2014 start here in the morning, wrap up here at night.',
+    jobs:'Every job you\u2019re running. Tap one to see its whole world on a single page.',
+    estimates:'Write estimates and invoices \u2014 by hand, by voice, or by uploading the plans.',
+    customers:'Your clients, their history, and recurring service agreements \u2014 the relationships that pay the bills.',
+    reports:'Where the money stands \u2014 earned, invoiced, collected, and spent.',
+    dispatch:'Send the right crew to the right job \u2014 assign today\u2019s work in seconds.',
+    schedule:'The week ahead \u2014 who\u2019s where, plus a timeline view of every job.',
+    log:'The daily site log \u2014 photos and notes that protect you when memories differ.',
+    sketches:'Upload plan sets and let the AI read them into takeoffs and estimates.',
+    jobreport:'Talk through your day \u2014 get back a clean, client-ready job report.',
+    punch:'The finish-line list \u2014 every small fix between you and final payment.',
+    selections:'Client choices \u2014 finishes, fixtures, options \u2014 tracked so nothing stalls the job.',
+    safety:'Toolbox talks and safety records \u2014 keeps crews safe and you covered.',
+    equipment:'Your tools and machines \u2014 what you own, where it is, which job has it.',
+    compliance:'Licenses, insurance, and permits \u2014 with expiry dates, before they become emergencies.',
+    crew:'Your people \u2014 who they are, where they\u2019re assigned, what they can see.',
+    hours:'Time on the clock by person and job \u2014 the truth behind your labor costs.',
+    subs:'Your subcontractors \u2014 contacts, trades, and who\u2019s on which job.',
+    leads:'New business \u2014 every inquiry captured and followed up before it goes cold.',
+    changes:'Change orders \u2014 extra work written up, approved, and billed. Never free work again.',
+    plans:'Recurring maintenance plans \u2014 steady revenue, visits that never slip.',
+    costs:'Job costing \u2014 what each job really costs you versus what it earns.',
+    pricebook:'Your price list \u2014 consistent numbers so every estimate is fast and right.',
+    bookings:'Online booking requests from your website land here.',
+    messages:'Client messages from the portal \u2014 the whole conversation in one place.',
+    assistant:'Ask anything about your business \u2014 it knows your jobs, money, and schedule.',
+    risks:'Early warnings \u2014 jobs drifting over budget or past deadline, before it hurts.',
+    billing:'Your Orchamind subscription and payment settings.',
+    invite:'Share Orchamind with other contractors \u2014 you both earn credit.',
+    profile:'Your company details \u2014 name, logo, review link \u2014 used on estimates and the portal.',
+    admin:'User accounts and roles \u2014 add crew, text them logins, control who sees what.'
+  };
+  function apply(){
+    Object.keys(INTRO).forEach(function(k){
+      var p=document.getElementById('panel-'+k);
+      if(!p||p.querySelector('.panel-intro'))return;
+      var d=document.createElement('div');
+      d.className='panel-intro';
+      d.style.cssText='font-size:12.5px;color:#7A8794;margin:0 0 12px;line-height:1.5;padding:8px 12px;background:#F6F9FC;border-left:3px solid #C9DCF5;border-radius:0 8px 8px 0;';
+      d.textContent=INTRO[k];
+      p.insertBefore(d,p.firstChild);
+    });
+  }
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',apply);
+  else apply();
+})();
+</script>
 </body>
 </html>
