@@ -132,9 +132,6 @@
     },
     "api/render.js": {
       "maxDuration": 120
-    },
-    "api/plan-selftest.js": {
-      "maxDuration": 300
     }
   }
 }

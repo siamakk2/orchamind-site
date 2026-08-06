@@ -3601,7 +3601,7 @@ function renderAdmin(){
       var pauseBtn=isP
         ?'<button onclick="setUserStatus(\''+u.username+'\',\'active\')" style="font-size:12px;border:1px solid #1B8A4B;background:#fff;color:#1B8A4B;border-radius:6px;padding:4px 9px;cursor:pointer;margin-right:5px;">Reactivate</button>'
         :'<button onclick="setUserStatus(\''+u.username+'\',\'paused\')" style="font-size:12px;border:1px solid #E1E8F0;background:#fff;color:#B45309;border-radius:6px;padding:4px 9px;cursor:pointer;margin-right:5px;">Pause</button>';
-      acts=mailBtn+'<button onclick="editUserOpen(\''+u.username+'\')" style="font-size:12px;border:1px solid #E1E8F0;background:#fff;color:#0A1628;border-radius:6px;padding:4px 9px;cursor:pointer;margin-right:5px;">Edit</button>'+pauseBtn+'<button onclick="resetUserPw(\''+u.username+'\')" style="font-size:12px;border:1px solid #E1E8F0;background:#fff;color:#2D7FF9;border-radius:6px;padding:4px 9px;cursor:pointer;margin-right:5px;">Reset PW</button><button onclick="removeUser(\''+u.username+'\')" style="font-size:12px;border:1px solid #E1E8F0;background:#fff;color:#D32F2F;border-radius:6px;padding:4px 9px;cursor:pointer;">Remove</button>';
+      acts=mailBtn+'<button onclick="editUserOpen(\''+u.username+'\')" style="font-size:12px;border:1px solid #E1E8F0;background:#fff;color:#0A1628;border-radius:6px;padding:4px 9px;cursor:pointer;margin-right:5px;">Edit</button>'+pauseBtn+'<button onclick="textUserLogin(\''+u.username+'\')" style="font-size:12px;border:1px solid #E1E8F0;background:#EAF3FF;color:#1B5FBF;border-radius:6px;padding:4px 9px;cursor:pointer;margin-right:5px;font-weight:700;">\ud83d\udcf1 Text login</button><button onclick="resetUserPw(\''+u.username+'\')" style="font-size:12px;border:1px solid #E1E8F0;background:#fff;color:#2D7FF9;border-radius:6px;padding:4px 9px;cursor:pointer;margin-right:5px;">Reset PW</button><button onclick="removeUser(\''+u.username+'\')" style="font-size:12px;border:1px solid #E1E8F0;background:#fff;color:#D32F2F;border-radius:6px;padding:4px 9px;cursor:pointer;">Remove</button>';
     }
     return '<div class="adm-row"><div style="font-weight:700;color:#0A1628;">'+esc(u.company||'\u2014')+'<br><span style="font-weight:400;font-size:11px;color:#9aa7b4;">'+esc(u.name||'')+'</span></div><div class="adm-login">'+esc(u.username)+flags+'<br>'+created+'</div><div>'+bill+'</div><div class="adm-usage">'+usTxt+'</div><div>'+acts+'</div></div>';
   }).join('');
@@ -3637,7 +3637,7 @@ function renderUsers(list){
   rows+=list.map(function(u){
     var self=(u.username==='siamakk2');
     var flags=((u.must_change||u.mustChange)?' <span style="font-size:11px;color:#B45309;">(temp pw)</span>':'')+(u.reset_requested?' <span style="font-size:11px;color:#D32F2F;font-weight:700;">\u26a0 needs reset</span>':'');
-    var acts=self?'<span style="font-size:12px;color:#9aa7b4;">You (admin)</span>':'<button onclick="resetUserPw(\''+u.username+'\')" style="font-size:12px;border:1px solid #E1E8F0;background:#fff;color:#2D7FF9;border-radius:6px;padding:4px 9px;cursor:pointer;margin-right:5px;">Reset PW</button><button onclick="removeUser(\''+u.username+'\')" style="font-size:12px;border:1px solid #E1E8F0;background:#fff;color:#D32F2F;border-radius:6px;padding:4px 9px;cursor:pointer;">Remove</button>';
+    var acts=self?'<span style="font-size:12px;color:#9aa7b4;">You (admin)</span>':'<button onclick="textUserLogin(\''+u.username+'\')" style="font-size:12px;border:1px solid #E1E8F0;background:#EAF3FF;color:#1B5FBF;border-radius:6px;padding:4px 9px;cursor:pointer;margin-right:5px;font-weight:700;">\ud83d\udcf1 Text login</button><button onclick="resetUserPw(\''+u.username+'\')" style="font-size:12px;border:1px solid #E1E8F0;background:#fff;color:#2D7FF9;border-radius:6px;padding:4px 9px;cursor:pointer;margin-right:5px;">Reset PW</button><button onclick="removeUser(\''+u.username+'\')" style="font-size:12px;border:1px solid #E1E8F0;background:#fff;color:#D32F2F;border-radius:6px;padding:4px 9px;cursor:pointer;">Remove</button>';
     return '<div class="hours-row"><div style="font-weight:700;color:#0A1628;">'+esc(u.company||'\u2014')+'</div><div class="h-name">'+esc(u.name||'')+'</div><div>'+esc(u.username)+flags+'</div><div>'+acts+'</div></div>';
   }).join('');
   t.innerHTML=rows;
@@ -3675,9 +3675,26 @@ function saveUser(){
   if(!name||!user||!pass){alert('Fill in name, username, and temporary password.');return;}
   fetch('/api/accounts',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'add',callerRole:CURRENT_USER.role,name:name,username:user,role:role,password:pass})})
     .then(function(r){return r.json();}).then(function(d){
-      if(d&&d.ok){closeModal('userModal');loadUsers();alert('Account created for '+name+'. Give them the username "'+user+'" and the temporary password. They will set their own password on first login.');}
+      if(d&&d.ok){closeModal('userModal');loadUsers();
+        if(confirm('Account created for '+name+'. Text them their login now? (opens Messages with everything filled in)')){ _smsLogin(user,pass); }
+        else { alert('Give them the username "'+user+'" and the temporary password. They will set their own password on first login.'); }}
       else{alert((d&&d.error)||'Could not create account.');}
     });
+}
+function _smsLogin(username,tempPass){
+  var msg='Your Orchamind login:'+String.fromCharCode(10)+'App: https://orchamind.com/app'+String.fromCharCode(10)+'Username: '+username+String.fromCharCode(10)+'Temp password: '+tempPass+String.fromCharCode(10)+'Sign in and it will ask you to set your own password. You will see your assigned jobs and can log photos, notes and hours from your phone.';
+  try{navigator.clipboard.writeText(msg);}catch(e){}
+  location.href='sms:?&body='+encodeURIComponent(msg);
+}
+function textUserLogin(username){
+  var np=prompt('Text a login to '+username+'. Temporary password (6+ chars) to send by text - they choose their own at first sign-in:','crew'+Math.floor(1000+Math.random()*9000));
+  if(np===null)return; np=(np||'').trim();
+  if(np.length<6){alert('Password must be at least 6 characters.');return;}
+  fetch('/api/accounts',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'setPassword',callerRole:CURRENT_USER.role,username:username,password:np})})
+    .then(function(r){return r.json();}).then(function(d){
+      if(d&&d.ok){ _smsLogin(username,np); loadUsers(); }
+      else{ alert((d&&d.error)||'Could not set the temporary password.'); }
+    }).catch(function(){alert('Could not reach the server.');});
 }
 function resetUserPw(username){
   var np=prompt('Set a temporary password for '+username+' (6+ characters). They will be asked to set their own at next login.');
