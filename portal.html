@@ -184,8 +184,16 @@ function sendMsg(){
   });
 }
 function decide(coId, decision){
-  if(decision==='approved' && !confirm('Approve this change order? This confirms you accept the additional cost.')) return;
-  api('co', {coId:coId, decision:decision, name:''}, function(d){
+  var signer='';
+  if(decision==='approved'){
+    signer=prompt('Type your full name to approve \u2014 this acts as your signature:','');
+    if(signer===null) return;
+    signer=(signer||'').trim();
+    if(!signer){ alert('A typed name is required to approve.'); return; }
+  } else {
+    if(!confirm('Decline this change order?')) return;
+  }
+  api('co', {coId:coId, decision:decision, name:signer}, function(d){
     if(d&&d.ok){ loadProject(); } else { alert((d&&d.error)||'Could not record your decision.'); }
   });
 }
