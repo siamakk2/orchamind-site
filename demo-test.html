@@ -731,6 +731,7 @@ button:active, .btn:active, .btn-ghost:active, .tab:active, [role="button"]:acti
 .aicp-form button{background:#2D7FF9;color:#fff;border:none;width:42px;height:42px;border-radius:50%;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
 .aicp-form button svg{width:18px;height:18px;}
 </style>
+<div id="jobHub" style="display:none;position:fixed;inset:0;background:#F2F5F9;z-index:900;overflow:auto;-webkit-overflow-scrolling:touch;"></div>
 <div class="modal-bg" id="omniModal"><div class="modal" style="max-width:580px;">
   <input id="omniQ" placeholder="Search jobs, clients, estimates, invoices, leads…" oninput="omniRun()" onkeydown="if(event.key==='Enter'&&window._omniFirst){omniGo(_omniFirst[0],_omniFirst[1]);}if(event.key==='Escape'){closeModal('omniModal');}" autocomplete="off" style="width:100%;font-size:16px;padding:12px 14px;border:2px solid var(--blue,#2D7FF9);border-radius:11px;margin-bottom:10px;font-family:inherit;">
   <div id="omniRes" style="max-height:56vh;overflow:auto;"></div>
@@ -2565,7 +2566,7 @@ function renderJobs(){
       '<div class="job-foot"><button class="ai-btn" onclick="analyzeJob(\''+j.id+'\')">AI Analyze</button>'+qbBtn+progInvBtn+'<button onclick="openJobLog(\''+j.id+'\')">Photos &amp; Log ('+((window.logs||[]).filter(function(x){return x.jobId===j.id||x.job===j.name;}).length)+')</button><button onclick="openClientPortal(\''+j.id+'\')">Client Portal</button><button onclick="draftClientUpdate(\''+j.id+'\')">Client Update</button><button onclick="editJob(\''+j.id+'\')">Edit</button><button onclick="delJob(\''+j.id+'\')" style="color:var(--red);">Delete</button></div></div>';
   }).join('');
 }
-function openJobDetail(id){
+function openJobEdit(id){
   var j=(jobs||[]).filter(function(x){return x.id===id;})[0]; if(!j) return;
   var crewMode=(typeof isCrew==='function'&&isCrew());
   var bp=j.budget?Math.round(j.spent/j.budget*100):0;
@@ -2820,6 +2821,7 @@ function openModal(id){
   try{ history.pushState({omModal:id, omTab:(typeof _omTab!=='undefined'?_omTab:'today')}, '', location.hash||''); }catch(e){}
 }
 function closeModal(id){
+  try{if(window._jobHubId){var _jh=document.getElementById('jobHub');if(_jh&&_jh.style.display!=='none'){setTimeout(function(){try{renderJobHub(window._jobHubId);}catch(e){}},60);}}}catch(e){}
   try{ var st=history.state||{}; if(st.omModal===id){ history.back(); return; } }catch(e){}
   var el=document.getElementById(id); if(el) el.classList.remove('show');
 }
@@ -7319,6 +7321,168 @@ function _wrapSms(jobId){
   var body='Quick update on '+j.name+': '+((typeof STATUS_LABELS!=='undefined'&&STATUS_LABELS[j.status])||j.status||'in progress')+', about '+(j.progress||0)+'% along. Any questions, just reply here. \u2014 '+company;
   _wrapPinged[jobId]=1;wrapRefresh();
   location.href='sms:'+(phone?encodeURIComponent(phone):'')+'?&body='+encodeURIComponent(body);
+}
+
+</script>
+<script>
+/* ===== Unified Job Hub — one screen per job, everything about it ===== */
+function openJobDetail(id){openJobHub(id);}
+function openJobHub(id){
+  window._jobHubId=id;
+  var el=document.getElementById('jobHub');
+  el.style.display='block';
+  renderJobHub(id);
+  el.scrollTop=0;
+}
+function closeJobHub(){
+  window._jobHubId=null;
+  document.getElementById('jobHub').style.display='none';
+}
+document.addEventListener('keydown',function(ev){
+  if(ev.key==='Escape'&&window._jobHubId){
+    var anyModal=document.querySelector('.modal-bg.show');
+    if(!anyModal)closeJobHub();
+  }
+});
+function _jhSec(title,right,body){
+  return '<div style="background:#fff;border:1px solid #E1E8F0;border-radius:14px;padding:14px 15px;margin-bottom:12px;">'+
+    '<div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:10px;">'+
+    '<b style="font-size:14px;">'+title+'</b><span>'+(right||'')+'</span></div>'+body+'</div>';
+}
+function _jhBtn(label,onclick,primary){
+  return '<button onclick="'+onclick+'" style="font-size:12px;font-weight:700;border-radius:8px;padding:6px 11px;cursor:pointer;font-family:inherit;border:1px solid '+(primary?'#2D7FF9;background:#2D7FF9;color:#fff;':'#E1E8F0;background:#fff;color:#1565C0;')+'">'+label+'</button>';
+}
+function renderJobHub(id){
+  var j=(window.jobs||[]).find(function(x){return x.id===id;});
+  var el=document.getElementById('jobHub');
+  if(!j){el.innerHTML='<div style="padding:40px;text-align:center;color:#9AA7B4;">Job not found. <button onclick="closeJobHub()" style="color:#2D7FF9;background:none;border:none;cursor:pointer;font-size:14px;">Back</button></div>';return;}
+  var crewMode=(typeof isCrew==='function'&&isCrew());
+  var today=new Date().toISOString().split('T')[0];
+  var client=(window.clients||[]).find(function(c){return c.name&&j.client&&c.name.toLowerCase()===j.client.toLowerCase();});
+  var phone=client&&client.phone?String(client.phone).replace(/[^0-9+]/g,''):'';
+
+  // ---- joins ----
+  var ests=(window.estimates||[]).filter(function(e){return e.kind!=='invoice'&&e.project===j.name;});
+  var invs=(window.estimates||[]).filter(function(e){return e.kind==='invoice'&&e.project===j.name;});
+  var cos=(window.changeOrders||[]).filter(function(c){return c.jobId===j.id||c.jobName===j.name;});
+  var jlogs=(window.logs||[]).filter(function(l){return (l.job||'')===j.name;}).slice(0,4);
+  var hrsAll=(window.hours||[]).filter(function(x){return x.site===j.name;});
+  var hrsToday=hrsAll.filter(function(x){return x.date===today;}).reduce(function(s,x){return s+(parseFloat(x.amount)||0);},0);
+  var wk=new Date();wk.setDate(wk.getDate()-6);var wkIso=wk.toISOString().split('T')[0];
+  var hrsWeek=hrsAll.filter(function(x){return x.date>=wkIso;}).reduce(function(s,x){return s+(parseFloat(x.amount)||0);},0);
+  var sched=(window.schedule||[]).filter(function(s){return (s.job||'')===j.name;}).sort(function(a,b){return String(a.date).localeCompare(String(b.date));});
+  var upcoming=sched.filter(function(s){return String(s.date)>=today;}).slice(0,5);
+  var crewHere=(window.crew||[]).filter(function(cm){return (cm.assign||'')===j.name;});
+  var pOpen=(window.punch||[]).filter(function(p){return (p.jobId===j.id||p.jobName===j.name);});
+  var exps=(window.expenses||[]).filter(function(x){return x.jobName===j.name||(x.jobId&&x.jobId===j.id);});
+  var sels=(window.selections||[]).filter(function(s){return s.jobId===j.id||s.jobName===j.name;});
+  var equip=(window.equipment||[]).filter(function(e){return (e.assignedTo||'')===j.name;});
+
+  // ---- money (managers only) ----
+  var moneyBar='';
+  if(!crewMode){
+    var base=0;ests.forEach(function(e){try{var t=estTotals(e).total;if(t>base)base=t;}catch(x){}});
+    var coApp=0;cos.forEach(function(c){if(c.status==='approved'){try{coApp+=coTotals(c);}catch(x){}}});
+    var invTot=0,paidTot=0;invs.forEach(function(e){try{var t=estTotals(e).total;invTot+=t;if(e.status==='paid')paidTot+=t;}catch(x){}});
+    var expTot=exps.reduce(function(s,x){return s+(Number(x.amount)||0);},0);
+    function cell(l,v,c){return '<div style="flex:1;min-width:110px;background:#fff;border:1px solid #E1E8F0;border-radius:12px;padding:10px 12px;"><div style="font-size:10.5px;font-weight:800;color:#8A97A6;text-transform:uppercase;letter-spacing:.5px;">'+l+'</div><div style="font-size:16.5px;font-weight:800;color:'+(c||'#0A1628')+';">'+estMoney(v)+'</div></div>';}
+    moneyBar='<div style="display:flex;gap:9px;flex-wrap:wrap;margin-bottom:12px;">'+
+      cell('Contract'+(coApp?' (incl. COs)':''),base+coApp)+cell('Invoiced',invTot)+cell('Paid',paidTot,'#1B8A4B')+cell('Expenses',expTot,expTot>base+coApp&&base+coApp>0?'#D32F2F':'#0A1628')+'</div>';
+  }
+
+  // ---- sections ----
+  var S='';
+  if(!crewMode){
+    var estRows=ests.slice(0,3).map(function(e){return '<div onclick="closeJobHub();goTab(\'estimates\');setTimeout(function(){editEstimate(\''+e.id+'\');},120);" style="display:flex;justify-content:space-between;padding:7px 2px;border-bottom:1px solid #F0F3F7;cursor:pointer;font-size:13.5px;"><span>\ud83d\udcc4 '+esc(e.number||'Estimate')+' <span style="color:#8A97A6;">('+esc(e.status||'draft')+')</span></span><b>'+estMoney((function(){try{return estTotals(e).total;}catch(x){return 0;}})())+'</b></div>';}).join('');
+    var invRows=invs.slice(0,4).map(function(e){return '<div onclick="closeJobHub();goTab(\'estimates\');setTimeout(function(){editEstimate(\''+e.id+'\');},120);" style="display:flex;justify-content:space-between;padding:7px 2px;border-bottom:1px solid #F0F3F7;cursor:pointer;font-size:13.5px;"><span>\ud83e\uddfe '+esc(e.number||'Invoice')+' <span style="color:#8A97A6;">('+esc(e.status||'')+')</span></span><b'+(e.status==='paid'?' style="color:#1B8A4B;"':'')+'>'+estMoney((function(){try{return estTotals(e).total;}catch(x){return 0;}})())+'</b></div>';}).join('');
+    S+=_jhSec('\ud83d\udcc4 Estimate &amp; invoices',_jhBtn('\uff0b Progress invoice','createProgressInvoice(\''+j.id+'\')',true),
+      (estRows||'<div style="color:#9AA7B4;font-size:13px;">No estimate linked \u2014 estimates whose project matches \u201c'+esc(j.name)+'\u201d appear here.</div>')+invRows);
+    var coRows=cos.slice(0,5).map(function(c){
+      var col=c.status==='approved'?'#1B8A4B':c.status==='sent'?'#B8860B':'#8A97A6';
+      return '<div style="display:flex;justify-content:space-between;padding:7px 2px;border-bottom:1px solid #F0F3F7;font-size:13.5px;"><span>\ud83d\udcdd '+esc(c.number||'CO')+' '+esc(c.title||'')+'</span><span><b style="color:'+col+';">'+esc(c.status||'draft')+'</b> \u00b7 '+estMoney((function(){try{return coTotals(c);}catch(x){return 0;}})())+'</span></div>';}).join('');
+    S+=_jhSec('\ud83d\udcdd Change orders ('+cos.length+')',_jhBtn('\uff0b New CO','jhCONew(\''+j.id+'\')'),coRows||'<div style="color:#9AA7B4;font-size:13px;">None yet. Extra work? Write it up before you build it.</div>');
+  }
+  var logRows=jlogs.map(function(l){
+    var d=l.date||(l.ts?new Date(l.ts).toLocaleDateString():'');
+    return '<div style="padding:7px 2px;border-bottom:1px solid #F0F3F7;font-size:13px;"><span style="color:#8A97A6;">'+esc(String(d))+'</span> '+esc(String(l.text||'').slice(0,110))+'</div>';}).join('');
+  S+=_jhSec('\ud83d\udcf8 Photos &amp; log',_jhBtn('\uff0b Note','jhNote(\''+j.id+'\')')+' '+_jhBtn('Full log','closeJobHub();goTab(\'log\')'),
+    logRows||'<div style="color:#9AA7B4;font-size:13px;">No entries yet today \u2014 a one-line note keeps everyone honest.</div>');
+  S+=_jhSec('\u23f1 Hours','<span style="font-size:12.5px;color:#5A6B7D;"><b>'+hrsToday+'</b> today \u00b7 <b>'+hrsWeek+'</b> this week</span> '+_jhBtn('\uff0b Hours','_wrapHours(\''+j.id+'\')',true),
+    hrsAll.slice(0,3).map(function(x){return '<div style="display:flex;justify-content:space-between;padding:6px 2px;border-bottom:1px solid #F0F3F7;font-size:13px;"><span>'+esc(x.name||'')+'</span><span>'+esc(x.date||'')+' \u00b7 <b>'+(x.amount||0)+'h</b></span></div>';}).join('')||'<div style="color:#9AA7B4;font-size:13px;">No hours logged yet.</div>');
+  S+=_jhSec('\ud83d\udcc5 Schedule','',
+    upcoming.map(function(s){return '<div style="padding:6px 2px;border-bottom:1px solid #F0F3F7;font-size:13px;">'+esc(String(s.date||''))+(s.start?' \u00b7 '+esc(String(s.start)):'')+(s.note?' \u2014 '+esc(String(s.note).slice(0,60)):'')+(s.crew?' <span style="color:#8A97A6;">('+esc(String(s.crew))+')</span>':'')+'</div>';}).join('')||'<div style="color:#9AA7B4;font-size:13px;">Nothing scheduled ahead for this job.</div>');
+  S+=_jhSec('\ud83d\udc77 Crew ('+crewHere.length+')','',
+    crewHere.map(function(cm){return '<span style="display:inline-block;background:#F0F6FF;color:#1565C0;border-radius:16px;padding:4px 12px;font-size:12.5px;font-weight:600;margin:0 6px 6px 0;">'+esc(cm.name||'')+(cm.role?' \u00b7 '+esc(cm.role):'')+'</span>';}).join('')||'<div style="color:#9AA7B4;font-size:13px;">No one assigned \u2014 assign crew in the Crew tab.</div>');
+  var puRows=pOpen.slice(0,6).map(function(p){
+    var done=p.status==='done';
+    return '<div onclick="jhPunchToggle(\''+p.id+'\')" style="display:flex;align-items:center;gap:8px;padding:7px 2px;border-bottom:1px solid #F0F3F7;font-size:13.5px;cursor:pointer;">'+
+      '<span style="width:18px;height:18px;border-radius:5px;flex-shrink:0;display:inline-flex;align-items:center;justify-content:center;font-size:12px;'+(done?'background:#1B8A4B;color:#fff;':'border:2px solid #C6D0DB;color:transparent;')+'">\u2713</span>'+
+      '<span style="'+(done?'text-decoration:line-through;color:#9AA7B4;':'')+'">'+esc(p.desc||'')+(p.location?' <span style="color:#8A97A6;">('+esc(p.location)+')</span>':'')+'</span></div>';}).join('');
+  var puOpenCt=pOpen.filter(function(p){return p.status!=='done';}).length;
+  S+=_jhSec('\u2705 Punch list \u2014 '+puOpenCt+' open','',puRows||'<div style="color:#9AA7B4;font-size:13px;">Clean list. Nice.</div>');
+  if(!crewMode&&exps.length){
+    S+=_jhSec('\ud83d\udcb8 Expenses','',exps.slice(0,4).map(function(x){return '<div style="display:flex;justify-content:space-between;padding:6px 2px;border-bottom:1px solid #F0F3F7;font-size:13px;"><span>'+esc(x.vendor||x.category||'')+' <span style="color:#8A97A6;">'+esc(x.date||'')+'</span></span><b>'+estMoney(Number(x.amount)||0)+'</b></div>';}).join(''));
+  }
+  if(sels.length){
+    var selP=sels.filter(function(s){return s.status==='pending';}).length;
+    S+=_jhSec('\ud83c\udfa8 Selections \u2014 '+selP+' pending','',sels.slice(0,4).map(function(s){return '<div style="padding:6px 2px;border-bottom:1px solid #F0F3F7;font-size:13px;">'+esc(s.category||'')+' \u00b7 <b>'+esc(s.chosen||s.status||'')+'</b></div>';}).join(''));
+  }
+  if(equip.length){
+    S+=_jhSec('\ud83d\udea7 Equipment on site','',equip.map(function(e){return '<span style="display:inline-block;background:#FFF6E3;color:#8A6100;border-radius:16px;padding:4px 12px;font-size:12.5px;font-weight:600;margin:0 6px 6px 0;">'+esc(e.name||'')+'</span>';}).join(''));
+  }
+
+  // ---- header ----
+  var stLabel=(typeof STATUS_LABELS!=='undefined'&&STATUS_LABELS[j.status])||j.status||'';
+  var dd=j.date?('<span style="font-size:12.5px;color:#5A6B7D;">\ud83c\udfaf target '+esc(j.date)+'</span>'):'';
+  el.innerHTML=
+    '<div style="max-width:760px;margin:0 auto;padding:14px 14px 60px;">'+
+    '<div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">'+
+      '<button onclick="closeJobHub()" style="background:#fff;border:1px solid #E1E8F0;border-radius:10px;width:38px;height:38px;font-size:17px;cursor:pointer;">\u2190</button>'+
+      '<div style="flex:1;min-width:0;"><b style="font-size:18px;display:block;line-height:1.2;">'+esc(j.name)+'</b>'+
+      '<span style="font-size:13px;color:#5A6B7D;">'+(j.client?('\ud83d\udc64 '+(phone?'<a href="tel:'+phone+'" style="color:#1565C0;">'+esc(j.client)+'</a>':esc(j.client))+' \u00b7 '):'')+esc(j.location||'')+'</span></div>'+
+      '<button onclick="openJobEdit(\''+j.id+'\')" style="background:#fff;border:1px solid #E1E8F0;border-radius:10px;padding:8px 13px;font-size:12.5px;font-weight:700;color:#1565C0;cursor:pointer;">Edit details</button></div>'+
+    '<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:12px;">'+
+      '<span style="background:#0F2138;color:#fff;border-radius:16px;padding:4px 13px;font-size:12.5px;font-weight:700;">'+esc(stLabel)+'</span>'+
+      '<div style="flex:1;min-width:130px;height:9px;background:#E1E8F0;border-radius:6px;overflow:hidden;"><div style="width:'+Math.max(0,Math.min(100,j.progress||0))+'%;height:100%;background:#2D7FF9;"></div></div>'+
+      '<b style="font-size:13px;">'+(j.progress||0)+'%</b>'+dd+'</div>'+
+    '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px;">'+
+      _jhBtn('\ud83d\ude97 On my way','jhOMW(\''+j.id+'\')')+
+      _jhBtn('\u2709\ufe0f Update client','draftClientUpdate(\''+j.id+'\')')+
+      (!crewMode?_jhBtn('\ud83d\udd17 Client portal','openClientPortal(\''+j.id+'\')'):'')+'</div>'+
+    moneyBar+S+'</div>';
+}
+/* ---- hub quick actions ---- */
+function jhNote(jobId){
+  var j=(window.jobs||[]).find(function(x){return x.id===jobId;});if(!j)return;
+  var note=prompt('Quick note for '+j.name+':','');
+  if(note===null||!note.trim())return;
+  logs.unshift({id:'log'+Date.now(),ts:Date.now(),date:new Date().toISOString().split('T')[0],job:j.name,text:note.trim()});
+  if(typeof save==='function')save();
+  renderJobHub(jobId);
+}
+function jhPunchToggle(pid){
+  var p=(window.punch||[]).find(function(x){return x.id===pid;});if(!p)return;
+  p.status=p.status==='done'?'open':'done';
+  if(typeof save==='function')save();
+  if(window._jobHubId)renderJobHub(window._jobHubId);
+}
+function jhOMW(jobId){
+  var j=(window.jobs||[]).find(function(x){return x.id===jobId;});if(!j)return;
+  var c=(window.clients||[]).find(function(x){return x.name&&j.client&&x.name.toLowerCase()===j.client.toLowerCase();});
+  var phone=c&&c.phone?String(c.phone).replace(/[^0-9+]/g,''):'';
+  var eta=prompt('ETA in minutes:','20');if(eta===null)return;
+  var company=(CURRENT_USER&&CURRENT_USER.name)||'us';
+  var body='On my way to '+j.name+' \u2014 about '+(parseInt(eta,10)||20)+' minutes out. \u2014 '+company;
+  location.href='sms:'+(phone?encodeURIComponent(phone):'')+'?&body='+encodeURIComponent(body);
+}
+function jhCONew(jobId){
+  var j=(window.jobs||[]).find(function(x){return x.id===jobId;});
+  closeJobHub();
+  try{newCO();}catch(e){goTab('changes');return;}
+  if(j){setTimeout(function(){try{
+    var sel=document.getElementById('coJob')||document.getElementById('coJobName');
+    if(sel)sel.value=j.name;
+  }catch(e){}},80);}
 }
 
 </script>
