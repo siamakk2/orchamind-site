@@ -59,7 +59,7 @@
         if (!plausible(v.x, v.y, v.x + v.w, v.y + v.h)) return;
         solids.push({ x0: v.x, y0: v.y, x1: v.x + v.w, y1: v.y + v.h,
           top: Math.max(6, Math.min(40, v.heightFt || wallTop)),
-          roof: roofN(v.roof || g.roof || 'flat'), glazing: v.glazing || null, name: v.name || '' });
+          roof: roofN(v.roof || g.roof || 'low-slope'), glazing: v.glazing || null, name: v.name || '' });
       });
     }
     var porches = [];
@@ -254,7 +254,7 @@
 
       if (grow > 0.5) {
         var ra = Math.min(1, (grow - 0.5) / 0.4);
-        var roofType = (s2.roof || 'flat').toLowerCase();
+        var roofType = (s2.roof || 'low-slope').toLowerCase();
         var Wd2 = sx1 - sx0, Dp2 = sy1 - sy0;
         var o2 = Math.max(0.7, Math.min(Wd2, Dp2) * 0.05);
         var pitchMul = roofType === 'flat' ? 0.06 : (roofType === 'low-slope' || roofType === 'shed' || roofType === 'lowslope') ? 0.16 : 0.5;
