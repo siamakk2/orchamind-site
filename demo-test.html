@@ -1742,7 +1742,7 @@ button:active, .btn:active, .btn-ghost:active, .tab:active, [role="button"]:acti
     <div class="epv-3dhint" id="epv3dLabel">Drag to rotate &middot; pinch or scroll to zoom</div>
     <div id="p3dRooms" class="epv-rooms"></div>
   </div>
-  <div class="epv-foot">Massing model &amp; pricing are an AI draft for visualization &mdash; review every line below before sending.</div>
+  <div class="epv-foot" id="epvFoot">Massing model &amp; pricing are an AI draft for visualization &mdash; review every line below before sending.</div>
 </div>
 <div id="estTiers"></div>
     <div id="estPbPick" class="pbpick"></div>
@@ -4610,6 +4610,11 @@ function _planApply(text,msg){
   msg.textContent='Drafted '+obj.items.length+' line items from your plans - AI draft, review every line before sending.';
   _planGeom=(obj.geometry&&obj.geometry.rooms&&obj.geometry.rooms.length)?obj.geometry:_planGeom;
   if(_planGeom&&obj.totalSqft){_planGeom.totalSqft=estNum(obj.totalSqft);}
+  // Honesty flag: if the notes/assumptions say the upload was elevation-only (no floor plan),
+  // the geometry is an approximation, not a read of the actual room layout — label it so.
+  var srcTxt=((obj.notes||'')+' '+((obj.assumptions||[]).join(' '))).toLowerCase();
+  _planGeomApprox = (!obj.geometry || !obj.geometry.rooms || obj.geometry.rooms.length<2)
+    || /elevation-only|no floor plan|proportional reading|area schedule was provided|no floor plan or area/.test(srcTxt);
   _p3dGrow=0;_p3dGrowT0=Date.now();_plan3dBtn();
   _planRenderQ(obj.questions||[]);
   _planRenderCompliance(obj.complianceFlags||[]);
@@ -4655,7 +4660,7 @@ function estPlanRefine(){
   }).catch(function(e){btn.disabled=false;btn.innerHTML=old;msg.textContent='AI error: '+e.message;});
 }
 /* ---- 3D plan view ---- */
-var _planGeom=null,_p3dRAF=null,_p3dTheta=0.7,_p3dPitch=0.46,_p3dZoom=1,_p3dAuto=true,_p3dGrow=1,_p3dGrowT0=0;
+var _planGeom=null,_planGeomApprox=false,_p3dRAF=null,_p3dTheta=0.7,_p3dPitch=0.46,_p3dZoom=1,_p3dAuto=true,_p3dGrow=1,_p3dGrowT0=0;
 var _P3D_COLORS=['#5B9DFF','#F9A825','#2E9B5B','#9B6BD6','#E8654F','#3AAFA9','#D66B9B','#8A97A5'];
 function _plan3dLoad(e){
   _planGeom=(e&&e.plan3d&&e.plan3d.rooms&&e.plan3d.rooms.length)?e.plan3d:null;
@@ -4670,6 +4675,12 @@ function _epvSyncPreview(){
   var realGeom=!!(_planGeom&&_planGeom.rooms&&_planGeom.rooms.length&&!_planGeom._synth);
   if(!hasLines&&!(_planGeom&&_planGeom.rooms&&_planGeom.rooms.length)){pv.style.display='none';cancelAnimationFrame(_p3dRAF);_p3dRAF=null;return;}
   pv.style.display='block';
+  var _foot=document.getElementById('epvFoot');
+  if(_foot){
+    _foot.innerHTML = _planGeomApprox
+      ? '&#9888;&#65039; This 3D preview is an <b>approximation</b> &mdash; the upload didn\u2019t include a readable floor plan, so the shape, rooms, and windows are estimated from the elevations and may not match the real building. Upload the floor-plan sheet for an accurate model. Pricing is an AI draft; review every line.'
+      : 'Massing model &amp; pricing are an AI draft for visualization &mdash; review every line below before sending.';
+  }
   document.getElementById('epvTitle').textContent=(document.getElementById('estProject').value||document.getElementById('estClient').value||'').trim();
   // metrics
   var tt=(document.getElementById('estTotal')||{}).textContent||'$0';
