@@ -51,6 +51,10 @@
     {
       "source": "/book",
       "destination": "/book.html"
+    },
+    {
+      "source": "/features/materials-calculator",
+      "destination": "/features/materials-calculator/index.html"
     }
   ],
   "headers": [
