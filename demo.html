@@ -1699,6 +1699,24 @@ button:active, .btn:active, .btn-ghost:active, .tab:active, [role="button"]:acti
 
 
 <!-- MODALS -->
+<div class="modal-bg" id="matModal"><div class="modal" style="max-width:720px;">
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+    <h2 style="margin:0;">&#128207; Measure materials</h2>
+    <button class="btn btn-ghost" onclick="matClose()" style="padding:4px 10px;">&times;</button>
+  </div>
+  <p style="color:var(--muted);font-size:13px;margin:0 0 14px;">Describe what you need in plain words. Orchamind figures out the materials and quantities, then adds them to your estimate. Two specialties built in: <b>fencing</b> (posts, wire, gates, hardware) and <b>countertop slabs</b> (how many slabs + reusable remnants).</p>
+  <div class="field">
+    <label>What do you need?</label>
+    <textarea id="matPrompt" rows="3" placeholder="e.g. 150 linear feet of 5 ft wire fence around a vineyard, 4 corners, one gate&#10;or: quartz countertops on 49.5 x 120 slabs — island 96x42, main run 120x25.5, L-return 60x25.5, bar 72x16"></textarea>
+  </div>
+  <div id="matSlabRow" class="field" style="display:none;">
+    <label>Slab size (inches) &mdash; for countertop jobs</label>
+    <div style="display:flex;gap:8px;align-items:center;"><input id="matSlabW" type="number" value="120" style="width:90px;"> &times; <input id="matSlabH" type="number" value="49.5" style="width:90px;"><span style="color:var(--muted);font-size:12px;">width &times; height</span></div>
+  </div>
+  <button class="btn btn-primary" id="matGoBtn" onclick="matCalc()" style="width:100%;">&#10024; Calculate materials</button>
+  <div id="matResult" style="margin-top:14px;"></div>
+</div></div>
+
 <div class="modal-bg" id="estModal"><div class="modal" style="max-width:820px;">
   <h3 id="estModalTitle">New Estimate</h3>
   <input type="hidden" id="estId">
@@ -1717,7 +1735,7 @@ button:active, .btn:active, .btn-ghost:active, .tab:active, [role="button"]:acti
   <div class="est-ai">
     <label style="font-weight:700;color:var(--navy);font-size:13px;">&#10024; Draft with AI</label>
     <textarea id="estAiScope" rows="2" placeholder="Describe the job in plain words &mdash; e.g. 'Rewire a 2,000 sq ft home, 200A panel upgrade, 24 recessed lights, pull permit'"></textarea>
-    <div class="gbb-row"><button class="btn btn-ghost" type="button" id="estAiBtn" onclick="aiDraftEstimate()">&#10024; Generate line items</button><button class="btn btn-ghost" type="button" id="estGbbBtn" onclick="aiGoodBetterBest()">&#9889; Good &middot; Better &middot; Best</button><button class="btn btn-ghost" type="button" id="estPlanBtn" onclick="document.getElementById('estPlanFile').click()">&#128208; From plans <span style="background:#2E9B5B;color:#fff;border-radius:8px;font-size:9px;padding:1px 5px;vertical-align:middle;">NEW</span></button><button class="btn btn-ghost" type="button" onclick="estFromPricebook()">+ From Pricebook</button></div>
+    <div class="gbb-row"><button class="btn btn-ghost" type="button" id="estAiBtn" onclick="aiDraftEstimate()">&#10024; Generate line items</button><button class="btn btn-ghost" type="button" id="estGbbBtn" onclick="aiGoodBetterBest()">&#9889; Good &middot; Better &middot; Best</button><button class="btn btn-ghost" type="button" id="estPlanBtn" onclick="document.getElementById('estPlanFile').click()">&#128208; From plans <span style="background:#2E9B5B;color:#fff;border-radius:8px;font-size:9px;padding:1px 5px;vertical-align:middle;">NEW</span></button><button class="btn btn-ghost" type="button" onclick="estFromPricebook()">+ From Pricebook</button><button class="btn btn-ghost" type="button" id="estMatBtn" onclick="matOpen()">&#128207; Measure materials <span style="background:#F9A825;color:#0A1628;border-radius:8px;font-size:9px;padding:1px 5px;vertical-align:middle;">NEW</span></button></div>
     <input type="file" id="estPlanFile" accept="image/*,application/pdf" multiple style="display:none" onchange="_planStageAdd(this.files);this.value='';">
     <div id="estPlanStage"></div>
     <div id="estAiMsg" class="est-ai-msg"></div>
@@ -4595,6 +4613,131 @@ function _planAnalyzeStaged(){
 }
 /* Back-compat: anything still calling the old instant flow now stages instead */
 function aiEstimateFromPlans(files){_planStageAdd(files);}
+// ===== MEASURE MATERIALS (fence BOM + slab 2D nesting) =====
+function matOpen(){var m=document.getElementById('matModal');if(m)m.classList.add('show');matAutoShowSlab();var p=document.getElementById('matPrompt');if(p)p.oninput=matAutoShowSlab;}
+function matClose(){var m=document.getElementById('matModal');if(m)m.classList.remove('show');}
+function matAutoShowSlab(){var t=(document.getElementById('matPrompt').value||'').toLowerCase();var isSlab=/counter|slab|quartz|granite|stone|marble|backsplash/.test(t);var row=document.getElementById('matSlabRow');if(row)row.style.display=isSlab?'block':'none';}
+function _matFenceBOM(cfg){
+  var lf=+cfg.linearFeet||0, gates=+cfg.gates||0, corners=cfg.corners!=null?+cfg.corners:4, ends=cfg.ends!=null?+cfg.ends:0;
+  var type=(cfg.type||'wire').toLowerCase(), height=+cfg.heightFt||5, out={type:type,items:[],notes:[]}, runLF=Math.max(0,lf);
+  if(/wire|field|vineyard|deer|welded|woven/.test(type)){
+    var spacing=+cfg.postSpacingFt||12, woodEvery=+cfg.woodPostEveryFt||48;
+    var linePosts=Math.max(0,Math.ceil(runLF/spacing)-1), woodLine=Math.ceil(runLF/woodEvery), cornerPosts=corners+ends, rolls=Math.ceil(runLF/330);
+    out.items.push({m:'Wood corner/end posts (8 ft, set in concrete)',qty:cornerPosts,unit:'ea'});
+    out.items.push({m:'Wood line/brace posts (8 ft)',qty:woodLine,unit:'ea'});
+    out.items.push({m:'Metal T-posts ('+(height+1)+' ft)',qty:linePosts,unit:'ea'});
+    out.items.push({m:'Field/wire fencing '+height+' ft',qty:rolls,unit:'roll (330 ft)'});
+    out.items.push({m:'H-brace assemblies (corners/ends)',qty:cornerPosts,unit:'ea'});
+    out.items.push({m:'T-post clips',qty:linePosts*5,unit:'ea'});
+    out.items.push({m:'Concrete bags',qty:(cornerPosts+woodLine)*2,unit:'bag'});
+    out.items.push({m:'Brace wire',qty:Math.max(1,Math.ceil(cornerPosts/4)),unit:'spool'});
+    if(gates>0)out.items.push({m:'Gates',qty:gates,unit:'ea'});
+    out.notes.push('T-posts every '+spacing+' ft; wood brace posts every '+woodEvery+' ft, set in concrete.');
+  } else if(/wood|board|privacy|cedar|picket/.test(type)){
+    var ps=+cfg.postSpacingFt||8, posts=Math.ceil(runLF/ps)+1+corners, sections=Math.ceil(runLF/ps), rails=sections*(height>=6?3:2), boards=Math.ceil(runLF*12/5.5);
+    out.items.push({m:'Wood posts (4x4, '+(height+2)+' ft, set in concrete)',qty:posts,unit:'ea'});
+    out.items.push({m:'Rails (2x4x8)',qty:rails,unit:'ea'});
+    out.items.push({m:'Fence boards ('+height+' ft)',qty:boards,unit:'ea'});
+    out.items.push({m:'Concrete bags',qty:posts*2,unit:'bag'});
+    out.items.push({m:'Screws/nails',qty:Math.ceil(runLF/10),unit:'lb'});
+    if(gates>0)out.items.push({m:'Gate kits',qty:gates,unit:'ea'});
+    out.notes.push('Posts every '+ps+' ft; '+(height>=6?3:2)+' rails per section.');
+  } else if(/chain/.test(type)){
+    var cs=+cfg.postSpacingFt||10, line=Math.max(0,Math.ceil(runLF/cs)-1), terminal=corners+ends+gates*2;
+    out.items.push({m:'Line posts',qty:line,unit:'ea'});
+    out.items.push({m:'Terminal posts (corner/end/gate)',qty:terminal,unit:'ea'});
+    out.items.push({m:'Top rail (10.5 ft)',qty:Math.ceil(runLF/10.5),unit:'ea'});
+    out.items.push({m:'Chain-link fabric '+height+' ft',qty:Math.ceil(runLF/50),unit:'roll (50 ft)'});
+    out.items.push({m:'Tension bands + bars',qty:terminal,unit:'set'});
+    out.items.push({m:'Tie wires',qty:Math.ceil(runLF*1.5),unit:'ea'});
+    out.items.push({m:'Concrete bags',qty:(line+terminal)*2,unit:'bag'});
+    if(gates>0)out.items.push({m:'Gates',qty:gates,unit:'ea'});
+    out.notes.push('Line posts every '+cs+' ft.');
+  }
+  return out;
+}
+function _matNest(pieces,slabW,slabH,opts){
+  opts=opts||{};var kerf=opts.kerf||0.125,items=[];
+  pieces.forEach(function(p,idx){var w=+p.w,h=+p.h,q=Math.max(1,+(p.qty||1));if(!(w>0)||!(h>0))return;for(var n=0;n<q;n++)items.push({id:p.name||('Piece '+(idx+1)),w:w,h:h,area:w*h});});
+  items.sort(function(a,b){return (Math.max(b.w,b.h)-Math.max(a.w,a.h))||(b.area-a.area);});
+  var slabs=[];
+  function newSlab(){return {free:[{x:0,y:0,w:slabW,h:slabH}],placed:[]};}
+  function place(slab,item){var best=null;for(var i=0;i<slab.free.length;i++){var f=slab.free[i];[[item.w,item.h,false],[item.h,item.w,true]].forEach(function(o){var pw=o[0],ph=o[1];if(pw<=f.w+1e-6&&ph<=f.h+1e-6){var waste=f.w*f.h-pw*ph;if(!best||waste<best.waste)best={i:i,w:pw,h:ph,rot:o[2],waste:waste,f:f};}});}
+    if(!best)return false;var f=best.f;slab.placed.push({id:item.id,x:f.x,y:f.y,w:best.w,h:best.h,rot:best.rot});
+    var usedW=best.w+(f.w-best.w>0.01?kerf:0),usedH=best.h+(f.h-best.h>0.01?kerf:0);
+    var right={x:f.x+usedW,y:f.y,w:f.w-usedW,h:usedH},bottom={x:f.x,y:f.y+usedH,w:f.w,h:f.h-usedH};
+    slab.free.splice(best.i,1);if(right.w>0.5&&right.h>0.5)slab.free.push(right);if(bottom.w>0.5&&bottom.h>0.5)slab.free.push(bottom);return true;}
+  var oversize=[];
+  items.forEach(function(item){var ok=(item.w<=slabW&&item.h<=slabH)||(item.h<=slabW&&item.w<=slabH);if(!ok){oversize.push(item.id+' ('+item.w+'x'+item.h+')');return;}
+    var placed=false;for(var s=0;s<slabs.length;s++){if(place(slabs[s],item)){placed=true;break;}}if(!placed){var sl=newSlab();place(sl,item);slabs.push(sl);}});
+  var remnants=[];slabs.forEach(function(sl,si){sl.free.forEach(function(f){if(f.w>=6&&f.h>=6)remnants.push({slab:si+1,w:Math.round(f.w*10)/10,h:Math.round(f.h*10)/10,area:f.w*f.h});});});
+  remnants.sort(function(a,b){return b.area-a.area;});
+  var tp=items.reduce(function(s,i){return s+i.area;},0),ts=slabs.length*slabW*slabH;
+  return {slabCount:slabs.length,slabs:slabs,remnants:remnants,oversize:oversize,yieldPct:ts?Math.round(tp/ts*100):0,sqftPieces:Math.round(tp/144*10)/10,sqftSlabs:Math.round(ts/144*10)/10};
+}
+function matCalc(){
+  var prompt=(document.getElementById('matPrompt').value||'').trim();
+  if(!prompt){return;}
+  var res=document.getElementById('matResult');
+  if(typeof _planDemoOk==='function' && !_planDemoOk()){res.innerHTML='<div style="color:var(--muted);">Demo AI limit reached. The full version is unlimited \u2014 call 323-657-7752.</div>';return;}
+  var btn=document.getElementById('matGoBtn');btn.disabled=true;var old=btn.innerHTML;btn.innerHTML='Calculating\u2026';
+  res.innerHTML='<div class="briefing-loading"><div class="spinner"></div> Working out your materials\u2026</div>';
+  var sys='You turn a contractor\u2019s plain-English material request into structured data for a calculator. Decide if it is a FENCE job or a COUNTERTOP/SLAB job. Return ONLY JSON, no markdown.\n'
+    +'For FENCE: {"kind":"fence","fence":{"type":"wire|wood|chain-link (pick the best fit; vineyard/field/deer/garden = wire)","linearFeet":number,"heightFt":number,"corners":number (estimate 4 if enclosing an area and not stated),"ends":number,"gates":number,"postSpacingFt":number or null}}.\n'
+    +'For COUNTERTOP: {"kind":"slab","pieces":[{"name":"string","w":number_inches,"h":number_inches,"qty":number}]}. Convert any feet to inches. Each countertop run/island/bar is a piece; a long run over ~10 ft can stay one piece (the calculator handles seams).\n'
+    +'If unsure which, pick the most likely. Never add commentary.';
+  callClaude(sys,prompt,function(text){
+    btn.disabled=false;btn.innerHTML=old;
+    var obj=_estParseJSON(text);
+    if(!obj){res.innerHTML='<div style="color:var(--muted);">Could not read that. Try describing the fence length/height or the countertop sizes.</div>';return;}
+    try{ if(obj.kind==='slab'){_matRenderSlab(obj.pieces||[]);} else {_matRenderFence(obj.fence||{});} }
+    catch(e){res.innerHTML='<div style="color:var(--muted);">Calc error: '+esc(e.message||'')+'</div>';}
+  },function(e){btn.disabled=false;btn.innerHTML=old;res.innerHTML='<div style="color:var(--muted);">Error: '+esc(e)+'</div>';});
+}
+var _matLast=null;
+function _matRenderFence(cfg){
+  var bom=_matFenceBOM(cfg);_matLast={kind:'fence',bom:bom};
+  var res=document.getElementById('matResult');
+  res.innerHTML='<div style="background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px;">'
+    +'<div style="font-weight:800;margin-bottom:8px;">Fence materials \u2014 '+esc(cfg.linearFeet||0)+' ft, '+esc(cfg.heightFt||5)+' ft '+esc(bom.type)+'</div>'
+    +'<table style="width:100%;font-size:13.5px;border-collapse:collapse;">'+bom.items.map(function(i){return '<tr><td style="padding:4px 0;border-bottom:1px solid var(--line);">'+esc(i.m)+'</td><td style="text-align:right;font-weight:700;white-space:nowrap;padding-left:10px;">'+i.qty+' '+esc(i.unit)+'</td></tr>';}).join('')+'</table>'
+    +(bom.notes.length?'<div style="color:var(--muted);font-size:12px;margin-top:8px;">'+esc(bom.notes.join(' '))+'</div>':'')
+    +'<div style="color:var(--muted);font-size:11.5px;margin-top:8px;">Estimated quantities \u2014 verify against your layout and local supplier pack sizes.</div>'
+    +'<button class="btn btn-primary" onclick="matAddToEstimate()" style="width:100%;margin-top:12px;">Add these to the estimate</button></div>';
+}
+function _matRenderSlab(pieces){
+  var slabW=+document.getElementById('matSlabW').value||120, slabH=+document.getElementById('matSlabH').value||49.5;
+  var r=_matNest(pieces,slabW,slabH,{kerf:0.125});_matLast={kind:'slab',nest:r,slabW:slabW,slabH:slabH,pieces:pieces};
+  var res=document.getElementById('matResult');
+  var svg=_matSlabSVG(r,slabW,slabH);
+  res.innerHTML='<div style="background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px;">'
+    +'<div style="font-weight:800;font-size:16px;margin-bottom:4px;">'+r.slabCount+' slab'+(r.slabCount===1?'':'s')+' needed</div>'
+    +'<div style="color:var(--muted);font-size:12.5px;margin-bottom:10px;">Slab '+slabW+'\u2033 \u00d7 '+slabH+'\u2033 \u00b7 '+r.sqftPieces+' sq ft of countertop \u00b7 '+r.yieldPct+'% yield'+(r.oversize.length?(' \u00b7 \u26a0\ufe0f '+r.oversize.length+' piece(s) need a seam'):'')+'</div>'
+    +svg
+    +'<div style="font-weight:700;font-size:13.5px;margin:12px 0 6px;">Reusable remnants</div>'
+    +(r.remnants.length?('<table style="width:100%;font-size:13px;border-collapse:collapse;">'+r.remnants.slice(0,10).map(function(m){return '<tr><td style="padding:3px 0;border-bottom:1px solid var(--line);">Slab '+m.slab+'</td><td style="text-align:right;padding-left:10px;border-bottom:1px solid var(--line);">'+m.w+'\u2033 \u00d7 '+m.h+'\u2033 <span style="color:var(--muted);">('+Math.round(m.area/144*10)/10+' sq ft)</span></td></tr>';}).join('')+'</table>'):'<div style="color:var(--muted);font-size:13px;">No large usable remnants.</div>')
+    +(r.oversize.length?'<div style="color:#C62828;font-size:12px;margin-top:8px;">Too big for one slab (will need a seam): '+esc(r.oversize.join(', '))+'</div>':'')
+    +'<div style="color:var(--muted);font-size:11.5px;margin-top:8px;">Rectangular-nesting estimate incl. \u215b\u2033 blade kerf \u2014 not a vein-matched fabricator cut sheet. Verify before ordering stone.</div>'
+    +'<button class="btn btn-primary" onclick="matAddToEstimate()" style="width:100%;margin-top:12px;">Add slabs to the estimate</button></div>';
+}
+function _matSlabSVG(r,slabW,slabH){
+  var pal=['#2D7FF9','#2E9B5B','#F9A825','#8E5BD9','#E0567A','#00A6A6','#C97A2B','#5B7CB8'];
+  var scale=Math.min(300/slabW, 1), gap=10, rows=r.slabs.map(function(sl,si){
+    var w=slabW*scale, h=slabH*scale;
+    var rects=sl.placed.map(function(p,pi){return '<rect x="'+(p.x*scale)+'" y="'+(p.y*scale)+'" width="'+(p.w*scale)+'" height="'+(p.h*scale)+'" fill="'+pal[pi%pal.length]+'" opacity="0.85" stroke="#fff" stroke-width="1"/><text x="'+((p.x+p.w/2)*scale)+'" y="'+((p.y+p.h/2)*scale+3)+'" font-size="8" fill="#fff" text-anchor="middle">'+esc((p.id||'').slice(0,10))+'</text>';}).join('');
+    return '<div style="margin-bottom:8px;"><div style="font-size:11px;color:var(--muted);margin-bottom:2px;">Slab '+(si+1)+'</div><svg width="'+w+'" height="'+h+'" style="border:1px solid var(--line);background:#F4F6F9;">'+rects+'</svg></div>';
+  }).join('');
+  return '<div>'+rows+'</div>';
+}
+function matAddToEstimate(){
+  if(!_matLast)return;
+  if(_matLast.kind==='fence'){ _matLast.bom.items.forEach(function(i){ addEstLine({desc:i.m,qty:i.qty,unit:i.unit.split(' ')[0],price:0}); }); }
+  else { addEstLine({desc:'Countertop slabs ('+_matLast.slabW+'\u2033\u00d7'+_matLast.slabH+'\u2033) \u2014 nested layout',qty:_matLast.nest.slabCount,unit:'slab',price:0});
+    addEstLine({desc:'Countertop fabrication & install ('+_matLast.nest.sqftPieces+' sq ft)',qty:_matLast.nest.sqftPieces,unit:'sqft',price:0}); }
+  if(typeof recalcEst==='function')recalcEst();
+  matClose();
+}
+
 function _planApply(text,msg){
   _planThinkStop();
   var obj=_estParseJSON(text);
