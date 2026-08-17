@@ -136,6 +136,12 @@
     },
     "api/render.js": {
       "maxDuration": 120
+    },
+    "api/pagegen.js": {
+      "maxDuration": 300
+    },
+    "api/audit.js": {
+      "maxDuration": 120
     }
   }
 }
