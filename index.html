@@ -268,7 +268,7 @@ nav{position:sticky;top:0;z-index:100;background:rgba(10,22,40,0.85);backdrop-fi
 .pulse-dot{width:7px;height:7px;border-radius:50%;background:var(--amber);box-shadow:0 0 0 0 rgba(249,168,37,0.7);animation:pulse 2s infinite;}
 @keyframes pulse{0%{box-shadow:0 0 0 0 rgba(249,168,37,0.6);}70%{box-shadow:0 0 0 9px rgba(249,168,37,0);}100%{box-shadow:0 0 0 0 rgba(249,168,37,0);}}
 .hero h1{font-size:58px;font-weight:800;max-width:14ch;margin-bottom:24px;}
-.hero h1 .grad{background:linear-gradient(120deg,var(--signal-soft),var(--amber));-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;}
+.hero h1 .grad{color:var(--amber);}
 .hero-sub{font-size:20px;color:rgba(255,255,255,0.78);max-width:54ch;margin-bottom:38px;font-weight:400;}
 .hero-btns{display:flex;gap:14px;flex-wrap:wrap;margin-bottom:54px;}
 .btn-primary{background:var(--signal);color:#fff;padding:15px 30px;border-radius:11px;font-weight:600;font-size:16px;transition:transform .15s,box-shadow .2s;box-shadow:0 8px 24px rgba(45,127,249,0.35);}
@@ -624,9 +624,9 @@ footer a:hover{color:#1E6FE0;}
 <header class="hero" id="top">
   <div class="hero-inner">
     <div class="hero-copy">
-      <div class="eyebrow"><span class="pulse-dot"></span> The all-in-one AI platform for contractors &mdash; A to Z</div>
-      <h1>The AI brain that <span class="grad">runs your jobs</span> while you run your business.</h1>
-      <p class="hero-sub">Orchamind tracks every job, crew member, and hour — then briefs you each morning, flags what's about to go wrong, and answers any question. Just talk to it. If you can send a text, you can run it.</p>
+      <div class="eyebrow"><span class="pulse-dot"></span> Built by a contractor's team in Napa Valley, California</div>
+      <h1>Run every job from your phone &mdash; <span class="grad">by talking to it.</span></h1>
+      <p class="hero-sub">Orchamind keeps track of your jobs, crew, and hours, writes your estimates from a photo of the plans, and tells you each morning what needs your attention. No spreadsheets, no typing &mdash; if you can send a text, you can run it.</p>
       <div class="hero-btns">
         <a href="/app?signup=1" class="btn-primary">Start free →</a>
         <a href="demo.html?demo=1" class="btn-ghost"><svg class="btn-ic" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg> Try the live demo</a>
