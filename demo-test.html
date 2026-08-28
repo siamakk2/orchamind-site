@@ -2,6 +2,12 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
+<!-- Consent Mode v2 defaults — must load ahead of gtag.js. Keep it directly after the charset meta tag. -->
+<script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}
+(function(){var d='denied',g='granted',B={ad_storage:d,ad_user_data:d,ad_personalization:d,functionality_storage:d,personalization_storage:d,security_storage:g,wait_for_update:500},m=function(o){var r={},k;for(k in B)r[k]=B[k];for(k in o)r[k]=o[k];return r};
+gtag('consent','default',m({analytics_storage:g}));
+gtag('consent','default',m({analytics_storage:d,region:'AT BE BG HR CY CZ DK EE FI FR DE GR HU IE IT LV LT LU MT NL PL PT RO SK SI ES SE IS LI NO GB CH'.split(' ')}));
+try{var c=JSON.parse(localStorage.getItem('sk_consent_v1'));if(c&&c.v===1&&Date.now()-c.ts<15552e6){var a=c.ads?g:d,n=c.analytics?g:d,f=c.functional?g:d;gtag('consent','update',{ad_storage:a,ad_user_data:a,ad_personalization:a,analytics_storage:n,functionality_storage:f,personalization_storage:f,security_storage:g});}}catch(e){}})();</script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Site Manager AI | Orchamind Demo</title>
   <link rel="icon" href="/favicon.ico?v=4" sizes="any"><link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png?v=4"><link rel="icon" type="image/png" sizes="192x192" href="/icon-192.png?v=4">
@@ -5099,7 +5105,7 @@ function printProposal(){
       '<div class="price">'+estMoney(tot)+'</div><ul>'+items+'</ul></div>';
   }).join('');
   var w=_docWin();
-  var doc='<!doctype html><html><head><meta charset="utf-8"><title>Proposal - '+esc(company)+'</title><style>'+
+  var doc='<!doctype html><html><head><title>Proposal - '+esc(company)+'</title><style>'+
     '*{box-sizing:border-box;}body{font-family:Arial,Helvetica,sans-serif;color:#0A1628;margin:34px;}'+
     '.hd{border-bottom:3px solid #1565C0;padding-bottom:14px;}.co{font-size:22px;font-weight:800;color:#1565C0;}'+
     '.sub{color:#5A6B7D;font-size:13px;margin-top:4px;}h1{font-size:22px;margin:18px 0 4px;}.lead{color:#5A6B7D;font-size:13.5px;margin-bottom:22px;}'+
@@ -5113,7 +5119,8 @@ function printProposal(){
     '<h1>Choose the option that\u2019s right for you</h1><div class="lead">Three ways we can approach your project. Each option is complete and ready to start \u2014 simply choose the one that best fits your goals and budget.</div>'+
     '<div class="opts">'+cols+'</div>'+
     '<div class="ft" style="margin-bottom:4px;">All pricing shown is an estimate only and subject to a written contract.</div>'+
-    '<div class="ft">Prepared by '+esc(company)+' \u00b7 powered by Orchamind</div></body></html>';
+    '<div class="ft">Prepared by '+esc(company)+' \u00b7 powered by Orchamind</div><script defer src="/consent.js"></script>
+</body></html>';
   w.document.write(doc);w.document.close();w.focus();setTimeout(function(){try{w.print();}catch(e){}},400);
 }
 function _estParseJSON(text){
@@ -5243,7 +5250,7 @@ function printEstimate(id){
   var rows=(e.items||[]).map(function(it){return '<tr><td>'+esc(it.desc)+'</td><td class="c">'+estNum(it.qty)+'</td><td class="c">'+esc(it.unit||'')+'</td><td class="r">'+estMoney(it.price)+'</td><td class="r">'+estMoney(estNum(it.qty)*estNum(it.price))+'</td></tr>';}).join('');
   var taxRow=(estNum(e.taxRate)>0)?('<tr><td class="r" colspan="4">Tax ('+estNum(e.taxRate)+'%)</td><td class="r">'+estMoney(t.tax)+'</td></tr>'):'';
   var w=_docWin();
-  var doc=`<!doctype html><html><head><meta charset="utf-8"><title>${title} ${esc(e.number||'')}</title>
+  var doc=`<!doctype html><html><head><title>${title} ${esc(e.number||'')}</title>
 <style>
 *{box-sizing:border-box;}body{font-family:Arial,Helvetica,sans-serif;color:#0A1628;margin:40px;}
 .hd{display:flex;justify-content:space-between;align-items:flex-start;border-bottom:3px solid #1565C0;padding-bottom:16px;margin-bottom:20px;}
@@ -5362,7 +5369,7 @@ function _extractSvg(text){
   return svg;
 }
 function _skWrapDoc(svg,title){
-  return `<!doctype html><html><head><meta charset="utf-8"><title>${esc(title)}</title>
+  return `<!doctype html><html><head><title>${esc(title)}</title>
 <style>body{font-family:Arial,Helvetica,sans-serif;margin:28px;color:#0A1628;}h2{color:#1565C0;margin:0 0 4px;}
 .sub{color:#5A6B7D;font-size:13px;margin-bottom:14px;}svg{max-width:100%;height:auto;border:1px solid #E1E8F0;border-radius:8px;}
 .disc{margin-top:16px;font-size:12px;color:#7A5300;background:#FFF7E6;border:1px solid #F3D28B;border-radius:8px;padding:10px 13px;}</style>
@@ -6119,7 +6126,7 @@ function printSelectionSheet(){
     return '<div class="selblock"><h3>'+esc(s.category)+(s.chosen?' <span class="ch">\u2713 '+esc(s.chosen)+'</span>':'')+'</h3><table>'+opts+'</table></div>';
   }).join('');
   var w=_docWin();
-  var doc='<!doctype html><html><head><meta charset="utf-8"><title>Selections - '+esc(j?j.name:'')+'</title><style>*{box-sizing:border-box;}body{font-family:Arial,Helvetica,sans-serif;color:#0A1628;margin:36px;}.hd{border-bottom:3px solid #1565C0;padding-bottom:14px;margin-bottom:8px;}.co{font-size:22px;font-weight:800;color:#1565C0;}.sub{color:#5A6B7D;font-size:13px;margin-top:4px;}h1{font-size:22px;margin:18px 0 4px;}.lead{color:#5A6B7D;font-size:13.5px;margin-bottom:20px;}.selblock{margin-bottom:16px;}.selblock h3{font-size:15px;margin:0 0 6px;border-bottom:1px solid #E1E8F0;padding-bottom:4px;}.ch{color:#2E9B5B;font-size:12px;font-weight:600;}table{width:100%;border-collapse:collapse;}td{padding:6px 8px;font-size:13px;border-bottom:1px solid #F0F3F7;}td.r{text-align:right;font-weight:600;color:#1565C0;width:110px;}tr.chosen td{background:#F0FBF4;font-weight:600;}.sign{margin-top:30px;display:flex;gap:40px;}.sign div{flex:1;border-top:1px solid #0A1628;padding-top:6px;font-size:12px;color:#5A6B7D;}.ft{margin-top:24px;font-size:11px;color:#9aa7b4;text-align:center;}</style></head><body><div class="hd"><div class="co">'+esc(company)+'</div><div class="sub">Selection Sheet'+(j?(' \u00b7 '+esc(j.name)):'')+(j&&j.client?(' \u00b7 '+esc(j.client)):'')+'</div></div><h1>Your finish selections</h1><div class="lead">Please review the options below and initial your choices. Prices are estimates and will be confirmed on your change order.</div>'+rows+'<div class="sign"><div>Client signature / date</div><div>'+esc(company)+' / date</div></div><div class="ft">Prepared by '+esc(company)+' \u00b7 powered by Orchamind</div></body></html>';
+  var doc='<!doctype html><html><head><title>Selections - '+esc(j?j.name:'')+'</title><style>*{box-sizing:border-box;}body{font-family:Arial,Helvetica,sans-serif;color:#0A1628;margin:36px;}.hd{border-bottom:3px solid #1565C0;padding-bottom:14px;margin-bottom:8px;}.co{font-size:22px;font-weight:800;color:#1565C0;}.sub{color:#5A6B7D;font-size:13px;margin-top:4px;}h1{font-size:22px;margin:18px 0 4px;}.lead{color:#5A6B7D;font-size:13.5px;margin-bottom:20px;}.selblock{margin-bottom:16px;}.selblock h3{font-size:15px;margin:0 0 6px;border-bottom:1px solid #E1E8F0;padding-bottom:4px;}.ch{color:#2E9B5B;font-size:12px;font-weight:600;}table{width:100%;border-collapse:collapse;}td{padding:6px 8px;font-size:13px;border-bottom:1px solid #F0F3F7;}td.r{text-align:right;font-weight:600;color:#1565C0;width:110px;}tr.chosen td{background:#F0FBF4;font-weight:600;}.sign{margin-top:30px;display:flex;gap:40px;}.sign div{flex:1;border-top:1px solid #0A1628;padding-top:6px;font-size:12px;color:#5A6B7D;}.ft{margin-top:24px;font-size:11px;color:#9aa7b4;text-align:center;}</style></head><body><div class="hd"><div class="co">'+esc(company)+'</div><div class="sub">Selection Sheet'+(j?(' \u00b7 '+esc(j.name)):'')+(j&&j.client?(' \u00b7 '+esc(j.client)):'')+'</div></div><h1>Your finish selections</h1><div class="lead">Please review the options below and initial your choices. Prices are estimates and will be confirmed on your change order.</div>'+rows+'<div class="sign"><div>Client signature / date</div><div>'+esc(company)+' / date</div></div><div class="ft">Prepared by '+esc(company)+' \u00b7 powered by Orchamind</div></body></html>';
   w.document.write(doc);w.document.close();w.focus();setTimeout(function(){try{w.print();}catch(e){}},400);
 }
 var _sfCurrent=null;
@@ -6176,7 +6183,7 @@ function printToolboxTalk(id){
   function sec(title,arr){return '<h3>'+title+'</h3><ul>'+(arr||[]).map(function(x){return '<li>'+esc(x)+'</li>';}).join('')+'</ul>';}
   var signRows='';for(var i=0;i<10;i++){signRows+='<tr><td>&nbsp;</td><td>&nbsp;</td></tr>';}
   var w=_docWin();
-  var doc='<!doctype html><html><head><meta charset="utf-8"><title>Toolbox Talk - '+esc(t.topic)+'</title><style>*{box-sizing:border-box;}body{font-family:Arial,Helvetica,sans-serif;color:#0A1628;margin:34px;}.hd{border-bottom:3px solid #1565C0;padding-bottom:12px;margin-bottom:10px;display:flex;justify-content:space-between;align-items:flex-end;}.co{font-size:20px;font-weight:800;color:#1565C0;}.mt{font-size:12px;color:#5A6B7D;text-align:right;}h1{font-size:22px;margin:10px 0 2px;}.sub{color:#5A6B7D;font-size:13px;margin-bottom:14px;}h3{font-size:13px;text-transform:uppercase;letter-spacing:.04em;color:#1565C0;margin:16px 0 4px;}ul{margin:0;padding-left:20px;}li{font-size:13px;margin-bottom:4px;}table{width:100%;border-collapse:collapse;margin-top:8px;}th,td{border:1px solid #C9D4E0;padding:9px 10px;font-size:12.5px;text-align:left;}th{background:#EEF3F8;text-transform:uppercase;font-size:10.5px;letter-spacing:.04em;}.sig{height:34px;}.ft{margin-top:20px;font-size:11px;color:#9aa7b4;text-align:center;}</style></head><body>'+
+  var doc='<!doctype html><html><head><title>Toolbox Talk - '+esc(t.topic)+'</title><style>*{box-sizing:border-box;}body{font-family:Arial,Helvetica,sans-serif;color:#0A1628;margin:34px;}.hd{border-bottom:3px solid #1565C0;padding-bottom:12px;margin-bottom:10px;display:flex;justify-content:space-between;align-items:flex-end;}.co{font-size:20px;font-weight:800;color:#1565C0;}.mt{font-size:12px;color:#5A6B7D;text-align:right;}h1{font-size:22px;margin:10px 0 2px;}.sub{color:#5A6B7D;font-size:13px;margin-bottom:14px;}h3{font-size:13px;text-transform:uppercase;letter-spacing:.04em;color:#1565C0;margin:16px 0 4px;}ul{margin:0;padding-left:20px;}li{font-size:13px;margin-bottom:4px;}table{width:100%;border-collapse:collapse;margin-top:8px;}th,td{border:1px solid #C9D4E0;padding:9px 10px;font-size:12.5px;text-align:left;}th{background:#EEF3F8;text-transform:uppercase;font-size:10.5px;letter-spacing:.04em;}.sig{height:34px;}.ft{margin-top:20px;font-size:11px;color:#9aa7b4;text-align:center;}</style></head><body>'+
    '<div class="hd"><div class="co">'+esc(company)+'</div><div class="mt">Toolbox Talk / Safety Meeting<br>Date: '+esc(t.date||'')+(t.jobName?('<br>Job: '+esc(t.jobName)):'')+'</div></div>'+
    '<h1>'+esc(t.topic)+'</h1><div class="sub">Review with the crew before work begins. Everyone present must sign below.</div>'+
    sec('Hazards',t.hazards)+sec('Controls / precautions',t.controls)+sec('Key talking points',t.keyPoints)+
@@ -6228,7 +6235,7 @@ function printPunchList(){
   var done=items.filter(function(p){return p.status==='done';}).length;
   var rows=items.map(function(p,i){return '<tr class="'+(p.status==='done'?'d':'')+'"><td class="c">'+(i+1)+'</td><td>'+esc(p.desc)+'</td><td>'+esc(p.location||'')+'</td><td class="c">'+(p.status==='done'?'\u2713 Done':'\u2610')+'</td></tr>';}).join('');
   var w=_docWin();
-  var doc='<!doctype html><html><head><meta charset="utf-8"><title>Punch List - '+esc(j?j.name:'')+'</title><style>*{box-sizing:border-box;}body{font-family:Arial,Helvetica,sans-serif;color:#0A1628;margin:34px;}.hd{border-bottom:3px solid #1565C0;padding-bottom:12px;margin-bottom:8px;display:flex;justify-content:space-between;align-items:flex-end;}.co{font-size:20px;font-weight:800;color:#1565C0;}.mt{font-size:12px;color:#5A6B7D;text-align:right;}h1{font-size:22px;margin:12px 0 2px;}.sub{color:#5A6B7D;font-size:13px;margin-bottom:14px;}table{width:100%;border-collapse:collapse;}th,td{border:1px solid #C9D4E0;padding:8px 10px;font-size:12.5px;text-align:left;}th{background:#EEF3F8;text-transform:uppercase;font-size:10.5px;letter-spacing:.04em;}td.c,th.c{text-align:center;width:44px;}tr.d td{color:#8A9AAC;}.ft{margin-top:20px;font-size:11px;color:#9aa7b4;text-align:center;}</style></head><body>'+
+  var doc='<!doctype html><html><head><title>Punch List - '+esc(j?j.name:'')+'</title><style>*{box-sizing:border-box;}body{font-family:Arial,Helvetica,sans-serif;color:#0A1628;margin:34px;}.hd{border-bottom:3px solid #1565C0;padding-bottom:12px;margin-bottom:8px;display:flex;justify-content:space-between;align-items:flex-end;}.co{font-size:20px;font-weight:800;color:#1565C0;}.mt{font-size:12px;color:#5A6B7D;text-align:right;}h1{font-size:22px;margin:12px 0 2px;}.sub{color:#5A6B7D;font-size:13px;margin-bottom:14px;}table{width:100%;border-collapse:collapse;}th,td{border:1px solid #C9D4E0;padding:8px 10px;font-size:12.5px;text-align:left;}th{background:#EEF3F8;text-transform:uppercase;font-size:10.5px;letter-spacing:.04em;}td.c,th.c{text-align:center;width:44px;}tr.d td{color:#8A9AAC;}.ft{margin-top:20px;font-size:11px;color:#9aa7b4;text-align:center;}</style></head><body>'+
    '<div class="hd"><div class="co">'+esc(company)+'</div><div class="mt">Punch List<br>Date: '+(new Date().toISOString().split("T")[0])+(j?('<br>Job: '+esc(j.name)):'')+'</div></div>'+
    '<h1>Punch List</h1><div class="sub">'+done+' of '+items.length+' items complete'+(j&&j.client?(' \u00b7 '+esc(j.client)):'')+'</div>'+
    '<table><thead><tr><th class="c">#</th><th>Item to correct</th><th>Location</th><th class="c">Status</th></tr></thead><tbody>'+rows+'</tbody></table>'+
@@ -6822,7 +6829,7 @@ function printCO(id){
   var company=(CURRENT_USER&&CURRENT_USER.name)||'Your Company'; var t=coTotals(c);
   var rows=(c.items||[]).map(function(it){ return '<tr><td>'+esc(it.desc)+'</td><td class="c">'+estNum(it.qty)+'</td><td class="r">'+estMoney(it.price)+'</td><td class="r">'+estMoney(estNum(it.qty)*estNum(it.price))+'</td></tr>'; }).join('');
   var w=_docWin();
-  var doc=`<!doctype html><html><head><meta charset="utf-8"><title>${esc(c.number||'Change Order')}</title>
+  var doc=`<!doctype html><html><head><title>${esc(c.number||'Change Order')}</title>
 <style>*{box-sizing:border-box}body{font-family:Arial,Helvetica,sans-serif;color:#0A1628;margin:40px}.hd{display:flex;justify-content:space-between;border-bottom:3px solid #1565C0;padding-bottom:16px;margin-bottom:18px}.co{font-size:20px;font-weight:700;color:#1565C0}h1{font-size:24px;margin:0}.meta{font-size:13px;color:#5A6B7D}table{width:100%;border-collapse:collapse;margin-top:12px;font-size:13px}th{background:#EEF3F8;text-align:left;padding:9px}td{padding:9px;border-bottom:1px solid #E1E8F0}td.c{text-align:center}td.r{text-align:right}tfoot td{font-weight:700;border:none}.grand td{font-size:16px;color:#1565C0;border-top:2px solid #1565C0}.sig{margin-top:40px;display:flex;gap:40px}.sig div{flex:1;border-top:1px solid #0A1628;padding-top:6px;font-size:12px;color:#5A6B7D}</style></head><body>
 <div class="hd"><div><div class="co">${esc(company)}</div><div class="meta">CHANGE ORDER</div></div><div style="text-align:right"><h1>Change Order</h1><div class="meta">${esc(c.number||'')}<br>Date: ${esc(c.date||'')}</div></div></div>
 <div class="meta"><b>Project:</b> ${esc(c.jobName||'')}<br><b>Change:</b> ${esc(c.title||'')}</div>

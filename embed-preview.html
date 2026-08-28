@@ -1,4 +1,11 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<!DOCTYPE html><html lang="en"><head>
+<meta charset="utf-8">
+<!-- Consent Mode v2 defaults — must load ahead of gtag.js. Keep it directly after the charset meta tag. -->
+<script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}
+(function(){var d='denied',g='granted',B={ad_storage:d,ad_user_data:d,ad_personalization:d,functionality_storage:d,personalization_storage:d,security_storage:g,wait_for_update:500},m=function(o){var r={},k;for(k in B)r[k]=B[k];for(k in o)r[k]=o[k];return r};
+gtag('consent','default',m({analytics_storage:g}));
+gtag('consent','default',m({analytics_storage:d,region:'AT BE BG HR CY CZ DK EE FI FR DE GR HU IE IT LV LT LU MT NL PL PT RO SK SI ES SE IS LI NO GB CH'.split(' ')}));
+try{var c=JSON.parse(localStorage.getItem('sk_consent_v1'));if(c&&c.v===1&&Date.now()-c.ts<15552e6){var a=c.ads?g:d,n=c.analytics?g:d,f=c.functional?g:d;gtag('consent','update',{ad_storage:a,ad_user_data:a,ad_personalization:a,analytics_storage:n,functionality_storage:f,personalization_storage:f,security_storage:g});}}catch(e){}})();</script><meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="robots" content="noindex"><title>Your lead widget — live preview</title>
 <style>body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#f5f8fc;margin:0;padding:34px 20px;}
 .pv{max-width:520px;margin:0 auto;}h1{font-size:19px;color:#0A1628;margin:0 0 6px;}p{color:#66748a;font-size:14px;margin:0 0 22px;}
@@ -7,4 +14,5 @@
 <p>Go ahead and submit it — a test lead will appear in your Orchamind Leads tab. This is the exact widget your embed code installs.</p>
 <div id="mount"></div></div>
 <script>var qs=new URLSearchParams(location.search);var c=qs.get('c')||'';var md=qs.get('mode')||'';var s=document.createElement('script');s.src='/embed.js';s.setAttribute('data-orchamind',c);if(md==='book')s.setAttribute('data-mode','book');document.getElementById('mount').appendChild(s);</script>
+<script defer src="/consent.js"></script>
 </body></html>
