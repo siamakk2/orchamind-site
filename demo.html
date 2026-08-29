@@ -868,6 +868,7 @@ button:active, .btn:active, .btn-ghost:active, .tab:active, [role="button"]:acti
       </button>
     </div>
     <div id="onboardCard" style="display:none;"></div>
+<div id="obRestore" style="display:none;"></div>
     <div class="stats" style="margin-bottom:20px;">
       <div class="stat"><div class="stat-num" id="statActive">0</div><div class="stat-lbl">Active Jobs</div></div>
       <div class="stat red"><div class="stat-num" id="statRisk">0</div><div class="stat-lbl">At Risk</div></div>
@@ -2088,6 +2089,11 @@ function pushToServer(){
     .catch(function(){markPending();});
 }
 function save(){
+  // Trial over and no card on file: workspace is read-only. Nothing is deleted.
+  if(typeof omTrialLocked==='function' && omTrialLocked()){
+    if(typeof omShowLockWall==='function') omShowLockWall();
+    return;
+  }
   // LOCAL-FIRST: write to this device immediately so an edit is never lost offline
   writeLocal();
   // then sync up to the shared database (debounced); queues + retries when offline
@@ -2600,33 +2606,57 @@ function openJobEdit(id){
   openModal("jobDetailModal");
 }
 function _obState(){
-  var st={company:false, job:false, crew:false, client:false, widget:false, pay:false};
+  var st={company:false, job:false, crew:false, report:false, estimate:false, pay:false};
   try{
     var p=(CURRENT_USER&&CURRENT_USER.profile)||{};
     st.company = !!(p.phone || p.logo || p.address || p.license);
     st.job = (typeof jobs!=='undefined' && jobs && jobs.length>0);
     st.crew = (typeof crew!=='undefined' && crew && crew.length>0);
-    st.client = ((typeof clients!=='undefined' && clients && clients.length>0) || (typeof buildCustomers==='function' && buildCustomers().length>0));
-    st.widget = localStorage.getItem('om_ob_widget')==='1';
+    st.report = (typeof logs!=='undefined' && logs && logs.length>0);
+    st.estimate = (typeof estimates!=='undefined' && estimates && estimates.length>0);
     st.pay = !!window._payConnected;
   }catch(e){}
   return st;
 }
 function markOnboard(k){ try{ localStorage.setItem('om_ob_'+k,'1'); }catch(e){} renderOnboarding(); }
-function dismissOnboard(){ try{ localStorage.setItem('om_ob_dismissed','1'); }catch(e){} var c=document.getElementById('onboardCard'); if(c)c.style.display='none'; }
+function dismissOnboard(){
+  // Snooze for today, not forever — a stray tap used to kill setup permanently.
+  try{ localStorage.setItem('om_ob_snooze', new Date().toISOString().slice(0,10)); }catch(e){}
+  var c=document.getElementById('onboardCard'); if(c)c.style.display='none';
+  renderOnboarding();
+}
+function omShowChecklist(){
+  try{ localStorage.removeItem('om_ob_snooze'); localStorage.removeItem('om_ob_dismissed'); }catch(e){}
+  renderOnboarding();
+  try{ goTab('today',true); }catch(e){}
+}
 function renderOnboarding(){
   var card=document.getElementById('onboardCard'); if(!card) return;
   var crewMode=(typeof isCrew==='function'&&isCrew());
-  var dismissed=false; try{ dismissed=localStorage.getItem('om_ob_dismissed')==='1'; }catch(e){}
+  var dismissed=false, snoozed=false;
+  try{
+    dismissed=localStorage.getItem('om_ob_dismissed')==='1';
+    snoozed=(localStorage.getItem('om_ob_snooze')===new Date().toISOString().slice(0,10));
+  }catch(e){}
+  var restore=document.getElementById('obRestore');
+  function showRestore(on){
+    if(!restore) return;
+    if(on){
+      restore.innerHTML='<button onclick="omShowChecklist()" style="background:none;border:none;color:#2D7FF9;font-weight:700;font-size:13.5px;cursor:pointer;padding:2px 0 12px;">Setup checklist \u203a</button>';
+      restore.style.display='block';
+    } else { restore.style.display='none'; }
+  }
+  if(snoozed && !dismissed){ card.style.display='none'; showRestore(true); return; }
+  showRestore(false);
   if(crewMode || dismissed || (typeof IS_REAL_APP==='undefined') || !IS_REAL_APP){ card.style.display='none'; return; }
   var st=_obState();
   var items=[
-    {k:'company', label:'Company details', desc:'Name, phone & logo for your invoices and widget.', tab:'profile', mark:''},
-    {k:'job', label:'Add a project', desc:'Create your first job to start tracking it.', tab:'jobs', mark:''},
-    {k:'crew', label:'Add your crew', desc:'Add your team so you can assign and schedule them.', tab:'crew', mark:''},
-    {k:'client', label:'Add a client', desc:'Add the people you build for \u2014 they link to jobs & invoices.', tab:'customers', mark:''},
-    {k:'widget', label:'Website widget', desc:'One line of code turns your site into a lead machine.', tab:'leads', mark:'widget'},
-    {k:'pay', label:'Online payments', desc:'Get paid by card, straight to your bank.', tab:'profile', mark:''}
+    {k:'job', label:'Add one project', desc:'Takes 30 seconds. Everything else hangs off a job.', tab:'jobs', mark:''},
+    {k:'report', label:'Snap a photo \u2014 get a written report', desc:'Photograph the work. Orchamind writes the progress report for you.', tab:'jobreport', mark:''},
+    {k:'estimate', label:'Describe a job \u2014 get a priced estimate', desc:'Plain words or a photo of the plans. You get a real number back.', tab:'estimates', mark:''},
+    {k:'crew', label:'Add your crew', desc:'So you can assign work, schedule, and track hours.', tab:'crew', mark:''},
+    {k:'company', label:'Company details & logo', desc:'Puts your name at the top of every estimate and invoice.', tab:'profile', mark:''},
+    {k:'pay', label:'Get paid online', desc:'Card payments, straight to your bank.', tab:'profile', mark:''}
   ];
   var done=items.filter(function(i){return st[i.k];}).length;
   if(done>=items.length){ try{ localStorage.setItem('om_ob_dismissed','1'); }catch(e){} card.style.display='none'; return; }
@@ -6479,8 +6509,40 @@ function omEmpty(icon, title, sub, btnLabel, btnAction){
   var btn=btnLabel?('<button class="btn" style="margin-top:14px;" onclick="'+btnAction+'">'+btnLabel+'</button>'):'';
   return '<div class="om-empty"><div class="om-empty-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">'+ic+'</svg></div><div class="om-empty-t">'+title+'</div>'+(sub?'<div class="om-empty-s">'+sub+'</div>':'')+btn+'</div>';
 }
+function omTrialLocked(){
+  try{
+    if(typeof IS_REAL_APP==='undefined' || !IS_REAL_APP) return false;
+    if(typeof isCrew==='function' && isCrew()) return false;   // never strand a crew mid-job
+    if(window._payConnected) return false;                     // paying: never locked
+    var u=(typeof CURRENT_USER!=='undefined')?CURRENT_USER:null;
+    var te=(u&&u.trialEnd)?u.trialEnd:0;
+    if(!te) return false;
+    return Math.floor(Date.now()/1000) > te;
+  }catch(e){ return false; }
+}
+function omCloseLockWall(){
+  var w=document.getElementById('omLockWall'); if(w) w.parentNode.removeChild(w);
+}
+function omShowLockWall(){
+  if(document.getElementById('omLockWall')) return;
+  var d=document.createElement('div');
+  d.id='omLockWall';
+  d.style.cssText='position:fixed;inset:0;z-index:6000;background:rgba(10,22,40,.72);display:flex;align-items:center;justify-content:center;padding:20px;';
+  d.innerHTML='<div style="background:#fff;border-radius:16px;padding:28px 24px;max-width:400px;width:100%;box-shadow:0 20px 60px rgba(0,0,0,.4);font-family:\'Outfit\',sans-serif;">'
+    +'<div style="font-size:19px;font-weight:800;color:#0A1628;margin-bottom:10px;">Your free trial has ended</div>'
+    +'<div style="font-size:14.5px;color:#5A6B7D;line-height:1.5;margin-bottom:18px;">Your jobs, photos, estimates and invoices are all still here \u2014 nothing has been deleted. Add a payment method and you can pick up exactly where you left off. $500/month.</div>'
+    +'<button onclick="omCloseLockWall();trialRibbonCta();" style="width:100%;background:#1565C0;color:#fff;border:none;border-radius:9px;padding:13px;font-size:15px;font-weight:700;cursor:pointer;">Reactivate \u2014 add payment method</button>'
+    +'<button onclick="omCloseLockWall()" style="width:100%;background:none;color:#5A6B7D;border:none;padding:12px;font-size:13.5px;font-weight:600;cursor:pointer;margin-top:4px;">Keep looking around (read-only)</button>'
+    +'</div>';
+  document.body.appendChild(d);
+}
 function renderTrialRibbon(){
   var el=document.getElementById('trialRibbon'); if(!el) return;
+  try{
+    if(omTrialLocked() && sessionStorage.getItem('om_lockwall')!=='1'){
+      sessionStorage.setItem('om_lockwall','1'); omShowLockWall();
+    }
+  }catch(e){}
   var real=(typeof IS_REAL_APP!=='undefined')&&IS_REAL_APP;
   var crewMode=(typeof isCrew==='function'&&isCrew());
   if(!real||crewMode){ el.style.display='none'; return; }
