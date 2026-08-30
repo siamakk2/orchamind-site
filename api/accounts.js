@@ -80,6 +80,51 @@ module.exports = async function handler(req, res) {
     var a = await r.json();
     return (Array.isArray(a) && a[0]) ? a[0] : null;
   }
+  // Email is the login. Usernames still exist as the internal key, so every
+  // account created before this change keeps working exactly as it did.
+  async function getUserByEmail(email) {
+    var e = String(email || '').toLowerCase().trim();
+    if (!e || e.indexOf('@') === -1) return null;
+    try {
+      var r = await sbFetch(base + '/accounts?profile->>email=ilike.' + encodeURIComponent(e) + '&select=*', { headers: H });
+      var a = await r.json();
+      if (!Array.isArray(a) || !a.length) return null;
+      if (a.length === 1) return a[0];
+      // More than one account shares this address. Never resolve arbitrarily:
+      // a paused workspace must not win over a live one.
+      var rank = function (row) {
+        if (row.status === 'paused') return 3;
+        if (row.stripe_status === 'active') return 0;
+        if (row.status === 'active' || !row.status) return 1;
+        return 2;
+      };
+      a.sort(function (x, y) {
+        var d = rank(x) - rank(y);
+        if (d) return d;
+        return String(y.created_at || '').localeCompare(String(x.created_at || ''));
+      });
+      return a[0];
+    } catch (e2) { return null; }
+  }
+  async function resolveUser(identifier) {
+    var id = String(identifier || '').toLowerCase().trim();
+    if (!id) return null;
+    if (id.indexOf('@') !== -1) {
+      var byEmail = await getUserByEmail(id);
+      if (byEmail) return byEmail;
+    }
+    return await getUser(id);
+  }
+  // Turn an email address into a stable, unique internal username.
+  async function deriveUsername(email, company) {
+    var local = String(email || '').toLowerCase().split('@')[0].replace(/[^a-z0-9_]/g, '');
+    if (!local) local = String(company || '').toLowerCase().replace(/[^a-z0-9_]/g, '');
+    if (!local) local = 'user';
+    local = local.slice(0, 24);
+    var candidate = local, n = 1;
+    while (await getUser(candidate)) { n++; candidate = (local + n).slice(0, 30); if (n > 200) break; }
+    return candidate;
+  }
   async function countUsers() {
     var r = await sbFetch(base + '/accounts?select=username', { headers: H });
     var a = await r.json();
@@ -119,7 +164,10 @@ module.exports = async function handler(req, res) {
       var rpass = body.password || '';
       var rco = (body.company || '').trim();
       var remail = (body.email || '').trim();
-      if (!rco || !ru || String(rpass).length < 6) return res.status(200).json({ ok: false, error: 'Enter a company name, a username, and a password of at least 6 characters.' });
+      if (!ru) { ru = await deriveUsername(remail, rco); }
+      if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(remail)) return res.status(200).json({ ok: false, error: 'Enter a valid email address - that is how you will sign in.' });
+      if (await getUserByEmail(remail)) return res.status(200).json({ ok: false, error: 'That email already has an Orchamind account. Try logging in, or use Forgot password.' });
+      if (!rco || !ru || String(rpass).length < 6) return res.status(200).json({ ok: false, error: 'Enter a company name, an email address, and a password of at least 6 characters.' });
       if (!/^[a-z0-9_]+$/.test(ru)) return res.status(200).json({ ok: false, error: 'Username can use only lowercase letters, numbers, and underscores (no spaces).' });
       var taken = await getUser(ru);
       if (taken) return res.status(200).json({ ok: false, error: 'That username is already taken \u2014 please pick another.' });
@@ -199,7 +247,24 @@ module.exports = async function handler(req, res) {
         var qq = await sbFetch(base + '/accounts?profile->>referredBy=eq.' + encodeURIComponent(who) + '&select=username,company', { headers: H });
         var arr = await qq.json();
         var list = Array.isArray(arr) ? arr : [];
-        return res.status(200).json({ ok: true, count: list.length, referrals: list.map(function (x) { return { company: x.company || x.username }; }) });
+        // A referral only earns a free month once the invited account has
+        // actually produced something. Signing up is not the bar.
+        var activated = {};
+        if (list.length) {
+          try {
+            var names = list.map(function (x) { return '"' + x.username + '"'; }).join(',');
+            var ar = await sbFetch(base + '/activity_log?type=eq.activation&username=in.(' + encodeURIComponent(names) + ')&select=username', { headers: H });
+            if (ar.ok) {
+              var aj = await ar.json();
+              if (Array.isArray(aj)) aj.forEach(function (e) { if (e && e.username) activated[e.username] = true; });
+            }
+          } catch (eAct) {}
+        }
+        var refs = list.map(function (x) {
+          return { company: x.company || x.username, qualified: !!activated[x.username] };
+        });
+        var qualified = refs.filter(function (x) { return x.qualified; }).length;
+        return res.status(200).json({ ok: true, count: list.length, qualified: qualified, referrals: refs });
       } catch (e) { return res.status(200).json({ ok: true, count: 0, referrals: [] }); }
     }
 
@@ -214,8 +279,8 @@ module.exports = async function handler(req, res) {
     if (action === 'login') {
       var lu = (body.username || '').toLowerCase().trim();
       var lp = body.password || '';
-      var row = await getUser(lu);
-      if (!row || !verifyPw(lp, row.pass)) return res.status(200).json({ ok: false, error: 'Wrong username or password.' });
+      var row = await resolveUser(lu);
+      if (!row || !verifyPw(lp, row.pass)) return res.status(200).json({ ok: false, error: 'Wrong email or password.' });
       if (row.status === 'paused' && row.username !== 'siamakk2') { var pauUrl = await stripePortal(row.stripe_customer, 'https://orchamind.com/app'); return res.status(200).json({ ok: true, paused: true, user: { username: row.username, name: row.name, role: row.role || 'member', company: row.company || '', paused: true, portalUrl: pauUrl } }); }
       // Optional email 2FA: if enabled on this account, email a 6-digit code and require it before issuing a session.
       if (row.mfa_enabled) {
