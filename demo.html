@@ -749,7 +749,7 @@ button:active, .btn:active, .btn-ghost:active, .tab:active, [role="button"]:acti
   <div id="wrapSummary" style="font-size:13px;color:var(--muted,#5A6B7D);margin:10px 0 12px;"></div>
   <button class="btn" style="background:var(--green,#1B8A4B);color:#fff;width:100%;" onclick="closeModal('wrapModal')">Done for today ✅</button>
 </div></div>
-<script src="/house3d.js?v=10"></script>
+<script src="/house3d.js?v=10" defer></script>
 </head>
 <body class="locked">
 <div id="demoBanner" style="position:relative;z-index:1;background:linear-gradient(90deg,#0A1628,#1565C0);color:#fff;padding:10px 16px;display:flex;align-items:center;justify-content:center;gap:16px;flex-wrap:wrap;font-family:'Outfit',sans-serif;font-size:14px;box-shadow:0 2px 12px rgba(0,0,0,0.2);">
@@ -769,8 +769,8 @@ button:active, .btn:active, .btn-ghost:active, .tab:active, [role="button"]:acti
 
     <!-- LOGIN FORM -->
     <div id="formLogin">
-      <div style="margin-bottom:13px;"><label style="display:block;font-size:13px;font-weight:600;color:#0A1628;margin-bottom:6px;">Username</label>
-        <input id="liUser" type="text" placeholder="your username" style="width:100%;border:1.5px solid #E1E8F0;border-radius:9px;padding:11px 14px;font-size:15px;outline:none;"></div>
+      <div style="margin-bottom:13px;"><label style="display:block;font-size:13px;font-weight:600;color:#0A1628;margin-bottom:6px;">Email</label>
+        <input id="liUser" type="text" inputmode="email" autocomplete="username" placeholder="you@company.com" style="width:100%;border:1.5px solid #E1E8F0;border-radius:9px;padding:11px 14px;font-size:15px;outline:none;"></div>
       <div style="margin-bottom:16px;"><label style="display:block;font-size:13px;font-weight:600;color:#0A1628;margin-bottom:6px;">Password</label>
         <input id="liPass" type="password" placeholder="your password" style="width:100%;border:1.5px solid #E1E8F0;border-radius:9px;padding:11px 14px;font-size:15px;outline:none;"></div>
       <div style="text-align:right;margin:-8px 0 14px;"><a href="#" onclick="forgotPw();return false;" style="font-size:13px;color:#2D7FF9;font-weight:600;">Forgot password?</a></div>
@@ -784,7 +784,7 @@ button:active, .btn:active, .btn-ghost:active, .tab:active, [role="button"]:acti
       <div style="margin-bottom:11px;"><label style="display:block;font-size:13px;font-weight:600;color:#0A1628;margin-bottom:6px;">Company name</label><input id="suCompany" type="text" placeholder="e.g. Howard Construction" style="width:100%;border:1.5px solid #E1E8F0;border-radius:9px;padding:11px 14px;font-size:15px;outline:none;"></div>
       <div style="margin-bottom:11px;"><label style="display:block;font-size:13px;font-weight:600;color:#0A1628;margin-bottom:6px;">Your name</label><input id="suName" type="text" placeholder="e.g. Phil Howard" style="width:100%;border:1.5px solid #E1E8F0;border-radius:9px;padding:11px 14px;font-size:15px;outline:none;"></div>
       <div style="margin-bottom:11px;"><label style="display:block;font-size:13px;font-weight:600;color:#0A1628;margin-bottom:6px;">Email</label><input id="suEmail" type="email" placeholder="you@company.com" style="width:100%;border:1.5px solid #E1E8F0;border-radius:9px;padding:11px 14px;font-size:15px;outline:none;"></div>
-      <div style="margin-bottom:11px;"><label style="display:block;font-size:13px;font-weight:600;color:#0A1628;margin-bottom:6px;">Choose a username</label><input id="suUser" type="text" placeholder="lowercase, no spaces" style="width:100%;border:1.5px solid #E1E8F0;border-radius:9px;padding:11px 14px;font-size:15px;outline:none;"></div>
+      <input id="suUser" type="hidden" value="">
       <div style="margin-bottom:16px;"><label style="display:block;font-size:13px;font-weight:600;color:#0A1628;margin-bottom:6px;">Password</label><input id="suPass" type="password" placeholder="at least 6 characters" style="width:100%;border:1.5px solid #E1E8F0;border-radius:9px;padding:11px 14px;font-size:15px;outline:none;"></div>
       <button onclick="authRegister()" id="suBtn" style="width:100%;background:#1565C0;color:#fff;border:none;border-radius:9px;padding:13px;font-size:15px;font-weight:700;cursor:pointer;">Create my free account</button>
       <div style="text-align:center;margin-top:14px;font-size:13px;color:#5A6B7D;">Already have an account? <a href="#" onclick="showForm('formLogin');return false;" style="color:#2D7FF9;font-weight:700;">Log in</a></div>
@@ -1620,6 +1620,7 @@ button:active, .btn:active, .btn-ghost:active, .tab:active, [role="button"]:acti
     <div class="panel-head">
       <h2>Orchamind &mdash; Operator Console</h2>
     </div>
+    <div id="actvCard" style="margin-bottom:14px;"></div>
     <style>
 .adv-chip{background:rgba(255,255,255,.14);color:#fff;border:none;border-radius:20px;padding:6px 12px;font-size:12px;cursor:pointer;font-family:inherit;font-weight:600;}
 .adv-chip:hover{background:rgba(255,255,255,.26);}
@@ -2695,6 +2696,7 @@ function renderHours(){
   t.innerHTML=rows;
 }
 function renderAll(){
+  try{ omApplyDemoCarry(); }catch(e){}
   try{ renderOnboarding(); }catch(e){}
   try{ renderTrialRibbon(); }catch(e){}
   try{ _msgBadge(); }catch(e){}renderStats();renderJobs();renderHomeJobs();renderAttention();renderCrew();renderHours();renderSubs();save();}
@@ -2780,7 +2782,7 @@ function _omRender(n){
   if(n==='schedule'){renderSchedule();}
   if(n==='bookings'){renderBookings();}
   if(n==='dispatch'){renderDispatch();}
-  if(n==='billing'){renderBilling();}
+  if(n==='billing'){renderBilling();} if(n==='admin'){try{loadActivation();}catch(e){}}
   if(n==='invite'){renderInvite();}
   if(n==='compliance'){renderCompliance();}
   if(n==='equipment'){renderEquipment();}
@@ -3170,16 +3172,19 @@ function authRegister(){
   var co=document.getElementById('suCompany').value.trim();
   var nm=document.getElementById('suName').value.trim();
   var em=document.getElementById('suEmail').value.trim();
-  var u=document.getElementById('suUser').value.trim().toLowerCase();
+  var u='';  // no longer asked for — the server derives it from the email
   var p=document.getElementById('suPass').value;
   var err=document.getElementById('authError');
-  if(!co||!u||p.length<6){err.textContent='Enter a company name, a username, and a 6+ character password.';return;}
-  if(!/^[a-z0-9_]+$/.test(u)){err.textContent='Username can use only lowercase letters, numbers, and underscores.';return;}
+  if(!co){err.textContent='Enter your company name.';return;}
+  if(!em||!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(em)){err.textContent='Enter a valid email address \u2014 that is how you will sign in.';return;}
+  if(p.length<6){err.textContent='Choose a password of at least 6 characters.';return;}
   var btn=document.getElementById('suBtn');btn.disabled=true;var old=btn.textContent;btn.textContent='Creating\u2026';err.textContent='';
   fetch('/api/accounts',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'register',company:co,name:nm,email:em,username:u,password:p,ref:(window._REFCODE||'')})})
     .then(function(r){return r.json();}).then(function(d){
       btn.disabled=false;btn.textContent=old;
-      if(d&&d.ok&&d.user){CURRENT_USER=d.user;try{sessionStorage.setItem('hci_session',JSON.stringify(CURRENT_USER));}catch(e){}enterApp();}
+      if(d&&d.ok&&d.user){
+        try{ omStageDemoCarry(); }catch(e){}
+        CURRENT_USER=d.user;try{sessionStorage.setItem('hci_session',JSON.stringify(CURRENT_USER));}catch(e){}enterApp();}
       else{err.textContent=(d&&d.error)||'Could not create your account.';}
     }).catch(function(){btn.disabled=false;btn.textContent=old;err.textContent='Network error. Please try again.';});
 }
@@ -3663,6 +3668,7 @@ function loadUsers(){
     .then(function(r){return r.json();}).then(function(d){if(d&&d.ok){window._adminUsers=d.users; window._adminPayments=d.payments||[]; window._adminUsage=d.usage||[]; renderAdmin();}else{var _t=document.getElementById('usersTable'); if(_t)_t.innerHTML='<div style="color:#C62828;font-size:13px;padding:8px 2px;">Could not load contractors: '+esc((d&&d.error)||'unknown error')+'</div>';}}).catch(function(){});
   if(typeof loadActivity==='function') loadActivity();
   if(typeof loadSupport==='function') loadSupport();
+  if(typeof loadActivation==='function') loadActivation();
 }
 function forgotPw(){
   var u=prompt('Enter your username. Your owner or manager will be notified to reset your password.');
@@ -3950,6 +3956,7 @@ function exportReportPDF(){
 
 // Sample data for the PUBLIC DEMO only. The real app (?app=1) uses load() above, which syncs the database.
 function loadDemo(cb){
+  try{ setTimeout(omRecordDemoSeed,0); }catch(e){}
   jobs=[
     {id:'d1',name:'Oak Street Remodel',client:'The Bryants',location:'Santa Rosa, CA',status:'finishing',progress:78,crew:4,date:'2026-08-15',budget:540000,spent:475000,notes:'Kitchen and bath finishing underway. Cabinets installed, countertops next week.',materials:[{id:'m1',item:'Framing lumber',qty:120,vendor:'Santa Rosa Building Supply',cost:4200},{id:'m2',item:'Quartz countertop slabs',qty:3,vendor:'North Bay Stone',cost:6800},{id:'m3',item:'Cabinet hardware set',qty:42,vendor:'Home Depot',cost:560}]},
     {id:'d2',name:'Hillside Addition',client:'J. Castellano',location:'Napa, CA',status:'rough-in',progress:55,crew:3,date:'2026-09-30',budget:240000,spent:142000,notes:'Electrical and plumbing rough-in in progress. Framing inspection passed.'},
@@ -6437,10 +6444,23 @@ function renderInvite(){
   fetch('/api/accounts',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'refStats',username:u})}).then(function(r){return r.json();}).then(function(d){
     if(!d||!d.ok)return;
     var c=d.count||0;
+    var q=(typeof d.qualified==='number')?d.qualified:c;
     var cc=document.getElementById('invCount');if(cc)cc.textContent=c;
-    var cr=document.getElementById('invCredits');if(cr)cr.textContent=c;
+    // Credits reflect QUALIFIED invites only \u2014 a signup that never produced
+    // anything does not earn a free month.
+    var cr=document.getElementById('invCredits');if(cr)cr.textContent=q;
     var lst=document.getElementById('invList');
-    if(lst){if(d.referrals&&d.referrals.length){lst.innerHTML='<div class="inv-list-h">Contractors you\'ve invited</div>'+d.referrals.map(function(x){return '<div class="inv-row">\u2713 '+esc(x.company||'A contractor')+'</div>';}).join('');}else{lst.innerHTML='';}}
+    if(lst){if(d.referrals&&d.referrals.length){
+      lst.innerHTML='<div class="inv-list-h">Contractors you\'ve invited</div>'
+        +d.referrals.map(function(x){
+          var done=!!x.qualified;
+          return '<div class="inv-row" style="opacity:'+(done?'1':'.62')+';">'
+            +(done?'\u2713 ':'\u25cb ')+esc(x.company||'A contractor')
+            +'<span style="font-size:12px;color:var(--muted);margin-left:6px;">'
+            +(done?'free month earned':'not started yet')+'</span></div>';
+        }).join('')
+        +'<div style="font-size:12px;color:var(--muted);margin-top:8px;line-height:1.45;">A free month is earned once your invite writes their first estimate or job report.</div>';
+    }else{lst.innerHTML='';}}
   }).catch(function(){});
 }
 function copyRef(){var t=document.getElementById('invLink');if(!t)return;t.select();t.setSelectionRange(0,9999);var done=function(){var m=document.getElementById('invMsg');if(m){m.style.color='#2E9B5B';m.textContent='\u2713 Copied!';}};try{if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(t.value).then(done,done);}else{document.execCommand('copy');done();}}catch(e){done();}}
@@ -7789,6 +7809,155 @@ function toggleMoreTabs(){
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',apply);
   else apply();
 })();
+
+/* ============================================================
+   Demo -> account bridge, activation tracking, referral gating
+   ============================================================ */
+var _OM_CARRY = ['jobs','estimates','clients','leads','logs','changeOrders','expenses','crew'];
+
+/* Snapshot the IDs of the seeded sample records so we can tell them apart
+   from anything the visitor actually created during the demo. */
+function omRecordDemoSeed(){
+  try{
+    var seed={};
+    _OM_CARRY.forEach(function(k){
+      var arr=window[k];
+      seed[k]=(Array.isArray(arr)?arr:[]).map(function(x){return x&&x.id;}).filter(Boolean);
+    });
+    localStorage.setItem('om_demo_seed',JSON.stringify(seed));
+  }catch(e){}
+}
+
+/* Everything the visitor made themselves, and nothing that shipped with the demo. */
+function omHarvestDemo(){
+  var out={},total=0;
+  try{
+    var seed=JSON.parse(localStorage.getItem('om_demo_seed')||'{}');
+    _OM_CARRY.forEach(function(k){
+      var arr=window[k]; if(!Array.isArray(arr)) return;
+      var known={}; (seed[k]||[]).forEach(function(id){known[id]=1;});
+      var mine=arr.filter(function(x){return x&&x.id&&!known[x.id];});
+      if(mine.length){ out[k]=mine; total+=mine.length; }
+    });
+  }catch(e){}
+  return {items:out,total:total};
+}
+
+function omStageDemoCarry(){
+  var h=omHarvestDemo();
+  if(!h.total) return 0;
+  try{ localStorage.setItem('om_demo_carry',JSON.stringify(h.items)); }catch(e){}
+  return h.total;
+}
+
+/* Applied once, after the real workspace has finished loading. */
+function omApplyDemoCarry(){
+  var raw=null;
+  try{ raw=localStorage.getItem('om_demo_carry'); }catch(e){}
+  if(!raw) return;
+  if(typeof IS_REAL_APP==='undefined'||!IS_REAL_APP) return;
+  if(typeof CURRENT_USER==='undefined'||!CURRENT_USER||!CURRENT_USER.username) return;
+  try{ localStorage.removeItem('om_demo_carry'); }catch(e){}
+  var moved=0;
+  try{
+    var carry=JSON.parse(raw)||{};
+    _OM_CARRY.forEach(function(k){
+      var incoming=carry[k]; if(!Array.isArray(incoming)||!incoming.length) return;
+      if(!Array.isArray(window[k])) window[k]=[];
+      var have={}; window[k].forEach(function(x){ if(x&&x.id) have[x.id]=1; });
+      incoming.forEach(function(x){ if(x&&x.id&&!have[x.id]){ window[k].push(x); moved++; } });
+    });
+    if(moved){
+      if(typeof save==='function') save();
+      if(typeof showToast==='function') showToast('Brought '+moved+' item'+(moved===1?'':'s')+' over from your demo.',6000);
+      if(typeof logEvent==='function') logEvent('signup','carried '+moved+' demo record(s) into a new workspace');
+    }
+  }catch(e){}
+}
+
+/* ---- Activation: did this trial actually produce anything? ---- */
+function omActivationKey(){
+  var u=(typeof CURRENT_USER!=='undefined'&&CURRENT_USER&&CURRENT_USER.username)?CURRENT_USER.username:'anon';
+  return 'om_activated_'+u;
+}
+function omMarkActivated(kind){
+  try{
+    if(typeof IS_REAL_APP==='undefined'||!IS_REAL_APP) return;
+    if(typeof isCrew==='function'&&isCrew()) return;
+    if(localStorage.getItem(omActivationKey())==='1') return;
+    localStorage.setItem(omActivationKey(),'1');
+    if(typeof logEvent==='function') logEvent('activation','first '+kind);
+  }catch(e){}
+}
+function omIsActivated(){
+  try{ return localStorage.getItem(omActivationKey())==='1'; }catch(e){ return false; }
+}
+
+/* Wrap the two moments that count as real value delivered. */
+(function(){
+  if(typeof saveEstimate==='function'){
+    var _se=saveEstimate;
+    saveEstimate=function(){
+      var before=(typeof estimates!=='undefined'&&estimates)?estimates.length:0;
+      var r=_se.apply(this,arguments);
+      try{
+        var after=(typeof estimates!=='undefined'&&estimates)?estimates.length:0;
+        if(after>before) omMarkActivated('estimate');
+      }catch(e){}
+      return r;
+    };
+  }
+  if(typeof jrGenerate==='function'){
+    var _jr=jrGenerate;
+    jrGenerate=function(){
+      var r=_jr.apply(this,arguments);
+      try{ if(window._jrPhotos && _jrPhotos.length) omMarkActivated('job report'); }catch(e){}
+      return r;
+    };
+  }
+})();
+
+/* ---- Operator console: who is on trial and has produced nothing ---- */
+function loadActivation(){
+  var el=document.getElementById('actvCard'); if(!el) return;
+  if(!(typeof isAdmin==='function'&&isAdmin())) return;
+  var users=null, active=null;
+  function paint(){
+    if(!users||!active) return;
+    var now=Math.floor(Date.now()/1000);
+    var trialing=users.filter(function(u){
+      if(u.username===ADMIN_USER) return false;
+      return u.stripe_status!=='active';
+    });
+    var stalled=trialing.filter(function(u){ return !active[u.username]; });
+    var did=trialing.length-stalled.length;
+    var rows=stalled.map(function(u){
+      var te=u.trial_end?Math.ceil((new Date(u.trial_end).getTime()/1000-now)/86400):null;
+      var when=(te===null)?'no trial date':(te>0?te+' day'+(te===1?'':'s')+' left':'trial over');
+      return '<div style="display:flex;justify-content:space-between;gap:10px;padding:7px 0;border-top:1px solid rgba(255,255,255,.10);font-size:13px;">'
+        +'<span>'+esc(u.company||u.name||u.username)+'</span>'
+        +'<span style="opacity:.75;white-space:nowrap;">'+when+'</span></div>';
+    }).join('');
+    el.innerHTML='<div style="background:#0D2B4E;color:#fff;border-radius:12px;padding:14px 16px;">'
+      +'<div style="font-weight:800;font-size:15px;margin-bottom:2px;">Activation</div>'
+      +'<div style="font-size:12.5px;opacity:.75;margin-bottom:10px;">An account counts as activated once it has produced a real estimate or job report.</div>'
+      +'<div style="display:flex;gap:18px;font-size:13px;margin-bottom:6px;">'
+        +'<span><b style="font-size:19px;">'+trialing.length+'</b> on trial</span>'
+        +'<span><b style="font-size:19px;color:#7BE3A8;">'+did+'</b> activated</span>'
+        +'<span><b style="font-size:19px;color:#FFCB5B;">'+stalled.length+'</b> need a call</span>'
+      +'</div>'
+      +(rows||'<div style="font-size:13px;opacity:.7;padding-top:6px;">Everyone on trial has produced something. Nice.</div>')
+      +'</div>';
+  }
+  fetch('/api/accounts',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'list'})})
+    .then(function(r){return r.json();}).then(function(d){ users=(d&&d.ok&&d.users)?d.users:[]; paint(); }).catch(function(){});
+  fetch('/api/activity',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'list',type:'activation',limit:200})})
+    .then(function(r){return r.json();}).then(function(d){
+      active={}; ((d&&d.events)||[]).forEach(function(e){ if(e&&e.username) active[e.username]=1; }); paint();
+    }).catch(function(){ active={}; paint(); });
+}
+var ADMIN_USER='siamakk2';
+
 </script>
 </body>
 </html>
