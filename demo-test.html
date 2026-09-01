@@ -4445,9 +4445,10 @@ function _planExtractSys(){
     +'6. STORIES: the number of floors, from the area schedule or level names.\n'
     +'7. OVERALL DIMENSIONS: from the floor plan\u2019s outermost dimension strings, transcribe the building\u2019s overall WIDTH and DEPTH in feet (e.g. "42\'-0\\"" wide by "68\'-0\\"" deep). Use the outer dimension line that spans the whole building, not a single room. Report both the printed string and the decimal feet. If the overall dimension line is not printed, null \u2014 do not scale it off the drawing.\n'
     +'8. HEIGHTS: from the ELEVATION or SECTION sheets only, transcribe printed vertical dimensions: wall plate height and ridge/parapet height above the main floor. These come from dimension strings or height callouts on the elevations. If no elevation sheet is present, or no vertical dimension is printed on it, null. Never infer a height from a floor plan.\n'
-    +'9. SHEET INVENTORY: for each uploaded file/drawing, classify what it actually is: floorplan, elevation, section, site, detail, schedule, render, or other. This tells the contractor which sheet is missing.\n\n'
+    +'9. LEVELS: list every floor level printed in the area schedule or level names (e.g. "BASEMENT", "MAIN FLOOR", "UPPER FLOOR"), each with its printed square footage. For EACH level state whether it is belowGrade (a basement or lower level) and, from the ELEVATIONS only, whether it is a walkout \u2014 i.e. that level is visibly exposed above ground on at least one elevation. A walkout lower level is a full storey of visible building; a fully buried basement is not. If no elevation is present, leave walkout null rather than guessing.\n'
+    +'10. SHEET INVENTORY: for each uploaded file/drawing, classify what it actually is: floorplan, elevation, section, site, detail, schedule, render, or other. This tells the contractor which sheet is missing.\n\n'
     +'RULES: transcribe only what is actually printed or drawn. Anything absent or unreadable = null. Never guess. If two sheets disagree, report both in "conflicts".\n\n'
-    +'Return ONLY JSON, no markdown, no commentary: {"areaSchedule":[{"label":"string","sqft":number}]|null,"totalPrintedSqft":number|null,"stories":number|null,"rooms":[{"name":"string","level":"string|null","dims":"string|null"}]|null,"bedrooms":["string"]|null,"potentialBedrooms":["string"]|null,"windowSchedule":[{"mark":"string","size":"string","count":number}]|null,"elevations":{"present":true|false,"front":{"windows":number,"style":"punched|window-wall|mixed","clerestory":true|false,"door":true},"back":{"windows":number,"style":"punched|window-wall|mixed","clerestory":true|false},"left":{"windows":number,"style":"punched|window-wall|mixed","clerestory":true|false},"right":{"windows":number,"style":"punched|window-wall|mixed","clerestory":true|false}}|null,"roof":"flat|low-slope|gable|hip"|null,"storyHeightFt":number|null,"raisedSection":{"present":true|false,"fromFt":number|null,"toFt":number|null,"heightFt":number|null}|null,"porchInfo":{"side":"front|back|left|right","printedDims":"string"}|null,"overallDims":{"widthFt":number|null,"depthFt":number|null,"printed":"string|null"}|null,"heights":{"wallPlateFt":number|null,"ridgeFt":number|null,"source":"elevation|section"|null}|null,"sheets":[{"label":"string","type":"floorplan|elevation|section|site|detail|schedule|render|other"}]|null,"conflicts":["string"]|null}';
+    +'Return ONLY JSON, no markdown, no commentary: {"areaSchedule":[{"label":"string","sqft":number}]|null,"totalPrintedSqft":number|null,"stories":number|null,"rooms":[{"name":"string","level":"string|null","dims":"string|null"}]|null,"bedrooms":["string"]|null,"potentialBedrooms":["string"]|null,"windowSchedule":[{"mark":"string","size":"string","count":number}]|null,"elevations":{"present":true|false,"front":{"windows":number,"style":"punched|window-wall|mixed","clerestory":true|false,"door":true},"back":{"windows":number,"style":"punched|window-wall|mixed","clerestory":true|false},"left":{"windows":number,"style":"punched|window-wall|mixed","clerestory":true|false},"right":{"windows":number,"style":"punched|window-wall|mixed","clerestory":true|false}}|null,"roof":"flat|low-slope|gable|hip"|null,"storyHeightFt":number|null,"raisedSection":{"present":true|false,"fromFt":number|null,"toFt":number|null,"heightFt":number|null}|null,"porchInfo":{"side":"front|back|left|right","printedDims":"string"}|null,"overallDims":{"widthFt":number|null,"depthFt":number|null,"printed":"string|null"}|null,"heights":{"wallPlateFt":number|null,"ridgeFt":number|null,"source":"elevation|section"|null}|null,"sheets":[{"label":"string","type":"floorplan|elevation|section|site|detail|schedule|render|other"}]|null,"levels":[{"name":"string","sqft":number|null,"belowGrade":true|false,"walkout":true|false|null}]|null,"conflicts":["string"]|null}';
 }
 function _planPrepareImage(file,tileBudget,cb,err){
   // Large architectural sheets get TILED into overlapping full-resolution pieces
@@ -4932,7 +4933,9 @@ function _epvSyncPreview(){
   // label: real takeoff vs representative
   var lblEl=document.getElementById('epv3dLabel');
   if(lblEl){lblEl.textContent=(_planGeom&&_planGeom._printed)
-      ? ('Massing from printed dimensions \u00b7 '+Math.round(_planGeom._from.width)+'\u2032 \u00d7 '+Math.round(_planGeom._from.depth)+'\u2032 \u00b7 '+esc(_planGeom._from.roof)+' roof')
+      ? ('Massing from printed dimensions \u00b7 '+Math.round(_planGeom._from.width)+'\u2032 \u00d7 '+Math.round(_planGeom._from.depth)+'\u2032 \u00b7 '
+         +_planGeom._from.stories+' level'+(_planGeom._from.stories===1?'':'s')+' \u00b7 '+esc(_planGeom._from.roof)+' roof'
+         +((_planGeom._levels&&_planGeom._levels.hidden)?(' \u00b7 '+_planGeom._levels.hidden+' below grade, not drawn'):''))
       : (realGeom?'3D from your plans \u00b7 drag to rotate':'Representative property \u00b7 drag to rotate');}
   var list=document.getElementById('p3dRooms');list.innerHTML='';
   var _pc=(_planGeom&&_planGeom._printed)?_printedRoomChips(window._planExtracted):[];
@@ -5064,7 +5067,12 @@ function epvSetView(v){
       img.onerror=null;
       img.src='data:image/svg+xml;utf8,'+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="600" height="300"><defs><linearGradient id="g" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="%23dceaf7"/><stop offset="1" stop-color="%23eef0e8"/></linearGradient></defs><rect width="600" height="300" fill="url(%23g)"/><text x="300" y="150" font-family="sans-serif" font-size="16" fill="%235A6B7D" text-anchor="middle">Photoreal render</text><text x="300" y="174" font-family="sans-serif" font-size="12" fill="%238A97A5" text-anchor="middle">A realistic view of the finished property</text></svg>');
     };
-    var _rp=_epvPickPhoto(); if(_rp){ img.src=_rp; img.style.display=''; } else { img.removeAttribute('src'); img.style.display='none'; }
+    var _rp=_epvPickPhoto();
+    // The wrapper is position:relative with no height of its own - the image
+    // supplies it. Hiding the image collapsed the box and took the Generate
+    // button with it, so no render could ever be requested.
+    img.style.display='';
+    img.src=_rp || _epvPlaceholder();
     var _rb=document.getElementById('epvRenderBtn'); if(_rb) _rb.style.display='';
     document.getElementById('epvPhotoLabel').textContent=_epvRealRender?'Rendered from this estimate':'No render yet \u2014 tap Generate to create one from this estimate';
     if(hint)hint.textContent='A realistic look at the finished property';
@@ -8164,7 +8172,10 @@ function _massingRequirements(e){
 function _massingFromPrinted(e){
   var r=_massingRequirements(e);
   if(!r.ok) return r;
-  var stories=Math.max(1,parseInt(e.stories,10)||1);
+  var li=_levelInfo(e);
+  // A printed plate height already spans the whole visible building; only
+  // multiply by level count when no plate was dimensioned.
+  var stories=Math.max(li.visible,parseInt(e.stories,10)||1);
   var storyH=r.storyH>4?r.storyH:9;
   var wallH=r.plate>4?r.plate:(storyH*stories);
   var roof=String(e.roof||'gable').toLowerCase();
@@ -8193,8 +8204,9 @@ function _massingFromPrinted(e){
       rooms:[{name:'Building envelope',x:0,y:0,w:r.W,h:r.D}],
       volumes:vols, stories:stories, storyHeight:storyH,
       wallHeightFt:wallH, ridgeFt:r.ridge||null,
-      totalSqft:estNum(e.totalPrintedSqft)||Math.round(r.W*r.D*stories),
+      totalSqft:estNum(e.totalPrintedSqft)||li.totalSqft||Math.round(r.W*r.D*stories),
       _printed:true,
+      _levels:li,
       _from:{width:r.W,depth:r.D,wall:wallH,ridge:r.ridge,roof:roof,stories:stories}
     }
   };
@@ -8244,6 +8256,40 @@ function _omModalDirty(m){
     for(var i=0;i<f.length;i++){ if(String(f[i].value||'').trim()!=='') return true; }
   }catch(e){}
   return false;
+}
+
+
+/* An honest placeholder that keeps the photo box its full height. */
+function _epvPlaceholder(){
+  return 'data:image/svg+xml;utf8,'+encodeURIComponent(
+    '<svg xmlns="http://www.w3.org/2000/svg" width="600" height="300">'
+    +'<rect width="600" height="300" fill="%23EAF1F9"/>'
+    +'<text x="300" y="140" font-family="sans-serif" font-size="15" fill="%235A6B7D" text-anchor="middle">No render yet</text>'
+    +'<text x="300" y="166" font-family="sans-serif" font-size="12" fill="%238A97A5" text-anchor="middle">Tap Generate below to create one from this estimate</text>'
+    +'</svg>');
+}
+
+/* Levels, preferring what the plans print. A basement counts towards the
+   visible mass only when an elevation shows it walking out. */
+function _levelInfo(e){
+  var lv=(e&&Array.isArray(e.levels)&&e.levels.length)?e.levels:null;
+  if(!lv && e && Array.isArray(e.areaSchedule)){
+    // Derive from the printed area schedule: floor levels only, no porches or garages.
+    lv=e.areaSchedule.filter(function(r){
+        return r&&r.label&&!/porch|patio|deck|garage|carport|balcony|covered/i.test(r.label);
+      }).map(function(r){
+        return {name:r.label,sqft:estNum(r.sqft),
+                belowGrade:/basement|lower\s*level|below\s*grade|walkout/i.test(r.label),
+                walkout:/walkout/i.test(r.label)?true:null};
+      });
+  }
+  if(!lv||!lv.length) return {levels:[],visible:Math.max(1,parseInt(e&&e.stories,10)||1),hidden:0,totalSqft:0};
+  var visible=0,hidden=0,total=0;
+  lv.forEach(function(L){
+    total+=estNum(L.sqft)||0;
+    if(L.belowGrade && L.walkout!==true) hidden++; else visible++;
+  });
+  return {levels:lv,visible:Math.max(1,visible),hidden:hidden,totalSqft:total};
 }
 
 </script>
