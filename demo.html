@@ -4435,9 +4435,12 @@ function _planExtractSys(){
     +'3. BEDROOMS: list the names of rooms that are explicitly labeled as bedrooms. Do not count a den/office/flex room as a bedroom unless the plan labels it one. SEPARATELY, list rooms NOT labeled as bedrooms that could plausibly serve as one (office, den, study, flex, loft, bonus room) as potentialBedrooms — the owner decides, not you.\n'
     +'4. WINDOW & DOOR SCHEDULES: if the plans include printed window/door schedules, transcribe them (mark, size, count).\n'
     +'5. ELEVATIONS: for EACH elevation drawing present, examine it carefully one elevation at a time. First identify the GLAZING STYLE of that face: "punched" (discrete individual windows in solid wall), "window-wall" (continuous floor-to-header glazing bands / storefront-style glass, common in modern homes), or "mixed". Then count the window UNITS visible (for window-walls, count the major glazed panels). Also note whether that face has a CLERESTORY — a separate horizontal band of glazing up high, above the main glazing, typically under a raised roof section — as true/false. State which elevation has the main entry door (that is "front"). Also note the roof form (flat / low-slope / gable / hip) and story height if dimensioned. If a raised/stepped roof section exists, transcribe its horizontal EXTENT: where it starts and ends along the building in feet (use the printed dimension strings), and its printed heights. From the floor plan, transcribe the covered porch\u2019s printed dimensions and WHICH SIDE of the building it runs along.\n'
-    +'6. STORIES: the number of floors, from the area schedule or level names.\n\n'
+    +'6. STORIES: the number of floors, from the area schedule or level names.\n'
+    +'7. OVERALL DIMENSIONS: from the floor plan\u2019s outermost dimension strings, transcribe the building\u2019s overall WIDTH and DEPTH in feet (e.g. "42\'-0\\"" wide by "68\'-0\\"" deep). Use the outer dimension line that spans the whole building, not a single room. Report both the printed string and the decimal feet. If the overall dimension line is not printed, null \u2014 do not scale it off the drawing.\n'
+    +'8. HEIGHTS: from the ELEVATION or SECTION sheets only, transcribe printed vertical dimensions: wall plate height and ridge/parapet height above the main floor. These come from dimension strings or height callouts on the elevations. If no elevation sheet is present, or no vertical dimension is printed on it, null. Never infer a height from a floor plan.\n'
+    +'9. SHEET INVENTORY: for each uploaded file/drawing, classify what it actually is: floorplan, elevation, section, site, detail, schedule, render, or other. This tells the contractor which sheet is missing.\n\n'
     +'RULES: transcribe only what is actually printed or drawn. Anything absent or unreadable = null. Never guess. If two sheets disagree, report both in "conflicts".\n\n'
-    +'Return ONLY JSON, no markdown, no commentary: {"areaSchedule":[{"label":"string","sqft":number}]|null,"totalPrintedSqft":number|null,"stories":number|null,"rooms":[{"name":"string","level":"string|null","dims":"string|null"}]|null,"bedrooms":["string"]|null,"potentialBedrooms":["string"]|null,"windowSchedule":[{"mark":"string","size":"string","count":number}]|null,"elevations":{"present":true|false,"front":{"windows":number,"style":"punched|window-wall|mixed","clerestory":true|false,"door":true},"back":{"windows":number,"style":"punched|window-wall|mixed","clerestory":true|false},"left":{"windows":number,"style":"punched|window-wall|mixed","clerestory":true|false},"right":{"windows":number,"style":"punched|window-wall|mixed","clerestory":true|false}}|null,"roof":"flat|low-slope|gable|hip"|null,"storyHeightFt":number|null,"raisedSection":{"present":true|false,"fromFt":number|null,"toFt":number|null,"heightFt":number|null}|null,"porchInfo":{"side":"front|back|left|right","printedDims":"string"}|null,"conflicts":["string"]|null}';
+    +'Return ONLY JSON, no markdown, no commentary: {"areaSchedule":[{"label":"string","sqft":number}]|null,"totalPrintedSqft":number|null,"stories":number|null,"rooms":[{"name":"string","level":"string|null","dims":"string|null"}]|null,"bedrooms":["string"]|null,"potentialBedrooms":["string"]|null,"windowSchedule":[{"mark":"string","size":"string","count":number}]|null,"elevations":{"present":true|false,"front":{"windows":number,"style":"punched|window-wall|mixed","clerestory":true|false,"door":true},"back":{"windows":number,"style":"punched|window-wall|mixed","clerestory":true|false},"left":{"windows":number,"style":"punched|window-wall|mixed","clerestory":true|false},"right":{"windows":number,"style":"punched|window-wall|mixed","clerestory":true|false}}|null,"roof":"flat|low-slope|gable|hip"|null,"storyHeightFt":number|null,"raisedSection":{"present":true|false,"fromFt":number|null,"toFt":number|null,"heightFt":number|null}|null,"porchInfo":{"side":"front|back|left|right","printedDims":"string"}|null,"overallDims":{"widthFt":number|null,"depthFt":number|null,"printed":"string|null"}|null,"heights":{"wallPlateFt":number|null,"ridgeFt":number|null,"source":"elevation|section"|null}|null,"sheets":[{"label":"string","type":"floorplan|elevation|section|site|detail|schedule|render|other"}]|null,"conflicts":["string"]|null}';
 }
 function _planPrepareImage(file,tileBudget,cb,err){
   // Large architectural sheets get TILED into overlapping full-resolution pieces
@@ -4881,11 +4884,16 @@ function _epvSyncPreview(){
   // metrics
   var tt=(document.getElementById('estTotal')||{}).textContent||'$0';
   var tot=estNum(tt.replace(/[^0-9.]/g,''));
-  // Ensure there is ALWAYS a model to show: real takeoff geometry, or a representative house.
+  // Plans present: the model comes from printed dimensions or it does not come at all.
+  if(window._planFromPlans){
+    var _m=_massingFromPrinted(window._planExtracted);
+    if(_m.ok){ if(!(_planGeom&&_planGeom._printed)){ _p3dGrow=0;_p3dGrowT0=Date.now(); } _planGeom=_m.geom; }
+    else { _epvShowNoModel(_m.missing); return; }
+  }
   if(!(_planGeom&&_planGeom.rooms&&_planGeom.rooms.length)){
     // If plans were actually read, showing a made-up house next to a real
     // priced estimate is worse than showing nothing. Say so instead.
-    if(window._planFromPlans){ _epvShowNoModel(); return; }
+    if(window._planFromPlans){ _epvShowNoModel(_massingRequirements(window._planExtracted).missing); return; }
     _planGeom=_synthHouse(_estGuessSqft());
     _p3dGrow=0;_p3dGrowT0=Date.now();
   }
@@ -4911,9 +4919,25 @@ function _epvSyncPreview(){
   wrap.style.display='block';
   // label: real takeoff vs representative
   var lblEl=document.getElementById('epv3dLabel');
-  if(lblEl){lblEl.textContent=realGeom?'3D from your plans \u00b7 drag to rotate':'Representative property \u00b7 drag to rotate';}
+  if(lblEl){lblEl.textContent=(_planGeom&&_planGeom._printed)
+      ? ('Massing from printed dimensions \u00b7 '+Math.round(_planGeom._from.width)+'\u2032 \u00d7 '+Math.round(_planGeom._from.depth)+'\u2032 \u00b7 '+esc(_planGeom._from.roof)+' roof')
+      : (realGeom?'3D from your plans \u00b7 drag to rotate':'Representative property \u00b7 drag to rotate');}
   var list=document.getElementById('p3dRooms');list.innerHTML='';
-  if(realGeom){
+  var _pc=(_planGeom&&_planGeom._printed)?_printedRoomChips(window._planExtracted):[];
+  if(_pc.length){
+    var _psum=0;_pc.forEach(function(c){_psum+=c.sqft;});
+    _pc.forEach(function(c,i){
+      var chip=document.createElement('span');
+      chip.innerHTML='<span style="width:9px;height:9px;border-radius:3px;background:'+_P3D_COLORS[i%_P3D_COLORS.length]+';display:inline-block;"></span>'
+        +esc(c.name)+' \u00b7 '+c.sqft+' sf'+(tot&&_psum?(' \u00b7 ~'+estMoney(tot*c.sqft/_psum)):'');
+      chip.title='Printed on the plan as '+c.dims;
+      list.appendChild(chip);
+    });
+    var n=document.createElement('span');n.style.cssText='color:#8FA6C2;font-size:11.5px;';
+    n.textContent='Room sizes read from the printed schedule.';
+    list.appendChild(n);
+  }
+  else if(realGeom){
     _planGeom.rooms.forEach(function(r,i){
       var a=r.w*r.h;var chip=document.createElement('span');
       chip.innerHTML='<span style="width:9px;height:9px;border-radius:3px;background:'+_P3D_COLORS[i%_P3D_COLORS.length]+';display:inline-block;"></span>'+esc(r.name||('Room '+(i+1)))+' \u00b7 '+Math.round(a)+' sf'+(tot&&totalArea?(' \u00b7 ~'+estMoney(tot*a/totalArea)):'');
@@ -8042,16 +8066,18 @@ function _planShowRaw(){
 
 
 /* Honest empty state: plans were read, but no trustworthy model came back. */
-function _epvShowNoModel(){
+function _epvShowNoModel(missing){
   try{
     var cv=document.getElementById('p3dCanvas'); if(cv) cv.style.display='none';
-    var list=document.getElementById('p3dRooms');
-    if(list){
-      list.innerHTML='<span style="color:#FFCB5B;font-size:12px;">'
-        +'No model \u2014 the takeoff priced your plans, but the drawings did not yield '
-        +'reliable geometry (floor-plan sheet with printed dimensions works best). '
-        +'Nothing here is invented.</span>';
-    }
+    var wrap=document.getElementById('epv3dWrap'); if(wrap) wrap.style.display='block';
+    var lbl=document.getElementById('epv3dLabel'); if(lbl) lbl.textContent='No model \u2014 not enough printed dimensions';
+    var list=document.getElementById('p3dRooms'); if(!list) return;
+    var need=(missing&&missing.length)?missing:['the elevation sheets'];
+    list.innerHTML='<span style="color:#FFCB5B;font-size:12px;line-height:1.5;display:block;">'
+      +'<b>No model shown.</b> The estimate above is still valid \u2014 but a building is only drawn '
+      +'from dimensions your plans actually print. Add:<br>'
+      +need.map(function(x){return '\u2022 '+esc(x);}).join('<br>')
+      +'<br><span style="opacity:.75;">Nothing here is guessed or invented.</span></span>';
   }catch(e){}
 }
 
@@ -8083,6 +8109,91 @@ function _planReadSummary(){
     +'<div style="font-weight:800;font-size:12.5px;margin-bottom:5px;">What we read off your plans</div>'
     +html+warn
     +'<div style="font-size:11.5px;opacity:.6;margin-top:7px;">Straight from the printed drawings. If a number is wrong here, every price below it is wrong too.</div></div>';
+}
+
+
+/* ---- Massing built from PRINTED dimensions only ---------------------------
+   The 3D used to be a vision guess. It is now derived arithmetically from
+   numbers the drawing actually prints, and refuses to render without them. */
+
+function _ftIn(v){
+  if(v==null) return 0;
+  if(typeof v==='number') return isFinite(v)?v:0;
+  var s=String(v).trim();
+  var m=/^(-?\d+(?:\.\d+)?)\s*(?:'|\u2032|ft\b)?\s*[-\s]?\s*(\d+(?:\.\d+)?)?\s*(?:"|\u2033|in\b)?/.exec(s);
+  if(!m) return 0;
+  var ft=parseFloat(m[1])||0, inch=m[2]?(parseFloat(m[2])||0):0;
+  return ft + inch/12;
+}
+
+/* What the drawings must print before we will draw a building. */
+function _massingRequirements(e){
+  var missing=[];
+  if(!e) return {ok:false,missing:['a readable plan set']};
+  var od=e.overallDims||{};
+  var W=_ftIn(od.widthFt||od.width), D=_ftIn(od.depthFt||od.depth);
+  var hs=e.heights||{};
+  var plate=_ftIn(hs.wallPlateFt), ridge=_ftIn(hs.ridgeFt), storyH=_ftIn(e.storyHeightFt);
+  var elev=!!(e.elevations&&e.elevations.present);
+  if(!(W>4&&D>4)) missing.push('the overall width and depth dimension line on the floor plan');
+  if(!elev)       missing.push('the elevation sheets');
+  if(!(plate>4||ridge>4||storyH>4)) missing.push('a printed wall or ridge height on an elevation');
+  if(!e.roof)     missing.push('the roof form (a roof plan note or a dimensioned elevation)');
+  return {ok:missing.length===0,missing:missing,W:W,D:D,plate:plate,ridge:ridge,storyH:storyH};
+}
+
+function _massingFromPrinted(e){
+  var r=_massingRequirements(e);
+  if(!r.ok) return r;
+  var stories=Math.max(1,parseInt(e.stories,10)||1);
+  var storyH=r.storyH>4?r.storyH:9;
+  var wallH=r.plate>4?r.plate:(storyH*stories);
+  var roof=String(e.roof||'gable').toLowerCase();
+  var el=e.elevations||{};
+  function glazingOf(face){
+    var f=el[face]||{};
+    if(f.clerestory) return 'clerestory';
+    if(f.style==='window-wall') return 'window-wall';
+    return 'punched';
+  }
+  var vols=[{name:'Main',x:0,y:0,w:r.W,h:r.D,heightFt:wallH,roof:roof,glazing:glazingOf('front')}];
+  // A raised/stepped section is its own taller prism along its printed extent.
+  var rs=e.raisedSection;
+  if(rs&&rs.present){
+    var a=_ftIn(rs.fromFt), b=_ftIn(rs.toFt), rh=_ftIn(rs.heightFt);
+    if(b>a && rh>wallH){
+      vols.push({name:'Raised',x:a,y:0,w:Math.min(b,r.W)-a,h:r.D,heightFt:rh,
+                 roof:roof,glazing:(el.front&&el.front.clerestory)?'clerestory':glazingOf('front')});
+    }
+  }
+  return {
+    ok:true, missing:[],
+    geom:{
+      // One envelope rectangle: the footprint is printed, interior partition
+      // POSITIONS are not, so we do not invent them.
+      rooms:[{name:'Building envelope',x:0,y:0,w:r.W,h:r.D}],
+      volumes:vols, stories:stories, storyHeight:storyH,
+      wallHeightFt:wallH, ridgeFt:r.ridge||null,
+      totalSqft:estNum(e.totalPrintedSqft)||Math.round(r.W*r.D*stories),
+      _printed:true,
+      _from:{width:r.W,depth:r.D,wall:wallH,ridge:r.ridge,roof:roof,stories:stories}
+    }
+  };
+}
+
+/* Room chips from the PRINTED room schedule — real names, real dimensions,
+   no invented coordinates. */
+function _printedRoomChips(e){
+  var out=[];
+  if(!e||!Array.isArray(e.rooms)) return out;
+  e.rooms.forEach(function(r){
+    if(!r||!r.name||!r.dims) return;
+    var p=String(r.dims).split(/[x\u00d7X]/);
+    if(p.length<2) return;
+    var a=_ftIn(p[0]), b=_ftIn(p[1]);
+    if(a>1&&b>1) out.push({name:r.name,sqft:Math.round(a*b),dims:String(r.dims)});
+  });
+  return out;
 }
 
 </script>
