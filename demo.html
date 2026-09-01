@@ -4634,6 +4634,7 @@ function _planAnalyzeStaged(){
     var blocks1=[{type:"text",text:manifest}].concat(media).concat([{type:"text",text:'Transcribe these plan sheets per your instructions. JSON only.'}]);
     callClaudeBlocks(_planExtractSys(),blocks1,function(extText){
       var extracted=_estParseJSON(extText);
+      window._planExtracted=extracted; window._planFromPlans=true;
       var extNote=extracted?('VERIFIED TRANSCRIPTION OF THE PRINTED PLAN DATA (a careful first pass already read these exact sheets — treat this as ground truth and stay consistent with it; if you see a clear transcription error, correct it and say so in "assumptions"):\n'+JSON.stringify(extracted)):'';
       // PASS 2 — the takeoff & estimate, locked to the transcription
       var blocks2=[{type:"text",text:manifest+(extNote?('\n\n'+extNote):'')}].concat(media).concat([{type:"text",text:'These are the plans for the job.'+(scope?(' Extra context from the contractor: '+scope):'')+' Do the takeoff and draft the estimate. Your totalSqft MUST equal the transcription\u2019s totalPrintedSqft when present; geometry.windows MUST match the transcription\u2019s per-elevation counts and styles when present; bedroom room names MUST come from the transcription. If the transcription lists potentialBedrooms, keep the bedroom count at the printed labels BUT add a question like \u201cOffice/Den could serve as a 3rd bedroom (needs closet + egress) \u2014 count it as one?\u201d so the owner decides. geometry.volumes MUST follow the transcription: roof form from its roof field, volume heights from its printed height dimensions (a raised/stepped section is its own taller volume with glazing \u201cclerestory\u201d when the transcription shows a clerestory). Do your verification INSIDE your thinking (sum of room areas vs the printed total, window counts vs the transcription, bedroom list, volume heights vs printed heights) and fix mismatches there. Your visible output must be EXACTLY ONE JSON object \u2014 no draft version, no commentary, no verification notes, nothing before or after the JSON.'}]);
@@ -4882,6 +4883,9 @@ function _epvSyncPreview(){
   var tot=estNum(tt.replace(/[^0-9.]/g,''));
   // Ensure there is ALWAYS a model to show: real takeoff geometry, or a representative house.
   if(!(_planGeom&&_planGeom.rooms&&_planGeom.rooms.length)){
+    // If plans were actually read, showing a made-up house next to a real
+    // priced estimate is worse than showing nothing. Say so instead.
+    if(window._planFromPlans){ _epvShowNoModel(); return; }
     _planGeom=_synthHouse(_estGuessSqft());
     _p3dGrow=0;_p3dGrowT0=Date.now();
   }
@@ -4917,7 +4921,9 @@ function _epvSyncPreview(){
     });
   } else {
     var note=document.createElement('span');note.style.cssText='color:#8FA6C2;font-size:11.5px;';
-    note.textContent='Illustrative model. Upload plans on this estimate for an exact takeoff with cost per room.';
+    note.textContent=(_planGeom&&_planGeom._synth)
+      ? 'Generic example house \u2014 NOT your project. Upload the plans for a model built from your drawings.'
+      : 'Model built from your plan set. Check it against your drawings before sending.';
     list.appendChild(note);
   }
   if(_epvView!=='photo')_p3dEnsureLoop();
@@ -5006,11 +5012,9 @@ var _PHOTO_SET=[
   {k:'modern',src:'/media/house-modern.jpg',min:0}
 ];
 function _epvPickPhoto(){
-  // choose a representative render by stories/size; real renders (epvRenderReal) override
-  if(_epvRealRender)return _epvRealRender;
-  var stories=(_planGeom&&_planGeom.stories)||1;
-  if(stories>=2)return '/media/house-two-story.jpg';
-  return '/media/house-ranch.jpg';
+  // Only ever show a real render of THIS project. The old behaviour picked one
+  // of three stock houses by storey count and presented it as the client's home.
+  return _epvRealRender || null;
 }
 var _epvRealRender=null;
 function epvSetView(v){
@@ -8034,6 +8038,51 @@ function _planShowRaw(){
     +'<pre style="white-space:pre-wrap;word-break:break-word;font-size:12px;background:#F4F6F9;padding:12px;border-radius:8px;margin:0;">'+esc(t)+'</pre>'
     +'<button onclick="this.closest(\'div[style*=fixed]\').remove()" style="margin-top:12px;background:#1565C0;color:#fff;border:none;border-radius:8px;padding:10px 16px;font-weight:700;cursor:pointer;">Close</button></div>';
   document.body.appendChild(d);
+}
+
+
+/* Honest empty state: plans were read, but no trustworthy model came back. */
+function _epvShowNoModel(){
+  try{
+    var cv=document.getElementById('p3dCanvas'); if(cv) cv.style.display='none';
+    var list=document.getElementById('p3dRooms');
+    if(list){
+      list.innerHTML='<span style="color:#FFCB5B;font-size:12px;">'
+        +'No model \u2014 the takeoff priced your plans, but the drawings did not yield '
+        +'reliable geometry (floor-plan sheet with printed dimensions works best). '
+        +'Nothing here is invented.</span>';
+    }
+  }catch(e){}
+}
+
+/* What the first pass actually read off the sheets. The contractor's audit trail. */
+function _planReadSummary(){
+  var e=window._planExtracted; if(!e) return '';
+  function row(k,v){ return v?('<div style="display:flex;justify-content:space-between;gap:12px;padding:4px 0;font-size:12.5px;"><span style="opacity:.72;">'+esc(k)+'</span><b>'+esc(String(v))+'</b></div>'):''; }
+  var fp=e.footprint||e.overallDimensions||'';
+  if(fp&&typeof fp==='object') fp=(fp.width||'?')+' x '+(fp.depth||'?');
+  var beds=Array.isArray(e.bedrooms)?e.bedrooms.length:(e.bedroomCount||'');
+  var html=row('Printed total sq ft',e.totalPrintedSqft||e.totalSqft||'')
+          +row('Footprint',fp)
+          +row('Stories',e.stories||'')
+          +row('Bedrooms',beds)
+          +row('Roof',e.roof&&(e.roof.form||e.roof)||'');
+  if(!html) return '';
+  // Cross-check: do the priced areas agree with what the plan prints?
+  var warn='';
+  try{
+    var printed=estNum(e.totalPrintedSqft||e.totalSqft||0);
+    var used=estNum((_planGeom&&_planGeom.totalSqft)||0);
+    if(printed>0&&used>0&&Math.abs(used-printed)/printed>0.15){
+      warn='<div style="margin-top:8px;padding:8px 10px;background:rgba(255,203,91,.16);border-radius:8px;font-size:12px;color:#FFCB5B;">'
+        +'Mismatch: the plans print '+esc(String(printed))+' sq ft but the takeoff used '
+        +esc(String(used))+' sq ft. Check the line items before sending.</div>';
+    }
+  }catch(e2){}
+  return '<div style="background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.13);border-radius:10px;padding:11px 13px;margin-bottom:10px;">'
+    +'<div style="font-weight:800;font-size:12.5px;margin-bottom:5px;">What we read off your plans</div>'
+    +html+warn
+    +'<div style="font-size:11.5px;opacity:.6;margin-top:7px;">Straight from the printed drawings. If a number is wrong here, every price below it is wrong too.</div></div>';
 }
 
 </script>
