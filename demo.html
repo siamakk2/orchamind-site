@@ -2857,7 +2857,14 @@ function _stamp(){return new Date().toISOString().split('T')[0];}
 function exportJSON(){var data={exportedAt:new Date().toISOString(),company:(CURRENT_USER&&CURRENT_USER.name)||'',jobs:jobs,crew:crew,hours:hours,subs:subs,estimates:estimates,sketches:sketches,logs:logs,schedule:schedule,bookings:bookings,bookingConfig:bookingConfig,changeOrders:changeOrders,expenses:expenses,leads:leads,plans:plans,clients:clients,agreements:agreements,portalMessages:portalMessages,pricebook:pricebook,selections:selections,safety:safety,punch:punch,equipment:equipment,clockSessions:clockSessions,certs:certs};_dl('orchamind-export-'+_stamp()+'.json',JSON.stringify(data,null,2),'application/json');}
 function exportCSV(which){var map={jobs:jobs,crew:crew,hours:hours,subs:subs};var rows=map[which]||[];if(!rows.length){alert('Nothing to export there yet.');return;}_dl('orchamind-'+which+'-'+_stamp()+'.csv',_csv(rows),'text/csv');}
 function renderExportCounts(){var el=document.getElementById('exportCounts');if(!el)return;el.textContent=jobs.length+' projects \u00b7 '+hours.length+' timesheet entries \u00b7 '+crew.length+' crew \u00b7 '+subs.length+' subcontractors';}
-document.querySelectorAll('.modal-bg').forEach(function(m){m.addEventListener('click',function(e){if(e.target===m)closeModal(m.id);});});
+document.querySelectorAll('.modal-bg').forEach(function(m){m.addEventListener('click',function(e){
+  if(e.target!==m) return;
+  // Clicking the backdrop used to silently bin a 45-second AI takeoff.
+  if(_OM_EDITOR_MODALS[m.id] && _omModalDirty(m)){
+    if(!confirm('Close without saving? Anything you have entered here will be lost.')) return;
+  }
+  closeModal(m.id);
+});});
 function openJobModal(){try{_fillClientDL();}catch(e){}document.getElementById('jobModalTitle').textContent='New Job';['jobId','jobName','jobClient','jobLocation','jobNotes'].forEach(function(i){document.getElementById(i).value='';});document.getElementById('jobStatus').value='planning';document.getElementById('jobProgress').value=0;document.getElementById('jobCrew').value=0;document.getElementById('jobDate').value='';document.getElementById('jobBudget').value='';document.getElementById('jobSpent').value='';openModal('jobModal');}
 function editJob(id){var j=jobs.find(function(x){return x.id===id;});if(!j)return;document.getElementById('jobModalTitle').textContent='Edit Job';document.getElementById('jobId').value=j.id;document.getElementById('jobName').value=j.name;document.getElementById('jobClient').value=j.client;document.getElementById('jobLocation').value=j.location;document.getElementById('jobStatus').value=j.status;document.getElementById('jobProgress').value=j.progress;document.getElementById('jobCrew').value=j.crew;document.getElementById('jobDate').value=j.date||'';document.getElementById('jobBudget').value=j.budget||'';document.getElementById('jobSpent').value=j.spent||'';document.getElementById('jobNotes').value=j.notes||'';openModal('jobModal');}
 function saveJob(){var id=document.getElementById('jobId').value;var name=document.getElementById('jobName').value.trim();if(!name){alert('Please enter a project name.');return;}var data={name:name,client:document.getElementById('jobClient').value.trim(),location:document.getElementById('jobLocation').value.trim(),status:document.getElementById('jobStatus').value,progress:Math.min(100,Math.max(0,parseInt(document.getElementById('jobProgress').value)||0)),crew:parseInt(document.getElementById('jobCrew').value)||0,date:document.getElementById('jobDate').value,budget:parseInt(document.getElementById('jobBudget').value)||0,spent:parseInt(document.getElementById('jobSpent').value)||0,notes:document.getElementById('jobNotes').value.trim()};if(id){var j=jobs.find(function(x){return x.id===id;});Object.assign(j,data);}else{data.id=uid();jobs.unshift(data);}closeModal('jobModal');renderAll();}
@@ -4884,18 +4891,23 @@ function _epvSyncPreview(){
   // metrics
   var tt=(document.getElementById('estTotal')||{}).textContent||'$0';
   var tot=estNum(tt.replace(/[^0-9.]/g,''));
-  // Plans present: the model comes from printed dimensions or it does not come at all.
+  // Plans present: the model comes from printed dimensions or it does not come
+  // at all. Missing geometry must NEVER suppress the totals or the render tab.
+  var _noModel=null;
   if(window._planFromPlans){
     var _m=_massingFromPrinted(window._planExtracted);
     if(_m.ok){ if(!(_planGeom&&_planGeom._printed)){ _p3dGrow=0;_p3dGrowT0=Date.now(); } _planGeom=_m.geom; }
-    else { _epvShowNoModel(_m.missing); return; }
+    else { _noModel=_m.missing; }
   }
-  if(!(_planGeom&&_planGeom.rooms&&_planGeom.rooms.length)){
-    // If plans were actually read, showing a made-up house next to a real
-    // priced estimate is worse than showing nothing. Say so instead.
-    if(window._planFromPlans){ _epvShowNoModel(_massingRequirements(window._planExtracted).missing); return; }
-    _planGeom=_synthHouse(_estGuessSqft());
-    _p3dGrow=0;_p3dGrowT0=Date.now();
+  if(!_noModel && !(_planGeom&&_planGeom.rooms&&_planGeom.rooms.length)){
+    if(window._planFromPlans){ _noModel=_massingRequirements(window._planExtracted).missing; }
+    else { _planGeom=_synthHouse(_estGuessSqft()); _p3dGrow=0;_p3dGrowT0=Date.now(); }
+  }
+  if(_noModel && !(_planGeom&&_planGeom.rooms&&_planGeom.rooms.length)){
+    // Draw the numbers, skip the building.
+    _epvPaintMetricsOnly(tot);
+    _epvShowNoModel(_noModel);
+    return;
   }
   var area=0,rooms=0;
   // Classify zones: outdoor/covered areas (patios, decks, porches, garages, carports) are
@@ -5052,8 +5064,9 @@ function epvSetView(v){
       img.onerror=null;
       img.src='data:image/svg+xml;utf8,'+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="600" height="300"><defs><linearGradient id="g" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="%23dceaf7"/><stop offset="1" stop-color="%23eef0e8"/></linearGradient></defs><rect width="600" height="300" fill="url(%23g)"/><text x="300" y="150" font-family="sans-serif" font-size="16" fill="%235A6B7D" text-anchor="middle">Photoreal render</text><text x="300" y="174" font-family="sans-serif" font-size="12" fill="%238A97A5" text-anchor="middle">A realistic view of the finished property</text></svg>');
     };
-    img.src=_epvPickPhoto();
-    document.getElementById('epvPhotoLabel').textContent=_epvRealRender?'Rendered from this estimate':'Representative render';
+    var _rp=_epvPickPhoto(); if(_rp){ img.src=_rp; img.style.display=''; } else { img.removeAttribute('src'); img.style.display='none'; }
+    var _rb=document.getElementById('epvRenderBtn'); if(_rb) _rb.style.display='';
+    document.getElementById('epvPhotoLabel').textContent=_epvRealRender?'Rendered from this estimate':'No render yet \u2014 tap Generate to create one from this estimate';
     if(hint)hint.textContent='A realistic look at the finished property';
     if(rooms)rooms.style.display='none';
   } else {
@@ -6621,8 +6634,13 @@ function omEmpty(icon, title, sub, btnLabel, btnAction){
   var btn=btnLabel?('<button class="btn" style="margin-top:14px;" onclick="'+btnAction+'">'+btnLabel+'</button>'):'';
   return '<div class="om-empty"><div class="om-empty-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">'+ic+'</svg></div><div class="om-empty-t">'+title+'</div>'+(sub?'<div class="om-empty-s">'+sub+'</div>':'')+btn+'</div>';
 }
+var OM_ENFORCE_TRIAL_LOCK=false; /* read-only enforcement is OFF until account
+   statuses are cleaned up. The ribbon still nags; nobody loses work. Flip to
+   true only when every legitimate account has a correct status/trial_end. */
 function omTrialLocked(){
   try{
+    if(!OM_ENFORCE_TRIAL_LOCK) return false;
+    if(typeof isAdmin==='function' && isAdmin()) return false;   // never lock the operator
     if(typeof IS_REAL_APP==='undefined' || !IS_REAL_APP) return false;
     if(typeof isCrew==='function' && isCrew()) return false;   // never strand a crew mid-job
     if(window._payConnected) return false;                     // paying: never locked
@@ -6657,7 +6675,8 @@ function renderTrialRibbon(){
   }catch(e){}
   var real=(typeof IS_REAL_APP!=='undefined')&&IS_REAL_APP;
   var crewMode=(typeof isCrew==='function'&&isCrew());
-  if(!real||crewMode){ el.style.display='none'; return; }
+  var adminMode=(typeof isAdmin==='function'&&isAdmin());
+  if(!real||crewMode||adminMode){ el.style.display='none'; return; }
   var u=(typeof CURRENT_USER!=='undefined')?CURRENT_USER:null;
   var te=(u&&u.trialEnd)?u.trialEnd:0;
   if(!te||window._payConnected){ el.style.display='none'; return; }
@@ -8194,6 +8213,37 @@ function _printedRoomChips(e){
     if(a>1&&b>1) out.push({name:r.name,sqft:Math.round(a*b),dims:String(r.dims)});
   });
   return out;
+}
+
+
+/* Totals and title always render, with or without a 3D model. */
+function _epvPaintMetricsOnly(tot){
+  try{
+    var t=document.getElementById('epvTitle');
+    if(t) t.textContent=((document.getElementById('estProject')||{}).value||(document.getElementById('estClient')||{}).value||'').trim();
+    var mk=function(v,l){return '<div class="epv-metric"><div class="m-val">'+v+'</div><div class="m-lbl">'+l+'</div></div>';};
+    var e=window._planExtracted||{};
+    var sqft=estNum(e.totalPrintedSqft)||0;
+    var html=mk(estMoney(tot),'Total estimate');
+    var lines=document.querySelectorAll('#estLines tr').length;
+    html+=mk(lines,'Line items');
+    if(sqft>0){ html+=mk(Math.round(sqft).toLocaleString()+' sf','Printed floor area'); html+=mk(estMoney(sqft?tot/sqft:0),'Per sq ft'); }
+    else { html+=mk((e.stories||1),'Stories'); }
+    var mEl=document.getElementById('epvMetrics'); if(mEl) mEl.innerHTML=html;
+    var wrap=document.getElementById('epv3dWrap'); if(wrap) wrap.style.display='block';
+  }catch(err){}
+}
+
+/* Which modals hold work a person would hate to lose. */
+var _OM_EDITOR_MODALS={estModal:1,jobModal:1,clientFormModal:1,logModal:1,schModal:1,
+  coModal:1,expModal:1,leadModal:1,planModal:1,crewModal:1,subModal:1,hoursModal:1,
+  userModal:1,ownerEditModal:1,matModal:1};
+function _omModalDirty(m){
+  try{
+    var f=m.querySelectorAll('input[type=text],input[type=number],input[type=email],input[type=date],textarea');
+    for(var i=0;i<f.length;i++){ if(String(f[i].value||'').trim()!=='') return true; }
+  }catch(e){}
+  return false;
 }
 
 </script>
