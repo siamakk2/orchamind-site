@@ -203,7 +203,7 @@ body{font-family:'Outfit',system-ui,sans-serif;background:var(--bg);color:var(--
 .field input,.field select,.field textarea{width:100%;border:1.5px solid var(--line);border-radius:9px;padding:10px 13px;font-family:inherit;font-size:14px;color:var(--ink);outline:none;background:#fff;}
 .field input:focus,.field select:focus,.field textarea:focus{border-color:var(--blue);}
 .field-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
-.modal-foot{display:flex;gap:10px;margin-top:8px;}
+.modal-foot{display:flex;gap:10px;margin-top:8px;position:sticky;bottom:-26px;background:#fff;padding:12px 0 4px;border-top:1px solid var(--line,#E1E8F0);z-index:5;}.om-field-bad{border-color:#C62828!important;box-shadow:0 0 0 3px rgba(198,40,40,.14)!important;}.om-field-msg{color:#C62828;font-size:12.5px;font-weight:600;margin-top:5px;}
 .modal-foot .btn{flex:1;justify-content:center;}
 .ai-output{background:#F7FAFD;border:1px solid var(--line);border-radius:10px;padding:16px;font-size:14px;line-height:1.65;color:var(--ink);margin-top:6px;white-space:pre-wrap;max-height:340px;overflow-y:auto;}
 .empty{text-align:center;padding:50px 20px;color:var(--muted);}
@@ -1748,6 +1748,7 @@ button:active, .btn:active, .btn-ghost:active, .tab:active, [role="button"]:acti
     <input type="file" id="estPlanFile" accept="image/*,application/pdf" multiple style="display:none" onchange="_planStageAdd(this.files);this.value='';">
     <div id="estPlanStage"></div>
     <div id="estAiMsg" class="est-ai-msg"></div>
+    <div id="estPlanRead"></div>
     <div id="estPlanQ"></div>
     <div id="estPlanCompliance"></div>
     <div style="font-size:11px;color:var(--muted);margin-top:6px;">AI drafts are a starting point using typical regional pricing &mdash; not a bid. Verify quantities, apply your rates and confirm scope before sending.</div>
@@ -4258,9 +4259,10 @@ function _estGather(){
 function saveEstimate(){
   var id=document.getElementById('estId').value;
   var client=document.getElementById('estClient').value.trim();
-  if(!client){alert('Please enter a client name.');return;}
+  if(!client){_estFieldError('estClient','Enter a client name here before saving.');return;}
   var items=_estGather();
-  if(!items.length){alert('Add at least one line item.');return;}
+  if(!items.length){_estFieldError('estLines','Add at least one line item before saving.');return;}
+  _estClearErrors();
   var data={client:client,clientEmail:document.getElementById('estEmail').value.trim(),project:document.getElementById('estProject').value.trim(),location:document.getElementById('estLocation').value.trim(),date:document.getElementById('estDate').value,validUntil:document.getElementById('estValid').value,taxRate:estNum(document.getElementById('estTax').value),notes:document.getElementById('estNotes').value.trim(),status:document.getElementById('estStatus').value,items:items,plan3d:(_planGeom||undefined)};
   if(id){var e=estimates.find(function(x){return x.id===id;});if(e){Object.assign(e,data);}}
   else{data.id=uid();data.kind='estimate';data.number=estNextNumber('estimate');estimates.unshift(data);}
@@ -4798,6 +4800,7 @@ function matAddToEstimate(){
 function _planApply(text,msg){
   _planThinkStop();
   window._planLastRaw=text;
+  window._autoRenderFired=false;   // a new takeoff earns a new render
   var obj=_estParseJSON(text);
   if(!obj||!obj.items||!obj.items.length){
     var why=obj?'the AI replied but sent no line items':'the AI reply could not be read';
@@ -4815,6 +4818,7 @@ function _planApply(text,msg){
   if(extra&&!notes.value.trim()){notes.value=extra;}
   recalcEst();
   msg.textContent='Drafted '+obj.items.length+' line items from your plans - AI draft, review every line before sending.';
+  try{ var _rd=document.getElementById('estPlanRead'); if(_rd) _rd.innerHTML=_planReadSummary(); }catch(e){}
   _planGeom=(obj.geometry&&obj.geometry.rooms&&obj.geometry.rooms.length)?obj.geometry:_planGeom;
   if(_planGeom&&obj.totalSqft){_planGeom.totalSqft=estNum(obj.totalSqft);}
   // Honesty flag: if the notes/assumptions say the upload was elevation-only (no floor plan),
@@ -4966,6 +4970,7 @@ function _epvSyncPreview(){
     list.appendChild(note);
   }
   if(_epvView!=='photo')_p3dEnsureLoop();
+  _maybeAutoRender();
  }catch(e){ if(window.console)console.warn('preview skipped:',e.message); }
 }
 // Pull a plausible building square footage from the line items (for representative sizing)
@@ -8290,6 +8295,43 @@ function _levelInfo(e){
     if(L.belowGrade && L.walkout!==true) hidden++; else visible++;
   });
   return {levels:lv,visible:Math.max(1,visible),hidden:hidden,totalSqft:total};
+}
+
+
+/* ---- Field-level errors: say it where the person has to fix it ---- */
+function _estClearErrors(){
+  try{
+    document.querySelectorAll('#estModal .om-field-bad').forEach(function(el){el.classList.remove('om-field-bad');});
+    document.querySelectorAll('#estModal .om-field-msg').forEach(function(el){el.parentNode.removeChild(el);});
+  }catch(e){}
+}
+function _estFieldError(id,msg){
+  _estClearErrors();
+  var el=document.getElementById(id); if(!el){ alert(msg); return; }
+  try{
+    el.classList.add('om-field-bad');
+    var m=document.createElement('div'); m.className='om-field-msg'; m.textContent=msg;
+    var host=el.closest('.field')||el.parentNode;
+    host.appendChild(m);
+  }catch(e){ alert(msg); return; }
+  // A 5,000px estimate means the field can be far off screen. Go to it.
+  // Scrolling is best-effort: if the browser lacks it, the inline error still stands.
+  try{ if(el.scrollIntoView) el.scrollIntoView({behavior:'smooth',block:'center'}); }catch(e){}
+  try{ setTimeout(function(){ try{ el.focus({preventScroll:true}); }catch(e2){ try{ el.focus(); }catch(e3){} } },260); }catch(e){}
+}
+
+/* ---- The render is a pipeline step, not a button people must find ---- */
+function _maybeAutoRender(){
+  try{
+    if(window._autoRenderFired) return;
+    if(!window._planFromPlans) return;                       // only after a plan drop
+    if(!(_planGeom&&_planGeom._printed)) return;             // only off verified massing
+    if(_epvRealRender) return;                               // already have one
+    if(window.DEMO_MODE) return;                             // don't burn demo quota
+    var btn=document.getElementById('epvRenderBtn'); if(!btn) return;
+    window._autoRenderFired=true;
+    epvRenderReal();
+  }catch(e){ window._autoRenderFired=false; }
 }
 
 </script>
