@@ -4785,8 +4785,15 @@ function matAddToEstimate(){
 
 function _planApply(text,msg){
   _planThinkStop();
+  window._planLastRaw=text;
   var obj=_estParseJSON(text);
-  if(!obj||!obj.items||!obj.items.length){msg.textContent='Could not read the AI takeoff - try clearer photos or add a short description.';return;}
+  if(!obj||!obj.items||!obj.items.length){
+    var why=obj?'the AI replied but sent no line items':'the AI reply could not be read';
+    msg.innerHTML=esc('Takeoff failed \u2014 '+why+'.')
+      +' <a href="#" onclick="_planShowRaw();return false;" style="color:var(--blue);font-weight:600;">See what the AI sent</a>';
+    try{ if(typeof logEvent==='function') logEvent('takeoff_fail',(why+' :: '+String(text||'').slice(0,300))); }catch(e){}
+    return;
+  }
   _planDraft=obj;
   document.getElementById('estLines').innerHTML='';
   obj.items.forEach(function(it){addEstLine({desc:it.desc||'',qty:estNum(it.qty)||1,unit:it.unit||'ea',price:estNum(it.price)});});
@@ -5162,23 +5169,80 @@ function printProposal(){
   w.document.write(doc);w.document.close();w.focus();setTimeout(function(){try{w.print();}catch(e){}},400);
 }
 function _estParseJSON(text){
-  if(!text)return null;
-  var t=text.replace(/```json/gi,'').replace(/```/g,'').trim();
-  // Collect every balanced top-level {...} candidate, tolerant of strings/escapes
-  var cands=[],depth=0,start=-1,inStr=false,esc=false;
-  for(var i=0;i<t.length;i++){
-    var c=t[i];
-    if(inStr){ if(esc)esc=false; else if(c==='\\')esc=true; else if(c==='"')inStr=false; continue; }
-    if(c==='"'){inStr=true;continue;}
-    if(c==='{'){ if(depth===0)start=i; depth++; }
-    else if(c==='}'){ depth--; if(depth===0&&start>=0){cands.push(t.substring(start,i+1));start=-1;} if(depth<0)depth=0; }
+  if(!text) return null;
+  var t=String(text).replace(/```json/gi,'').replace(/```/g,'');
+
+  function strip(s){ return s.replace(/,(\s*[}\]])/g,'$1'); }
+  function tryParse(s){
+    if(!s) return null;
+    try{ return JSON.parse(s); }catch(e){}
+    try{ return JSON.parse(strip(s)); }catch(e){}
+    return null;
   }
-  // Prefer the LAST parseable candidate (a corrected version supersedes a draft)
-  for(var j=cands.length-1;j>=0;j--){ try{return JSON.parse(cands[j]);}catch(e){} }
-  var a=t.indexOf('{');var b=t.lastIndexOf('}');
-  if(a>=0&&b>a){ try{return JSON.parse(t.substring(a,b+1));}catch(e){} }
+  // How much do we want this object? A real takeoff has priced line items.
+  function score(o){
+    if(!o||typeof o!=='object'||Array.isArray(o)) return -1;
+    var n=(o.items&&o.items.length)||0;
+    if(n) return 1000+n;                       // a takeoff always wins
+    if(o.notes||o.assumptions||o.questions) return 10;
+    return 0;                                   // a stray {"stories":1} loses
+  }
+
+  // Scan forward from `from`, returning the index just past the balanced close.
+  function balancedEnd(s,from){
+    var depth=0,inStr=false,esc=false;
+    for(var i=from;i<s.length;i++){
+      var c=s[i];
+      if(inStr){ if(esc)esc=false; else if(c==='\\')esc=true; else if(c==='"')inStr=false; continue; }
+      if(c==='"'){ inStr=true; continue; }
+      if(c==='{'||c==='['){ depth++; }
+      else if(c==='}'||c===']'){ depth--; if(depth===0) return i+1; if(depth<0) return -1; }
+    }
+    return -1;
+  }
+
+  // Try every '{' independently, so a stray brace in prose cannot poison the scan.
+  var best=null,bestScore=0,starts=[],i;
+  for(i=0;i<t.length;i++){ if(t[i]==='{') starts.push(i); }
+  if(starts.length>400) starts=starts.slice(0,400);
+  for(i=0;i<starts.length;i++){
+    var end=balancedEnd(t,starts[i]);
+    if(end<0) continue;
+    var obj=tryParse(t.slice(starts[i],end));
+    var sc=score(obj);
+    if(sc>bestScore){ bestScore=sc; best=obj; }
+    if(bestScore>1000 && starts[i]>0) { /* keep looking for a bigger takeoff */ }
+  }
+  if(best) return best;
+
+  // Nothing balanced parsed. The reply was probably cut off mid-object:
+  // reopen from a '{' that looks like a takeoff and close the structure.
+  var head=t.search(/\{[\s\S]{0,400}?"items"\s*:/);
+  if(head<0) head=t.indexOf('{');
+  if(head<0) return null;
+  var s2=t.slice(head), cuts=[];
+  for(i=s2.length-1;i>=0 && cuts.length<60;i--){ if(s2[i]==='}'||s2[i]===']') cuts.push(i); }
+  for(var c=0;c<cuts.length;c++){
+    var frag=s2.slice(0,cuts[c]+1);
+    var stack=[],inStr=false,esc=false;
+    for(var k=0;k<frag.length;k++){
+      var ch=frag[k];
+      if(inStr){ if(esc)esc=false; else if(ch==='\\')esc=true; else if(ch==='"')inStr=false; continue; }
+      if(ch==='"'){ inStr=true; continue; }
+      if(ch==='{') stack.push('}');
+      else if(ch==='[') stack.push(']');
+      else if(ch==='}'||ch===']') stack.pop();
+    }
+    if(inStr) continue;
+    var closed=frag;
+    for(var z=stack.length-1;z>=0;z--) closed+=stack[z];
+    var o2=tryParse(closed);
+    if(score(o2)>0) return o2;
+  }
   return null;
 }
+var _estJsonBest=1;  /* marker: robust extractor installed */
+
 
 /* ---- Document delivery: in-page viewer with real PDF download + share (replaces blocked pop-ups) ---- */
 function _docName(html){
@@ -7957,6 +8021,20 @@ function loadActivation(){
     }).catch(function(){ active={}; paint(); });
 }
 var ADMIN_USER='siamakk2';
+
+
+function _planShowRaw(){
+  var t=window._planLastRaw||'(nothing was captured)';
+  var d=document.createElement('div');
+  d.style.cssText='position:fixed;inset:0;z-index:6200;background:rgba(10,22,40,.75);display:flex;align-items:center;justify-content:center;padding:18px;';
+  d.onclick=function(e){ if(e.target===d) d.parentNode.removeChild(d); };
+  d.innerHTML='<div style="background:#fff;border-radius:14px;max-width:760px;width:100%;max-height:82vh;overflow:auto;padding:20px;">'
+    +'<div style="font-weight:800;font-size:16px;margin-bottom:8px;">What the AI actually sent back</div>'
+    +'<div style="font-size:13px;color:#5A6B7D;margin-bottom:10px;">Paste this to support if the takeoff keeps failing.</div>'
+    +'<pre style="white-space:pre-wrap;word-break:break-word;font-size:12px;background:#F4F6F9;padding:12px;border-radius:8px;margin:0;">'+esc(t)+'</pre>'
+    +'<button onclick="this.closest(\'div[style*=fixed]\').remove()" style="margin-top:12px;background:#1565C0;color:#fff;border:none;border-radius:8px;padding:10px 16px;font-weight:700;cursor:pointer;">Close</button></div>';
+  document.body.appendChild(d);
+}
 
 </script>
 </body>
