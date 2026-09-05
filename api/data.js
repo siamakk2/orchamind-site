@@ -94,7 +94,7 @@ module.exports = async function handler(req, res) {
               var bccRaw = (process.env.SALES_BCC || '').trim();
               var mail = {
                 from: 'Orchamind <info@orchamind.com>',
-                to: [process.env.BOOKINGS_TO || 'info@orchamind.com'],
+                to: [process.env.BOOKINGS_TO || 'siamakk2@gmail.com'],
                 reply_to: row.email || 'info@siamakkalhor.com',
                 subject: 'New booking request - ' + (row.name || 'unknown') + (row.date ? (' - ' + row.date) : ''),
                 html: html
