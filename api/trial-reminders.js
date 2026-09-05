@@ -24,22 +24,11 @@ function emailHtml(name, company, dateStr) {
     '</div>';
 }
 
-// Blind copy for the sales consultant. BCC, never CC: these emails go to
-// customers, and a CC would put a private address in their inbox. The address
-// lives in the SALES_BCC env var, never in this public repo.
-function salesBcc() {
-  var v = (process.env.SALES_BCC || '').trim();
-  return v ? v.split(',').map(function (x) { return x.trim(); }).filter(Boolean) : null;
-}
-
 async function sendResend(RESEND, to, subject, html) {
-  var payload = { from: FROM, to: [to], reply_to: REPLY_TO, subject: subject, html: html };
-  var bcc = salesBcc();
-  if (bcc) payload.bcc = bcc;
   var r = await fetch('https://api.resend.com/emails', {
     method: 'POST',
     headers: { 'Authorization': 'Bearer ' + RESEND, 'Content-Type': 'application/json' },
-    body: JSON.stringify(payload)
+    body: JSON.stringify({ from: FROM, to: [to], reply_to: REPLY_TO, subject: subject, html: html })
   });
   var body = await r.text();
   return { ok: r.ok, body: body.slice(0, 300) };
