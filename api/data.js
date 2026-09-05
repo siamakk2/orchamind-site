@@ -58,17 +58,59 @@ module.exports = async function handler(req, res) {
         if (!SUPABASE_URL || !KEY) return res.status(200).json({ ok: true, queued: false });
         try {
           var bk = body.booking;
+          var row = {
+            account: (bk.account || null), name: (bk.name||'').slice(0,120), phone: (bk.phone||'').slice(0,40),
+            email: (bk.email||'').slice(0,120), service: (bk.service||'').slice(0,120), date: bk.date||null,
+            slot: (bk.slot||'').slice(0,40), notes: (bk.notes||'').slice(0,1000),
+            status: 'requested', source: 'public_book_page', created_at: new Date().toISOString()
+          };
           var ins = await fetch(base + '/bookings', {
             method: 'POST',
             headers: Object.assign({}, H, { 'Prefer': 'return=minimal' }),
-            body: JSON.stringify({
-              name: (bk.name||'').slice(0,120), phone: (bk.phone||'').slice(0,40), email: (bk.email||'').slice(0,120),
-              service: (bk.service||'').slice(0,120), date: bk.date||null, slot: (bk.slot||'').slice(0,40),
-              notes: (bk.notes||'').slice(0,1000), status: 'requested', created_at: new Date().toISOString()
-            })
+            body: JSON.stringify(row)
           });
-          return res.status(200).json({ ok: true, queued: ins.ok });
-        } catch (e) { return res.status(200).json({ ok: true, queued: false }); }
+          if (!ins.ok) {
+            var errTxt = await ins.text();
+            return res.status(200).json({ ok: false, queued: false, error: errTxt.slice(0, 200) });
+          }
+
+          // Stored is not the same as seen. Tell someone, or the lead still dies.
+          var notified = false;
+          try {
+            var RESEND = process.env.RESEND_API_KEY;
+            if (RESEND) {
+              var e = function (x) { return String(x == null ? '' : x).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); };
+              var line = function (k, v) { return v ? ('<tr><td style="padding:6px 12px 6px 0;color:#5A6B7D;">' + e(k) + '</td><td style="padding:6px 0;font-weight:600;">' + e(v) + '</td></tr>') : ''; };
+              var html = '<div style="font-family:Arial,Helvetica,sans-serif;max-width:520px;color:#0A1628;">'
+                + '<h2 style="margin:0 0 4px;">New booking request</h2>'
+                + '<p style="margin:0 0 14px;color:#5A6B7D;font-size:14px;">Submitted from the public booking page.</p>'
+                + '<table style="font-size:14px;border-collapse:collapse;">'
+                + line('Name', row.name) + line('Phone', row.phone) + line('Email', row.email)
+                + line('Service', row.service) + line('Date', row.date) + line('Time', row.slot)
+                + line('Notes', row.notes)
+                + '</table>'
+                + (row.phone ? '<p style="margin-top:16px;"><a href="tel:' + e(row.phone) + '" style="background:#1565C0;color:#fff;padding:10px 16px;border-radius:8px;text-decoration:none;font-weight:700;">Call ' + e(row.name) + '</a></p>' : '')
+                + '</div>';
+              var bccRaw = (process.env.SALES_BCC || '').trim();
+              var mail = {
+                from: 'Orchamind <info@orchamind.com>',
+                to: [process.env.BOOKINGS_TO || 'info@orchamind.com'],
+                reply_to: row.email || 'info@siamakkalhor.com',
+                subject: 'New booking request - ' + (row.name || 'unknown') + (row.date ? (' - ' + row.date) : ''),
+                html: html
+              };
+              if (bccRaw) mail.bcc = bccRaw.split(',').map(function (x) { return x.trim(); }).filter(Boolean);
+              var mr = await fetch('https://api.resend.com/emails', {
+                method: 'POST',
+                headers: { 'Authorization': 'Bearer ' + RESEND, 'Content-Type': 'application/json' },
+                body: JSON.stringify(mail)
+              });
+              notified = mr.ok;
+            }
+          } catch (e2) {}
+
+          return res.status(200).json({ ok: true, queued: true, notified: notified });
+        } catch (e) { return res.status(200).json({ ok: false, queued: false, error: String(e && e.message || e).slice(0,200) }); }
       }
       // Demo or signed-out users: accept but don't persist.
       if (!sess || sess.role === 'demo') return res.status(200).json({ ok: true, skipped: true });
