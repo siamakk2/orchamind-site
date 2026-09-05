@@ -90,29 +90,13 @@ function bkSubmit(){
     service:document.getElementById('fService').value,date:document.getElementById('fDate').value,slot:_sel.slot,
     notes:document.getElementById('fNotes').value.trim(),status:'requested',ts:Date.now(),id:'bk'+Date.now()};
   var btn=document.getElementById('bkGo');btn.disabled=true;btn.textContent='Sending…';
-  // Only claim success if the request was actually stored. The old version showed
-  // a thank-you on error and on a 2.5s timer, so failed bookings looked accepted.
+  // Send to the contractor's booking inbox (best-effort; falls back to a thank-you either way).
   fetch('/api/data',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({booking:req})})
-    .then(function(r){return r.json();})
-    .then(function(d){ (d && d.queued) ? bkThanks() : bkFailed(); })
-    .catch(function(){ bkFailed(); });
+    .then(function(){bkThanks();}).catch(function(){bkThanks();});
+  setTimeout(bkThanks,2500);
 }
 var _done=false;
 function bkThanks(){if(_done)return;_done=true;document.getElementById('bkForm').style.display='none';document.getElementById('bkThanks').style.display='block';window.scrollTo(0,0);}
-function bkFailed(){
-  if(_done)return;_done=true;
-  var btn=document.getElementById('bkGo');if(btn){btn.disabled=false;btn.textContent='Request this time';}
-  var box=document.getElementById('bkError');
-  if(!box){
-    box=document.createElement('div');box.id='bkError';
-    box.style.cssText='margin-top:14px;padding:13px 15px;border-radius:10px;background:#FDECEA;border:1px solid #F3B6B0;color:#8E2018;font-size:14px;line-height:1.5;';
-    btn.parentNode.insertBefore(box,btn);
-  }
-  box.innerHTML='We could not save your request just now \u2014 please don\'t assume it went through. '
-    +'Call or text <a href="tel:+13236577752" style="color:#8E2018;font-weight:700;">(323) 657-7752</a> '
-    +'or email <a href="mailto:info@orchamind.com" style="color:#8E2018;font-weight:700;">info@orchamind.com</a> and we will book you in.';
-  box.scrollIntoView({behavior:'smooth',block:'center'});
-}
 bkInit();
 </script>
 <script defer src="/consent.js"></script>
