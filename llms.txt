@@ -5,6 +5,7 @@
 Orchamind replaces the stack of tools a field business juggles. Instead of the operation living in the owner's head and a hundred text messages, it lives in one system you can talk to like your smartest project manager. Ask "what's at risk this week?" and get a straight answer.
 
 ## Core pages
+- [Contact Orchamind](https://orchamind.com/contact/): Reach a real person by phone, email, or message. Call or text (323) 657-7752, email info@orchamind.com, or send a message and get a same-working-day reply. Mon-Fri, 8am-6pm PT.
 
 - [Orchamind home](https://orchamind.com/): What Orchamind is, who it's for, and how it works.
 - [Live interactive demo](https://orchamind.com/demo): Try the AI site manager with sample data, no signup.
