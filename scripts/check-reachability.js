@@ -96,6 +96,35 @@ setTimeout(() => {
     check(typeof w._estFieldError === 'function',
       'no _estFieldError - "enter a client name" with no way to find the field');
 
+    // --- the two public forms that capture leads must be operable ---
+    // Both silently swallowed submissions in production: /book wrote to a table
+    // that did not exist and showed a thank-you anyway. A dead Send button here
+    // costs a real lead, and no unit test would notice.
+    const PUBLIC_FORMS = [
+      { file: 'contact/index.html', button: 'ctSend',  label: 'Contact page Send' },
+      { file: 'book.html',          button: 'bkGo',    label: '/book submit' },
+    ];
+    for (const f of PUBLIC_FORMS) {
+      const full = path.resolve(__dirname, '..', f.file);
+      if (!fs.existsSync(full)) { check(false, `${f.file} is missing`); continue; }
+      const src = fs.readFileSync(full, 'utf8');
+
+      check(src.includes(`id="${f.button}"`), `${f.label}: button #${f.button} not found`);
+
+      // It must post somewhere, not just look like a form.
+      check(/fetch\(\s*['"]\/api\//.test(src), `${f.label}: form does not POST to an API`);
+
+      // And it must not declare success on failure - the bug that lost every
+      // booking while showing "Request sent!".
+      const honest = /\.then\(function\s*\(d\)\s*\{[\s\S]{0,200}?d\s*&&\s*d\.queued/.test(src)
+                  || /\(d\s*&&\s*d\.queued\)/.test(src);
+      check(honest, `${f.label}: success is not gated on the server confirming queued:true`);
+
+      // A blind timer that fires the thank-you regardless must never come back.
+      check(!/setTimeout\(\s*bkThanks\s*,/.test(src),
+        `${f.label}: a timer fires the thank-you regardless of the server response`);
+    }
+
     if (failures.length) {
       console.error('\n\u274c  UNREACHABLE UI - do not push:\n');
       failures.forEach(f => console.error('   \u2022 ' + f));
