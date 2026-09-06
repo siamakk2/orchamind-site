@@ -1,0 +1,33 @@
+name: Validate app
+
+# Two guards, born from real production incidents:
+#   validate-app.js      - an unescaped </script> inside a JS string silently
+#                          truncated a 101 KB block and killed the entire
+#                          estimating engine in production.
+#   check-reachability.js - controls became unreachable (render button inside a
+#                          collapsed box, Save scrolled off a 5,000px modal)
+#                          while every unit test still passed.
+on:
+  push:
+    branches: [siamakk2, main]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install jsdom (needed by the reachability check)
+        run: npm install --no-save jsdom@24
+
+      - name: Inline scripts parse, files in sync, no stray hosts
+        run: node scripts/validate-app.js
+
+      - name: Every primary action is on screen and operable
+        run: node scripts/check-reachability.js
