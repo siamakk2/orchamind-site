@@ -8,8 +8,9 @@ name: Validate app
 #                          collapsed box, Save scrolled off a 5,000px modal)
 #                          while every unit test still passed.
 on:
+  # Every branch, not just the deploy branch. A guard that only runs after the
+  # code has already shipped is a report, not a gate.
   push:
-    branches: [siamakk2, main]
   pull_request:
   workflow_dispatch:
 
