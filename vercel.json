@@ -1,31 +1,4 @@
 {
-  "redirects": [
-    {
-      "source": "/book",
-      "destination": "/contact/",
-      "permanent": false
-    },
-    {
-      "source": "/book/",
-      "destination": "/contact/",
-      "permanent": false
-    },
-    {
-      "source": "/team/matthew-ministri",
-      "destination": "/",
-      "permanent": true
-    },
-    {
-      "source": "/team/matthew-ministri/",
-      "destination": "/",
-      "permanent": true
-    },
-    {
-      "source": "/team/matthew-ministri/:path*",
-      "destination": "/",
-      "permanent": true
-    }
-  ],
   "rewrites": [
     {
       "source": "/quote",
