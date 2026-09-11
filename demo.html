@@ -4387,12 +4387,13 @@ function callClaudeBlocks(systemPrompt,blocks,cb,errCb,maxTokens,thinkBudget){
   function go(messages){
     if(Date.now()>OVERALL_DEADLINE){ done(acc?cb:errCb, acc||'This plan is taking longer than usual to read. Try a single page at a time, or snap clear photos of the key sheets instead of the full PDF.'); return; }
     var ctrl=(typeof AbortController!=='undefined')?new AbortController():null;
+    window._lastAiBodyBytes=0;
     var TIMEOUT_MS=Math.max(8000, Math.min(280000, OVERALL_DEADLINE-Date.now())); // never exceed the overall budget
     var timer=setTimeout(function(){ if(ctrl){try{ctrl.abort();}catch(e){}}
       done(errCb,'This plan is taking longer than the AI\u2019s current limit to read. Large, detailed PDFs are the most common cause \u2014 try a single page at a time, or snap clear photos of the key sheets instead.'); },TIMEOUT_MS);
     fetch("/api/claude",{method:"POST",headers:{"Content-Type":"application/json"},
       signal:ctrl?ctrl.signal:undefined,
-      body:JSON.stringify((function(){var p={model:"claude-sonnet-4-6",max_tokens:mt,system:systemPrompt,messages:messages};if(thinkBudget)p.thinking={type:"enabled",budget_tokens:thinkBudget};return p;})())
+      body:(function(){var p={model:"claude-sonnet-4-6",max_tokens:mt,system:systemPrompt,messages:messages};if(thinkBudget)p.thinking={type:"enabled",budget_tokens:thinkBudget};var s=JSON.stringify(p);try{window._lastAiBodyBytes=s.length;}catch(e){}return s;})()
     }).then(function(r){return r.json();}).then(function(data){
       clearTimeout(timer);
       if(data&&data.error){done(errCb,typeof data.error==='string'?data.error:(data.error.message||'AI error'));return;}
@@ -4405,6 +4406,20 @@ function callClaudeBlocks(systemPrompt,blocks,cb,errCb,maxTokens,thinkBudget){
       } else { if(acc){done(cb,acc);}else{done(errCb,"No response from AI");} }
     }).catch(function(e){
       clearTimeout(timer);
+      // "Load failed" on its own is undiagnosable. Record what actually broke,
+      // how big the body was and how many image blocks it carried, so a repeat
+      // failure can be read off the activity feed instead of guessed at.
+      try{
+        if(!(e&&e.name==='AbortError')){
+          window._aiNetDiag={err:((e&&e.name)||'Error')+': '+((e&&e.message)||'unknown'),
+                             bodyKB:Math.round((_lastAiBodyBytes||0)/1024),
+                             blocks:(blocks&&blocks.length)||0, at:new Date().toISOString()};
+          if(typeof logEvent==='function'){
+            logEvent('ai_net_fail', window._aiNetDiag.err+' | body '+window._aiNetDiag.bodyKB
+              +'KB | '+window._aiNetDiag.blocks+' blocks | '+(navigator.userAgent||'').slice(0,80));
+          }
+        }
+      }catch(e2){}
       var m=(e&&e.name==='AbortError')?'This plan is taking longer than the AI\u2019s current limit to read. Large, detailed PDFs are the most common cause \u2014 try a single page at a time, or snap clear photos of the key sheets instead.':(e&&e.message||'Network error \u2014 check your connection and try again.');
       done(errCb,m);
     });
@@ -4621,7 +4636,23 @@ function _planAnalyzeStaged(){
   document.getElementById('estPlanQ').innerHTML='';var _epc=document.getElementById('estPlanCompliance');if(_epc)_epc.innerHTML='';_planDraft=null;
   var staged=_planStaged.slice();
   _planThinkStart(staged.map(function(s){return s.f;}));
-  var fail=function(e){_planThinkStop();if(btn){btn.disabled=false;btn.innerHTML='\u2728 Read plan set &amp; draft estimate';}msg.textContent='Plan reading error: '+e;};
+  var fail=function(e){
+    _planThinkStop();
+    if(btn){btn.disabled=false;btn.innerHTML='\u2728 Read plan set &amp; draft estimate';}
+    var raw=String(e||'');
+    // "Load failed" is Safari for "the request never left the phone". Say that,
+    // and give the step that actually works, instead of a dead end.
+    if(/load failed|network|failed to fetch/i.test(raw)){
+      var d=window._aiNetDiag||{};
+      msg.innerHTML='<b>The plans never reached the AI.</b> The upload dropped on the way out '
+        +'\u2014 this is a connection problem, not your drawings. '
+        +'Tap <b>Read plan set &amp; draft estimate</b> again; if it fails twice, send one sheet at a time.'
+        +'<div style="font-size:11.5px;color:var(--muted);margin-top:6px;">'
+        +esc(raw)+(d.bodyKB?(' \u00b7 '+d.bodyKB+'KB \u00b7 '+d.blocks+' images'):'')+'</div>';
+    } else {
+      msg.textContent='Plan reading error: '+raw;
+    }
+  };
   // Tile budget across the whole set: big single sheets get more tiles, big sets share
   var perFileBudget=Math.max(1,Math.floor(12/staged.length));
   var prepared=new Array(staged.length),done=0,failed=false;
