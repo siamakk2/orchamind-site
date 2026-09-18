@@ -45,6 +45,22 @@ module.exports = async function handler(req, res) {
     if (req.method === 'GET') {
       // No session (or demo) => no saved data; app falls back to its seed.
       if (!sess || sess.role === 'demo') return res.status(200).json({ ok: true, data: null });
+
+      // Support view: the operator may READ another account's workspace to help
+      // them. Authorisation comes from the signed session cookie, never from a
+      // client-supplied flag, and this path can only ever read.
+      var asUser = (req.query && (req.query.as || req.query.support_view)) || null;
+      if (asUser) {
+        if (sess.username !== 'siamakk2') {
+          return res.status(403).json({ ok: false, error: 'Not authorised to view other accounts.' });
+        }
+        var target = String(asUser).toLowerCase().trim();
+        var sr = await fetch(base + '/app_data?username=eq.' + encodeURIComponent(target) + '&select=data', { headers: H });
+        var sa = await sr.json();
+        var srow = (Array.isArray(sa) && sa[0]) ? sa[0] : null;
+        return res.status(200).json({ ok: true, data: srow ? srow.data : null, supportView: true, account: target });
+      }
+
       var r = await fetch(base + '/app_data?username=eq.' + encodeURIComponent(sess.username) + '&select=data', { headers: H });
       var a = await r.json();
       var row = (Array.isArray(a) && a[0]) ? a[0] : null;
