@@ -67,6 +67,65 @@ module.exports = async function handler(req, res) {
       return res.status(200).json({ ok: true, data: row ? row.data : null });
     }
 
+    // ---- spam screening for the two public, unauthenticated forms ----------
+    function _clientIp() {
+      var h = req.headers || {};
+      var f = (h['x-forwarded-for'] || h['x-real-ip'] || '').split(',')[0].trim();
+      return f || (req.socket && req.socket.remoteAddress) || '';
+    }
+    function _ipHash() {
+      var ip = _clientIp();
+      if (!ip) return null;
+      try { return crypto.createHmac('sha256', KEY).update('ip:' + ip).digest('hex').slice(0, 32); }
+      catch (e) { return null; }
+    }
+    // Returns a score. 0 = clean. >=5 is stored but never emailed.
+    function _spamCheck(b, text) {
+      var reasons = [], score = 0;
+      // 1. Honeypot - a hidden field only a bot fills in.
+      if (String(b.hp || '').trim()) { score += 10; reasons.push('honeypot'); }
+      // 2. Humans do not complete a form in under three seconds.
+      var el = Number(b.elapsed || 0);
+      if (el > 0 && el < 3000) { score += 5; reasons.push('submitted in ' + el + 'ms'); }
+      var blob = String(text || '').toLowerCase();
+      // 3. Link farming - the single strongest signal on a contact form.
+      var links = (blob.match(/https?:\/\/|www\.|\[url|<a\s/g) || []).length;
+      if (links >= 3) { score += 6; reasons.push(links + ' links'); }
+      else if (links === 2) { score += 3; reasons.push('2 links'); }
+      // 4. SEO/crypto/pharma boilerplate.
+      var bait = ['seo service','backlink','guest post','crypto','bitcoin','forex','casino',
+                  'viagra','cialis','loan offer','work from home','click here now','buy followers',
+                  'rank #1','increase your traffic','web design service','make money online'];
+      for (var i = 0; i < bait.length; i++) {
+        if (blob.indexOf(bait[i]) !== -1) { score += 5; reasons.push('phrase: ' + bait[i]); break; }
+      }
+      // 5. Cyrillic or CJK in a US contractor enquiry.
+      // Soft signal only. A Chinese- or Russian-speaking contractor writing in
+      // their own language is a real customer; this must never block on its own,
+      // only tip an already-suspicious message over the line.
+      if (/[\u0400-\u04FF\u4E00-\u9FFF]/.test(String(text || ''))) { score += 4; reasons.push('non-latin script'); }
+      // 6. Throwaway mailboxes.
+      var em = String(b.email || '').toLowerCase();
+      var burner = ['mailinator.com','guerrillamail','10minutemail','tempmail','yopmail','trashmail','sharklasers'];
+      for (var j = 0; j < burner.length; j++) {
+        if (em.indexOf(burner[j]) !== -1) { score += 5; reasons.push('disposable email'); break; }
+      }
+      // 7. A name that is a URL.
+      if (/https?:|www\./i.test(String(b.name || ''))) { score += 5; reasons.push('url in name'); }
+      return { score: score, reasons: reasons.join('; ') };
+    }
+    // Too many submissions from one address in an hour.
+    async function _ipFlood(table, hash) {
+      if (!hash) return 0;
+      try {
+        var since = new Date(Date.now() - 3600000).toISOString();
+        var r = await fetch(base + '/' + table + '?ip_hash=eq.' + encodeURIComponent(hash) +
+          '&created_at=gte.' + encodeURIComponent(since) + '&select=id', { headers: H });
+        var a = await r.json();
+        return Array.isArray(a) ? a.length : 0;
+      } catch (e) { return 0; }
+    }
+
     if (req.method === 'POST') {
       var body = readBody(req);
       // Public customer booking request from /book — no session required.
@@ -74,11 +133,18 @@ module.exports = async function handler(req, res) {
         if (!SUPABASE_URL || !KEY) return res.status(200).json({ ok: true, queued: false });
         try {
           var bk = body.booking;
+          var bHash = _ipHash();
+          var bChk = _spamCheck(bk, [bk.name, bk.email, bk.notes].join(' '));
+          var bFlood = await _ipFlood('bookings', bHash);
+          if (bFlood >= 5) { bChk.score += 6; bChk.reasons = (bChk.reasons ? bChk.reasons + '; ' : '') + bFlood + ' in the last hour'; }
+          if (bFlood >= 12) return res.status(200).json({ ok: true, queued: true });
+          var bSpam = bChk.score >= 5;
           var row = {
+            ip_hash: bHash, spam_score: bChk.score, spam_reasons: bChk.reasons || null,
             account: (bk.account || null), name: (bk.name||'').slice(0,120), phone: (bk.phone||'').slice(0,40),
             email: (bk.email||'').slice(0,120), service: (bk.service||'').slice(0,120), date: bk.date||null,
             slot: (bk.slot||'').slice(0,40), notes: (bk.notes||'').slice(0,1000),
-            status: 'requested', source: 'public_book_page', created_at: new Date().toISOString()
+            status: bSpam ? 'spam' : 'requested', source: 'public_book_page', created_at: new Date().toISOString()
           };
           var ins = await fetch(base + '/bookings', {
             method: 'POST',
@@ -94,7 +160,7 @@ module.exports = async function handler(req, res) {
           var notified = false;
           try {
             var RESEND = process.env.RESEND_API_KEY;
-            if (RESEND) {
+            if (RESEND && !bSpam) {
               var e = function (x) { return String(x == null ? '' : x).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); };
               var line = function (k, v) { return v ? ('<tr><td style="padding:6px 12px 6px 0;color:#5A6B7D;">' + e(k) + '</td><td style="padding:6px 0;font-weight:600;">' + e(v) + '</td></tr>') : ''; };
               var html = '<div style="font-family:Arial,Helvetica,sans-serif;max-width:520px;color:#0A1628;">'
@@ -133,11 +199,21 @@ module.exports = async function handler(req, res) {
         try {
           var cm = body.contact;
           if (!String(cm.name || '').trim()) return res.status(200).json({ ok: false, queued: false, error: 'name required' });
+          var cHash = _ipHash();
+          var cChk = _spamCheck(cm, [cm.name, cm.company, cm.email, cm.message].join(' '));
+          var cFlood = await _ipFlood('contact_messages', cHash);
+          if (cFlood >= 5) { cChk.score += 6; cChk.reasons = (cChk.reasons ? cChk.reasons + '; ' : '') + cFlood + ' in the last hour'; }
+          // Hard stop: a flooding address gets a success response and nothing is
+          // written, so a bot learns nothing from the difference.
+          if (cFlood >= 12) return res.status(200).json({ ok: true, queued: true });
+          var cSpam = cChk.score >= 5;
           var crow = {
             name: (cm.name||'').slice(0,120), email: (cm.email||'').slice(0,140), phone: (cm.phone||'').slice(0,40),
             company: (cm.company||'').slice(0,140), topic: (cm.topic||'').slice(0,80),
             message: (cm.message||'').slice(0,4000), source: 'contact_page',
-            page: (cm.page||'').slice(0,200), status: 'new', created_at: new Date().toISOString()
+            page: (cm.page||'').slice(0,200), status: cSpam ? 'spam' : 'new',
+            ip_hash: cHash, spam_score: cChk.score, spam_reasons: cChk.reasons || null,
+            created_at: new Date().toISOString()
           };
           var cins = await fetch(base + '/contact_messages', {
             method: 'POST',
@@ -151,7 +227,8 @@ module.exports = async function handler(req, res) {
           var cnotified = false;
           try {
             var CRESEND = process.env.RESEND_API_KEY;
-            if (CRESEND) {
+            // Spam is kept for review but never emailed - the inbox stays trustworthy.
+            if (CRESEND && !cSpam) {
               var ce = function (x) { return String(x == null ? '' : x).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); };
               var cline = function (k, v) { return v ? ('<tr><td style="padding:6px 12px 6px 0;color:#5A6B7D;white-space:nowrap;">' + ce(k) + '</td><td style="padding:6px 0;font-weight:600;">' + ce(v) + '</td></tr>') : ''; };
               var chtml = '<div style="font-family:Arial,Helvetica,sans-serif;max-width:560px;color:#0A1628;">'
