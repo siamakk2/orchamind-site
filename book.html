@@ -53,6 +53,7 @@ body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-ser
     <div class="bk-field"><label>Pick a date</label><select id="fDate" onchange="bkRenderSlots()"></select></div>
     <div class="bk-field"><label>Pick a time</label><div class="bk-slots" id="fSlots"></div></div>
     <div class="bk-field"><label>Anything else? <span style="color:var(--muted);font-weight:400;">(optional)</span></label><textarea id="fNotes" rows="2" placeholder="Brief description of the job"></textarea></div>
+    <div aria-hidden="true" style="position:absolute;left:-9999px;top:-9999px;height:0;overflow:hidden;"><label for="bkHp">Leave this field empty</label><input id="bkHp" name="company_website" tabindex="-1" autocomplete="off"></div>
     <button class="bk-go" id="bkGo" onclick="bkSubmit()">Request this time</button>
     <div class="bk-note" id="bkFoot">Picking a time is a request, not a confirmation — we email to confirm.</div>
   </div>
@@ -68,6 +69,7 @@ body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-ser
 // Two audiences, one page. Without ?c= this is Orchamind booking a demo with a
 // contractor. With ?c=slug it is a contractor's own customer booking a job, and
 // the booking is stamped with that account so it routes to the right workspace.
+window._bkOpened=Date.now();
 var OM_BOOK_ACCOUNT=(function(){
   try{
     var m=/[?&]c=([A-Za-z0-9_-]{1,40})/.exec(location.search);
@@ -125,7 +127,9 @@ function bkSubmit(){
   var req={name:name,phone:document.getElementById('fPhone').value.trim(),email:document.getElementById('fEmail').value.trim(),
     service:document.getElementById('fService').value,date:document.getElementById('fDate').value,slot:_sel.slot,
     notes:document.getElementById('fNotes').value.trim(),status:'requested',ts:Date.now(),id:'bk'+Date.now(),
-    account:OM_BOOK_ACCOUNT};
+    account:OM_BOOK_ACCOUNT,
+    hp:(document.getElementById('bkHp')||{}).value||'',
+    elapsed:(Date.now()-(window._bkOpened||Date.now()))};
   var btn=document.getElementById('bkGo');btn.disabled=true;btn.textContent='Sending…';
   // Only claim success if the request was actually stored. An earlier version showed
   // a thank-you on error and on a 2.5s timer, so failed bookings looked accepted.
