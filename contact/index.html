@@ -362,6 +362,7 @@ footer a:hover{color:#1E6FE0;}
       <div class="ct-f"><label for="ctMessage">Message</label>
         <textarea id="ctMessage" rows="5" placeholder="Six-person remodeling crew, currently on spreadsheets. Mostly want to stop losing an evening to every estimate."></textarea>
       </div>
+      <div aria-hidden="true" style="position:absolute;left:-9999px;top:-9999px;height:0;overflow:hidden;"><label for="ctHp">Leave this field empty</label><input id="ctHp" name="company_website" tabindex="-1" autocomplete="off"></div>
       <button class="ct-send" id="ctSend" onclick="ctSubmit()">Send message</button>
       <div class="ct-fine">We reply from a real inbox. No autoresponder sequence, no reselling your details.</div>
       <div id="ctErr"></div>
@@ -397,6 +398,7 @@ footer a:hover{color:#1E6FE0;}
 </div>
 
 <script>
+window._ctOpened=Date.now();
 function ctErr(id,msg){
   ['ctName','ctEmail','ctMessage'].forEach(function(x){var e=document.getElementById(x);if(e)e.classList.remove('ct-bad');});
   var box=document.getElementById('ctErr');
@@ -414,7 +416,7 @@ function ctSubmit(){
   document.getElementById('ctErr').innerHTML='';
   var btn=document.getElementById('ctSend'); btn.disabled=true; btn.textContent='Sending…';
   fetch('/api/data',{method:'POST',headers:{'Content-Type':'application/json'},
-    body:JSON.stringify({contact:{name:name,email:email,phone:document.getElementById('ctPhone').value.trim(),
+    body:JSON.stringify({contact:{hp:(document.getElementById('ctHp')||{}).value||'',elapsed:(Date.now()-(window._ctOpened||Date.now())),name:name,email:email,phone:document.getElementById('ctPhone').value.trim(),
       company:document.getElementById('ctCompany').value.trim(),topic:document.getElementById('ctTopic').value,
       message:msg,page:location.pathname}})})
     .then(function(r){return r.json();})
