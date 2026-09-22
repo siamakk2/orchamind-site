@@ -103,6 +103,42 @@ module.exports = async function handler(req, res) {
     // FIX 3 — structured data is the core AI-visibility signal.
     const ldTypes = [];
     let ldBlocks = 0, ldInvalid = 0;
+
+    // FIX 4 — properties, not just types. The engine used to report only the
+    // @type names, so the model saw "ProfessionalService" with no detail and,
+    // told to "suggest extending" existing schema, recommended adding sameAs,
+    // areaServed and hasOfferCatalog to a site that already had all three. It
+    // was being asked to judge completeness while shown only a label. Now each
+    // entity reports what it has and what it lacks, so recommendations can be
+    // about real gaps.
+    const ENTITY_TYPES = /Organization|LocalBusiness|ProfessionalService|Service|Person|Store|Restaurant|Dentist|Physician|LegalService|Attorney|MedicalBusiness|HomeAndConstructionBusiness|Corporation/i;
+    const ORG_PROPS = ['name','url','logo','image','description','address','telephone','email',
+                       'geo','openingHoursSpecification','areaServed','sameAs','hasOfferCatalog',
+                       'aggregateRating','review','founder','priceRange','contactPoint'];
+    const PERSON_PROPS = ['name','url','image','jobTitle','worksFor','sameAs','knowsAbout','alumniOf','description'];
+    const ldEntities = [];
+    function recordEntity(t, n) {
+      if (!ENTITY_TYPES.test(t) || ldEntities.length >= 6) return;
+      const props = /Person/i.test(t) && !/Organization|Business/i.test(t) ? PERSON_PROPS : ORG_PROPS;
+      const has = [], lacks = [];
+      props.forEach(function (k) {
+        const v = n[k];
+        const present = v !== undefined && v !== null && v !== '' &&
+                        !(Array.isArray(v) && v.length === 0);
+        if (present) {
+          if (k === 'sameAs') has.push('sameAs (' + (Array.isArray(v) ? v.length : 1) + ' profiles)');
+          else if (k === 'hasOfferCatalog') {
+            const items = (v && v.itemListElement) || [];
+            has.push('hasOfferCatalog (' + (Array.isArray(items) ? items.length : 1) + ' offers)');
+          }
+          else has.push(k);
+        } else lacks.push(k);
+      });
+      // An entity may be declared on this page by reference only. That is not
+      // the same as lacking properties, so do not report it as incomplete.
+      const referenceOnly = Object.keys(n).filter(function (k) { return k[0] !== '@'; }).length === 0;
+      ldEntities.push({ type: t, has: has, lacks: lacks, referenceOnly: referenceOnly });
+    }
     const ldre = /<script[^>]*type=["']application\/ld\+json["'][^>]*>([\s\S]*?)<\/script>/gi;
     let lm;
     while ((lm = ldre.exec(html))) {
@@ -114,6 +150,7 @@ module.exports = async function handler(req, res) {
           if (n && n['@type']) {
             const t = Array.isArray(n['@type']) ? n['@type'].join('/') : n['@type'];
             if (ldTypes.indexOf(t) === -1) ldTypes.push(t);
+            recordEntity(t, n);
           }
         });
       } catch (e) { ldInvalid++; }
@@ -149,6 +186,11 @@ module.exports = async function handler(req, res) {
       '- Headings found: ' + (headings.join(' | ') || 'NONE') + '\n' +
       '- JSON-LD structured data: ' + (ldBlocks ? ldBlocks + ' block(s), types: ' + (ldTypes.join(', ') || 'unknown') : 'NONE FOUND') +
         (ldInvalid ? ' (' + ldInvalid + ' failed to parse)' : '') + '\n' +
+      (ldEntities.length ? ldEntities.map(function (e) {
+        if (e.referenceOnly) return '- Entity ' + e.type + ': declared by reference only (defined elsewhere)\n';
+        return '- Entity ' + e.type + ' HAS: ' + (e.has.join(', ') || 'nothing') + '\n' +
+               '  Entity ' + e.type + ' LACKS: ' + (e.lacks.join(', ') || 'nothing') + '\n';
+      }).join('') : '') +
       '- Open Graph: og:title ' + (ogTitle ? 'present' : 'MISSING') + ', og:image ' + (ogImage ? 'present' : 'MISSING') + '\n' +
       '- robots.txt: ' + (robots.ok ? 'present' + (robotsHasSitemap ? ', declares a sitemap' : ', no sitemap directive') +
         (robotsAIRules ? ', contains AI-crawler rules' : '') : 'NOT FOUND') + '\n' +
@@ -167,7 +209,11 @@ module.exports = async function handler(req, res) {
 
 CRITICAL ACCURACY RULES:
 - You are given a MEASURED SIGNALS block. Those are facts from the live site. Never contradict them.
-- NEVER recommend adding something the signals say is already present. If a sitemap exists, do not suggest creating one — suggest improving it. If structured data exists, acknowledge it and suggest extending it.
+- NEVER recommend adding something the signals say is already present. If a sitemap exists, do not suggest creating one — suggest improving it.
+- Structured data: the signals list, for each entity, the properties it HAS and LACKS. Only ever recommend adding properties from the LACKS list. Recommending a property from the HAS list is a factual error that destroys the report's credibility — the owner will check, find it present, and distrust everything else you said.
+- If an entity HAS the important properties, say so and credit it. Do not invent a schema gap to fill a recommendation slot.
+- Do NOT recommend adding aggregateRating or review markup to a business's own Organization or LocalBusiness entity. Google treats review markup a business applies to itself as self-serving and ineligible for rich results. If reviews matter, recommend earning them on third-party platforms — Google Business Profile, Yelp, industry directories — instead.
+- Of the LACKS list, the properties most worth recommending for a local business are geo, openingHoursSpecification, contactPoint and logo.
 - You saw the HOMEPAGE ONLY. Never assert that other pages are missing; you cannot know. Phrase such suggestions as "if you don't already have one".
 - Use the measured heading counts. Do not estimate them from the text.
 - Never invent awards, numbers, review counts or clients you cannot verify.
