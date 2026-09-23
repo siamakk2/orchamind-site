@@ -91,11 +91,21 @@ footer a{color:rgba(255,255,255,0.75);margin:0 10px;}
   th{font-size:12px;}
   th:first-child,td:first-child{min-width:152px;max-width:152px;white-space:normal;padding-left:11px;font-size:12.5px;line-height:1.35;}
   th:not(:first-child),td:not(:first-child){min-width:88px;scroll-snap-align:start;}
-  .tbl-hint{display:flex;align-items:center;gap:7px;font-size:12.5px;color:var(--muted,#5A6B7D);margin:0 2px 8px;font-weight:600;}
-  .tbl-hint .arr{animation:tblNudge 1.5s ease-in-out infinite;}
-  @keyframes tblNudge{0%,100%{transform:translateX(0);}50%{transform:translateX(5px);}}
+  /* Six columns never fit a phone. Show Orchamind against ONE competitor at a
+     time, chosen by the person, so the comparison is actually readable instead
+     of a sliver of four. No horizontal scrolling needed at all. */
+  .cmp-pick{display:block;margin:0 2px 12px;}
+  .cmp-pick-lbl{display:block;font-size:12.5px;font-weight:700;color:var(--muted,#5A6B7D);margin-bottom:7px;}
+  .cmp-pills{display:flex;gap:7px;flex-wrap:wrap;}
+  .cmp-pills button{flex:1 1 auto;min-width:78px;border:1.5px solid var(--line,#E1E8F0);background:#fff;
+    color:var(--navy,#0A1628);border-radius:999px;padding:9px 11px;font:700 12.5px 'Inter',sans-serif;cursor:pointer;}
+  .cmp-pills button[aria-selected="true"]{background:var(--navy,#0A1628);color:#fff;border-color:var(--navy,#0A1628);}
+  table{min-width:0;width:100%;font-size:13px;}
+  .tbl-scroll{overflow-x:hidden;}
+  th:first-child,td:first-child{min-width:0;max-width:none;width:56%;}
+  th:not(:first-child),td:not(:first-child){min-width:0;width:22%;}
 }
-@media(min-width:641px){ .tbl-hint{display:none;} }
+@media(min-width:641px){ .cmp-pick{display:none;} }
 </style>
 </head>
 <body>
@@ -111,7 +121,10 @@ footer a{color:rgba(255,255,255,0.75);margin:0 10px;}
 <section><div class="wrap">
   <h2>The full comparison</h2>
   <p class="lede">Every row below is a capability contractors actually use daily. Based on each vendor&rsquo;s publicly listed features and pricing as of mid-2026 — always verify current details with the vendor.</p>
-  <div class="tbl-hint"><span>Swipe the table to compare all five</span><span class="arr" aria-hidden="true">&rarr;</span></div>
+  <div class="cmp-pick" id="cmpPick">
+  <span class="cmp-pick-lbl">Orchamind vs</span>
+  <div class="cmp-pills" id="cmpPills" role="tablist" aria-label="Choose a competitor to compare"></div>
+</div>
 <div class="tbl-scroll"><table>
     <tr><th>Capability</th><th>Orchamind</th><th>Jobber</th><th>Housecall&nbsp;Pro</th><th>ServiceTitan</th><th>Buildertrend</th></tr>
     <tr><td>AI reads plan sets &rarr; drafts estimate (floor plans, elevations, blueprints)</td><td class="oc"><span class="yes">&#10003;</span></td><td><span class="no">&mdash;</span></td><td><span class="no">&mdash;</span></td><td><span class="no">&mdash;</span></td><td><span class="no">&mdash;</span></td></tr>
@@ -204,5 +217,59 @@ footer a{color:rgba(255,255,255,0.75);margin:0 10px;}
   <div style="margin-top:10px;">&copy; 2026 Orchamind &middot; Napa Valley, California</div>
 </footer>
 <script defer src="/consent.js"></script>
+
+<script>
+(function(){
+  // matchMedia is missing in some older/embedded browsers; fall back to width
+  // so the picker degrades to "show everything" rather than throwing and
+  // leaving the page half-built.
+  var MOBILE = (typeof window.matchMedia === 'function')
+    ? window.matchMedia('(max-width:640px)') : null;
+  function isNarrow(){
+    return MOBILE ? MOBILE.matches
+                  : (window.innerWidth || document.documentElement.clientWidth || 0) <= 640;
+  }
+  var table  = document.querySelector('.tbl-scroll table');
+  var pills  = document.getElementById('cmpPills');
+  if(!table || !pills) return;
+
+  var headers = table.querySelectorAll('tr:first-child th');
+  // column 0 = Capability, 1 = Orchamind, 2..n = competitors
+  var rivals = [];
+  for(var i=2;i<headers.length;i++){
+    rivals.push({index:i, name:(headers[i].textContent||'').replace(/\u00a0/g,' ').trim()});
+  }
+  var chosen = rivals.length ? rivals[0].index : 2;
+
+  rivals.forEach(function(r){
+    var b=document.createElement('button');
+    b.type='button'; b.textContent=r.name;
+    b.setAttribute('role','tab');
+    b.setAttribute('data-col', r.index);
+    b.addEventListener('click',function(){ chosen=r.index; apply(); });
+    pills.appendChild(b);
+  });
+
+  function apply(){
+    var narrow = isNarrow();
+    Array.prototype.forEach.call(pills.children,function(b){
+      b.setAttribute('aria-selected', String(Number(b.getAttribute('data-col'))===chosen));
+    });
+    Array.prototype.forEach.call(table.rows,function(row){
+      Array.prototype.forEach.call(row.cells,function(cell,i){
+        // On a phone: capability, Orchamind, and the one they picked.
+        cell.style.display = (!narrow || i<=1 || i===chosen) ? '' : 'none';
+      });
+    });
+  }
+
+  if(MOBILE && MOBILE.addEventListener) MOBILE.addEventListener('change',apply);
+  else if(MOBILE && MOBILE.addListener) MOBILE.addListener(apply);
+  else window.addEventListener('resize',apply);
+  apply();
+  window._cmpApply=apply;
+  window._cmpPick=function(i){ chosen=i; apply(); };
+})();
+</script>
 </body>
 </html>
