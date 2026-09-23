@@ -78,7 +78,24 @@ td.oc{background:#F0F7FF !important;font-weight:700;}
 .cta-band .cta{display:inline-block;background:var(--signal);color:#fff;font-weight:700;padding:14px 30px;border-radius:12px;font-size:16.5px;}
 footer{background:var(--navy);color:rgba(255,255,255,0.6);padding:28px 24px;text-align:center;font-size:13px;}
 footer a{color:rgba(255,255,255,0.75);margin:0 10px;}
-@media(max-width:640px){section{padding:38px 0;}.vs{padding:20px 16px;}}
+@media(max-width:640px){
+  section{padding:38px 0;}
+  .vs{padding:20px 16px;}
+  /* A 230px sticky first column on a 390px screen left ~130px for six columns,
+     which sliced the Orchamind header in half. Tighten everything and make the
+     horizontal scroll obvious instead of something you have to discover. */
+  .wrap{padding:0 12px;}
+  .tbl-scroll{border-radius:12px;-webkit-overflow-scrolling:touch;scroll-snap-type:x proximity;}
+  table{min-width:620px;font-size:13px;}
+  th,td{padding:10px 8px;}
+  th{font-size:12px;}
+  th:first-child,td:first-child{min-width:152px;max-width:152px;white-space:normal;padding-left:11px;font-size:12.5px;line-height:1.35;}
+  th:not(:first-child),td:not(:first-child){min-width:88px;scroll-snap-align:start;}
+  .tbl-hint{display:flex;align-items:center;gap:7px;font-size:12.5px;color:var(--muted,#5A6B7D);margin:0 2px 8px;font-weight:600;}
+  .tbl-hint .arr{animation:tblNudge 1.5s ease-in-out infinite;}
+  @keyframes tblNudge{0%,100%{transform:translateX(0);}50%{transform:translateX(5px);}}
+}
+@media(min-width:641px){ .tbl-hint{display:none;} }
 </style>
 </head>
 <body>
@@ -94,7 +111,8 @@ footer a{color:rgba(255,255,255,0.75);margin:0 10px;}
 <section><div class="wrap">
   <h2>The full comparison</h2>
   <p class="lede">Every row below is a capability contractors actually use daily. Based on each vendor&rsquo;s publicly listed features and pricing as of mid-2026 — always verify current details with the vendor.</p>
-  <div class="tbl-scroll"><table>
+  <div class="tbl-hint"><span>Swipe the table to compare all five</span><span class="arr" aria-hidden="true">&rarr;</span></div>
+<div class="tbl-scroll"><table>
     <tr><th>Capability</th><th>Orchamind</th><th>Jobber</th><th>Housecall&nbsp;Pro</th><th>ServiceTitan</th><th>Buildertrend</th></tr>
     <tr><td>AI reads plan sets &rarr; drafts estimate (floor plans, elevations, blueprints)</td><td class="oc"><span class="yes">&#10003;</span></td><td><span class="no">&mdash;</span></td><td><span class="no">&mdash;</span></td><td><span class="no">&mdash;</span></td><td><span class="no">&mdash;</span></td></tr>
     <tr><td>Code &amp; permit checkpoint flags from the plans</td><td class="oc"><span class="yes">&#10003;</span></td><td><span class="no">&mdash;</span></td><td><span class="no">&mdash;</span></td><td><span class="no">&mdash;</span></td><td><span class="no">&mdash;</span></td></tr>
