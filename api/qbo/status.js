@@ -17,6 +17,10 @@ function sessUser(req){
 // QuickBooks connection status check: reads saved token, refreshes if needed, pings QBO CompanyInfo.
 var https = require('https');
 function esc(s){ return String(s).replace(/[&<>]/g, function(ch){ return {'&':'&amp;','<':'&lt;','>':'&gt;'}[ch]; }); }
+// Same resolver as sync.js — the status page MUST ping the company syncs actually write to,
+// otherwise "Live connection confirmed" confirms a company nobody is posting bills into.
+function qboBase(){ return (process.env.QBO_API_BASE || '').trim().replace(/\/$/,''); }
+function qboMode(base){ return /(^|\/\/)sandbox-/i.test(String(base||'')) ? 'SANDBOX' : 'PRODUCTION'; }
 function httpReq(method, urlStr, headers, bodyStr){
   return new Promise(function(resolve, reject){
     var u; try { u = new URL(urlStr); } catch(e){ return reject(e); }
@@ -75,8 +79,18 @@ module.exports = async (req, res) => {
         } else { refreshNote = 'Refresh returned HTTP '+rr.status+' '+String(rr.text).slice(0,200); }
       } catch(re){ refreshNote = 'Refresh error: '+((re&&re.message)||String(re)); }
     }
-    // 3) ping QBO CompanyInfo (sandbox endpoint for Development keys)
-    var qbHost = 'https://sandbox-quickbooks.api.intuit.com';
+    // 3) ping QBO CompanyInfo on the SAME host sync.js writes to
+    var qbHost = qboBase();
+    var qbModeLabel = qboMode(qbHost);
+    if (!qbHost) {
+      res.statusCode = 200;
+      return res.end(page('QuickBooks not configured',
+        '<p class="bad">A token is saved, but <b>QBO_API_BASE</b> is not set on the server.</p>'
+        + '<p>Without it there is no way to tell which QuickBooks company to read or write &mdash; so this check will not guess, and syncing is blocked until it is set.</p>'
+        + '<p>Set it in Vercel &rarr; Project &rarr; Settings &rarr; Environment Variables to one of:</p>'
+        + '<pre>https://quickbooks.api.intuit.com            (real books)\nhttps://sandbox-quickbooks.api.intuit.com    (sandbox)</pre>'
+        + '<p>Then redeploy and reload this page.</p>'));
+    }
     var pingUrl = qbHost + '/v3/company/' + encodeURIComponent(realm) + '/companyinfo/' + encodeURIComponent(realm) + '?minorversion=70';
     var company = '', live = false, pingNote = '';
     try {
@@ -88,7 +102,12 @@ module.exports = async (req, res) => {
     } catch(pe){ pingNote = (pe&&pe.message)||String(pe); }
 
     var saved = new Date(t.updated_at||Date.now()).toString();
-    var body = '<p>Realm (company id): <b>'+esc(realm)+'</b></p>'
+    var modeBanner = (qbModeLabel === 'SANDBOX')
+      ? '<p style="background:#4a2c00;border:1px solid #b45309;border-radius:8px;padding:10px 12px"><b style="color:#fbbf24">⚠ SANDBOX</b> &mdash; bills sync to an Intuit test company, <b>not</b> your real books. Nothing here reaches your accountant.</p>'
+      : '<p style="background:#06301f;border:1px solid #15803d;border-radius:8px;padding:10px 12px"><b style="color:#34D399">PRODUCTION</b> &mdash; bills sync to your real QuickBooks company.</p>';
+    var body = modeBanner
+      + '<p>API host: <code>'+esc(qbHost)+'</code></p>'
+      + '<p>Realm (company id): <b>'+esc(realm)+'</b></p>'
       + '<p>Token saved: '+esc(saved)+'</p>'
       + '<p>Token state: '+(expired? (refreshed?'<span class="ok">was expired \u2014 auto-refreshed \u2713</span>':'<span class="bad">expired</span>') : '<span class="ok">valid</span>')+'</p>'
       + (refreshNote? '<pre>'+esc(refreshNote)+'</pre>' : '')
@@ -96,7 +115,7 @@ module.exports = async (req, res) => {
       + (live
           ? '<p class="ok"><b style="color:#34D399">\u2713 Live connection confirmed.</b></p><p>QuickBooks answered as company: <b>'+esc(company||'(name hidden)')+'</b>. The link is real and working.</p>'
           : '<p class="bad">Token is stored, but the live ping didn\u2019t succeed:</p><pre>'+esc(pingNote)+'</pre><p>(If this says HTTP 401, the token just needs a reconnect at <a href="/api/qbo/connect">/api/qbo/connect</a>.)</p>');
-    res.statusCode=200; return res.end(page(live?'\u2713 QuickBooks is connected':'QuickBooks status', body));
+    res.statusCode=200; return res.end(page(live?('\u2713 QuickBooks is connected \u2014 '+qbModeLabel):'QuickBooks status', body));
   } catch(e){
     res.statusCode=200; return res.end(page('Status check error','<pre>'+esc((e&&e.message)||String(e))+'</pre>'));
   }

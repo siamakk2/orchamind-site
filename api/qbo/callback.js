@@ -55,7 +55,7 @@ module.exports = async (req, res) => {
       if (q) { Object.keys(q).forEach(function(k){ if (allp[k] == null) allp[k] = q[k]; }); }
       var dump = 'Raw path:\n' + esc(String(req.url)) + '\n\nParams:\n' + esc(JSON.stringify(allp, null, 2));
       var detail = oerr ? ('Intuit reported: <b>' + esc(oerr) + '</b>' + (oerrd ? (' &mdash; ' + esc(oerrd)) : '') + '.')
-                        : 'No authorization code came back. The code is single-use \u2014 always start fresh at <b>/api/qbo/connect</b>, pick a <b>sandbox</b> company, and click Connect.';
+                        : 'No authorization code came back. The code is single-use \u2014 always start fresh at <b>/api/qbo/connect</b>, pick your company, and click Connect.';
       res.statusCode = 200; return res.end(page('Connection not completed', '<p>' + detail + '</p><pre>' + dump + '</pre><p><a href="https://orchamind.com/api/qbo/connect">Try again &rarr;</a></p>'));
     }
     var stateParam = String(gp('state') || '');

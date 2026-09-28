@@ -36,7 +36,12 @@ function logQbo(level, obj){ try{ console[level==='error'?'error':'log'](JSON.st
 
 var SB_URL = 'https://yqbprvyhzugdmavvurqb.supabase.co';
 function sbKey(){ return (process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SECRET_KEY || process.env.SUPABASE_SERVICE_KEY || '').trim(); }
-function qboBase(){ return (process.env.QBO_API_BASE || 'https://sandbox-quickbooks.api.intuit.com').trim().replace(/\/$/,''); }
+// Which QuickBooks company do we write to? There is deliberately NO default here.
+// A silent fallback to sandbox means bills post to a throwaway company and nobody
+// finds out for months, so an unset QBO_API_BASE is treated as a configuration
+// error and the sync refuses to run. Keep this identical to status.js.
+function qboBase(){ return (process.env.QBO_API_BASE || '').trim().replace(/\/$/,''); }
+function qboMode(base){ return /(^|\/\/)sandbox-/i.test(String(base||'')) ? 'SANDBOX' : 'PRODUCTION'; }
 
 async function getToken(SB_KEY, owner){
   var gr = await httpReq('GET', SB_URL + '/rest/v1/qbo_tokens?id=eq.' + encodeURIComponent(owner) + '&select=*',
@@ -117,10 +122,17 @@ module.exports = async (req, res) => {
     if(!mats.length) return send({ok:false,error:'No materials to sync.'});
     var SB_KEY=sbKey();
     if(!SB_KEY) return send({ok:false,error:'Server not configured (Supabase key missing).'},500);
+    var _base=qboBase();
+    if(!_base){
+      logQbo('error',{ event:'qbo_base_missing', user:owner, job:jobId });
+      return send({ok:false,error:'Server not configured: QBO_API_BASE is not set, so there is no way to tell which QuickBooks company to write to. Nothing was synced.'},500);
+    }
     var t=await getToken(SB_KEY, owner);
     if(t && t._reauth) return send({ok:false,notConnected:true,error:'Your QuickBooks connection has expired. Please reconnect.'});
     if(!t || !t.access_token) return send({ok:false,notConnected:true,error:'QuickBooks is not connected yet.'});
-    var base=qboBase(), realm=t.realm_id, token=t.access_token;
+    var base=_base, realm=t.realm_id, token=t.access_token;
+    // Record the target company on every run, so the logs answer "which books did this land in?"
+    logQbo('log',{ event:'sync_start', user:owner, realm:realm, job:jobId, mode:qboMode(base), host:base, materials:mats.length });
     var vcache={}, acache={};
     var results=[], synced=0, skipped=0, errors=0;
     for(var i=0;i<mats.length;i++){
@@ -158,7 +170,7 @@ module.exports = async (req, res) => {
         }
       }catch(ie){ logQbo('error',{ event:'material_sync_exception', user:owner, job:jobId, material:mid, message:(ie&&ie.message)||String(ie) }); results.push({id:mid,status:'error',error:(ie&&ie.message)||String(ie)}); errors++; }
     }
-    logQbo('log',{ event:'sync_complete', user:owner, realm:realm, job:jobId, synced:synced, skipped:skipped, errors:errors });
-    return send({ok:true, realm:realm, account:acache.name||null, summary:{synced:synced,skipped:skipped,errors:errors}, results:results});
+    logQbo('log',{ event:'sync_complete', user:owner, realm:realm, job:jobId, mode:qboMode(base), synced:synced, skipped:skipped, errors:errors });
+    return send({ok:true, realm:realm, mode:qboMode(base), account:acache.name||null, summary:{synced:synced,skipped:skipped,errors:errors}, results:results});
   }catch(e){ logQbo('error',{ event:'sync_failed', message:(e&&e.message)||String(e) }); return send({ok:false,error:(e&&e.message)||String(e)},200); }
 };
