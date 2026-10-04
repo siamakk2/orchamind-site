@@ -15,8 +15,8 @@ var crypto = require('crypto');
 var o = require('../lib/outreach.js');
 
 var FROM = 'Siamak at Orchamind <info@orchamind.com>';
-var REPLY_TO = 'info@siamakkalhor.com';
-var COPY_TO = 'info@siamakkalhor.com';   // Siamak sees every note that goes out
+var REPLY_TO = 'siamakk2@gmail.com';
+var COPY_TO = 'siamakk2@gmail.com';   // Siamak sees every note that goes out
 var ADMIN = 'siamakk2';
 var REST = 'https://yqbprvyhzugdmavvurqb.supabase.co/rest/v1';
 var KINDS = ['welcome', 'checkin', 'ending', 'winback'];
@@ -105,7 +105,7 @@ module.exports = async function handler(req, res) {
       res.setHeader('Content-Type', 'text/html; charset=utf-8');
       return res.status(okSig ? 200 : 400).send('<!doctype html><meta name="viewport" content="width=device-width,initial-scale=1"><title>Orchamind</title>'
         + '<div style="font-family:-apple-system,Segoe UI,Arial,sans-serif;max-width:460px;margin:15vh auto;padding:0 16px;color:#0A1628;text-align:center;">'
-        + (okSig ? '<h2>You will not get these check-ins again.</h2><p style="color:#5A6B7D;">Sorry for the bother. If you ever need anything, just email <a href="mailto:info@siamakkalhor.com">info@siamakkalhor.com</a>.</p>'
+        + (okSig ? '<h2>You will not get these check-ins again.</h2><p style="color:#5A6B7D;">Sorry for the bother. If you ever need anything, just email <a href="mailto:siamakk2@gmail.com">siamakk2@gmail.com</a>.</p>'
                  : '<h2>That link did not work.</h2><p style="color:#5A6B7D;">Reply to the email and we will take you off the list by hand.</p>')
         + '</div>');
     }
@@ -123,6 +123,29 @@ module.exports = async function handler(req, res) {
         var tres = await fetch('https://api.resend.com/emails', { method: 'POST', headers: { Authorization: 'Bearer ' + RESEND, 'Content-Type': 'application/json' },
           body: JSON.stringify({ from: FROM, to: [String(q.test_to)], reply_to: REPLY_TO, subject: '[PROOF for ' + (tr.acct.company || tr.acct.username) + '] ' + tm.subject, html: tm.html, text: tm.text }) });
         return res.status(200).json({ ok: tres.ok, kind: tk, subject: tm.subject, detail: tres.ok ? undefined : (await tres.text()).slice(0, 200) });
+      }
+      // ONE-TIME (2026-10-04): the first batch went out with a reply-to that has no
+      // mailbox. Send each of those people a short note with the right address.
+      if (q.replyfix === '1') {
+        var bad = await get('/outreach_log?select=username,email,trial_end,sent_at&status=eq.sent&kind=neq.replyfix&sent_at=lt.2026-10-04T22:10:00Z');
+        var done = await get('/outreach_log?select=username&kind=eq.replyfix&status=eq.sent');
+        var fx = [];
+        for (var b = 0; b < bad.length; b++) {
+          var row = bad[b];
+          if (done.some(function (d) { return d.username === row.username; })) continue;
+          var acc = (await get('/accounts?select=name&username=eq.' + encodeURIComponent(row.username)))[0] || {};
+          var hi = o.firstName(acc.name);
+          var txt = 'Hi ' + hi + ',\n\nA quick correction to my note from a few minutes ago: the reply address on it was wrong. If you would like to reply, please write to me at siamakk2@gmail.com (simply replying to this email works too).\n\nSorry for the extra email.\n\nSiamak Kalhor\nFounder, Orchamind';
+          var fh = '<div style="font-family:-apple-system,Segoe UI,Arial,sans-serif;font-size:15px;color:#0A1628;line-height:1.6;max-width:560px;">'
+            + txt.split('\n\n').map(function (p) { return '<p style="margin:0 0 14px;">' + p.replace(/\n/g, '<br>').replace('siamakk2@gmail.com', '<a href="mailto:siamakk2@gmail.com" style="color:#2D7FF9;">siamakk2@gmail.com</a>') + '</p>'; }).join('') + '</div>';
+          var fr = await fetch('https://api.resend.com/emails', { method: 'POST', headers: { Authorization: 'Bearer ' + RESEND, 'Content-Type': 'application/json' },
+            body: JSON.stringify({ from: FROM, to: [row.email], bcc: [COPY_TO], reply_to: REPLY_TO, subject: 'Correction: my reply address', html: fh, text: txt }) });
+          var st = fr.ok ? 'sent' : 'error';
+          await fetch(REST + '/outreach_log?on_conflict=username,kind,trial_end', { method: 'POST', headers: Object.assign({}, H, { Prefer: 'resolution=merge-duplicates,return=minimal' }),
+            body: JSON.stringify({ username: row.username, kind: 'replyfix', trial_end: row.trial_end, email: row.email, subject: 'Correction: my reply address', status: st, error: fr.ok ? null : (await fr.text()).slice(0, 200), sent_by: 'auto', sent_at: fr.ok ? new Date().toISOString() : null }) });
+          fx.push({ username: row.username, status: st });
+        }
+        return res.status(200).json({ ok: true, results: fx });
       }
       var rows = await loadAll();
       var now = Date.now(), out = [];

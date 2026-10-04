@@ -83,8 +83,8 @@ function adminCookie(user) {
   r = await call('GET', { run: '1', key: 'cron-test' });
   check('real run sends exactly the 3 due notes', db.sent.length === 3, db.sent.length + ' sent');
   var toDusty = db.sent.find(function (m) { return m.to[0] === 'heiserhac@hotmail.com'; }) || {};
-  check('email is from Siamak, replies go to Siamak', /Siamak/.test(toDusty.from) && toDusty.reply_to === 'info@siamakkalhor.com');
-  check('Siamak gets a copy', (toDusty.bcc || [])[0] === 'info@siamakkalhor.com');
+  check('email is from Siamak, replies go to Siamak', /Siamak/.test(toDusty.from) && toDusty.reply_to === 'siamakk2@gmail.com');
+  check('Siamak gets a copy', (toDusty.bcc || [])[0] === 'siamakk2@gmail.com');
   check('the unsubscribe header is set', /unsub=heiserhac/.test((toDusty.headers || {})['List-Unsubscribe'] || ''));
   check('each send is logged', db.outreach_log.filter(function (l) { return l.status === 'sent'; }).length === 3);
   check('each send shows in the activity feed', db.activity_log.filter(function (a) { return a.type === 'outreach'; }).length === 3);

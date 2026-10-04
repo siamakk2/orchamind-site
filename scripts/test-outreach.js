@@ -73,3 +73,23 @@ check('suggests feedback after the trial ended', o.suggest(acct(40, -10), NOW) =
 
 if (failures.length) { console.error('\n❌  outreach FAILED:\n'); failures.forEach(function (f) { console.error('   • ' + f); }); process.exit(1); }
 console.log('✅  outreach: the right note, to the right person, once.\n');
+
+// Addresses that cannot receive mail must never be used as a reply or contact
+// address: info@siamakkalhor.com has no mailbox and orchamind.com has no MX.
+(function () {
+  var fs = require('fs'), path = require('path');
+  var root = path.join(__dirname, '..'), hits = [];
+  (function walk(d) {
+    fs.readdirSync(d).forEach(function (f) {
+      if (/^(node_modules|\.git|scripts)$/.test(f)) return;
+      var p = path.join(d, f), st = fs.statSync(p);
+      if (st.isDirectory()) return walk(p);
+      if (!/\.(js|html)$/.test(f)) return;
+      var s = fs.readFileSync(p, 'utf8');
+      if (/info@siamakkalhor\.com/.test(s)) hits.push(path.relative(root, p) + ': info@siamakkalhor.com');
+      if (/(reply_to|replyTo|mailto:)[^\n]{0,40}@orchamind\.com/.test(s)) hits.push(path.relative(root, p) + ': reply/contact at orchamind.com (no mailbox)');
+    });
+  })(root);
+  if (hits.length) { console.error('❌  undeliverable reply/contact addresses:\n   • ' + hits.join('\n   • ')); process.exit(1); }
+  console.log('✅  every reply and contact address can actually receive mail.');
+})();

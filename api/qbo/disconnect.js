@@ -81,7 +81,7 @@ module.exports = async (req, res) => {
     if (removed) {
       return res.end(page('\u2713 QuickBooks disconnected', '<p class="ok">Your QuickBooks connection has been removed' + (revoked ? ' and the access token was revoked with Intuit' : '') + '.</p><p>No further data will sync. You can reconnect any time.</p><p><a href="/api/qbo/connect">Reconnect QuickBooks</a> &nbsp;&middot;&nbsp; <a href="/app">Back to Orchamind &rarr;</a></p>'));
     }
-    return res.end(page('Could not fully disconnect', '<p class="bad">We could not remove the saved connection. Please try again, or contact info@siamakkalhor.com.</p><p><a href="/app">Back to Orchamind &rarr;</a></p>'));
+    return res.end(page('Could not fully disconnect', '<p class="bad">We could not remove the saved connection. Please try again, or contact siamakk2@gmail.com.</p><p><a href="/app">Back to Orchamind &rarr;</a></p>'));
   } catch (e) {
     res.statusCode = 200;
     return res.end(page('Error', '<p class="bad">' + esc((e && e.message) || String(e)) + '</p>'));
