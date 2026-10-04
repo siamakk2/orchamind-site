@@ -47,3 +47,6 @@ jobs:
 
       - name: Walkthrough is reachable and wired to Selections
         run: node scripts/test-walk-ui.js
+
+      - name: Quantity math is code and rounds up
+        run: node scripts/test-takeoff-quantities.js
