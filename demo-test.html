@@ -2639,6 +2639,19 @@ function _obState(){
   }catch(e){}
   return st;
 }
+function obStartPlanEstimate(){
+  try{ if(typeof _omTrack==='function') _omTrack('onboard_cta','upload plan'); }catch(e){}
+  try{ goTab('estimates',true); }catch(e){}
+  try{ if(typeof newEstimate==='function') newEstimate(); }catch(e){}
+  // Open the file picker in the same click, so the browser allows it.
+  try{ var f=document.getElementById('estPlanFile'); if(f) f.click(); }catch(e){}
+}
+function obStartTextEstimate(){
+  try{ if(typeof _omTrack==='function') _omTrack('onboard_cta','describe job'); }catch(e){}
+  try{ goTab('estimates',true); }catch(e){}
+  try{ if(typeof newEstimate==='function') newEstimate(); }catch(e){}
+  try{ var t=document.getElementById('estAiScope'); if(t){ t.focus(); } }catch(e){}
+}
 function markOnboard(k){ try{ localStorage.setItem('om_ob_'+k,'1'); }catch(e){} renderOnboarding(); }
 function dismissOnboard(){
   // Snooze for today, not forever — a stray tap used to kill setup permanently.
@@ -2672,9 +2685,9 @@ function renderOnboarding(){
   if(crewMode || dismissed || (typeof IS_REAL_APP==='undefined') || !IS_REAL_APP){ card.style.display='none'; return; }
   var st=_obState();
   var items=[
+    {k:'estimate', label:'Drop a floor plan \u2014 get a priced estimate', desc:'A photo or PDF of the plans. Orchamind reads the dimensions, computes the materials and prices the job.', tab:'estimates', mark:''},
     {k:'job', label:'Add one project', desc:'Takes 30 seconds. Everything else hangs off a job.', tab:'jobs', mark:''},
     {k:'report', label:'Snap a photo \u2014 get a written report', desc:'Photograph the work. Orchamind writes the progress report for you.', tab:'jobreport', mark:''},
-    {k:'estimate', label:'Describe a job \u2014 get a priced estimate', desc:'Plain words or a photo of the plans. You get a real number back.', tab:'estimates', mark:''},
     {k:'crew', label:'Add your crew', desc:'So you can assign work, schedule, and track hours.', tab:'crew', mark:''},
     {k:'company', label:'Company details & logo', desc:'Puts your name at the top of every estimate and invoice.', tab:'profile', mark:''},
     {k:'pay', label:'Get paid online', desc:'Card payments, straight to your bank.', tab:'profile', mark:''}
@@ -2690,9 +2703,20 @@ function renderOnboarding(){
     var action=d?'<span class="ob-done-lbl">Done</span>':('<button class="ob-go" onclick="goTab(\''+it.tab+'\',true);'+mk+'">Go &rsaquo;</button>');
     return '<div class="ob-item '+(d?'is-done':'')+'">'+check+'<div class="ob-item-txt"><div class="ob-item-l">'+it.label+'</div><div class="ob-item-d">'+it.desc+'</div></div>'+action+'</div>';
   }).join('');
+  // Until they have produced one estimate, the whole card leads with the single
+  // thing that shows what this product does. Six equal chores did not.
+  var hero=st.estimate?'':(
+    '<div style="background:linear-gradient(135deg,#0A1628,#163A6B);color:#fff;border-radius:12px;padding:16px 18px;margin:4px 0 14px;">'
+    +'<div style="font-size:17px;font-weight:700;margin-bottom:4px;">Start here: your first estimate in about 3 minutes</div>'
+    +'<div style="font-size:13.5px;opacity:.85;margin-bottom:12px;">Drop in a floor plan \u2014 a phone photo or a PDF. Orchamind reads the printed dimensions, '
+    +'calculates the concrete, framing, drywall and roofing, and drafts a priced estimate with a 3D model you can show the client.</div>'
+    +'<button onclick="obStartPlanEstimate()" style="background:#F9A825;color:#0A1628;border:0;border-radius:9px;padding:11px 18px;font-weight:700;font-size:14.5px;cursor:pointer;white-space:nowrap;">\ud83d\udcd0 Upload a floor plan &rsaquo;</button>'
+    +'<div style="font-size:12.5px;opacity:.75;margin-top:9px;">No plans handy? <a href="#" onclick="obStartTextEstimate();return false;" style="color:#9CC3FF;">Describe a job instead</a></div>'
+    +'</div>');
   card.innerHTML='<div class="ob-card"><button class="ob-x" onclick="dismissOnboard()" title="Hide">&times;</button>'
     +'<div class="ob-head"><div class="ob-title">Welcome to Orchamind, '+esc(name)+' \ud83d\udc4b</div>'
-    +'<div class="ob-lead">Finish these '+items.length+' quick steps so Orchamind can work for you \u2014 you can do them now or come back anytime.</div></div>'
+    +'<div class="ob-lead">'+(st.estimate?'A few more steps so Orchamind can run the rest of the business with you.':'One thing first \u2014 the rest can wait.')+'</div></div>'
+    +hero
     +'<div class="ob-bar"><div class="ob-bar-fill" style="width:'+pct+'%"></div></div><div class="ob-pct">'+done+' of '+items.length+' done</div>'
     +'<div class="ob-items">'+rows+'</div></div>';
   card.style.display='block';

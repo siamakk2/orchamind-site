@@ -62,3 +62,6 @@ jobs:
 
       - name: Demo carry-over moves only what the visitor made
         run: node scripts/test-demo-carry.js
+
+      - name: New customers are sent to their first estimate
+        run: node scripts/test-onboarding.js
