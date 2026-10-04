@@ -50,3 +50,6 @@ jobs:
 
       - name: Quantity math is code and rounds up
         run: node scripts/test-takeoff-quantities.js
+
+      - name: Quantity panel is wired and cannot break the estimate
+        run: node scripts/test-qty-ui.js

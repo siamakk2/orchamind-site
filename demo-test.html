@@ -10,7 +10,7 @@ gtag('consent','default',m({analytics_storage:d,region:'AT BE BG HR CY CZ DK EE 
 try{var c=JSON.parse(localStorage.getItem('sk_consent_v1'));if(c&&c.v===1&&Date.now()-c.ts<15552e6){var a=c.ads?g:d,n=c.analytics?g:d,f=c.functional?g:d;gtag('consent','update',{ad_storage:a,ad_user_data:a,ad_personalization:a,analytics_storage:n,functionality_storage:f,personalization_storage:f,security_storage:g});}}catch(e){}})();</script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Site Manager AI | Orchamind Demo</title>
-  <link rel="icon" href="/favicon.ico?v=4" sizes="any"><link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png?v=4"><link rel="icon" type="image/png" sizes="192x192" href="/icon-192.png?v=4">
+  <link rel="icon" href="/favicon.ico?v=4" sizes="any"><script src="/lib/takeoff-quantities.js"></script><link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png?v=4"><link rel="icon" type="image/png" sizes="192x192" href="/icon-192.png?v=4">
   <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
 <meta name="description" content="AI-powered project management for Orchamind Demo">
 <meta name="robots" content="noindex, nofollow">
@@ -1750,6 +1750,7 @@ button:active, .btn:active, .btn-ghost:active, .tab:active, [role="button"]:acti
     <div id="estAiMsg" class="est-ai-msg"></div>
     <div id="estPlanRead"></div>
     <div id="estPlanQ"></div>
+    <div id="estPlanQty"></div>
     <div id="estPlanCompliance"></div>
     <div style="font-size:11px;color:var(--muted);margin-top:6px;">AI drafts are a starting point using typical regional pricing &mdash; not a bid. Verify quantities, apply your rates and confirm scope before sending.</div>
     <div id="estPreview" class="est-preview" style="display:none;">
@@ -4637,7 +4638,7 @@ function _planAnalyzeStaged(){
   if(!_planStaged.length){msg.textContent='Add at least one plan file first.';return;}
   if(!_planDemoOk()){msg.textContent="You've reached the demo's AI limit. The full version has unlimited AI - call Siamak at 323-657-7752 to get Orchamind for your business.";return;}
   if(btn){btn.disabled=true;btn.innerHTML='Reading\u2026';}
-  document.getElementById('estPlanQ').innerHTML='';var _epc=document.getElementById('estPlanCompliance');if(_epc)_epc.innerHTML='';_planDraft=null;
+  document.getElementById('estPlanQ').innerHTML='';var _epq=document.getElementById('estPlanQty');if(_epq)_epq.innerHTML='';var _epc=document.getElementById('estPlanCompliance');if(_epc)_epc.innerHTML='';_planDraft=null;
   var staged=_planStaged.slice();
   _planThinkStart(staged.map(function(s){return s.f;}));
   var fail=function(e){
@@ -4864,6 +4865,65 @@ function _planApply(text,msg){
   _p3dGrow=0;_p3dGrowT0=Date.now();_plan3dBtn();
   _planRenderQ(obj.questions||[]);
   _planRenderCompliance(obj.complianceFlags||[]);
+  // Deterministic quantities, computed from what was TRANSCRIBED off the sheets
+  // rather than asked of the model. Shown alongside the AI draft, not instead of
+  // it, so the two can be compared before anything depends on it. The whole call
+  // is guarded: a bug in here must never cost the contractor their estimate.
+  try{ _planRenderQuantities(); }catch(e){ try{console.warn('[qty]',e&&e.message);}catch(_){ } }
+}
+function _planRenderQuantities(){
+  var box=document.getElementById('estPlanQty'); if(!box) return;
+  box.innerHTML='';
+  if(!window.OrchaQuantities) return;
+  var e=window._planExtracted; if(!e) return;
+  // Map the transcription's field names onto the engine's inputs. Only printed
+  // values are passed through - nothing is inferred to fill a gap.
+  var elev=e.elevations||{};
+  var wc=null;
+  if(Array.isArray(e.windowSchedule)&&e.windowSchedule.length){
+    wc=e.windowSchedule.reduce(function(s,w){return s+(Number(w&&w.count)||0);},0);
+  } else if(elev&&typeof elev==='object'){
+    var t=0,seen=0;
+    ['front','back','rear','left','right'].forEach(function(k){
+      var x=elev[k]; if(x&&typeof x==='object'&&x.windows!=null){t+=Number(x.windows)||0;seen++;}
+    });
+    if(seen)wc=t;
+  }
+  var od=e.overallDims||{};
+  var r=window.OrchaQuantities.computeQuantities({
+    totalPrintedSqft:e.totalPrintedSqft, stories:e.stories, storyHeightFt:e.storyHeightFt,
+    overallDims:{widthFt:od.widthFt||od.width||od.w, depthFt:od.depthFt||od.depth||od.d},
+    roof:e.roof, areaSchedule:e.areaSchedule, windowCount:wc, doorCount:null
+  });
+  if(!r||!r.items||!r.items.length) return;
+  var computed=r.items.filter(function(i){return i.computed;});
+  var gaps=r.items.filter(function(i){return !i.computed;});
+  if(!computed.length&&!gaps.length) return;
+  var rows=computed.map(function(i){
+    return '<tr><td style="padding:3px 8px 3px 0;color:#5A6B7D;">'+esc(i.trade)+'</td>'
+      +'<td style="padding:3px 8px 3px 0;">'+esc(i.item)+'</td>'
+      +'<td style="padding:3px 0;text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap;"><b>'
+      +esc(String(i.qty))+'</b> '+esc(i.unit)+'</td>'
+      +'<td style="padding:3px 0 3px 10px;color:#8A97A5;font-size:11px;">'+esc(i.formula||'')+'</td></tr>';
+  }).join('');
+  var html='<div style="background:#F2F7FF;border:1px solid #C9DCF7;border-radius:10px;padding:10px 12px;margin:8px 0;font-size:12.5px;">'
+    +'<b>\u{1F4D0} Computed from the drawing</b> — these are calculated from the printed dimensions, not written by the AI. '
+    +'Same drawing always gives the same numbers. Compare them against the line items below.'
+    +(rows?('<table style="width:100%;border-collapse:collapse;margin-top:7px;">'+rows+'</table>'):'');
+  if(r.assumptions&&r.assumptions.length){
+    html+='<div style="margin-top:7px;"><b>Assumed, because it was not printed:</b><ul style="margin:3px 0 0;padding-left:18px;">'
+      +r.assumptions.map(function(a){return '<li>'+esc(a)+'</li>';}).join('')+'</ul></div>';
+  }
+  if(r.unresolved&&r.unresolved.length){
+    html+='<div style="margin-top:7px;color:#B42318;"><b>Check this:</b><ul style="margin:3px 0 0;padding-left:18px;">'
+      +r.unresolved.map(function(u){return '<li>'+esc(u)+'</li>';}).join('')+'</ul></div>';
+  }
+  if(gaps.length){
+    html+='<div style="margin-top:7px;color:#8A97A5;">Not computed — the drawing did not print what these need: '
+      +gaps.map(function(g){return esc(g.item);}).join(', ')+'.</div>';
+  }
+  html+='</div>';
+  box.innerHTML=html;
 }
 function _planRenderCompliance(flags){
   var c=document.getElementById('estPlanCompliance');if(!c)return;
