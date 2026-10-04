@@ -41,3 +41,9 @@ jobs:
 
       - name: Cross-check warning reaches the screen
         run: node scripts/test-crosscheck-ui.js
+
+      - name: Walkthrough geometry matches the plan
+        run: node scripts/test-house-walk.js
+
+      - name: Walkthrough is reachable and wired to Selections
+        run: node scripts/test-walk-ui.js

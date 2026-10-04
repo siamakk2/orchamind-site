@@ -11,7 +11,7 @@ try{var c=JSON.parse(localStorage.getItem('sk_consent_v1'));if(c&&c.v===1&&Date.
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Site Manager AI | Orchamind Demo</title>
   <link rel="icon" href="/favicon.ico?v=4" sizes="any">
-  <script src="/lib/plan-crosscheck.js"></script><link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png?v=4"><link rel="icon" type="image/png" sizes="192x192" href="/icon-192.png?v=4">
+  <script src="/lib/plan-crosscheck.js"></script><script src="/lib/house-walk.js"></script><link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png?v=4"><link rel="icon" type="image/png" sizes="192x192" href="/icon-192.png?v=4">
   <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
 <meta name="description" content="AI-powered project management for Orchamind Demo">
 <meta name="robots" content="noindex, nofollow">
@@ -364,6 +364,10 @@ body.locked .appwrap{display:none !important;}
 .hjob-track i{display:block;height:100%;border-radius:99px;}
 .hjob-empty{color:var(--muted);font-size:13.5px;padding:8px 2px;}
 @media(max-width:1024px){.home-grid{grid-template-columns:1fr;}}
+.walkb{background:rgba(10,22,40,.72);color:#fff;border:0;border-radius:8px;font-size:13px;cursor:pointer;display:flex;align-items:center;justify-content:center;-webkit-user-select:none;user-select:none;touch-action:manipulation;}
+.walkb:active{background:rgba(45,127,249,.92);}
+.wfopt{border:1.5px solid #E1E8F0;background:#fff;border-radius:999px;padding:5px 11px;font-size:12.5px;cursor:pointer;margin:0 6px 6px 0;}
+.wfopt.on{border-color:#2D7FF9;background:#EEF4FF;font-weight:600;}
 </style>
 <style id="mobile-ux-pass">
 @media (max-width:768px){
@@ -1761,6 +1765,7 @@ button:active, .btn:active, .btn-ghost:active, .tab:active, [role="button"]:acti
     <button type="button" class="epv-vtab active" data-view="holo" onclick="epvSetView('holo')">&#128225; Hologram</button>
     <button type="button" class="epv-vtab" data-view="solid" onclick="epvSetView('solid')">&#127968; Model</button>
     <button type="button" class="epv-vtab" data-view="photo" onclick="epvSetView('photo')">&#128247; Photoreal</button>
+    <button type="button" class="epv-vtab" data-view="walk" onclick="epvSetView('walk')">&#128694; Walk through</button>
   </div>
   <div class="epv-3dwrap" id="epv3dWrap" style="display:none;">
     <canvas id="p3dCanvas" class="epv-canvas" style="touch-action:none;cursor:grab;"></canvas>
@@ -1770,8 +1775,20 @@ button:active, .btn:active, .btn-ghost:active, .tab:active, [role="button"]:acti
       <div class="epv-photolabel" id="epvPhotoLabel">Representative render</div>
     </div>
     <div class="epv-3dhint" id="epv3dLabel">Drag to rotate &middot; pinch or scroll to zoom</div>
+    <div id="walkHud" style="display:none;position:absolute;left:10px;top:10px;z-index:3;pointer-events:none;">
+      <span id="walkRoom" style="background:rgba(10,22,40,.78);color:#fff;font-size:12px;font-weight:600;padding:4px 9px;border-radius:999px;"></span>
+    </div>
+    <div id="walkPad" style="display:none;position:absolute;right:10px;bottom:10px;z-index:3;">
+      <div style="display:grid;grid-template-columns:repeat(3,38px);grid-template-rows:repeat(2,38px);gap:4px;">
+        <span></span><button type="button" class="walkb" data-m="f">&#9650;</button><span></span>
+        <button type="button" class="walkb" data-m="l">&#9664;</button>
+        <button type="button" class="walkb" data-m="b">&#9660;</button>
+        <button type="button" class="walkb" data-m="r">&#9654;</button>
+      </div>
+    </div>
     <div id="p3dRooms" class="epv-rooms"></div>
   </div>
+  <div id="walkFinishes" style="display:none;padding:10px 12px 2px;"></div>
   <div class="epv-foot" id="epvFoot">Massing model &amp; pricing are an AI draft for visualization &mdash; review every line below before sending.</div>
 </div>
 <div id="estTiers"></div>
@@ -5127,6 +5144,7 @@ function _p3dRender(){
   var cv=document.getElementById('p3dCanvas');
   if(!cv||!_planGeom||!window.OrchaHouse3D)return;
   if(_epvView==='photo')return; // photo view is a static image, not the canvas
+  if(_epvView==='walk')return;  // the walkthrough owns the canvas while it is open
   // Build the massing from INTERIOR rooms only — patios/decks/porches inflate the
   // footprint and squash the house. Keep the full list elsewhere for the chips.
   var _out=/\b(patio|deck|porch|balcony|terrace|carport|breezeway)\b/i;
@@ -5144,6 +5162,172 @@ function _p3dRender(){
   } else {
     window.OrchaHouse3D.render(opt);
   }
+}
+// ===== WALK THROUGH =====
+// Renoworks' insight, applied to a house that does not exist yet: the value is
+// not the 3D, it is CLOSING THE SELECTION. The homeowner stands in the room,
+// changes the floor, and watches the price move. Geometry comes from the
+// printed dimensions, so what they walk is what they are buying.
+var _walk=null,_walkRAF=null,_walkKeys={},_walkDrag=null,_walkHold=null;
+// Indicative finish colours. Deliberately approximate and labelled as such --
+// this is a swatch in context, never a claim about the exact product.
+function _walkColor(label){
+  var t=String(label||'').toLowerCase();
+  if(/porcelain|ceramic|tile|stone|slate|travertine/.test(t))return '#B9B4AC';
+  if(/marble|quartzite/.test(t))return '#E6E3DC';
+  if(/quartz|corian|solid surface/.test(t))return '#DCD8D0';
+  if(/granite|basalt/.test(t))return '#6E6A68';
+  if(/walnut|espresso|dark/.test(t))return '#5C4330';
+  if(/oak|hardwood|engineered|bamboo/.test(t))return '#9B7B55';
+  if(/maple|birch|ash|light|white.?wash/.test(t))return '#C6A77D';
+  if(/vinyl|lvp|laminate|lvt/.test(t))return '#8E7257';
+  if(/carpet|wool|berber/.test(t))return '#9A9086';
+  if(/concrete|polished/.test(t))return '#9C9C98';
+  if(/paint|drywall|white/.test(t))return '#E8E4DC';
+  return '#A8A49C';
+}
+function _walkCat(category){
+  var t=String(category||'').toLowerCase();
+  if(/floor|carpet|tile|hardwood/.test(t))return 'floor';
+  if(/wall|paint|trim/.test(t))return 'wall';
+  if(/ceiling/.test(t))return 'ceiling';
+  return null;
+}
+// Which selections can this view actually show? Only the ones that map to a
+// surface -- we do not pretend to render a faucet.
+function _walkSelections(){
+  var jobName=(document.getElementById('estProject')||{}).value||'';
+  var all=(window.selections||[]);
+  var mine=all.filter(function(x){return _walkCat(x.category);});
+  var forJob=mine.filter(function(x){return jobName&&x.jobName===jobName;});
+  return forJob.length?forJob:mine;
+}
+function _walkMaterials(){
+  var m={};
+  _walkSelections().forEach(function(sel){
+    var slot=_walkCat(sel.category); if(!slot)return;
+    var opts=sel.options||[];
+    var pick=opts.filter(function(o){return o.label===sel.chosen;})[0]||opts[0];
+    if(pick)m[slot]={name:pick.label,color:_walkColor(pick.label)};
+  });
+  return m;
+}
+function _walkPriceTotal(){
+  var t=0,anyChosen=false;
+  _walkSelections().forEach(function(sel){
+    var opts=sel.options||[];
+    var pick=opts.filter(function(o){return o.label===sel.chosen;})[0];
+    if(pick){t+=(+pick.price||0);anyChosen=true;}
+  });
+  return anyChosen?t:null;
+}
+function _walkRenderFinishes(){
+  var box=document.getElementById('walkFinishes'); if(!box)return;
+  var sels=_walkSelections();
+  if(!sels.length){
+    box.innerHTML='<div style="font-size:12px;color:var(--muted);">Add client selections (Flooring, Paint, Countertops) and they will appear here — change one and the room changes with it.</div>';
+    return;
+  }
+  var total=_walkPriceTotal();
+  var html=sels.map(function(sel,si){
+    var opts=sel.options||[];
+    return '<div style="margin-bottom:8px;"><div style="font-size:11.5px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px;">'+esc(sel.category)+'</div>'
+      + opts.map(function(o,oi){
+          var on=(o.label===sel.chosen)||(!sel.chosen&&oi===0);
+          return '<button type="button" class="wfopt'+(on?' on':'')+'" data-sel="'+esc(sel.id)+'" data-opt="'+esc(o.label)+'">'
+            + esc(o.label)+' <span style="color:var(--muted);font-weight:400;">$'+Math.round(+o.price||0).toLocaleString()+'</span></button>';
+        }).join('')
+      + '</div>';
+  }).join('');
+  html+='<div style="border-top:1px solid #E1E8F0;padding-top:7px;font-size:13px;">'
+     + (total==null?'<span style="color:var(--muted);">Pick a finish in each category to see the selections total.</span>'
+        :'<b>Selections total: $'+Math.round(total).toLocaleString()+'</b> <span style="color:var(--muted);">— changes here flow into the estimate’s selections, not the line items above.</span>')
+     + '</div>';
+  box.innerHTML=html;
+  Array.prototype.forEach.call(box.querySelectorAll('.wfopt'),function(b){
+    b.onclick=function(){
+      var sid=b.getAttribute('data-sel'),lab=b.getAttribute('data-opt');
+      var sel=(window.selections||[]).filter(function(x){return x.id===sid;})[0];
+      if(!sel)return;
+      sel.chosen=lab;
+      if(_walk)_walk.setMaterials(_walkMaterials());
+      _walkRenderFinishes();
+      try{ if(typeof save==='function')save(); }catch(e){}
+      try{ if(typeof renderSelections==='function')renderSelections(); }catch(e){}
+    };
+  });
+}
+function _walkStep(){
+  if(!_walk){_walkRAF=null;return;}
+  var fwd=0,str=0,turn=0;
+  if(_walkKeys.w||_walkKeys.ArrowUp)fwd+=0.26;
+  if(_walkKeys.s||_walkKeys.ArrowDown)fwd-=0.26;
+  if(_walkKeys.a)str-=0.22;
+  if(_walkKeys.d)str+=0.22;
+  if(_walkKeys.ArrowLeft)turn+=0.035;
+  if(_walkKeys.ArrowRight)turn-=0.035;
+  if(_walkHold==='f')fwd+=0.26;
+  if(_walkHold==='b')fwd-=0.26;
+  if(_walkHold==='l')turn+=0.035;
+  if(_walkHold==='r')turn-=0.035;
+  if(turn)_walk.look(turn,0);
+  if(fwd||str)_walk.move(fwd,str);
+  _walk.render();
+  var rl=document.getElementById('walkRoom');
+  if(rl){var rn=_walk.currentRoom();rl.textContent=rn?rn:'';}
+  _walkRAF=requestAnimationFrame(_walkStep);
+}
+function _walkStart(){
+  var cv=document.getElementById('p3dCanvas');
+  if(!cv||!window.OrchaWalk||!_planGeom){_walkStop();return false;}
+  _walk=window.OrchaWalk.create({canvas:cv,geom:_planGeom,materials:_walkMaterials()});
+  if(!_walk)return false;
+  document.getElementById('walkHud').style.display='';
+  document.getElementById('walkPad').style.display='';
+  document.getElementById('walkFinishes').style.display='';
+  _walkRenderFinishes();
+  // Drag to look. Dragging right turns right, which means DECREASING yaw --
+  // yaw+ rotates toward -x. Getting this backwards is the classic sign bug.
+  _walkDrag=null;
+  cv.onpointerdown=function(e){_walkDrag={x:e.clientX,y:e.clientY};try{cv.setPointerCapture(e.pointerId);}catch(_){}};
+  cv.onpointermove=function(e){
+    if(!_walkDrag||!_walk)return;
+    _walk.look(-(e.clientX-_walkDrag.x)*0.006, (e.clientY-_walkDrag.y)*0.004);
+    _walkDrag={x:e.clientX,y:e.clientY};
+  };
+  cv.onpointerup=cv.onpointercancel=function(){_walkDrag=null;};
+  var pad=document.getElementById('walkPad');
+  Array.prototype.forEach.call(pad.querySelectorAll('.walkb'),function(b){
+    var m=b.getAttribute('data-m');
+    b.onpointerdown=function(e){e.preventDefault();_walkHold=m;};
+    b.onpointerup=b.onpointerleave=b.onpointercancel=function(){_walkHold=null;};
+  });
+  if(!_walk._kb){
+    _walk._kb=1;
+    window.addEventListener('keydown',_walkKeyDown);
+    window.addEventListener('keyup',_walkKeyUp);
+  }
+  if(!_walkRAF)_walkRAF=requestAnimationFrame(_walkStep);
+  return true;
+}
+function _walkKeyDown(e){
+  if(!_walk)return;
+  if(['w','a','s','d'].indexOf(e.key.toLowerCase())>=0||e.key.indexOf('Arrow')===0){
+    _walkKeys[e.key.length===1?e.key.toLowerCase():e.key]=true;
+    if(e.key.indexOf('Arrow')===0)e.preventDefault();
+  }
+}
+function _walkKeyUp(e){
+  _walkKeys[e.key.length===1?e.key.toLowerCase():e.key]=false;
+}
+function _walkStop(){
+  if(_walkRAF){cancelAnimationFrame(_walkRAF);_walkRAF=null;}
+  _walk=null;_walkKeys={};_walkHold=null;_walkDrag=null;
+  window.removeEventListener('keydown',_walkKeyDown);
+  window.removeEventListener('keyup',_walkKeyUp);
+  var cv=document.getElementById('p3dCanvas');
+  if(cv){cv.onpointerdown=cv.onpointermove=cv.onpointerup=cv.onpointercancel=null;}
+  ['walkHud','walkPad','walkFinishes'].forEach(function(id){var e=document.getElementById(id);if(e)e.style.display='none';});
 }
 var _epvView='holo';
 var _PHOTO_SET=[
@@ -5178,7 +5362,22 @@ function epvSetView(v){
     document.getElementById('epvPhotoLabel').textContent=_epvRealRender?'Rendered from this estimate':'No render yet \u2014 tap Generate to create one from this estimate';
     if(hint)hint.textContent='A realistic look at the finished property';
     if(rooms)rooms.style.display='none';
+  } else if(v==='walk'){
+    // Stop the orbiting massing loop before taking the canvas: two render loops
+    // on one canvas fight each other and the result looks like a broken GPU.
+    cancelAnimationFrame(_p3dRAF);_p3dRAF=null;
+    cv.style.display='block';pw.style.display='none';
+    if(rooms)rooms.style.display='none';
+    cv.style.cursor='move';
+    if(!_walkStart()){
+      if(hint)hint.textContent='No interior rooms were read from these plans yet \u2014 the walkthrough needs room dimensions.';
+      cv.style.cursor='grab';
+      epvSetView('solid');return;
+    }
+    if(hint)hint.textContent='Drag to look \u00b7 W A S D or arrows to walk \u00b7 built from the printed dimensions';
   } else {
+    _walkStop();
+    cv.style.cursor='grab';
     cv.style.display='block';pw.style.display='none';
     if(rooms)rooms.style.display='';
     if(hint)hint.textContent='Drag to rotate \u00b7 pinch or scroll to zoom';
