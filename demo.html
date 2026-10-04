@@ -2077,6 +2077,21 @@ var plans=[{id:'pl1',client:'Nguyen Rentals',service:'Quarterly HVAC maintenance
 var leads=[{id:'ld1',name:'Karen Mitchell',company:'',phone:'(707) 555-0182',email:'karen.m@example.com',source:'Referral',service:'Master bath remodel',value:28000,stage:'quoted',notes:'Wants walk-in shower + heated floors. Sent estimate 6/28.',date:'2026-06-22'},{id:'ld2',name:'Dave Nguyen',company:'Nguyen Rentals',phone:'(707) 555-0143',email:'dave@nguyenrentals.com',source:'Website',service:'Kitchen refresh (rental unit)',value:14500,stage:'new',notes:'Needs it before new tenant Aug 1.',date:'2026-06-29'},{id:'ld3',name:'The Alvarez Family',company:'',phone:'(707) 555-0117',email:'alvarez@example.com',source:'Google',service:'Deck rebuild',value:9800,stage:'contacted',notes:'Texted back, interested.',date:'2026-06-27'}];
 var expenses=[{id:'x1',jobName:'Hillside Addition',jobId:'',date:'2026-06-20',category:'Materials',vendor:'ABC Lumber',amount:8400,note:'Framing lumber package'},{id:'x2',jobName:'Hillside Addition',jobId:'',date:'2026-06-24',category:'Subcontractor',vendor:'Napa Electric',amount:5200,note:'Electrical rough-in'}];
 var logs=[{id:'l1',job:'Sonoma Vista Residence',date:'2026-06-22',note:'Framing 60% complete on the north wall. Windows delivered and staged in the garage. Framing inspection confirmed for next Tuesday.',photos:[],author:'Demo'}];
+/* Sample-data IDs, captured the moment the sample arrays are defined and before
+   any saved state can be restored over them. The demo -> account carry-over uses
+   this to tell sample records from things a visitor actually made. It used to
+   rely on omRecordDemoSeed(), which was never called -- so every demo visitor who
+   signed up had the whole fictional company (Sonoma Vista, The Bennetts, ...)
+   written into their real account, and the onboarding checklist then marked
+   "add a project", "get an estimate" and "add your crew" as already done. */
+var _OM_SEED_IDS=(function(){
+  var out={};
+  try{
+    var src={jobs:jobs,estimates:estimates,clients:clients,leads:leads,logs:logs,changeOrders:changeOrders,expenses:expenses,crew:crew};
+    for(var k in src){ out[k]=(Array.isArray(src[k])?src[k]:[]).map(function(x){return x&&x.id;}).filter(Boolean); }
+  }catch(e){}
+  return out;
+})();
 var _saveTimer=null;
 function _acctKey(){return (typeof CURRENT_USER!=='undefined'&&CURRENT_USER&&CURRENT_USER.username)||'demo';}
 function dataKey(){return 'orcha_data_'+_acctKey();}
@@ -8068,10 +8083,14 @@ function omRecordDemoSeed(){
 function omHarvestDemo(){
   var out={},total=0;
   try{
-    var seed=JSON.parse(localStorage.getItem('om_demo_seed')||'{}');
+    var seed={};
+    try{ seed=JSON.parse(localStorage.getItem('om_demo_seed')||'{}')||{}; }catch(e2){ seed={}; }
+    var fixed=(typeof _OM_SEED_IDS==='object'&&_OM_SEED_IDS)||{};
     _OM_CARRY.forEach(function(k){
       var arr=window[k]; if(!Array.isArray(arr)) return;
-      var known={}; (seed[k]||[]).forEach(function(id){known[id]=1;});
+      var known={};
+      (seed[k]||[]).forEach(function(id){known[id]=1;});
+      (fixed[k]||[]).forEach(function(id){known[id]=1;});
       var mine=arr.filter(function(x){return x&&x.id&&!known[x.id];});
       if(mine.length){ out[k]=mine; total+=mine.length; }
     });

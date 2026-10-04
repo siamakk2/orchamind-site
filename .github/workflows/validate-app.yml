@@ -59,3 +59,6 @@ jobs:
 
       - name: Funnel tracks customers, never us
         run: node scripts/test-funnel.js
+
+      - name: Demo carry-over moves only what the visitor made
+        run: node scripts/test-demo-carry.js
