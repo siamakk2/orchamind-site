@@ -113,6 +113,17 @@ module.exports = async function handler(req, res) {
     // Daily automation.
     if (req.method === 'GET') {
       if (!CRON || String(q.key || '') !== CRON) return res.status(401).json({ ok: false, error: 'bad key' });
+      // Proof copy: the exact letter a customer would get, sent only to test_to,
+      // with nothing logged. ?test_to=EMAIL&username=U&kind=K
+      if (q.test_to) {
+        var tr = (await loadAll(String(q.username || '')))[0];
+        if (!tr) return res.status(200).json({ ok: false, error: 'No such account.' });
+        var tk = KINDS.indexOf(q.kind) > -1 ? q.kind : o.suggest(tr.acct);
+        var tm = letter(tr, tk);
+        var tres = await fetch('https://api.resend.com/emails', { method: 'POST', headers: { Authorization: 'Bearer ' + RESEND, 'Content-Type': 'application/json' },
+          body: JSON.stringify({ from: FROM, to: [String(q.test_to)], reply_to: REPLY_TO, subject: '[PROOF for ' + (tr.acct.company || tr.acct.username) + '] ' + tm.subject, html: tm.html, text: tm.text }) });
+        return res.status(200).json({ ok: tres.ok, kind: tk, subject: tm.subject, detail: tres.ok ? undefined : (await tres.text()).slice(0, 200) });
+      }
       var rows = await loadAll();
       var now = Date.now(), out = [];
       for (var i = 0; i < rows.length; i++) {
