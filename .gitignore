@@ -1,0 +1,10 @@
+# Local test dependencies. CI installs jsdom itself with `npm install --no-save
+# jsdom@24` (see .github/workflows/validate-app.yml), so the repo deliberately
+# carries no package manifest — running the guards locally should not add one.
+node_modules/
+package.json
+package-lock.json
+
+# Scratch
+*.log
+.DS_Store
