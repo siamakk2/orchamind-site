@@ -6,6 +6,7 @@ Disallow: /api/
 Disallow: /paid.html
 Disallow: /welcome.html
 Disallow: /bench/
+Disallow: /api/model-probe
 
 # ── Traditional search crawlers ──
 User-agent: Googlebot
