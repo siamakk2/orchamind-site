@@ -35,3 +35,9 @@ jobs:
 
       - name: Takeoff scoring is honest
         run: node scripts/test-bench-score.js
+
+      - name: Plan cross-check catches misreads
+        run: node scripts/test-plan-crosscheck.js
+
+      - name: Cross-check warning reaches the screen
+        run: node scripts/test-crosscheck-ui.js

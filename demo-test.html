@@ -10,7 +10,8 @@ gtag('consent','default',m({analytics_storage:d,region:'AT BE BG HR CY CZ DK EE 
 try{var c=JSON.parse(localStorage.getItem('sk_consent_v1'));if(c&&c.v===1&&Date.now()-c.ts<15552e6){var a=c.ads?g:d,n=c.analytics?g:d,f=c.functional?g:d;gtag('consent','update',{ad_storage:a,ad_user_data:a,ad_personalization:a,analytics_storage:n,functionality_storage:f,personalization_storage:f,security_storage:g});}}catch(e){}})();</script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Site Manager AI | Orchamind Demo</title>
-  <link rel="icon" href="/favicon.ico?v=4" sizes="any"><link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png?v=4"><link rel="icon" type="image/png" sizes="192x192" href="/icon-192.png?v=4">
+  <link rel="icon" href="/favicon.ico?v=4" sizes="any">
+  <script src="/lib/plan-crosscheck.js"></script><link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png?v=4"><link rel="icon" type="image/png" sizes="192x192" href="/icon-192.png?v=4">
   <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
 <meta name="description" content="AI-powered project management for Orchamind Demo">
 <meta name="robots" content="noindex, nofollow">
@@ -1750,6 +1751,7 @@ button:active, .btn:active, .btn-ghost:active, .tab:active, [role="button"]:acti
     <div id="estAiMsg" class="est-ai-msg"></div>
     <div id="estPlanRead"></div>
     <div id="estPlanQ"></div>
+    <div id="estPlanXCheck"></div>
     <div id="estPlanCompliance"></div>
     <div style="font-size:11px;color:var(--muted);margin-top:6px;">AI drafts are a starting point using typical regional pricing &mdash; not a bid. Verify quantities, apply your rates and confirm scope before sending.</div>
     <div id="estPreview" class="est-preview" style="display:none;">
@@ -4383,7 +4385,7 @@ function _planDemoOk(){
   return true;
 }
 var _planBlocks=null,_planDraft=null;
-function callClaudeBlocks(systemPrompt,blocks,cb,errCb,maxTokens,thinkBudget){
+function callClaudeBlocks(systemPrompt,blocks,cb,errCb,maxTokens,thinkBudget,tier){
   var mt=maxTokens||6000,acc="",tries=0,settled=false;
   var OVERALL_DEADLINE=Date.now()+290000; // just under the server's 300s cap — big multi-sheet plan sets legitimately take minutes
   function done(fn,arg){ if(settled)return; settled=true; fn&&fn(arg); }
@@ -4396,7 +4398,7 @@ function callClaudeBlocks(systemPrompt,blocks,cb,errCb,maxTokens,thinkBudget){
       done(errCb,'This plan is taking longer than the AI\u2019s current limit to read. Large, detailed PDFs are the most common cause \u2014 try a single page at a time, or snap clear photos of the key sheets instead.'); },TIMEOUT_MS);
     fetch("/api/claude",{method:"POST",headers:{"Content-Type":"application/json"},
       signal:ctrl?ctrl.signal:undefined,
-      body:(function(){var p={tier:"deep",max_tokens:mt,system:systemPrompt,messages:messages};if(thinkBudget)p.thinking={type:"enabled",budget_tokens:thinkBudget};var s=JSON.stringify(p);try{window._lastAiBodyBytes=s.length;}catch(e){}return s;})()
+      body:(function(){var p={tier:(tier||"deep"),max_tokens:mt,system:systemPrompt,messages:messages};if(thinkBudget)p.thinking={type:"enabled",budget_tokens:thinkBudget};var s=JSON.stringify(p);try{window._lastAiBodyBytes=s.length;}catch(e){}return s;})()
     }).then(function(r){return r.json();}).then(function(data){
       clearTimeout(timer);
       if(data&&data.error){done(errCb,typeof data.error==='string'?data.error:(data.error.message||'AI error'));return;}
@@ -4650,7 +4652,7 @@ function _planAnalyzeStaged(){
   if(!_planStaged.length){msg.textContent='Add at least one plan file first.';return;}
   if(!_planDemoOk()){msg.textContent="You've reached the demo's AI limit. The full version has unlimited AI - call Siamak at 323-657-7752 to get Orchamind for your business.";return;}
   if(btn){btn.disabled=true;btn.innerHTML='Reading\u2026';}
-  document.getElementById('estPlanQ').innerHTML='';var _epc=document.getElementById('estPlanCompliance');if(_epc)_epc.innerHTML='';_planDraft=null;
+  document.getElementById('estPlanQ').innerHTML='';var _epc=document.getElementById('estPlanCompliance');if(_epc)_epc.innerHTML='';var _exc=document.getElementById('estPlanXCheck');if(_exc)_exc.innerHTML='';window._planCrossCheck=null;_planDraft=null;
   var staged=_planStaged.slice();
   _planThinkStart(staged.map(function(s){return s.f;}));
   var fail=function(e){
@@ -4690,11 +4692,30 @@ function _planAnalyzeStaged(){
     var manifest='This plan set has '+staged.length+' file(s), in this order:\n'+manifestLines.join('\n')+
       '\nUse each sheet for its purpose: floor plans for rooms, dimensions and square footage; elevations for stories, roof form, glazing style and window counts; site plans for setbacks, drives and site work; blueprints/structural for framing and systems. Auto-detect means identify the sheet type yourself. Cross-check the sheets against each other and combine everything into ONE takeoff and estimate.';
     var scope=document.getElementById('estAiScope').value.trim();
-    // PASS 1 — pure transcription: read the printed schedules, count windows
-    // elevation-by-elevation, name the bedrooms. No math, no pricing.
+    // PASS 1 — pure transcription, read TWICE by two different models.
+    // A printed number has exactly one correct reading, so when two independent
+    // readers disagree, one of them misread it. That is the dropped-leading-digit
+    // bug ("1,156" read as "156"): it looks perfectly plausible downstream and
+    // poisons every quantity derived from it. Two readers rarely drop the same digit.
     var blocks1=[{type:"text",text:manifest}].concat(media).concat([{type:"text",text:'Transcribe these plan sheets per your instructions. JSON only.'}]);
-    callClaudeBlocks(_planExtractSys(),blocks1,function(extText){
-      var extracted=_estParseJSON(extText);
+    var _xcPrimary=null,_xcSecond=null,_xcPending=2,_xcGone=false;
+    function _xcSettle(){
+      if(_xcGone)return; if(--_xcPending>0)return; _xcGone=true;
+      if(!_xcPrimary){ fail('Could not read the plan sheets. Try a single page at a time, or clearer photos.'); return; }
+      var xc=null;
+      try{ if(window.OrchaCrossCheck&&_xcSecond) xc=window.OrchaCrossCheck.crossCheck(_xcPrimary,_xcSecond); }catch(e){}
+      window._planCrossCheck=xc;
+      try{ _planRenderCrossCheck(xc); }catch(e){}
+      _planAfterExtract(_xcPrimary);
+    }
+    callClaudeBlocks(_planExtractSys(),blocks1,function(t){ try{_xcPrimary=_estParseJSON(t);}catch(e){_xcPrimary=null;} _xcSettle(); },
+      function(){ _xcPrimary=null; _xcSettle(); },10000,4000,'deep');
+    // The second reader is deliberately a DIFFERENT model: a cheaper one that fails
+    // differently is worth far more here than a second opinion from the same mind.
+    // If it falls over we proceed on the primary read alone and say nothing.
+    callClaudeBlocks(_planExtractSys(),blocks1,function(t){ try{_xcSecond=_estParseJSON(t);}catch(e){_xcSecond=null;} _xcSettle(); },
+      function(){ _xcSecond=null; _xcSettle(); },10000,4000,'std');
+    function _planAfterExtract(extracted){
       window._planExtracted=extracted; window._planFromPlans=true;
       var extNote=extracted?('VERIFIED TRANSCRIPTION OF THE PRINTED PLAN DATA (a careful first pass already read these exact sheets — treat this as ground truth and stay consistent with it; if you see a clear transcription error, correct it and say so in "assumptions"):\n'+JSON.stringify(extracted)):'';
       // PASS 2 — the takeoff & estimate, locked to the transcription
@@ -4703,8 +4724,8 @@ function _planAnalyzeStaged(){
       callClaudeBlocks(_planSys(),blocks2,function(text){
         _planThinkStop();if(btn){btn.disabled=false;btn.innerHTML='\u2728 Read plan set &amp; draft estimate';}
         try{_planApply(text,msg);_planStageClear();}catch(e){msg.textContent='Read the plans but could not build the estimate ('+(e.message||'error')+'). Try again or add a short description.';}
-      },fail,12000,4000);
-    },fail,10000,4000);
+      },fail,12000,4000,'deep');
+    }
   }
   staged.forEach(function(s,i){
     if(s.f.type==='application/pdf'){
@@ -4877,6 +4898,32 @@ function _planApply(text,msg){
   _p3dGrow=0;_p3dGrowT0=Date.now();_plan3dBtn();
   _planRenderQ(obj.questions||[]);
   _planRenderCompliance(obj.complianceFlags||[]);
+}
+function _planRenderCrossCheck(xc){
+  var c=document.getElementById('estPlanXCheck');if(!c)return;
+  if(!xc||xc.unavailable||!xc.checked){c.innerHTML='';return;}
+  if(xc.agreed){
+    c.innerHTML='<div style="background:#EAF6EF;border:1px solid #BFE3CE;border-radius:10px;padding:9px 12px;margin:8px 0;font-size:12.5px;color:#17633C;">'+
+      '<b>&#10003; Cross-checked.</b> Two independent reads of these sheets agreed on all '+xc.checked+' printed values checked '+
+      '(square footage, stories, area schedule, window counts, roof form).</div>';
+    return;
+  }
+  var crit=xc.conflicts.filter(function(f){return f.severity==='critical';});
+  var warn=xc.conflicts.filter(function(f){return f.severity!=='critical';});
+  function row(f){
+    var a=(f.a==null?'not found':f.a), b=(f.b==null?'not found':f.b);
+    return '<li><b>'+esc(f.label)+':</b> one read gave <b>'+esc(String(a))+'</b>, the other <b>'+esc(String(b))+'</b>.'+
+      (f.note?(' <span style="opacity:.8">'+esc(f.note)+'</span>'):'')+'</li>';
+  }
+  var head = crit.length
+    ? '<b>&#9888; Check these numbers on the sheet.</b> Two independent reads disagreed, so one of them misread something. The estimate uses the first read &mdash; confirm before you bid:'
+    : '<b>Two reads differed on a few details.</b> Nothing load-bearing, but worth a glance:';
+  var bg = crit.length ? '#FDF3F0' : '#FFF8E6';
+  var bd = crit.length ? '#E8B8AC' : '#F2D98C';
+  c.innerHTML='<div style="background:'+bg+';border:1px solid '+bd+';border-radius:10px;padding:10px 12px;margin:8px 0;font-size:12.5px;">'+
+    head+'<ul style="margin:6px 0 0;padding-left:18px;">'+
+    crit.map(row).join('')+warn.map(row).join('')+
+    '</ul><div style="margin-top:7px;opacity:.75;">'+(xc.checked-xc.conflicts.length)+' of '+xc.checked+' checked values agreed.</div></div>';
 }
 function _planRenderCompliance(flags){
   var c=document.getElementById('estPlanCompliance');if(!c)return;
