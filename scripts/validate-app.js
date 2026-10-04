@@ -112,9 +112,12 @@ if (FILES.every(f => fs.existsSync(path.join(ROOT, f)))) {
 // the day a provider announces its shutdown, so CI blocks the next push that
 // still references it. Keep the reason — the next person needs to know why.
 // ---------------------------------------------------------------------------
+// ONLY models a provider has actually shut down. A model that still serves
+// belongs nowhere near this list: this guard exists to catch an outage, not to
+// enforce a preference for newer models. Listing a working model here blocked an
+// emergency rollback once; do not do it again.
 const RETIRED_MODELS = {
   'gemini-2.5-flash-image': 'shutdown 2026-10-02 — use gemini-3.1-flash-image',
-  'claude-sonnet-4-6': 'superseded by claude-sonnet-5-5 (cheaper and newer)',
   'claude-3-5-sonnet': 'long retired',
   'claude-3-opus': 'long retired',
   'gemini-1.5-flash': 'long retired',
