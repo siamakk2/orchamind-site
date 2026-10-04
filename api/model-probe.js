@@ -130,7 +130,7 @@ module.exports = async function handler(req, res) {
   // Production sends a tiled plan set, not one sheet. The easy single-sheet
   // case passed on every model and still did not reproduce the failure, so the
   // probe can repeat the sheet to recreate that pressure.
-  var blocks = Math.min(Math.max(parseInt((req.query && req.query.blocks) || '1', 10) || 1, 1), 16);
+  var imgCount = Math.min(Math.max(parseInt((req.query && req.query.blocks) || '1', 10) || 1, 1), 16);
 
   // ---- PLAN MODE: the real thing ------------------------------------------
   // Reads a synthetic sheet whose numbers we wrote ourselves, using the REAL
@@ -225,16 +225,16 @@ module.exports = async function handler(req, res) {
     var content = USER;
     if (planMode) {
       content = [];
-      for (var b = 0; b < blocks; b++) {
+      for (var ib = 0; ib < imgCount; ib++) {
         content.push({ type: 'image', source: { type: 'base64', media_type: 'image/png', data: planImg } });
       }
-      content.push({ type: 'text', text: 'Transcribe ' + (blocks > 1 ? ('these ' + blocks + ' plan sheets') : 'this plan sheet')
+      content.push({ type: 'text', text: 'Transcribe ' + (imgCount > 1 ? ('these ' + imgCount + ' plan sheets') : 'this plan sheet')
         + ' per your instructions. JSON only.' });
     }
     var payload = { model: model, max_tokens: maxTok, system: SYSTEM, messages: [{ role: 'user', content: content }] };
     if (withEffort) payload.effort = 'medium';
     var started = Date.now();
-    var row = { model: model, ms: 0, blocks: planMode ? blocks : 0 };
+    var row = { model: model, ms: 0, blocks: planMode ? imgCount : 0 };
     try {
       var r = await fetch('https://api.anthropic.com/v1/messages', {
         method: 'POST',
@@ -247,24 +247,31 @@ module.exports = async function handler(req, res) {
       if (data && data.error) {
         row.error = (data.error.message || JSON.stringify(data.error)).slice(0, 400);
       } else {
-        var blocks = Array.isArray(data.content) ? data.content : [];
+        var cblocks = Array.isArray(data.content) ? data.content : [];
         // THE question this probe exists to answer: what block types come back,
         // and is there any text in them?
-        row.blockTypes = blocks.map(function (b) { return b && b.type; });
-        row.blockSizes = blocks.map(function (b) {
-          return b && b.type === 'text' ? String(b.text || '').length
-               : JSON.stringify(b || {}).length;
+        row.blockTypes = cblocks.map(function (cb) { return cb && cb.type; });
+        row.blockSizes = cblocks.map(function (cb) {
+          return cb && cb.type === 'text' ? String(cb.text || '').length
+               : JSON.stringify(cb || {}).length;
         });
         row.stop = data.stop_reason;
         row.usage = data.usage || null;
-        var text = blocks.filter(function (b) { return b && b.type === 'text'; })
-                         .map(function (b) { return b.text; }).join('\n');
+        var text = cblocks.filter(function (cb) { return cb && cb.type === 'text'; })
+                          .map(function (cb) { return cb.text; }).join('\n');
         row.textLen = text.length;
         row.textHead = text.slice(0, 700);
         var parsed = estParseJSON(text);
         row.parsed = !!parsed;
         row.parsedKeys = parsed ? Object.keys(parsed) : [];
-        if (planMode) row.grade = gradePlan(parsed);
+        if (planMode) {
+          row.grade = gradePlan(parsed);
+          // If the model says it received no drawing, the probe is at fault, not
+          // the model. Say so rather than recording a 0 that looks like a verdict.
+          if (/no (plan sheet|image|drawing)[^.]{0,40}(attached|provided|included)/i.test(text)) {
+            row.probeFault = 'The model reports it received no image. The probe failed to attach one; this score is meaningless.';
+          }
+        }
       }
     } catch (e) {
       row.ms = Date.now() - started;
@@ -289,7 +296,7 @@ module.exports = async function handler(req, res) {
     res.setHeader('Content-Type', 'application/json');
     res.setHeader('Cache-Control', 'no-store');
     return res.end(JSON.stringify({
-      ok: true, planMode: planMode, blocks: planMode ? blocks : 0,
+      ok: true, planMode: planMode, blocks: planMode ? imgCount : 0,
       maxTokens: maxTok, promptSource: promptSource, note: tokenNote, results: out
     }, null, 2));
   }
