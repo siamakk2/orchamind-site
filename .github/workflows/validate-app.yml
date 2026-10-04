@@ -53,3 +53,6 @@ jobs:
 
       - name: Quantity panel is wired and cannot break the estimate
         run: node scripts/test-qty-ui.js
+
+      - name: Every AI feature reply parses into what its caller needs
+        run: node scripts/test-parser-callers.js

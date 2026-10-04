@@ -5329,13 +5329,25 @@ function _estParseJSON(text){
     try{ return JSON.parse(strip(s)); }catch(e){}
     return null;
   }
-  // How much do we want this object? A real takeoff has priced line items.
-  function score(o){
+  // Which candidate is the answer? Three tiers, then SIZE within a tier:
+  //   3  carries a result list a feature needs: items, tiers, selections, certs
+  //   2  carries a named result: notes, assumptions, questions, topic, kind
+  //   1  any other non-empty object -- e.g. a plan transcription, a job report
+  // Within a tier the larger span wins, so a wrapper beats its own children
+  // (Good-Better-Best returns {"tiers":[...]}, not one tier) and a takeoff still
+  // beats a stray trailing {"stories":1}.
+  // The previous version scored anything without items/notes as ZERO, which can
+  // never win. That silently discarded every plan transcription and broke
+  // Good-Better-Best, Measure Materials, Job Report, Selections, Toolbox Talk and
+  // Compliance suggestions. scripts/test-parser-callers.js now guards all of them.
+  function score(o,span){
     if(!o||typeof o!=='object'||Array.isArray(o)) return -1;
-    var n=(o.items&&o.items.length)||0;
-    if(n) return 1000+n;                       // a takeoff always wins
-    if(o.notes||o.assumptions||o.questions) return 10;
-    return 0;                                   // a stray {"stories":1} loses
+    if(!Object.keys(o).length) return 0;
+    var size=Math.min(span||0,9999999)/1e7;   // always < 1: a tie-break, never a tier jump
+    var list=function(x){return Array.isArray(x)&&x.length>0;};
+    if(list(o.items)||list(o.tiers)||list(o.selections)||list(o.certs)) return 3+size;
+    if(o.notes||o.assumptions||o.questions||o.topic||o.kind) return 2+size;
+    return 1+size;
   }
 
   // Scan forward from `from`, returning the index just past the balanced close.
@@ -5359,13 +5371,17 @@ function _estParseJSON(text){
     var end=balancedEnd(t,starts[i]);
     if(end<0) continue;
     var obj=tryParse(t.slice(starts[i],end));
-    var sc=score(obj);
+    var sc=score(obj,end-starts[i]);
     if(sc>bestScore){ bestScore=sc; best=obj; }
     if(bestScore>1000 && starts[i]>0) { /* keep looking for a bigger takeoff */ }
   }
-  if(best) return best;
+  // The best COMPLETE object may still be a fragment of a reply that was cut off
+  // -- one line item of a truncated takeoff, one tier of a truncated
+  // Good-Better-Best. Always also try the repair below and keep whichever ranks
+  // higher. Repair only closes brackets on a prefix of the reply, so it can never
+  // outrank a reply that actually arrived whole.
 
-  // Nothing balanced parsed. The reply was probably cut off mid-object:
+  // The reply may have been cut off mid-object:
   // reopen from a '{' that looks like a takeoff and close the structure.
   var head=t.search(/\{[\s\S]{0,400}?"items"\s*:/);
   if(head<0) head=t.indexOf('{');
@@ -5387,9 +5403,9 @@ function _estParseJSON(text){
     var closed=frag;
     for(var z=stack.length-1;z>=0;z--) closed+=stack[z];
     var o2=tryParse(closed);
-    if(score(o2)>0) return o2;
+    if(score(o2,closed.length)>bestScore) return o2;
   }
-  return null;
+  return best;
 }
 var _estJsonBest=1;  /* marker: robust extractor installed */
 
