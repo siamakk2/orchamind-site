@@ -22,6 +22,10 @@ var REST = 'https://yqbprvyhzugdmavvurqb.supabase.co/rest/v1';
 var KINDS = ['welcome', 'checkin', 'ending', 'winback'];
 
 module.exports = async function handler(req, res) {
+  // Every call must run: a cached answer would make the daily run silently do nothing.
+  res.setHeader('Cache-Control', 'no-store, max-age=0');
+  res.setHeader('CDN-Cache-Control', 'no-store');
+  res.setHeader('Vercel-CDN-Cache-Control', 'no-store');
   var KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SECRET_KEY || process.env.SUPABASE_SERVICE_KEY;
   var RESEND = process.env.RESEND_API_KEY;
   var CRON = process.env.OUTREACH_CRON_KEY;
