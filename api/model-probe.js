@@ -88,9 +88,36 @@ module.exports = async function handler(req, res) {
       sess = { username: parts[0] };
     }
   }
-  if (!sess || sess.username !== OPERATOR) {
+  // Second door: a single-use token. The cookie gate means the probe can only be
+  // run from a browser, which made verification depend on someone clicking --
+  // and "I could not test it myself" is exactly how a broken estimator reached
+  // production. A token unlocks THIS diagnostic and nothing else: no customer
+  // data, no writes, one use, two hours.
+  var tokenOk = false, tokenNote = '';
+  var tok = (req.query && req.query.token) ? String(req.query.token) : '';
+  if (!sess && tok && /^[a-f0-9]{32,64}$/.test(tok)) {
+    try {
+      var tr = await fetch(SB_URL + '/rest/v1/probe_tokens?token=eq.' + encodeURIComponent(tok) + '&select=*', {
+        headers: { apikey: KEY, Authorization: 'Bearer ' + KEY, Accept: 'application/json' }
+      });
+      var rowsT = await tr.json();
+      var trow = Array.isArray(rowsT) && rowsT[0];
+      if (trow && !trow.used_at && new Date(trow.expires_at).getTime() > Date.now()) {
+        tokenOk = true;
+        tokenNote = trow.note || '';
+        // Burn it immediately, before doing any work, so a retry cannot reuse it.
+        await fetch(SB_URL + '/rest/v1/probe_tokens?token=eq.' + encodeURIComponent(tok), {
+          method: 'PATCH',
+          headers: { apikey: KEY, Authorization: 'Bearer ' + KEY, 'Content-Type': 'application/json', Prefer: 'return=minimal' },
+          body: JSON.stringify({ used_at: new Date().toISOString() })
+        });
+      }
+    } catch (e) {}
+  }
+
+  if (!(sess && sess.username === OPERATOR) && !tokenOk) {
     res.statusCode = 403;
-    return page('<h1>Not authorised</h1><p>Sign in as the operator account, then reload.</p>');
+    return page('<h1>Not authorised</h1><p>Sign in as the operator account, or supply a valid single-use token.</p>');
   }
   if (!APIKEY) return page('<h1>Not configured</h1><p>ANTHROPIC_API_KEY missing.</p>');
 
@@ -257,6 +284,15 @@ module.exports = async function handler(req, res) {
       body: JSON.stringify({ id: 'probe_' + Date.now().toString(36), kind: 'model-probe', result: out })
     });
   } catch (e) {}
+
+  if (req.query && req.query.json) {
+    res.setHeader('Content-Type', 'application/json');
+    res.setHeader('Cache-Control', 'no-store');
+    return res.end(JSON.stringify({
+      ok: true, planMode: planMode, blocks: planMode ? blocks : 0,
+      maxTokens: maxTok, promptSource: promptSource, note: tokenNote, results: out
+    }, null, 2));
+  }
 
   var rows = out.map(function (o) {
     if (o.error) {
