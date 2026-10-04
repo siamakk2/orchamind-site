@@ -212,9 +212,22 @@ module.exports = async function handler(req, res) {
     ['MAIN FLOOR', 'UPPER FLOOR', 'GARAGE', 'COVERED PORCH'].forEach(function (k) {
       add('area: ' + k, sched[k], TRUTH.areaSchedule[k], near(sched[k], TRUTH.areaSchedule[k], 0.005));
     });
+    // The shipped prompt returns windowSchedule and elevations, NOT "windows".
+    // Grading against a field the prompt never promised marked all three models
+    // wrong for an error that was entirely mine.
     var wt = null;
-    if (Array.isArray(o.windows)) wt = o.windows.reduce(function (s2, w) { return s2 + (Number(w && (w.count != null ? w.count : w.qty)) || 0); }, 0);
-    else if (typeof o.windows === 'number') wt = o.windows;
+    if (Array.isArray(o.windowSchedule) && o.windowSchedule.length) {
+      wt = o.windowSchedule.reduce(function (s2, w) { return s2 + (Number(w && w.count) || 0); }, 0);
+    } else if (o.elevations && typeof o.elevations === 'object') {
+      var sides = ['front', 'back', 'rear', 'left', 'right'], seen = 0, tot = 0;
+      sides.forEach(function (k) {
+        var e = o.elevations[k];
+        if (e && typeof e === 'object' && e.windows != null) { tot += Number(e.windows) || 0; seen++; }
+      });
+      if (seen) wt = tot;
+    } else if (Array.isArray(o.windows)) {
+      wt = o.windows.reduce(function (s2, w) { return s2 + (Number(w && (w.count != null ? w.count : w.qty)) || 0); }, 0);
+    } else if (typeof o.windows === 'number') { wt = o.windows; }
     add('windows total', wt, TRUTH.windowsTotal, Number(wt) === TRUTH.windowsTotal);
     return { score: hit, of: rows.length, rows: rows };
   }
