@@ -219,6 +219,112 @@ t('reproduces a published-style score shape', function () {
   approx(r.composite, Math.pow(0.7, 0.4) * Math.pow(4 / 7, 0.6), 1e-9);
 });
 
+
+// ---- dollar mode -----------------------------------------------------------
+// Most contractors have cost history, not quantity history. Scoring their data
+// against quantities would report zero and look like a broken estimator.
+
+console.log('\nbench-score · dollar mode');
+
+t('detects cost-history truth (totals, no quantities)', function () {
+  assert.ok(S.looksLikeDollarTruth([
+    { trade: 'Framing', item: 'Framing', total: 84000 },
+    { trade: 'Roofing', item: 'Roofing', total: 31000 }
+  ]));
+});
+
+t('does not mistake quantity truth for cost history', function () {
+  assert.ok(!S.looksLikeDollarTruth([
+    { trade: 'Framing', item: '2x6 stud wall', unit: 'LF', qty: 420, total: 8400 },
+    { trade: 'Roofing', item: 'Shingles', unit: 'SQ', qty: 32, total: 9600 }
+  ]));
+});
+
+t('scoreAuto picks dollar mode on cost history', function () {
+  var r = S.scoreAuto(
+    [{ trade: 'Framing', item: 'Framing', total: 84000 }],
+    [{ trade: 'Framing', item: '2x6 stud wall', qty: 420, unit_cost: 200 }], {});
+  assert.strictEqual(r.mode, 'dollars');
+});
+
+t('scoreAuto stays in quantity mode when quantities exist', function () {
+  var r = S.scoreAuto(
+    [{ trade: 'Framing', item: '2x6 stud wall', unit: 'LF', qty: 420 }],
+    [{ trade: 'Framing', item: '2x6 stud wall', unit: 'LF', qty: 420 }], {});
+  assert.strictEqual(r.mode, 'quantity');
+  approx(r.coverage, 1);
+});
+
+t('sums many predicted lines into one truth trade', function () {
+  var r = S.scoreDollars(
+    [{ trade: 'Framing', item: 'Framing', total: 100000 }],
+    [{ trade: 'Framing', item: 'studs', total: 60000 },
+     { trade: 'Framing', item: 'sheathing', total: 40000 }], {});
+  approx(r.coverage, 1);
+  approx(r.precision25, 1);
+  approx(r.detail.matched[0].predQty, 100000);
+});
+
+t('a trade we produced nothing for is a miss', function () {
+  var r = S.scoreDollars(
+    [{ trade: 'Framing', item: 'Framing', total: 100000 },
+     { trade: 'Roofing', item: 'Roofing', total: 30000 }],
+    [{ trade: 'Framing', item: 'studs', total: 100000 }], {});
+  approx(r.coverage, 0.5);
+  assert.strictEqual(r.detail.missed.length, 1);
+  assert.strictEqual(r.detail.missed[0].trade, 'roofing');
+});
+
+t('a trade priced badly costs precision, not coverage', function () {
+  var r = S.scoreDollars(
+    [{ trade: 'Framing', item: 'Framing', total: 100000 }],
+    [{ trade: 'Framing', item: 'studs', total: 250000 }], {});
+  approx(r.coverage, 1);
+  approx(r.precision25, 0);
+});
+
+t('matches trade labels that differ in wording', function () {
+  var r = S.scoreDollars(
+    [{ trade: 'Rough Framing', item: 'Rough Framing', total: 100000 }],
+    [{ trade: 'framing rough', item: 'x', total: 100000 }], {});
+  approx(r.coverage, 1);
+});
+
+t('a trade we invented is reported as extra', function () {
+  var r = S.scoreDollars(
+    [{ trade: 'Framing', item: 'Framing', total: 100000 }],
+    [{ trade: 'Framing', item: 'studs', total: 100000 },
+     { trade: 'Landscaping', item: 'sod', total: 9000 }], {});
+  assert.strictEqual(r.detail.extra.length, 1);
+  assert.strictEqual(r.detail.extra[0].trade, 'landscaping');
+});
+
+t('falls back to the truth sum when no bid total was entered', function () {
+  var r = S.scoreDollars(
+    [{ trade: 'Framing', item: 'Framing', total: 100000 },
+     { trade: 'Roofing', item: 'Roofing', total: 40000 }],
+    [{ trade: 'Framing', item: 'x', total: 100000 },
+     { trade: 'Roofing', item: 'y', total: 40000 }], {});
+  approx(r.bidTotal, 140000);
+  approx(r.totalDelta, 0);
+});
+
+t('reports dollars per trade so a gap is visible in money', function () {
+  var r = S.scoreDollars(
+    [{ trade: 'Framing', item: 'Framing', total: 100000 }],
+    [{ trade: 'Framing', item: 'x', total: 70000 }], {});
+  approx(r.byTrade.framing.truthDollars, 100000);
+  approx(r.byTrade.framing.predDollars, 70000);
+});
+
+t('one truth trade cannot be matched by two predicted trades', function () {
+  var r = S.scoreDollars(
+    [{ trade: 'Framing', item: 'Framing', total: 100000 }],
+    [{ trade: 'Framing', item: 'a', total: 50000 },
+     { trade: 'Framing work', item: 'b', total: 50000 }], {});
+  assert.strictEqual(r.matchedItems, 1);
+});
+
 if (failures.length) {
   console.error('\n❌  bench-score FAILED:\n');
   failures.forEach(function (f) { console.error('   • ' + f); });

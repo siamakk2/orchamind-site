@@ -179,7 +179,8 @@ module.exports = async function handler(req, res) {
       var tins = await sb('/bench_truth', { method: 'POST', headers: Object.assign({}, H, { Prefer: 'return=minimal' }), body: JSON.stringify(items) });
       if (tins.status >= 300) return res.status(200).json({ ok: false, error: 'Could not save truth: ' + tins.raw.slice(0, 200) });
       var primary = items.filter(function (x) { return x.tier === 'primary'; }).length;
-      return res.status(200).json({ ok: true, saved: items.length, primary: primary, columns: Object.keys(idx) });
+      var mode = SCORER.looksLikeDollarTruth(items) ? 'dollars' : 'quantity';
+      return res.status(200).json({ ok: true, saved: items.length, primary: primary, columns: Object.keys(idx), mode: mode });
     }
 
     // ---- one set with its truth ------------------------------------------
@@ -217,17 +218,19 @@ module.exports = async function handler(req, res) {
         })
       });
 
-      var m = SCORER.score(truthRows, predicted, { bidTotal: setRow.total_bid });
+      // scoreAuto picks quantity vs dollar mode from the shape of the ground
+      // truth, so cost-history data gets a real measurement instead of a zero.
+      var m = SCORER.scoreAuto(truthRows, predicted, { bidTotal: setRow.total_bid, mode: body.mode || null });
       await sb('/bench_results', {
         method: 'POST', headers: Object.assign({}, H, { Prefer: 'return=minimal' }),
         body: JSON.stringify({
           run_id: runId, set_id: rid,
           coverage: m.coverage, precision_10: m.precision10, precision_25: m.precision25,
-          composite: m.composite, total_delta: m.totalDelta,
+          composite: m.composite, total_delta: m.totalDelta, mode: m.mode,
           by_trade: m.byTrade, detail: m.detail
         })
       });
-      console.log('[bench] scored', runId, 'cov', m.coverage.toFixed(3), 'p25', m.precision25.toFixed(3), 'comp', m.composite.toFixed(3));
+      console.log('[bench] scored', runId, m.mode, 'cov', m.coverage.toFixed(3), 'p25', m.precision25.toFixed(3), 'comp', m.composite.toFixed(3));
       return res.status(200).json({ ok: true, runId: runId, metrics: m });
     }
 

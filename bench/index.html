@@ -128,7 +128,8 @@
           anything works: <b>trade/division</b>, <b>item/description</b>, <b>unit/uom</b>,
           <b>qty/quantity</b>, <b>unit_cost/rate</b>, <b>total/extended</b>, and optionally
           <b>tier</b> (<code>primary</code> scores, <code>optional</code> doesn't). Saving replaces
-          whatever is there.</div>
+          whatever is there.<br><b>Only have costs, not quantities?</b> That's fine &mdash; give trade and
+          total and it scores spend per trade instead. Most cost history looks like that.</div>
         <textarea id="truthCsv" rows="7" placeholder="trade,item,unit,qty,unit_cost,total
 Framing,&quot;2x6 stud wall, exterior&quot;,LF,420,20,8400
 Roofing,Asphalt shingles,SQ,32,300,9600"></textarea>
@@ -154,6 +155,7 @@ Roofing,Asphalt shingles,SQ,32,300,9600"></textarea>
 
       <div id="scoreBox" style="display:none">
         <h2>Result</h2>
+        <div id="modeBanner"></div>
         <div class="tiles" id="tiles"></div>
 
         <div class="card" style="margin-top:14px">
@@ -258,10 +260,17 @@ Roofing,Asphalt shingles,SQ,32,300,9600"></textarea>
     $('scoreBox').style.display='';
     var deltaNote = m.totalDelta==null ? 'no bid total on this set'
       : (m.totalDelta>0?'over':'under')+' the real bid';
+    var dollars = m.mode==='dollars';
+    // The mode has to travel with the number. A dollar-mode composite and a
+    // quantity-mode composite measure different things and must never be read
+    // as the same score.
+    $('modeBanner').innerHTML = dollars
+      ? '<div class="msg info" style="display:block;margin:0 0 12px">Scored in <b>dollar mode</b> \u2014 your ground truth is cost history, so coverage means \u201cdid we produce work in this trade at all\u201d and precision compares <b>spend per trade</b>, not quantities. Coarser than per-item scoring. Do not compare these numbers to a quantity-mode run.</div>'
+      : '<div class="msg info" style="display:block;margin:0 0 12px">Scored in <b>quantity mode</b> \u2014 per-item quantities compared against the bid.</div>';
     $('tiles').innerHTML=[
       ['Composite', pct(m.composite), 'precision-weighted'],
-      ['Coverage', pct(m.coverage), m.matchedItems+' of '+m.eligibleItems+' found'],
-      ['Precision ±25%', pct(m.precision25), 'of what we found'],
+      ['Coverage', pct(m.coverage), m.matchedItems+' of '+m.eligibleItems+(dollars?' trades covered':' found')],
+      ['Precision ±25%', pct(m.precision25), dollars?'trade spend within ±25%':'of what we found'],
       ['Precision ±10%', pct(m.precision10), 'the tighter bar'],
       ['Our total', money(m.predictedTotal), m.totalDelta==null?deltaNote:(m.totalDelta>0?'+':'')+(m.totalDelta*100).toFixed(1)+'% '+deltaNote]
     ].map(function(t){
@@ -270,11 +279,11 @@ Roofing,Asphalt shingles,SQ,32,300,9600"></textarea>
 
     var trades=Object.keys(m.byTrade||{}).sort();
     $('byTrade').innerHTML = trades.length
-      ? '<table><thead><tr><th>Trade</th><th>Coverage</th><th>Precision ±25%</th><th class="num">Lines</th></tr></thead><tbody>'
+      ? '<table><thead><tr><th>Trade</th><th>Coverage</th><th>Precision ±25%</th><th class="num">'+(dollars?'Real $ / ours':'Lines')+'</th></tr></thead><tbody>'
         + trades.map(function(k){ var b=m.byTrade[k];
             return '<tr><td>'+esc(k)+'</td><td style="width:30%">'+bar(b.coverage,'var(--cov)')+'</td>'
                  + '<td style="width:30%">'+bar(b.precision25,'var(--prec)')+'</td>'
-                 + '<td class="num">'+b.matched+'/'+b.truth+'</td></tr>'; }).join('')
+                 + '<td class="num">'+(dollars?(money(b.truthDollars)+' / '+money(b.predDollars)):(b.matched+'/'+b.truth))+'</td></tr>'; }).join('')
         + '</tbody></table>'
       : '<div class="empty">No trades recorded on the ground truth.</div>';
 
@@ -295,7 +304,7 @@ Roofing,Asphalt shingles,SQ,32,300,9600"></textarea>
 
     $('matchedSummary').textContent='Matched lines ('+(d.matched||[]).length+')';
     $('matched').innerHTML=(d.matched||[]).length
-      ? '<table><thead><tr><th>Item</th><th>Read as</th><th class="num">Real</th><th class="num">Ours</th><th class="num">Off by</th></tr></thead><tbody>'
+      ? '<table><thead><tr><th>'+(dollars?'Trade':'Item')+'</th><th>Read as</th><th class="num">Real'+(dollars?' $':'')+'</th><th class="num">Ours</th><th class="num">Off by</th></tr></thead><tbody>'
         + d.matched.map(function(x){
             var off = (x.truthQty&&x.predQty!=null) ? ((x.predQty-x.truthQty)/x.truthQty*100) : null;
             var col = x.within10?'var(--prec)':(x.within25?'var(--warn)':'var(--bad)');
@@ -311,7 +320,7 @@ Roofing,Asphalt shingles,SQ,32,300,9600"></textarea>
     api('runs',{setId:state.setId}).then(function(d){
       var el=$('history');
       if(!d.ok||!(d.runs||[]).length){ el.innerHTML='<div class="empty">No runs yet.</div>'; return; }
-      el.innerHTML='<table><thead><tr><th>Run</th><th class="num">Composite</th><th class="num">Coverage</th><th class="num">±25%</th><th class="num">±10%</th><th class="num">$ delta</th><th>When</th></tr></thead><tbody>'
+      el.innerHTML='<table><thead><tr><th>Run</th><th>Mode</th><th class="num">Composite</th><th class="num">Coverage</th><th class="num">±25%</th><th class="num">±10%</th><th class="num">$ delta</th><th>When</th></tr></thead><tbody>'
         + d.runs.map(function(r){ var m=r.result||{};
             return '<tr><td>'+esc(r.label||r.id)+'</td>'
               +'<td class="num"><b>'+pct(m.composite)+'</b></td><td class="num">'+pct(m.coverage)+'</td>'
@@ -349,7 +358,8 @@ Roofing,Asphalt shingles,SQ,32,300,9600"></textarea>
     api('truth',{setId:state.setId,csv:csv}).then(function(d){
       b.disabled=false;
       if(!d.ok){ show($('truthMsg'),'err',d.error); return; }
-      show($('truthMsg'),'ok','Saved '+d.saved+' line items ('+d.primary+' scoring). Columns read: '+(d.columns||[]).join(', '));
+      show($('truthMsg'),'ok','Saved '+d.saved+' line items ('+d.primary+' scoring). Columns read: '+(d.columns||[]).join(', ')
+        +'. This will score in '+(d.mode==='dollars'?'DOLLAR mode (spend per trade — you gave costs, not quantities)':'QUANTITY mode')+'.');
       $('truthCount').textContent=d.saved+' line items · '+d.primary+' scoring';
     }).catch(function(e){ b.disabled=false; show($('truthMsg'),'err',e.message); });
   };
