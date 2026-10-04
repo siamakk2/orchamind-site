@@ -159,6 +159,12 @@
     },
     "api/audit.js": {
       "maxDuration": 120
+    },
+    "api/smoke.js": {
+      "maxDuration": 300
+    },
+    "api/model-probe.js": {
+      "maxDuration": 300
     }
   }
 }
