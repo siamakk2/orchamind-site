@@ -1,0 +1,410 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Takeoff Accuracy Bench</title>
+<link rel="icon" href="/favicon.ico?v=4" sizes="any">
+<style>
+  /* Two categorical hues, validated: blue/green pass lightness, chroma, CVD
+     separation (ΔE 25.9 deutan) and contrast against this surface. Every bar
+     also carries a printed number, so identity never rests on colour alone. */
+  :root{
+    --surface:#fcfcfb; --card:#ffffff; --ink:#0A1628; --ink2:#44506a; --muted:#8a94a8;
+    --line:#E1E8F0; --cov:#2D7FF9; --prec:#2E9B5B; --warn:#B45309; --bad:#B42318;
+    --radius:12px;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--surface);color:var(--ink);
+       font:15px/1.55 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+       -webkit-font-smoothing:antialiased}
+  .wrap{max-width:1040px;margin:0 auto;padding:28px 16px 80px}
+  header{border-bottom:1px solid var(--line);padding-bottom:18px;margin-bottom:26px}
+  .eyebrow{font-size:12px;letter-spacing:.09em;text-transform:uppercase;color:var(--muted);font-weight:600}
+  h1{font-size:26px;margin:6px 0 4px;letter-spacing:-.02em}
+  .sub{color:var(--ink2);font-size:14px;margin:0;max-width:62ch}
+  h2{font-size:17px;margin:30px 0 12px;letter-spacing:-.01em}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:18px}
+  .card + .card{margin-top:14px}
+  label{display:block;font-size:13px;font-weight:600;margin:0 0 5px;color:var(--ink)}
+  .hint{font-size:12.5px;color:var(--muted);font-weight:400;margin:-2px 0 6px}
+  input,textarea,select{width:100%;border:1.5px solid var(--line);border-radius:9px;padding:10px 12px;
+    font:inherit;font-size:14px;outline:none;background:#fff;color:var(--ink)}
+  input:focus,textarea:focus,select:focus{border-color:var(--cov)}
+  textarea{resize:vertical;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12.5px;line-height:1.5}
+  .row{display:flex;gap:12px;flex-wrap:wrap}
+  .row > *{flex:1 1 170px;min-width:0}
+  button{border:0;border-radius:9px;padding:10px 16px;font:inherit;font-weight:600;font-size:14px;
+    background:var(--ink);color:#fff;cursor:pointer}
+  button:hover{opacity:.9} button:disabled{opacity:.45;cursor:default}
+  button.ghost{background:#fff;color:var(--ink);border:1.5px solid var(--line)}
+  button.danger{background:#fff;color:var(--bad);border:1.5px solid #f1d4d2}
+  .tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px}
+  .tile{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:15px 16px}
+  .tile .k{font-size:12px;color:var(--muted);font-weight:600;letter-spacing:.02em}
+  .tile .v{font-size:30px;font-weight:650;letter-spacing:-.03em;margin-top:3px;font-variant-numeric:tabular-nums}
+  .tile .n{font-size:12.5px;color:var(--ink2);margin-top:1px}
+  table{width:100%;border-collapse:collapse;font-size:13.5px}
+  th{text-align:left;font-size:11.5px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);
+     font-weight:600;padding:0 10px 7px 0;border-bottom:1px solid var(--line)}
+  td{padding:8px 10px 8px 0;border-bottom:1px solid #f1f4f8;vertical-align:middle}
+  td.num{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+  tr:last-child td{border-bottom:0}
+  /* Inline bars: 2px gap to the surface, rounded data-end, label always printed. */
+  .bar{display:flex;align-items:center;gap:8px}
+  .bar .track{flex:1;height:7px;background:#eef1f6;border-radius:4px;overflow:hidden;min-width:48px}
+  .bar .fill{height:100%;border-radius:0 4px 4px 0;display:block}
+  .bar .pct{font-variant-numeric:tabular-nums;font-size:12.5px;color:var(--ink2);min-width:42px;text-align:right}
+  .key{display:flex;gap:16px;flex-wrap:wrap;font-size:12.5px;color:var(--ink2);margin:0 0 10px}
+  .key i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:6px;vertical-align:-1px}
+  .pill{display:inline-block;font-size:11.5px;font-weight:600;padding:2px 8px;border-radius:999px;
+        background:#eef3fb;color:var(--ink2)}
+  .msg{padding:11px 13px;border-radius:9px;font-size:13.5px;margin-top:12px;display:none}
+  .msg.ok{background:#eaf6ef;color:#17633c;display:block}
+  .msg.err{background:#fcefee;color:var(--bad);display:block}
+  .msg.info{background:#eef3fb;color:var(--ink2);display:block}
+  .empty{color:var(--muted);font-size:13.5px;padding:14px 0}
+  .setrow{display:flex;align-items:center;gap:12px;padding:11px 0;border-bottom:1px solid #f1f4f8;cursor:pointer}
+  .setrow:last-child{border-bottom:0}
+  .setrow:hover{background:#fafbfd}
+  .setrow .nm{font-weight:600;flex:1;min-width:0}
+  .setrow .meta{font-size:12.5px;color:var(--muted)}
+  .setrow.active{background:#f4f8ff}
+  details{margin-top:12px}
+  summary{cursor:pointer;font-size:13.5px;font-weight:600;color:var(--ink2);padding:6px 0}
+  .gate{text-align:center;padding:70px 20px;color:var(--ink2)}
+  @media (max-width:560px){ .wrap{padding:20px 16px 70px} h1{font-size:22px} .tile .v{font-size:25px} }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="eyebrow">Internal · Orchamind</div>
+    <h1>Takeoff Accuracy Bench</h1>
+    <p class="sub">Scores the estimator against plan sets we know the real bid for. Coverage is whether we
+      found the line at all; precision is whether the quantity was right once we found it. Until a number
+      appears here, "the estimator got better" is an opinion.</p>
+  </header>
+
+  <div id="gate" class="gate">Checking access&hellip;</div>
+
+  <div id="app" style="display:none">
+
+    <h2>Plan sets</h2>
+    <div class="card">
+      <div id="setList"><div class="empty">Loading&hellip;</div></div>
+    </div>
+
+    <details id="newSetWrap">
+      <summary>+ Add a plan set</summary>
+      <div class="card">
+        <div class="row">
+          <div><label for="nsName">Name</label><input id="nsName" placeholder="Woodside — Robinson Residential"></div>
+          <div><label for="nsSource">Source</label><input id="nsSource" placeholder="Who the bid came from"></div>
+        </div>
+        <div class="row" style="margin-top:12px">
+          <div><label for="nsBid">Real bid total</label>
+            <div class="hint">The number you trust. Leave blank if you only have line items.</div>
+            <input id="nsBid" inputmode="decimal" placeholder="1314056"></div>
+          <div><label for="nsSqft">Conditioned sq ft</label>
+            <div class="hint">For the per-sq-ft sanity check.</div>
+            <input id="nsSqft" inputmode="decimal" placeholder="3206"></div>
+        </div>
+        <div style="margin-top:12px"><label for="nsNotes">Notes</label>
+          <input id="nsNotes" placeholder="What this set does and doesn't cover"></div>
+        <div style="margin-top:14px"><button id="nsSave">Create set</button></div>
+        <div id="nsMsg" class="msg"></div>
+      </div>
+    </details>
+
+    <div id="detail" style="display:none">
+
+      <h2 id="detailName">Set</h2>
+
+      <div class="card">
+        <label for="truthCsv">Ground truth — paste the real bid</label>
+        <div class="hint">CSV with a header row. Columns are matched by name, so an export from almost
+          anything works: <b>trade/division</b>, <b>item/description</b>, <b>unit/uom</b>,
+          <b>qty/quantity</b>, <b>unit_cost/rate</b>, <b>total/extended</b>, and optionally
+          <b>tier</b> (<code>primary</code> scores, <code>optional</code> doesn't). Saving replaces
+          whatever is there.</div>
+        <textarea id="truthCsv" rows="7" placeholder="trade,item,unit,qty,unit_cost,total
+Framing,&quot;2x6 stud wall, exterior&quot;,LF,420,20,8400
+Roofing,Asphalt shingles,SQ,32,300,9600"></textarea>
+        <div style="margin-top:12px;display:flex;gap:10px;flex-wrap:wrap">
+          <button id="truthSave">Save ground truth</button>
+          <span id="truthCount" class="pill" style="align-self:center"></span>
+        </div>
+        <div id="truthMsg" class="msg"></div>
+      </div>
+
+      <div class="card">
+        <label for="predJson">Score a run — paste what the estimator produced</label>
+        <div class="hint">Run the estimate in the app, then paste its takeoff JSON here. Accepts
+          <code>{"items":[&hellip;]}</code> or a bare array. Label the run so you can tell two
+          configurations apart later.</div>
+        <div class="row" style="margin-bottom:10px">
+          <div><input id="runLabel" placeholder="Label — e.g. opus-5-5 @ 2576px"></div>
+        </div>
+        <textarea id="predJson" rows="7" placeholder='{"items":[{"trade":"Framing","item":"2x6 stud wall","unit":"LF","qty":418,"unit_cost":20}]}'></textarea>
+        <div style="margin-top:12px"><button id="runScore">Score this run</button></div>
+        <div id="runMsg" class="msg"></div>
+      </div>
+
+      <div id="scoreBox" style="display:none">
+        <h2>Result</h2>
+        <div class="tiles" id="tiles"></div>
+
+        <div class="card" style="margin-top:14px">
+          <div style="font-weight:600;margin-bottom:10px">By trade</div>
+          <div class="key">
+            <span><i style="background:var(--cov)"></i>Coverage — did we find it</span>
+            <span><i style="background:var(--prec)"></i>Precision ±25% — was the quantity right</span>
+          </div>
+          <div id="byTrade"></div>
+        </div>
+
+        <details open>
+          <summary id="missedSummary">Missed lines</summary>
+          <div class="card"><div id="missed"></div></div>
+        </details>
+        <details>
+          <summary id="extraSummary">Lines we invented</summary>
+          <div class="card"><div id="extra"></div></div>
+        </details>
+        <details>
+          <summary id="matchedSummary">Matched lines</summary>
+          <div class="card"><div id="matched"></div></div>
+        </details>
+      </div>
+
+      <h2>Run history</h2>
+      <div class="card"><div id="history"><div class="empty">No runs yet.</div></div></div>
+
+      <div style="margin-top:18px"><button id="delSet" class="danger">Delete this set</button></div>
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+  var $=function(id){return document.getElementById(id);};
+  var state={sets:[],setId:null,setName:''};
+
+  function esc(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
+  function pct(v){return v==null?'—':(v*100).toFixed(1)+'%';}
+  function money(v){return v==null?'—':'$'+Math.round(v).toLocaleString();}
+  function show(el,cls,txt){el.className='msg '+cls;el.textContent=txt;}
+  function clear(el){el.className='msg';el.textContent='';}
+
+  function api(action,payload){
+    return fetch('/api/bench',{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify(Object.assign({action:action},payload||{}))})
+      .then(function(r){ if(r.status===403) throw new Error('FORBIDDEN'); return r.json(); });
+  }
+
+  // ---- bars -------------------------------------------------------------
+  function bar(v,color){
+    var w=Math.max(0,Math.min(1,v||0))*100;
+    return '<div class="bar"><div class="track"><span class="fill" style="width:'+w.toFixed(1)+'%;background:'+color+'"></span></div>'
+         + '<span class="pct">'+pct(v)+'</span></div>';
+  }
+
+  // ---- sets -------------------------------------------------------------
+  function renderSets(){
+    var el=$('setList');
+    if(!state.sets.length){ el.innerHTML='<div class="empty">No plan sets yet. Add one below — you need a plan set <em>and</em> a bid you trust before anything can be scored.</div>'; return; }
+    el.innerHTML=state.sets.map(function(s){
+      var m=s.latest;
+      var score=m?('<span class="meta">composite '+pct(m.composite)+' · coverage '+pct(m.coverage)+' · ±25% '+pct(m.precision_25)+'</span>')
+                 :'<span class="meta">not scored yet</span>';
+      return '<div class="setrow'+(s.id===state.setId?' active':'')+'" data-id="'+esc(s.id)+'">'
+           + '<span class="nm">'+esc(s.name)+'</span>'+score+'</div>';
+    }).join('');
+    Array.prototype.forEach.call(el.querySelectorAll('.setrow'),function(r){
+      r.onclick=function(){ openSet(r.getAttribute('data-id')); };
+    });
+  }
+
+  function loadSets(){
+    return api('sets').then(function(d){
+      if(!d.ok) throw new Error(d.error||'Could not load sets');
+      state.sets=d.sets||[]; renderSets();
+    });
+  }
+
+  function openSet(id){
+    var s=state.sets.filter(function(x){return x.id===id;})[0];
+    if(!s) return;
+    state.setId=id; state.setName=s.name;
+    $('detail').style.display='';
+    $('detailName').textContent=s.name;
+    $('scoreBox').style.display='none';
+    renderSets();
+    api('getSet',{setId:id}).then(function(d){
+      if(d.ok){
+        var n=(d.truth||[]).length;
+        var p=(d.truth||[]).filter(function(t){return (t.tier||'primary')==='primary';}).length;
+        $('truthCount').textContent = n ? (n+' line items · '+p+' scoring') : 'no ground truth yet';
+      }
+    });
+    loadHistory();
+    $('detail').scrollIntoView({behavior:'smooth',block:'start'});
+  }
+
+  // ---- results ----------------------------------------------------------
+  function renderMetrics(m){
+    $('scoreBox').style.display='';
+    var deltaNote = m.totalDelta==null ? 'no bid total on this set'
+      : (m.totalDelta>0?'over':'under')+' the real bid';
+    $('tiles').innerHTML=[
+      ['Composite', pct(m.composite), 'precision-weighted'],
+      ['Coverage', pct(m.coverage), m.matchedItems+' of '+m.eligibleItems+' found'],
+      ['Precision ±25%', pct(m.precision25), 'of what we found'],
+      ['Precision ±10%', pct(m.precision10), 'the tighter bar'],
+      ['Our total', money(m.predictedTotal), m.totalDelta==null?deltaNote:(m.totalDelta>0?'+':'')+(m.totalDelta*100).toFixed(1)+'% '+deltaNote]
+    ].map(function(t){
+      return '<div class="tile"><div class="k">'+t[0]+'</div><div class="v">'+t[1]+'</div><div class="n">'+esc(t[2])+'</div></div>';
+    }).join('');
+
+    var trades=Object.keys(m.byTrade||{}).sort();
+    $('byTrade').innerHTML = trades.length
+      ? '<table><thead><tr><th>Trade</th><th>Coverage</th><th>Precision ±25%</th><th class="num">Lines</th></tr></thead><tbody>'
+        + trades.map(function(k){ var b=m.byTrade[k];
+            return '<tr><td>'+esc(k)+'</td><td style="width:30%">'+bar(b.coverage,'var(--cov)')+'</td>'
+                 + '<td style="width:30%">'+bar(b.precision25,'var(--prec)')+'</td>'
+                 + '<td class="num">'+b.matched+'/'+b.truth+'</td></tr>'; }).join('')
+        + '</tbody></table>'
+      : '<div class="empty">No trades recorded on the ground truth.</div>';
+
+    var d=m.detail||{};
+    $('missedSummary').textContent='Missed lines ('+(d.missed||[]).length+') — the expensive failure';
+    $('missed').innerHTML=(d.missed||[]).length
+      ? '<table><thead><tr><th>Trade</th><th>Item</th><th>Unit</th><th class="num">Real qty</th></tr></thead><tbody>'
+        + d.missed.map(function(x){ return '<tr><td>'+esc(x.trade||'—')+'</td><td>'+esc(x.item)+'</td><td>'+esc(x.unit||'—')+'</td><td class="num">'+(x.qty==null?'—':x.qty)+'</td></tr>'; }).join('')
+        + '</tbody></table>'
+      : '<div class="empty">Nothing missed. Every scoring line in the bid was found.</div>';
+
+    $('extraSummary').textContent='Lines we invented ('+(d.extra||[]).length+')';
+    $('extra').innerHTML=(d.extra||[]).length
+      ? '<table><thead><tr><th>Trade</th><th>Item</th><th>Unit</th><th class="num">Qty</th></tr></thead><tbody>'
+        + d.extra.map(function(x){ return '<tr><td>'+esc(x.trade||'—')+'</td><td>'+esc(x.item)+'</td><td>'+esc(x.unit||'—')+'</td><td class="num">'+(x.qty==null?'—':x.qty)+'</td></tr>'; }).join('')
+        + '</tbody></table>'
+      : '<div class="empty">Nothing invented.</div>';
+
+    $('matchedSummary').textContent='Matched lines ('+(d.matched||[]).length+')';
+    $('matched').innerHTML=(d.matched||[]).length
+      ? '<table><thead><tr><th>Item</th><th>Read as</th><th class="num">Real</th><th class="num">Ours</th><th class="num">Off by</th></tr></thead><tbody>'
+        + d.matched.map(function(x){
+            var off = (x.truthQty&&x.predQty!=null) ? ((x.predQty-x.truthQty)/x.truthQty*100) : null;
+            var col = x.within10?'var(--prec)':(x.within25?'var(--warn)':'var(--bad)');
+            return '<tr><td>'+esc(x.item)+'</td><td style="color:var(--muted)">'+esc(x.predictedAs)+'</td>'
+                 + '<td class="num">'+(x.truthQty==null?'—':x.truthQty)+'</td><td class="num">'+(x.predQty==null?'—':x.predQty)+'</td>'
+                 + '<td class="num" style="color:'+col+';font-weight:600">'+(off==null?'—':(off>0?'+':'')+off.toFixed(0)+'%')+'</td></tr>';
+          }).join('')
+        + '</tbody></table>'
+      : '<div class="empty">Nothing matched.</div>';
+  }
+
+  function loadHistory(){
+    api('runs',{setId:state.setId}).then(function(d){
+      var el=$('history');
+      if(!d.ok||!(d.runs||[]).length){ el.innerHTML='<div class="empty">No runs yet.</div>'; return; }
+      el.innerHTML='<table><thead><tr><th>Run</th><th class="num">Composite</th><th class="num">Coverage</th><th class="num">±25%</th><th class="num">±10%</th><th class="num">$ delta</th><th>When</th></tr></thead><tbody>'
+        + d.runs.map(function(r){ var m=r.result||{};
+            return '<tr><td>'+esc(r.label||r.id)+'</td>'
+              +'<td class="num"><b>'+pct(m.composite)+'</b></td><td class="num">'+pct(m.coverage)+'</td>'
+              +'<td class="num">'+pct(m.precision_25)+'</td><td class="num">'+pct(m.precision_10)+'</td>'
+              +'<td class="num">'+(m.total_delta==null?'—':(m.total_delta>0?'+':'')+(m.total_delta*100).toFixed(1)+'%')+'</td>'
+              +'<td style="color:var(--muted)">'+new Date(r.started_at).toLocaleString()+'</td></tr>';
+          }).join('')
+        + '</tbody></table>';
+    });
+  }
+
+  // ---- actions ----------------------------------------------------------
+  $('nsSave').onclick=function(){
+    var b=$('nsSave'); clear($('nsMsg'));
+    var name=$('nsName').value.trim();
+    if(!name){ show($('nsMsg'),'err','Give the set a name.'); return; }
+    b.disabled=true;
+    api('createSet',{name:name,source:$('nsSource').value,bidTotal:$('nsBid').value,
+                     sqft:$('nsSqft').value,notes:$('nsNotes').value})
+      .then(function(d){
+        b.disabled=false;
+        if(!d.ok){ show($('nsMsg'),'err',d.error||'Could not create.'); return; }
+        show($('nsMsg'),'ok','Created. Paste the real bid below to give it something to score against.');
+        $('nsName').value='';$('nsSource').value='';$('nsBid').value='';$('nsSqft').value='';$('nsNotes').value='';
+        loadSets().then(function(){ openSet(d.setId); });
+      })
+      .catch(function(e){ b.disabled=false; show($('nsMsg'),'err',e.message); });
+  };
+
+  $('truthSave').onclick=function(){
+    var b=$('truthSave'); clear($('truthMsg'));
+    var csv=$('truthCsv').value.trim();
+    if(!csv){ show($('truthMsg'),'err','Paste the bid first.'); return; }
+    b.disabled=true;
+    api('truth',{setId:state.setId,csv:csv}).then(function(d){
+      b.disabled=false;
+      if(!d.ok){ show($('truthMsg'),'err',d.error); return; }
+      show($('truthMsg'),'ok','Saved '+d.saved+' line items ('+d.primary+' scoring). Columns read: '+(d.columns||[]).join(', '));
+      $('truthCount').textContent=d.saved+' line items · '+d.primary+' scoring';
+    }).catch(function(e){ b.disabled=false; show($('truthMsg'),'err',e.message); });
+  };
+
+  $('runScore').onclick=function(){
+    var b=$('runScore'); clear($('runMsg'));
+    var raw=$('predJson').value.trim();
+    if(!raw){ show($('runMsg'),'err','Paste the estimator output first.'); return; }
+    var parsed;
+    try{ parsed=JSON.parse(raw); }
+    catch(e){ show($('runMsg'),'err','That is not valid JSON: '+e.message); return; }
+    var items=Array.isArray(parsed)?parsed:(parsed.items||parsed.lineItems||parsed.lines);
+    if(!Array.isArray(items)||!items.length){ show($('runMsg'),'err','No items array found. Expected {"items":[...]} or a bare array.'); return; }
+    // Normalise the field names the estimator actually emits.
+    items=items.map(function(it){
+      return {
+        trade: it.trade||it.category||it.division||null,
+        item: it.item||it.description||it.name||it.label||'',
+        unit: it.unit||it.uom||null,
+        qty: it.qty!=null?it.qty:(it.quantity!=null?it.quantity:null),
+        unit_cost: it.unit_cost!=null?it.unit_cost:(it.unitCost!=null?it.unitCost:(it.rate!=null?it.rate:null)),
+        total: it.total!=null?it.total:(it.extended!=null?it.extended:null)
+      };
+    }).filter(function(it){ return it.item; });
+    if(!items.length){ show($('runMsg'),'err','Items had no recognisable name field (item / description / name).'); return; }
+    b.disabled=true;
+    api('record',{setId:state.setId,label:$('runLabel').value,items:items,
+                  config:{source:'pasted',itemCount:items.length}})
+      .then(function(d){
+        b.disabled=false;
+        if(!d.ok){ show($('runMsg'),'err',d.error); return; }
+        show($('runMsg'),'ok','Scored '+items.length+' line items.');
+        renderMetrics(d.metrics); loadHistory(); loadSets();
+        $('scoreBox').scrollIntoView({behavior:'smooth',block:'start'});
+      })
+      .catch(function(e){ b.disabled=false; show($('runMsg'),'err',e.message); });
+  };
+
+  $('delSet').onclick=function(){
+    if(!confirm('Delete "'+state.setName+'" and every run scored against it? This cannot be undone.')) return;
+    api('deleteSet',{setId:state.setId}).then(function(){
+      state.setId=null; $('detail').style.display='none'; loadSets();
+    });
+  };
+
+  // ---- boot --------------------------------------------------------------
+  loadSets().then(function(){
+    $('gate').style.display='none';
+    $('app').style.display='';
+  }).catch(function(e){
+    $('gate').innerHTML = e.message==='FORBIDDEN'
+      ? 'This page is for the Orchamind operator account. <a href="/app" style="color:#2D7FF9">Sign in</a>, then reload.'
+      : 'Could not load: '+esc(e.message);
+  });
+})();
+</script>
+</body>
+</html>

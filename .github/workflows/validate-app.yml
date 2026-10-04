@@ -32,3 +32,6 @@ jobs:
 
       - name: Every primary action is on screen and operable
         run: node scripts/check-reachability.js
+
+      - name: Takeoff scoring is honest
+        run: node scripts/test-bench-score.js
