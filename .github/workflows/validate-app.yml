@@ -64,3 +64,12 @@ jobs:
 
       - name: New customers are sent to their first estimate
         run: node scripts/test-onboarding.js
+
+      - name: "Trial check-in emails - who gets what"
+        run: node scripts/test-outreach.js
+
+      - name: "Trial check-in emails - API end to end"
+        run: node scripts/test-outreach-api.js
+
+      - name: "Trial check-in emails - admin panel"
+        run: node scripts/test-outreach-ui.js

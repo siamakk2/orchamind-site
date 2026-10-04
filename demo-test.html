@@ -1700,6 +1700,16 @@ button:active, .btn:active, .btn-ghost:active, .tab:active, [role="button"]:acti
       <div id="npMsg" style="margin-top:10px;font-size:13px;min-height:18px;"></div>
     </div>
 
+    <div id="outreachCard" style="border:1px solid #E1E8F0;border-radius:12px;padding:16px;margin:18px 0;background:#fff;">
+      <div style="display:flex;justify-content:space-between;align-items:baseline;flex-wrap:wrap;gap:6px;">
+        <h3 style="margin:0;color:#0A1628;font-size:15px;">Trial check-in emails</h3>
+        <span style="font-size:12px;color:#5A6B7D;">Automatic &middot; every morning at 9am Pacific &middot; replies go to info@siamakkalhor.com, and you get a copy of each email</span>
+      </div>
+      <div style="font-size:12.5px;color:#5A6B7D;margin:6px 0 12px;line-height:1.5;">Personal notes from you, written for each contractor's trade and for what they have actually done in the app: <b>getting started</b> (day 3+), <b>1 week left</b>, <b>ends in 2 days</b>, and <b>feedback after the trial</b>. Each goes out once, never two within 3 days, and never to paying customers or anyone you switch off.</div>
+      <div id="outreachTable"><div style="font-size:13px;color:#9aa7b4;">Loading&hellip;</div></div>
+      <div id="outreachPreview" style="display:none;margin-top:14px;border-top:1px solid #E1E8F0;padding-top:12px;"></div>
+    </div>
+
     <h3 style="margin:18px 0 10px;color:#0A1628;font-size:15px;">All Contractors &amp; Users</h3>
     <input type="text" id="adminSearch" placeholder="Search by company, name, or username&hellip;" oninput="filterAdmin()" style="width:100%;border:1.5px solid #E1E8F0;border-radius:8px;padding:10px 12px;font-size:14px;box-sizing:border-box;margin-bottom:12px;">
     <div class="hours-table" id="usersTable"></div>
@@ -3564,7 +3574,7 @@ function showRenewWall(user){
 function logEvent(type, detail){ try{ fetch('/api/activity',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'log',type:type,detail:detail,username:(window.CURRENT_USER&&CURRENT_USER.username)||''})}); }catch(e){} }
 window.addEventListener('error', function(e){ try{ logEvent('error', ((e&&e.message)||'Script error')+(e&&e.filename?(' ('+String(e.filename).split('/').pop()+':'+e.lineno+')'):'')); }catch(x){} });
 var _actFilter='all';
-function _actIcon(t){ return {login:'\ud83d\udd11',signup:'\ud83c\udf89',lead:'\u2728',payment:'\ud83d\udcb3',error:'\u26a0\ufe0f',view:'\ud83d\udc41',plan_read_start:'\ud83d\udcd0',plan_read_ok:'\u2705',plan_read_fail:'\u274c',activation:'\ud83d\ude80'}[t]||'\u2022'; }
+function _actIcon(t){ return {login:'\ud83d\udd11',signup:'\ud83c\udf89',lead:'\u2728',payment:'\ud83d\udcb3',error:'\u26a0\ufe0f',view:'\ud83d\udc41',plan_read_start:'\ud83d\udcd0',plan_read_ok:'\u2705',plan_read_fail:'\u274c',activation:'\ud83d\ude80',outreach:'\u2709\ufe0f'}[t]||'\u2022'; }
 function _actAgo(ts){ if(!ts)return''; var d=new Date(ts); var s=Math.floor((Date.now()-d.getTime())/1000); if(s<0)s=0; if(s<60)return s+'s ago'; if(s<3600)return Math.floor(s/60)+'m ago'; if(s<86400)return Math.floor(s/3600)+'h ago'; return d.toLocaleDateString(); }
 function setActFilter(t){ _actFilter=t; loadActivity(); }
 function loadActivity(){
@@ -3722,6 +3732,57 @@ function renderAdmin(){
   }).join('');
   t.innerHTML=rows;
 }
+/* ---- Trial check-in emails (api/outreach.js, lib/outreach.js) ---- */
+function _oPost(body){ return fetch('/api/outreach',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)}).then(function(r){return r.json();}); }
+function loadOutreach(){
+  if(!document.getElementById('outreachTable')) return;
+  _oPost({action:'queue'}).then(function(d){ if(d&&d.ok){ window._oData=d; renderOutreach(); } else { document.getElementById('outreachTable').innerHTML='<div style="color:#C62828;font-size:13px;">Could not load: '+esc((d&&d.error)||'unknown error')+'</div>'; } }).catch(function(){});
+}
+function renderOutreach(){
+  var d=window._oData; var t=document.getElementById('outreachTable'); if(!d||!t) return;
+  var L=d.labels||{}; var now=Date.now();
+  var rows=(d.rows||[]).filter(function(r){ if(r.stripe_status==='active'||!r.trial_end) return false; var left=(new Date(r.trial_end)-now)/864e5; return left>-60; });
+  rows.sort(function(a,b){ var la=(new Date(a.trial_end)-now), lb=(new Date(b.trial_end)-now); var fa=la<0?1e13-la:la, fb=lb<0?1e13-lb:lb; return fa-fb; });
+  if(!rows.length){ t.innerHTML='<div style="font-size:13px;color:#9aa7b4;">No trials running or recently ended.</div>'; return; }
+  var btn='font-size:12px;border:1px solid #E1E8F0;background:#fff;color:#0A1628;border-radius:6px;padding:4px 9px;cursor:pointer;margin:2px 4px 2px 0;';
+  var h='<div class="adm-row head"><div>Contractor</div><div>Trial</div><div>Used so far</div><div>Emails</div><div>Send</div></div>';
+  h+=rows.map(function(r){
+    var left=Math.ceil((new Date(r.trial_end)-now)/864e5);
+    var when=new Date(r.trial_end).toLocaleDateString('en-US',{month:'short',day:'numeric'});
+    var trial=left>0?('<span style="font-weight:700;color:'+(left<=7?'#C62828':'#0A1628')+';">'+left+'d left</span><br><span style="font-size:11px;color:#9aa7b4;">ends '+when+'</span>'):('<span style="color:#5A6B7D;">ended '+when+'</span>');
+    var u=r.usage||{}; var _pl=function(n,one,many){return n?(n+' '+(n===1?one:many)+' '):'';}; var used=u.total?(_pl(u.estimates,'estimate','estimates')+_pl(u.jobs,'job','jobs')+_pl(u.clients,'client','clients')+_pl(u.invoices,'invoice','invoices')):'<span style="color:#B45309;">nothing yet</span>';
+    if(u.triedPlan) used+='<br><span style="font-size:11px;color:#1B8A4B;">tried a plan</span>';
+    var sent=(r.log||[]).filter(function(l){return l.status==='sent';});
+    var hist=sent.length?sent.map(function(l){return '<span style="font-size:11px;color:#1B8A4B;">\u2713 '+esc(L[l.kind]||l.kind)+' \u00b7 '+String(l.sent_at||'').slice(5,10)+'</span>';}).join('<br>'):'<span style="font-size:11px;color:#9aa7b4;">none sent</span>';
+    var fail=(r.log||[]).filter(function(l){return l.status==='error';})[0];
+    if(fail) hist+='<br><span style="font-size:11px;color:#C62828;">\u26a0 '+esc(L[fail.kind]||fail.kind)+' failed</span>';
+    if(r.no_outreach) hist='<span style="font-size:11px;color:#5A6B7D;font-weight:700;">Emails off</span><br>'+hist;
+    else if(r.due) hist='<span style="font-size:11px;color:#1565C0;font-weight:700;">Next run: '+esc(L[r.due]||r.due)+'</span><br>'+hist;
+    if(!r.email) hist='<span style="font-size:11px;color:#C62828;">no email on file</span>';
+    var sel='<select id="oKind_'+esc(r.username)+'" style="font-size:12px;border:1px solid #E1E8F0;border-radius:6px;padding:3px;margin:2px 4px 2px 0;">'+['welcome','checkin','ending','winback'].map(function(k){return '<option value="'+k+'"'+(k===r.suggest?' selected':'')+'>'+esc(L[k]||k)+'</option>';}).join('')+'</select>';
+    var acts=sel+'<button style="'+btn+'" onclick="outreachPreview(\''+esc(r.username)+'\')">Preview</button>'
+      +(r.email&&!r.no_outreach?'<button style="'+btn+'background:#1565C0;color:#fff;border-color:#1565C0;font-weight:700;" onclick="outreachSend(\''+esc(r.username)+'\')">Send now</button>':'')
+      +'<button style="'+btn+'color:#5A6B7D;" onclick="outreachOptout(\''+esc(r.username)+'\','+(r.no_outreach?'false':'true')+')">'+(r.no_outreach?'Turn emails on':'Stop emails')+'</button>';
+    return '<div class="adm-row"><div style="font-weight:700;color:#0A1628;">'+esc(r.company||r.username)+'<br><span style="font-weight:400;font-size:11px;color:#9aa7b4;">'+esc(r.name||'')+(r.email?' \u00b7 '+esc(r.email):'')+'</span></div><div>'+trial+'</div><div style="font-size:12.5px;">'+used+'</div><div>'+hist+'</div><div>'+acts+'</div></div>';
+  }).join('');
+  t.innerHTML=h;
+}
+function _oKind(u){ var s=document.getElementById('oKind_'+u); return s?s.value:''; }
+function outreachPreview(u){
+  var box=document.getElementById('outreachPreview'); box.style.display='block'; box.innerHTML='<div style="font-size:13px;color:#9aa7b4;">Loading preview&hellip;</div>';
+  _oPost({action:'preview',username:u,kind:_oKind(u)}).then(function(d){
+    if(!d||!d.ok){ box.innerHTML='<div style="color:#C62828;font-size:13px;">'+esc((d&&d.error)||'Could not preview')+'</div>'; return; }
+    box.innerHTML='<div style="font-size:12px;color:#5A6B7D;margin-bottom:4px;">To: <b>'+esc(d.to||'(no email)')+'</b> \u00b7 from Siamak at Orchamind</div><div style="font-size:15px;font-weight:700;color:#0A1628;margin-bottom:8px;">'+esc(d.subject)+'</div><iframe id="oFrame" sandbox="" style="width:100%;height:440px;border:1px solid #E1E8F0;border-radius:8px;background:#fff;"></iframe><div style="margin-top:6px;"><button onclick="document.getElementById(\'outreachPreview\').style.display=\'none\'" style="font-size:12px;border:1px solid #E1E8F0;background:#fff;border-radius:6px;padding:4px 10px;cursor:pointer;">Close preview</button></div>';
+    document.getElementById('oFrame').srcdoc='<body style="margin:14px;">'+d.html+'</body>';
+  }).catch(function(){ box.innerHTML='<div style="color:#C62828;font-size:13px;">Server error.</div>'; });
+}
+function outreachSend(u){
+  var r=((window._oData||{}).rows||[]).find(function(x){return x.username===u;})||{};
+  var L=(window._oData||{}).labels||{}; var k=_oKind(u);
+  if(!confirm('Email "'+(L[k]||k)+'" to '+(r.name||u)+' at '+(r.email||'?')+' now?')) return;
+  _oPost({action:'send',username:u,kind:k}).then(function(d){ if(d&&d.ok){ alert('Sent to '+(r.email||u)+'. You will get a copy.'); } else { alert('Not sent: '+((d&&d.error)||'unknown error')); } loadOutreach(); }).catch(function(){ alert('Server error.'); });
+}
+function outreachOptout(u,v){ _oPost({action:'optout',username:u,value:v}).then(function(){ loadOutreach(); }); }
 function filterAdmin(){ renderAdmin(); }
 function setUserStatus(username,status){
   var verb=(status==='paused')?'Pause':'Reactivate';
@@ -3737,6 +3798,7 @@ function loadUsers(){
   if(typeof loadActivity==='function') loadActivity();
   if(typeof loadSupport==='function') loadSupport();
   if(typeof loadActivation==='function') loadActivation();
+  if(typeof loadOutreach==='function') loadOutreach();
 }
 function forgotPw(){
   var u=prompt('Enter your username. Your owner or manager will be notified to reset your password.');
