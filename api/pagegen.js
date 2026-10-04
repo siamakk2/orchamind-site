@@ -21,7 +21,7 @@ module.exports = async function handler(req, res) {
     const maxTokens = Math.min(body.max_tokens || 4000, 8000);
     const messages = Array.isArray(body.messages) ? body.messages : [];
     const system = (body.system || '').toString().slice(0, 12000);
-    const payload = { model: 'claude-sonnet-4-6', max_tokens: maxTokens, messages: messages };
+    const payload = { model: 'claude-sonnet-5-5', max_tokens: maxTokens, messages: messages };
     if (system) payload.system = system;
     // Abort before the platform kills us, so the client gets a real error.
     const ctrl = new AbortController();

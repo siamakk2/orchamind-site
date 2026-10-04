@@ -7,6 +7,17 @@ var MEDIA_WEIGHT = 8;        // an image/PDF request costs 8 units (plan sets ar
 var TEXT_WEIGHT = 1;
 var MAX_MEDIA_BLOCKS = 16;   // large sheets are tiled into multiple hi-res images so printed schedules stay legible
 
+// Model tiers. The client asks for a TIER, never a raw model name, so model
+// choice lives in one place and a stale front end can never pin us to an old
+// model. "deep" is for reading plan sheets — the one step where a wrong number
+// discredits the whole estimate — and is worth the extra cost per call.
+var TIERS = {
+  fast: 'claude-haiku-4-5-20251001',  // short, cheap, latency-sensitive replies
+  std:  'claude-sonnet-5-5',          // default: cheaper AND newer than sonnet-4-6
+  deep: 'claude-opus-5-5'             // plan takeoff / quantity reasoning
+};
+var DEFAULT_TIER = 'std';
+
 function allowedOrigin(o) {
   if (!o) return true; // same-origin/no-origin (server tools) — rate limit still applies
   try {
@@ -58,9 +69,12 @@ module.exports = async function handler(req, res) {
     if (typeof body === 'string') { try { body = JSON.parse(body); } catch (e) { body = {}; } }
     if (!body || typeof body !== 'object') body = {};
 
-    const maxTokens = Math.min(body.max_tokens || 800, 16000);
+    // 128K output is available on the 5.x models. The old 16K ceiling is what
+    // forced the takeoff JSON to truncate and need repairing downstream.
+    const maxTokens = Math.min(body.max_tokens || 800, 32000);
     const messages = Array.isArray(body.messages) ? body.messages : [];
     const system = (body.system || '').toString().slice(0, 12000);
+    const model = TIERS[body.tier] || TIERS[DEFAULT_TIER];
 
     const media = countMedia(messages);
     if (media > MAX_MEDIA_BLOCKS) {
@@ -71,27 +85,48 @@ module.exports = async function handler(req, res) {
       return res.status(429).json({ error: 'Too many AI requests from your connection — give it a few minutes and try again.' });
     }
 
-    const payload = { model: 'claude-sonnet-4-6', max_tokens: maxTokens, system: system, messages: messages };
-    // Extended thinking: lets the model reason step-by-step through complex plan
-    // sets before answering — the difference between a skim and a careful read.
-    if (body.thinking && body.thinking.type === 'enabled') {
-      var bt = Math.min(Math.max(parseInt(body.thinking.budget_tokens, 10) || 0, 1024), 8000);
-      if (bt < maxTokens) payload.thinking = { type: 'enabled', budget_tokens: bt };
+    const payload = { model: model, max_tokens: maxTokens, system: system, messages: messages };
+    // Reasoning. On the 5.x models adaptive thinking is on by default, so we no
+    // longer send a thinking budget — we translate the front end's old
+    // budget_tokens hint into an `effort` level instead. If the API rejects the
+    // parameter we retry once without it: a wrong guess here must degrade to a
+    // plain answer, never take the estimator down.
+    var effort = '';
+    if (['low', 'medium', 'high', 'xhigh', 'max'].indexOf(body.effort) >= 0) {
+      effort = body.effort;
+    } else if (body.thinking && body.thinking.type === 'enabled') {
+      var bt = parseInt(body.thinking.budget_tokens, 10) || 0;
+      effort = bt >= 6000 ? 'high' : (bt >= 3000 ? 'medium' : 'low');
+    }
+    if (effort) payload.effort = effort;
+
+    async function callAnthropic(p) {
+      const resp = await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'x-api-key': apiKey, 'anthropic-version': '2023-06-01' },
+        body: JSON.stringify(p)
+      });
+      return { status: resp.status, json: await resp.json() };
     }
 
-    const r = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'x-api-key': apiKey, 'anthropic-version': '2023-06-01' },
-      body: JSON.stringify(payload)
-    });
-    const data = await r.json();
+    let out = await callAnthropic(payload);
+    // Retry without `effort` if that is what the API objected to.
+    if (out.status === 400 && payload.effort) {
+      var msg400 = (out.json && out.json.error && out.json.error.message) || '';
+      if (/effort|thinking/i.test(msg400)) {
+        console.warn('[claude] effort rejected, retrying without it:', msg400.slice(0, 160));
+        delete payload.effort;
+        out = await callAnthropic(payload);
+      }
+    }
+    const data = out.json;
     if (media > 0) {
       // Plan reads are the expensive, failure-prone path — log enough to diagnose from Vercel logs.
       var _size = 0; try { _size = JSON.stringify(data.content || '').length; } catch (e) {}
       if (data && data.error) {
-        console.error('[claude] media req FAILED:', media, 'blocks; anthropic error:', (data.error.message || JSON.stringify(data.error)).slice(0, 300));
+        console.error('[claude] media req FAILED:', media, 'blocks; model:', model, '; anthropic error:', (data.error.message || JSON.stringify(data.error)).slice(0, 300));
       } else {
-        console.log('[claude] media req ok:', media, 'blocks; stop:', data && data.stop_reason, '; content chars:', _size);
+        console.log('[claude] media req ok:', media, 'blocks; model:', model, '; effort:', effort || 'default', '; stop:', data && data.stop_reason, '; content chars:', _size);
       }
     }
     return res.status(200).json(data);

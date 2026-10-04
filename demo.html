@@ -2223,7 +2223,7 @@ function callClaude(systemPrompt, userMessage, cb, errCb, maxTokens){
     fetch("/api/claude",{
       method:"POST",
       headers:{"Content-Type":"application/json"},
-      body:JSON.stringify({ model:"claude-sonnet-4-6", max_tokens:mt, system:systemPrompt, messages:messages })
+      body:JSON.stringify({ tier:"std", max_tokens:mt, system:systemPrompt, messages:messages })
     }).then(function(r){return r.json();}).then(function(data){
       if(data&&data.error){errCb&&errCb(data.error);return;}
       var text="";
@@ -4396,7 +4396,7 @@ function callClaudeBlocks(systemPrompt,blocks,cb,errCb,maxTokens,thinkBudget){
       done(errCb,'This plan is taking longer than the AI\u2019s current limit to read. Large, detailed PDFs are the most common cause \u2014 try a single page at a time, or snap clear photos of the key sheets instead.'); },TIMEOUT_MS);
     fetch("/api/claude",{method:"POST",headers:{"Content-Type":"application/json"},
       signal:ctrl?ctrl.signal:undefined,
-      body:(function(){var p={model:"claude-sonnet-4-6",max_tokens:mt,system:systemPrompt,messages:messages};if(thinkBudget)p.thinking={type:"enabled",budget_tokens:thinkBudget};var s=JSON.stringify(p);try{window._lastAiBodyBytes=s.length;}catch(e){}return s;})()
+      body:(function(){var p={tier:"deep",max_tokens:mt,system:systemPrompt,messages:messages};if(thinkBudget)p.thinking={type:"enabled",budget_tokens:thinkBudget};var s=JSON.stringify(p);try{window._lastAiBodyBytes=s.length;}catch(e){}return s;})()
     }).then(function(r){return r.json();}).then(function(data){
       clearTimeout(timer);
       if(data&&data.error){done(errCb,typeof data.error==='string'?data.error:(data.error.message||'AI error'));return;}
@@ -4429,6 +4429,18 @@ function callClaudeBlocks(systemPrompt,blocks,cb,errCb,maxTokens,thinkBudget){
   }
   go([{role:"user",content:blocks}]);
 }
+function _planMaxEdge(tileCount){
+  // Claude 4.7+ reads images at a HIGH-RESOLUTION tier: 2576px on the long edge
+  // and ~3x the visual tokens of the old 1568px standard tier. On a plan sheet
+  // that is the difference between reading a dimension string and guessing it.
+  // But every pixel is payload, and a serverless request body has a hard ceiling,
+  // so the budget scales down as a sheet is split into more tiles.
+  var n = Math.max(1, tileCount || 1);
+  if (n <= 2) return 2576;
+  if (n <= 6) return 2200;
+  if (n <= 12) return 1800;
+  return 1568;
+}
 function _planShrinkImage(file,cb,err){
   var settled=false; var fin=function(fn,a){if(settled)return;settled=true;fn(a);};
   // Decode watchdog: some very large PNGs can stall the browser decoder.
@@ -4439,7 +4451,7 @@ function _planShrinkImage(file,cb,err){
     img.onload=function(){
       clearTimeout(watch);
       try{
-        var MAX=1568,w=img.width,h=img.height;
+        var MAX=_planMaxEdge(1),w=img.width,h=img.height;
         if(!w||!h){fin(err,'That image could not be decoded. Try a JPG or PNG re-export.');return;}
         if(w>MAX||h>MAX){var s=MAX/Math.max(w,h);w=Math.round(w*s);h=Math.round(h*s);}
         var cv=document.createElement('canvas');cv.width=w;cv.height=h;
@@ -4489,11 +4501,12 @@ function _planPrepareImage(file,tileBudget,cb,err){
         var cols=Math.ceil(w/1000),rows=Math.ceil(h/1000);
         while(cols*rows>budget){ if(cols>=rows&&cols>1)cols--; else if(rows>1)rows--; else break; }
         var blocks=[];
+        var EDGE=_planMaxEdge(cols*rows);
         function frame(sx,sy,sw,sh){
-          // UPSCALE small tiles toward 1568 (capped 2.5x): printed schedules are
-          // ~8px tall at native sheet resolution - magnification is what makes
-          // them legible, the same way a human zooms in to read them.
-          var scale=Math.min(2.5,1568/Math.max(sw,sh));
+          // UPSCALE small tiles toward the high-res ceiling (capped 2.5x): printed
+          // schedules are ~8px tall at native sheet resolution - magnification is
+          // what makes them legible, the same way a human zooms in to read them.
+          var scale=Math.min(2.5,EDGE/Math.max(sw,sh));
           var cv=document.createElement('canvas');cv.width=Math.round(sw*scale);cv.height=Math.round(sh*scale);
           cv.getContext('2d').drawImage(img,sx,sy,sw,sh,0,0,cv.width,cv.height);
           var d=cv.toDataURL('image/jpeg',0.85);
@@ -4896,7 +4909,7 @@ function estPlanRefine(){
     {role:"user",content:'The contractor answered your questions: "'+ans+'". Update the takeoff and pricing accordingly. Return ONLY the same JSON shape as before ({"items":[...],"notes":"...","assumptions":[...],"questions":[...]}), with questions now containing only anything still unresolved.'}
   ];
   fetch("/api/claude",{method:"POST",headers:{"Content-Type":"application/json"},
-    body:JSON.stringify({model:"claude-sonnet-4-6",max_tokens:6000,system:_planSys(),messages:messages})
+    body:JSON.stringify({tier:"deep",max_tokens:12000,system:_planSys(),messages:messages})
   }).then(function(r){return r.json();}).then(function(data){
     btn.disabled=false;btn.innerHTML=old;
     if(data&&data.error){msg.textContent='AI error: '+(typeof data.error==='string'?data.error:(data.error.message||'unknown'));return;}

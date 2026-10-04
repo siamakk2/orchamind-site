@@ -106,6 +106,40 @@ if (FILES.every(f => fs.existsSync(path.join(ROOT, f)))) {
   if (a !== b) failures.push('demo.html and demo-test.html have diverged — keep them identical');
 }
 
+// ---------------------------------------------------------------------------
+// Model rot. A retired model ID is a silent production outage: the call fails,
+// the user sees "AI error", and nothing in the code looks wrong. Add an ID here
+// the day a provider announces its shutdown, so CI blocks the next push that
+// still references it. Keep the reason — the next person needs to know why.
+// ---------------------------------------------------------------------------
+const RETIRED_MODELS = {
+  'gemini-2.5-flash-image': 'shutdown 2026-10-02 — use gemini-3.1-flash-image',
+  'claude-sonnet-4-6': 'superseded by claude-sonnet-5-5 (cheaper and newer)',
+  'claude-3-5-sonnet': 'long retired',
+  'claude-3-opus': 'long retired',
+  'gemini-1.5-flash': 'long retired',
+  'gemini-1.5-pro': 'long retired'
+};
+// Files that are allowed to mention a retired ID — fallback chains and this list.
+const MODEL_SCAN_SKIP = new Set(['scripts/validate-app.js', 'api/render.js']);
+function scanDir(dir, out) {
+  for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+    if (entry.name === 'node_modules' || entry.name === '.git') continue;
+    const full = path.join(dir, entry.name);
+    if (entry.isDirectory()) scanDir(full, out);
+    else if (/\.(js|html)$/.test(entry.name)) out.push(full);
+  }
+  return out;
+}
+for (const full of scanDir(ROOT, [])) {
+  const rel = path.relative(ROOT, full).split(path.sep).join('/');
+  if (MODEL_SCAN_SKIP.has(rel)) continue;
+  const src = fs.readFileSync(full, 'utf8');
+  for (const [id, why] of Object.entries(RETIRED_MODELS)) {
+    if (src.includes(id)) fail(rel, `references retired model "${id}" (${why})`);
+  }
+}
+
 if (failures.length) {
   console.error('\n\u274c  BLOCKED — do not push:\n');
   failures.forEach(f => console.error('   • ' + f));

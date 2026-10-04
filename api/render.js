@@ -1,6 +1,6 @@
 // Photoreal property render for Orchamind estimates — geometry-anchored.
 // Front end POSTs { prompt, geometry, reference (massing-model snapshot data URL) }.
-// Server calls Google's image model (gemini-2.5-flash-image) with the snapshot as
+// Server calls Google's image model (gemini-3.1-flash-image) with the snapshot as
 // an image input, so the output follows the verified massing instead of guessing.
 // Single-call generation: no asset polling, no third-party render fees.
 var BUCKET = {};
@@ -77,12 +77,27 @@ module.exports = async function handler(req, res) {
       : '') + prompt });
 
     console.log('[render] req; anchored:', anchored, 'prompt chars:', prompt.length);
-    var r = await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-image:generateContent', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'x-goog-api-key': apiKey },
-      body: JSON.stringify({ contents: [{ parts: parts }] })
-    });
-    var data = await r.json();
+    // Model chain. gemini-2.5-flash-image reached its published shutdown date on
+    // 2026-10-02; gemini-3.1-flash-image is the GA successor (2K/4K output,
+    // multi-reference). We try the current model first and fall back only if the
+    // name itself is rejected, so a bad model string can never take renders down.
+    var MODELS = ['gemini-3.1-flash-image', 'gemini-3.1-flash-image-preview', 'gemini-2.5-flash-image'];
+    var r = null, data = null, usedModel = '';
+    for (var mi = 0; mi < MODELS.length; mi++) {
+      usedModel = MODELS[mi];
+      r = await fetch('https://generativelanguage.googleapis.com/v1beta/models/' + usedModel + ':generateContent', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'x-goog-api-key': apiKey },
+        body: JSON.stringify({ contents: [{ parts: parts }] })
+      });
+      data = await r.json();
+      var emsg = (data && data.error && (data.error.message || '')) || '';
+      var unknownModel = r.status === 404 || /not found|not supported|unsupported model|is not available|invalid model/i.test(emsg);
+      if (!unknownModel) break;               // real answer (or a real error) — stop here
+      console.warn('[render] model unavailable:', usedModel, '-', emsg.slice(0, 160));
+      if (mi === MODELS.length - 1) break;    // nothing left to try
+    }
+    console.log('[render] model used:', usedModel);
     if (data && data.error) {
       console.error('[render] api error:', (data.error.message || JSON.stringify(data.error)).slice(0, 300));
       return res.status(200).json({ error: 'Render error: ' + (data.error.message || 'API error').slice(0, 200) });
