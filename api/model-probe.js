@@ -100,6 +100,10 @@ module.exports = async function handler(req, res) {
   var withEffort = !!(req.query && req.query.effort);
   var planMode = !!(req.query && req.query.plan);
   var maxTok = Math.min(parseInt((req.query && req.query.max) || '0', 10) || (planMode ? 10000 : 2000), 32000);
+  // Production sends a tiled plan set, not one sheet. The easy single-sheet
+  // case passed on every model and still did not reproduce the failure, so the
+  // probe can repeat the sheet to recreate that pressure.
+  var blocks = Math.min(Math.max(parseInt((req.query && req.query.blocks) || '1', 10) || 1, 1), 16);
 
   // ---- PLAN MODE: the real thing ------------------------------------------
   // Reads a synthetic sheet whose numbers we wrote ourselves, using the REAL
@@ -110,25 +114,26 @@ module.exports = async function handler(req, res) {
     areaSchedule: { 'MAIN FLOOR': 1312, 'UPPER FLOOR': 1174, 'GARAGE': 484, 'COVERED PORCH': 168 },
     windowsTotal: 20, roof: 'gable'
   };
-  function realExtractSys() {
-    // Prefer the prompt the app actually ships; fall back only if we cannot
-    // find it, and say so, so a stale copy is never mistaken for the real one.
+  async function realExtractSys() {
+    // The serverless bundle does not contain demo.html, so reading it off disk
+    // never worked -- the first run of this probe silently used the fallback and
+    // said so, which is the only reason that was caught. Fetch the deployed page
+    // instead: that is the prompt customers actually run.
     try {
-      var fsx = require('fs'), px = require('path');
-      for (var i = 0; i < 3; i++) {
-        var cand = px.join(process.cwd(), '../'.repeat(i), 'demo.html');
-        if (fsx.existsSync(cand)) {
-          var src = fsx.readFileSync(cand, 'utf8');
-          var m2 = src.match(/function _planExtractSys\(\)\{([\s\S]*?)\n\}/);
-          if (m2) {
-            var fn = new Function('return (function(){' + m2[1] + '})()');
-            var out2 = fn();
-            if (typeof out2 === 'string' && out2.length > 200) return { text: out2, source: 'demo.html' };
+      var dr = await fetch('https://orchamind.com/demo');
+      if (dr.ok) {
+        var src = await dr.text();
+        var m2 = src.match(/function _planExtractSys\(\)\{([\s\S]*?)\n\}/);
+        if (m2) {
+          var fn = new Function('return (function(){' + m2[1] + '})()');
+          var out2 = fn();
+          if (typeof out2 === 'string' && out2.length > 500) {
+            return { text: out2, source: 'live demo.html (' + out2.length + ' chars)' };
           }
         }
       }
     } catch (e) {}
-    return { source: 'fallback', text:
+    return { source: 'FALLBACK', text:
       'You are a construction plan TRANSCRIBER. Read what is PRINTED on these sheets and transcribe it exactly. '
       + 'Do NOT compute, estimate, price or infer. Find the printed AREA SCHEDULE and transcribe every row exactly '
       + '(label + square footage). totalPrintedSqft must be the CONDITIONED total only, never including garage, '
@@ -148,7 +153,7 @@ module.exports = async function handler(req, res) {
 
   var planImg = null, promptSource = '';
   if (planMode) {
-    var ex = realExtractSys();
+    var ex = await realExtractSys();
     SYSTEM = ex.text; promptSource = ex.source;
     try {
       var ir = await fetch('https://orchamind.com/media/test-plan.png');
@@ -190,14 +195,19 @@ module.exports = async function handler(req, res) {
   var out = [];
   for (var i = 0; i < models.length; i++) {
     var model = String(models[i]);
-    var content = planMode
-      ? [{ type: 'image', source: { type: 'base64', media_type: 'image/png', data: planImg } },
-         { type: 'text', text: 'Transcribe this plan sheet per your instructions. JSON only.' }]
-      : USER;
+    var content = USER;
+    if (planMode) {
+      content = [];
+      for (var b = 0; b < blocks; b++) {
+        content.push({ type: 'image', source: { type: 'base64', media_type: 'image/png', data: planImg } });
+      }
+      content.push({ type: 'text', text: 'Transcribe ' + (blocks > 1 ? ('these ' + blocks + ' plan sheets') : 'this plan sheet')
+        + ' per your instructions. JSON only.' });
+    }
     var payload = { model: model, max_tokens: maxTok, system: SYSTEM, messages: [{ role: 'user', content: content }] };
     if (withEffort) payload.effort = 'medium';
     var started = Date.now();
-    var row = { model: model, ms: 0 };
+    var row = { model: model, ms: 0, blocks: planMode ? blocks : 0 };
     try {
       var r = await fetch('https://api.anthropic.com/v1/messages', {
         method: 'POST',
@@ -263,6 +273,7 @@ module.exports = async function handler(req, res) {
       + '<tr><th>keys found</th><td>' + esc(JSON.stringify(o.parsedKeys)) + '</td></tr>'
       + '<tr><th>usage</th><td>' + esc(JSON.stringify(o.usage)) + '</td></tr>'
       + '<tr><th>ms</th><td>' + o.ms + '</td></tr>'
+      + (o.blocks ? '<tr><th>image blocks sent</th><td>' + o.blocks + '</td></tr>' : '')
       + '</table>'
       + (o.grade ? ('<table><tr><th>field</th><th>got</th><th>should be</th></tr>'
           + o.grade.rows.map(function (r2) {
@@ -274,12 +285,12 @@ module.exports = async function handler(req, res) {
   }).join('');
 
   var srcNote = planMode
-    ? ('<p class="' + (promptSource === 'demo.html' ? 'ok' : 'warn') + '">Extraction prompt source: <b>'
-       + esc(promptSource) + '</b>' + (promptSource === 'demo.html' ? ' (the prompt the app actually ships)'
-       : ' \u2014 could not read demo.html, so this used the probe\u2019s own copy and may have drifted') + '</p>')
+    ? ('<p class="' + (promptSource.indexOf('live') === 0 ? 'ok' : 'warn') + '">Extraction prompt source: <b>'
+       + esc(promptSource) + '</b>' + (promptSource.indexOf('live') === 0 ? ' \u2014 the prompt the app actually ships'
+       : ' \u2014 could not read the live demo.html, so this used the probe\u2019s own copy and may have drifted. Do not act on this run.') + '</p>')
     : '';
   return page('<h1>Model probe</h1>'
     + '<p class="sub">Asks each model for the estimator\'s JSON shape and reports the RAW response. '
-    + 'Add <code>?plan=1</code> to run the REAL extraction prompt against a synthetic sheet whose numbers we know, at the real token budget (<code>&amp;max=20000</code> to raise it). <code>?effort=1</code> also sends the effort parameter. '
+    + 'Add <code>?plan=1</code> to run the REAL extraction prompt against a synthetic sheet whose numbers we know, at the real token budget (<code>&amp;max=20000</code> to raise it, <code>&amp;blocks=12</code> to send a tiled plan set like production does). <code>?effort=1</code> also sends the effort parameter. '
     + 'Nothing here is wired into the app.</p>' + srcNote + rows);
 };
