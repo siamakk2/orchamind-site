@@ -1,0 +1,46 @@
+{
+  "totalPrintedSqft": 2486,
+  "stories": 2,
+  "overallWidthFt": 42,
+  "overallDepthFt": 34,
+  "areaSchedule": [
+    {
+      "label": "MAIN FLOOR",
+      "sqft": 1312,
+      "conditioned": true
+    },
+    {
+      "label": "UPPER FLOOR",
+      "sqft": 1174,
+      "conditioned": true
+    },
+    {
+      "label": "GARAGE",
+      "sqft": 484,
+      "conditioned": false
+    },
+    {
+      "label": "COVERED PORCH",
+      "sqft": 168,
+      "conditioned": false
+    }
+  ],
+  "windows": {
+    "front": 7,
+    "rear": 6,
+    "left": 3,
+    "right": 4,
+    "total": 20
+  },
+  "roof": "gable",
+  "rooms": [
+    "LIVING",
+    "KITCHEN",
+    "DINING",
+    "GARAGE",
+    "BEDROOM 1",
+    "BEDROOM 2",
+    "BEDROOM 3",
+    "BATH"
+  ]
+}

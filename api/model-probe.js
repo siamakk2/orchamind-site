@@ -98,6 +98,46 @@ module.exports = async function handler(req, res) {
     ? [].concat(req.query.model)
     : ['claude-sonnet-4-6', 'claude-sonnet-5-5', 'claude-opus-5-5'];
   var withEffort = !!(req.query && req.query.effort);
+  var planMode = !!(req.query && req.query.plan);
+  var maxTok = Math.min(parseInt((req.query && req.query.max) || '0', 10) || (planMode ? 10000 : 2000), 32000);
+
+  // ---- PLAN MODE: the real thing ------------------------------------------
+  // Reads a synthetic sheet whose numbers we wrote ourselves, using the REAL
+  // extraction prompt out of demo.html, at the REAL token budget. A probe that
+  // uses a toy prompt proves nothing about the estimator.
+  var TRUTH = {
+    totalPrintedSqft: 2486, stories: 2,
+    areaSchedule: { 'MAIN FLOOR': 1312, 'UPPER FLOOR': 1174, 'GARAGE': 484, 'COVERED PORCH': 168 },
+    windowsTotal: 20, roof: 'gable'
+  };
+  function realExtractSys() {
+    // Prefer the prompt the app actually ships; fall back only if we cannot
+    // find it, and say so, so a stale copy is never mistaken for the real one.
+    try {
+      var fsx = require('fs'), px = require('path');
+      for (var i = 0; i < 3; i++) {
+        var cand = px.join(process.cwd(), '../'.repeat(i), 'demo.html');
+        if (fsx.existsSync(cand)) {
+          var src = fsx.readFileSync(cand, 'utf8');
+          var m2 = src.match(/function _planExtractSys\(\)\{([\s\S]*?)\n\}/);
+          if (m2) {
+            var fn = new Function('return (function(){' + m2[1] + '})()');
+            var out2 = fn();
+            if (typeof out2 === 'string' && out2.length > 200) return { text: out2, source: 'demo.html' };
+          }
+        }
+      }
+    } catch (e) {}
+    return { source: 'fallback', text:
+      'You are a construction plan TRANSCRIBER. Read what is PRINTED on these sheets and transcribe it exactly. '
+      + 'Do NOT compute, estimate, price or infer. Find the printed AREA SCHEDULE and transcribe every row exactly '
+      + '(label + square footage). totalPrintedSqft must be the CONDITIONED total only, never including garage, '
+      + 'porch, patio or deck rows. READ NUMBERS DIGIT BY DIGIT: "1,312" is easily misread as "312" - re-read every '
+      + 'area figure twice. Also transcribe: number of stories, per-elevation window counts, roof form, and every '
+      + 'room name with its printed dimensions. Return ONLY one JSON object: '
+      + '{"totalPrintedSqft":number|null,"stories":number|null,"areaSchedule":[{"label":string,"sqft":number}],'
+      + '"windows":[{"elevation":string,"count":number}],"roof":{"form":string},"rooms":[{"name":string,"dims":string}]}' };
+  }
 
   // A prompt shaped like the estimator's: asks for JSON only, nothing else.
   var SYSTEM = 'You are a construction plan TRANSCRIBER. Return ONLY one JSON object, '
@@ -106,10 +146,55 @@ module.exports = async function handler(req, res) {
     + '{"totalPrintedSqft":number,"stories":number,"areaSchedule":[{"label":string,"sqft":number}],'
     + '"windows":[{"elevation":string,"count":number}],"roof":{"form":string}}';
 
+  var planImg = null, promptSource = '';
+  if (planMode) {
+    var ex = realExtractSys();
+    SYSTEM = ex.text; promptSource = ex.source;
+    try {
+      var ir = await fetch('https://orchamind.com/media/test-plan.png');
+      if (!ir.ok) throw new Error('fixture HTTP ' + ir.status);
+      var ab = await ir.arrayBuffer();
+      planImg = Buffer.from(ab).toString('base64');
+    } catch (e) {
+      return page('<h1>Fixture unavailable</h1><pre class="bad">' + esc(e.message) + '</pre>'
+        + '<p>/media/test-plan.png must be deployed before plan mode can run.</p>');
+    }
+  }
+
+  function near(a, b, tol) {
+    if (a == null || b == null) return false;
+    return Math.abs(a - b) / Math.abs(b || 1) <= (tol == null ? 0.01 : tol);
+  }
+  function gradePlan(o) {
+    if (!o) return { score: 0, of: 7, rows: [['parsed', false, '-', '-']] };
+    var rows = [], hit = 0;
+    function add(label, got, want, ok) { rows.push([label, ok, got, want]); if (ok) hit++; }
+    add('totalPrintedSqft', o.totalPrintedSqft, TRUTH.totalPrintedSqft, near(o.totalPrintedSqft, TRUTH.totalPrintedSqft, 0.005));
+    add('stories', o.stories, TRUTH.stories, Number(o.stories) === TRUTH.stories);
+    var sched = {};
+    (Array.isArray(o.areaSchedule) ? o.areaSchedule : []).forEach(function (r) {
+      var k = String(r && (r.label || r.name) || '').toUpperCase().replace(/[^A-Z ]/g, '').trim();
+      var v = Number(r && (r.sqft != null ? r.sqft : r.value));
+      if (k) sched[k] = v;
+    });
+    ['MAIN FLOOR', 'UPPER FLOOR', 'GARAGE', 'COVERED PORCH'].forEach(function (k) {
+      add('area: ' + k, sched[k], TRUTH.areaSchedule[k], near(sched[k], TRUTH.areaSchedule[k], 0.005));
+    });
+    var wt = null;
+    if (Array.isArray(o.windows)) wt = o.windows.reduce(function (s2, w) { return s2 + (Number(w && (w.count != null ? w.count : w.qty)) || 0); }, 0);
+    else if (typeof o.windows === 'number') wt = o.windows;
+    add('windows total', wt, TRUTH.windowsTotal, Number(wt) === TRUTH.windowsTotal);
+    return { score: hit, of: rows.length, rows: rows };
+  }
+
   var out = [];
   for (var i = 0; i < models.length; i++) {
     var model = String(models[i]);
-    var payload = { model: model, max_tokens: 2000, system: SYSTEM, messages: [{ role: 'user', content: USER }] };
+    var content = planMode
+      ? [{ type: 'image', source: { type: 'base64', media_type: 'image/png', data: planImg } },
+         { type: 'text', text: 'Transcribe this plan sheet per your instructions. JSON only.' }]
+      : USER;
+    var payload = { model: model, max_tokens: maxTok, system: SYSTEM, messages: [{ role: 'user', content: content }] };
     if (withEffort) payload.effort = 'medium';
     var started = Date.now();
     var row = { model: model, ms: 0 };
@@ -142,6 +227,7 @@ module.exports = async function handler(req, res) {
         var parsed = estParseJSON(text);
         row.parsed = !!parsed;
         row.parsedKeys = parsed ? Object.keys(parsed) : [];
+        if (planMode) row.grade = gradePlan(parsed);
       }
     } catch (e) {
       row.ms = Date.now() - started;
@@ -177,11 +263,23 @@ module.exports = async function handler(req, res) {
       + '<tr><th>keys found</th><td>' + esc(JSON.stringify(o.parsedKeys)) + '</td></tr>'
       + '<tr><th>usage</th><td>' + esc(JSON.stringify(o.usage)) + '</td></tr>'
       + '<tr><th>ms</th><td>' + o.ms + '</td></tr>'
-      + '</table><pre>' + esc(o.textHead || '(no text returned)') + '</pre>';
+      + '</table>'
+      + (o.grade ? ('<table><tr><th>field</th><th>got</th><th>should be</th></tr>'
+          + o.grade.rows.map(function (r2) {
+              return '<tr><td class="' + (r2[1] ? 'ok' : 'bad') + '">' + (r2[1] ? '\u2713 ' : '\u2717 ') + esc(r2[0]) + '</td>'
+                   + '<td>' + esc(r2[2]) + '</td><td>' + esc(r2[3]) + '</td></tr>'; }).join('')
+          + '</table><p class="' + (o.grade.score === o.grade.of ? 'ok' : 'bad') + '">'
+          + o.grade.score + ' of ' + o.grade.of + ' printed values read correctly</p>') : '')
+      + '<pre>' + esc(o.textHead || '(no text returned)') + '</pre>';
   }).join('');
 
+  var srcNote = planMode
+    ? ('<p class="' + (promptSource === 'demo.html' ? 'ok' : 'warn') + '">Extraction prompt source: <b>'
+       + esc(promptSource) + '</b>' + (promptSource === 'demo.html' ? ' (the prompt the app actually ships)'
+       : ' \u2014 could not read demo.html, so this used the probe\u2019s own copy and may have drifted') + '</p>')
+    : '';
   return page('<h1>Model probe</h1>'
     + '<p class="sub">Asks each model for the estimator\'s JSON shape and reports the RAW response. '
-    + 'Add <code>?effort=1</code> to also send the effort parameter. '
-    + 'Nothing here is wired into the app.</p>' + rows);
+    + 'Add <code>?plan=1</code> to run the REAL extraction prompt against a synthetic sheet whose numbers we know, at the real token budget (<code>&amp;max=20000</code> to raise it). <code>?effort=1</code> also sends the effort parameter. '
+    + 'Nothing here is wired into the app.</p>' + srcNote + rows);
 };
