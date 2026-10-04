@@ -56,3 +56,6 @@ jobs:
 
       - name: Every AI feature reply parses into what its caller needs
         run: node scripts/test-parser-callers.js
+
+      - name: Funnel tracks customers, never us
+        run: node scripts/test-funnel.js

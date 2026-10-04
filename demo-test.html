@@ -3508,7 +3508,7 @@ function showRenewWall(user){
 function logEvent(type, detail){ try{ fetch('/api/activity',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'log',type:type,detail:detail,username:(window.CURRENT_USER&&CURRENT_USER.username)||''})}); }catch(e){} }
 window.addEventListener('error', function(e){ try{ logEvent('error', ((e&&e.message)||'Script error')+(e&&e.filename?(' ('+String(e.filename).split('/').pop()+':'+e.lineno+')'):'')); }catch(x){} });
 var _actFilter='all';
-function _actIcon(t){ return {login:'\ud83d\udd11',signup:'\ud83c\udf89',lead:'\u2728',payment:'\ud83d\udcb3',error:'\u26a0\ufe0f'}[t]||'\u2022'; }
+function _actIcon(t){ return {login:'\ud83d\udd11',signup:'\ud83c\udf89',lead:'\u2728',payment:'\ud83d\udcb3',error:'\u26a0\ufe0f',view:'\ud83d\udc41',plan_read_start:'\ud83d\udcd0',plan_read_ok:'\u2705',plan_read_fail:'\u274c',activation:'\ud83d\ude80'}[t]||'\u2022'; }
 function _actAgo(ts){ if(!ts)return''; var d=new Date(ts); var s=Math.floor((Date.now()-d.getTime())/1000); if(s<0)s=0; if(s<60)return s+'s ago'; if(s<3600)return Math.floor(s/60)+'m ago'; if(s<86400)return Math.floor(s/3600)+'h ago'; return d.toLocaleDateString(); }
 function setActFilter(t){ _actFilter=t; loadActivity(); }
 function loadActivity(){
@@ -8148,6 +8148,64 @@ function omIsActivated(){
     jrGenerate=function(){
       var r=_jr.apply(this,arguments);
       try{ if(window._jrPhotos && _jrPhotos.length) omMarkActivated('job report'); }catch(e){}
+      return r;
+    };
+  }
+})();
+
+/* ---- Funnel: where do trial users actually go, and where do they stop? ----
+   Before this, the only signal was a login. All we could say was "they left";
+   not whether they opened the estimator, tried a plan, or hit an error. These
+   events answer that. Real customers only: never the operator, crew, demo mode
+   or the support view, so the numbers are not polluted by us. */
+function _omTrack(type,detail){
+  try{
+    if(typeof IS_REAL_APP==='undefined'||!IS_REAL_APP) return;
+    if(window.SUPPORT_VIEW) return;
+    if(typeof isCrew==='function'&&isCrew()) return;
+    if(typeof isAdmin==='function'&&isAdmin()) return;
+    if(typeof logEvent==='function') logEvent(type,String(detail||'').slice(0,300));
+  }catch(e){}
+}
+(function(){
+  // Which screens they open -- once per screen per browser session.
+  if(typeof goTab==='function'){
+    var _gt=goTab;
+    goTab=function(name){
+      var r=_gt.apply(this,arguments);
+      try{
+        var k='om_seen_'+name;
+        if(!sessionStorage.getItem(k)){ sessionStorage.setItem(k,'1'); _omTrack('view',name); }
+      }catch(e){}
+      return r;
+    };
+  }
+  // Did they try the plan reader, and did it work?
+  if(typeof _planAnalyzeStaged==='function'){
+    var _pa=_planAnalyzeStaged;
+    _planAnalyzeStaged=function(){
+      try{
+        window._omPlanT0=Date.now();
+        var n=(typeof _planStaged!=='undefined'&&_planStaged&&_planStaged.length)||0;
+        _omTrack('plan_read_start',n+' file(s)');
+      }catch(e){}
+      return _pa.apply(this,arguments);
+    };
+  }
+  if(typeof _planApply==='function'){
+    var _pap=_planApply;
+    _planApply=function(text){
+      var before=window._planDraft;
+      var r=_pap.apply(this,arguments);
+      try{
+        var secs=window._omPlanT0?Math.round((Date.now()-window._omPlanT0)/1000):null;
+        var d=window._planDraft;
+        if(d&&d!==before&&d.items&&d.items.length){
+          _omTrack('plan_read_ok',d.items.length+' items in '+secs+'s'+(window._planExtracted?' (with transcription)':' (no transcription)'));
+        } else {
+          _omTrack('plan_read_fail','after '+secs+'s');
+        }
+      }catch(e){}
       return r;
     };
   }
