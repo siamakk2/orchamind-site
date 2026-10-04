@@ -38,9 +38,8 @@ jobs:
 
       - name: Plan cross-check catches misreads
         run: node scripts/test-plan-crosscheck.js
-
-      - name: Cross-check warning reaches the screen
-        run: node scripts/test-crosscheck-ui.js
+      # test-crosscheck-ui.js is NOT run: the second-opinion read is not wired into
+      # the app (it was reverted). Re-add this step in the same commit that wires it.
 
       - name: Walkthrough geometry matches the plan
         run: node scripts/test-house-walk.js

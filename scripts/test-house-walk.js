@@ -128,7 +128,9 @@ t('looking and walking agree — you move where you are facing', function () {
   };
   [-0.6, -0.2, 0, 0.35, 0.9].forEach(function (yaw) {
     var inst = mk();
-    inst.cam.x = 11; inst.cam.y = 7.5; inst.cam.yaw = yaw;
+    // Level camera: this test is about yaw and movement agreeing. The default
+    // start is tilted down on purpose so the floor is in view.
+    inst.cam.x = 11; inst.cam.y = 7.5; inst.cam.yaw = yaw; inst.cam.pitch = 0;
     var x0 = inst.cam.x, y0 = inst.cam.y;
     inst.move(1.2, 0);
     var dx = inst.cam.x - x0, dy = inst.cam.y - y0;
@@ -204,6 +206,20 @@ t('a doorway in a wall shorter than the door leaves no header', function () {
 });
 
 // ---- the instance ---------------------------------------------------------
+t('the starting view is tilted down so the floor -- the finish being sold -- is in frame', function () {
+  var inst = W.create({ canvas: { clientWidth: 600, clientHeight: 340, getContext: function () { return null; } }, geom: GEOM });
+  assert.ok(inst.cam.pitch < -0.05 && inst.cam.pitch > -0.5, 'pitch ' + inst.cam.pitch);
+});
+
+t('it starts in a corner looking across the room, not at the nearest wall', function () {
+  var inst = W.create({ canvas: { clientWidth: 600, clientHeight: 340, getContext: function () { return null; } }, geom: GEOM });
+  // Living is 22 x 15 from (0,0). Starting near (0,0) facing the far corner means
+  // walking forward moves +x and +y.
+  var x0 = inst.cam.x, y0 = inst.cam.y;
+  inst.move(1, 0);
+  assert.ok(inst.cam.x > x0 && inst.cam.y > y0, 'should head into the room diagonally');
+});
+
 t('create() starts you inside the largest room, at eye height', function () {
   var inst = W.create({ canvas: { clientWidth: 600, clientHeight: 340, getContext: function () { return null; } }, geom: GEOM });
   assert.ok(inst);
