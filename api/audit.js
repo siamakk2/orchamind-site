@@ -17,6 +17,58 @@
 // interpret them, rather than asking it to infer what exists.
 //
 // Response shape is backward compatible; report.signals is additive.
+// Full shape of the report, so the model fills every nested field as real
+// JSON (a loose "object" let it send sections as strings or skip them).
+const SEC = { type: 'object', properties: { score: { type: 'integer' }, summary: { type: 'string' },
+  fixes: { type: 'array', items: { type: 'string' } } }, required: ['score', 'summary', 'fixes'] };
+const STR = { type: 'string' }, STRS = { type: 'array', items: { type: 'string' } };
+const REPORT_SCHEMA = { type: 'object', properties: {
+  business_name: STR, what_they_do: STR, industry: STR, overall_score: { type: 'integer' }, grade_label: STR, headline: STR,
+  scores: { type: 'object', properties: { seo: SEC, llmo: SEC, positioning: SEC, content: SEC }, required: ['seo', 'llmo', 'positioning', 'content'] },
+  quick_wins: STRS, ideas: STRS,
+  preview: { type: 'object', properties: { logo_text: STR, tagline: STR, hero_headline: STR, hero_sub: STR, primary_cta: STR,
+    services: { type: 'array', items: { type: 'object', properties: { title: STR, desc: STR }, required: ['title', 'desc'] } },
+    why_us: STRS, about_line: STR, location_line: STR }, required: ['logo_text', 'hero_headline', 'services'] },
+  pitch: STR },
+  required: ['business_name', 'what_they_do', 'overall_score', 'grade_label', 'headline', 'scores', 'quick_wins', 'ideas', 'preview', 'pitch'] };
+
+// Repair what the model sends instead of rejecting it: sections that arrive
+// as JSON strings are parsed, missing pieces get safe defaults. Only a report
+// with no usable scores at all counts as a failure.
+function normalize(r) {
+  const parse = (v) => { if (typeof v === 'string') { try { return JSON.parse(v); } catch (e) { return v; } } return v; };
+  r = parse(r);
+  if (!r || typeof r !== 'object') return null;
+  for (const k of ['scores', 'preview', 'quick_wins', 'ideas']) r[k] = parse(r[k]);
+  const sc = r.scores && typeof r.scores === 'object' ? r.scores : null;
+  if (!sc) return null;
+  const arr = (v) => (Array.isArray(v) ? v.map((x) => (typeof x === 'string' ? x : (x && (x.text || x.title)) || '')).filter(Boolean) : (typeof v === 'string' && v ? [v] : []));
+  const num = (v, d) => { const n = Math.round(Number(v)); return isFinite(n) ? Math.max(0, Math.min(100, n)) : d; };
+  let have = 0;
+  for (const k of ['seo', 'llmo', 'positioning', 'content']) {
+    let x = parse(sc[k]);
+    if (typeof x === 'number') x = { score: x };
+    if (!x || typeof x !== 'object') x = {};
+    if (x.score != null) have++;
+    sc[k] = { score: num(x.score, 50), summary: String(x.summary || ''), fixes: arr(x.fixes) };
+  }
+  if (!have) return null;
+  r.scores = sc;
+  const avg = Math.round((sc.seo.score + sc.llmo.score + sc.positioning.score + sc.content.score) / 4);
+  r.overall_score = num(r.overall_score, avg);
+  r.quick_wins = arr(r.quick_wins); r.ideas = arr(r.ideas);
+  for (const k of ['business_name', 'what_they_do', 'industry', 'grade_label', 'headline', 'pitch']) r[k] = String(r[k] || '');
+  const p = r.preview && typeof r.preview === 'object' ? r.preview : {};
+  p.services = (Array.isArray(p.services) ? p.services : []).map((x) => (typeof x === 'string' ? { title: x, desc: '' } : { title: String((x && x.title) || ''), desc: String((x && x.desc) || '') })).filter((x) => x.title);
+  p.why_us = arr(p.why_us);
+  for (const k of ['logo_text', 'tagline', 'hero_headline', 'hero_sub', 'primary_cta', 'about_line', 'location_line']) p[k] = String(p[k] || '');
+  if (!p.logo_text) p.logo_text = r.business_name.slice(0, 22);
+  if (!p.primary_cta) p.primary_cta = 'Get in Touch';
+  r.preview = p;
+  return r;
+}
+
+
 module.exports = async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
@@ -264,42 +316,46 @@ For the "preview" content: write it as polished marketing copy a professional co
 
     const user = 'Audit this website: ' + url + ' (host: ' + host + ')\n\n--- FETCHED CONTENT ---\n' + pageText;
 
-    const aResp = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-api-key': apiKey,
-        'anthropic-version': '2023-06-01'
-      },
-      body: JSON.stringify({
-        model: 'claude-sonnet-5-5',
-        max_tokens: 3000,
-        system: system,
-        messages: [{ role: 'user', content: user }]
-      })
-    });
-
-    const data = await aResp.json();
-    let txt = '';
-    if (data && Array.isArray(data.content)) {
-      txt = data.content.filter(b => b.type === 'text').map(b => b.text).join('').trim();
-    }
-    if (!txt) {
-      return res.status(200).json({ error: "The analysis came back empty. Please try again, or call Siamak at 323-657-7752." });
-    }
-
-    // Strip any stray code fences and parse
-    txt = txt.replace(/^```json\s*/i, '').replace(/^```\s*/i, '').replace(/```$/i, '').trim();
-    let report;
-    try { report = JSON.parse(txt); }
-    catch (e) {
-      // Try to salvage the JSON object
+    // The report comes back through a forced tool call with the full report
+    // shape, so the model must return one complete JSON object. Free text was
+    // cut off past max_tokens and failed with "couldn't format the report".
+    // Anything slightly off is repaired by normalize(); one retry with a
+    // bigger budget if nothing usable came back.
+    async function ask(maxTokens) {
+      const aResp = await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'x-api-key': apiKey, 'anthropic-version': '2023-06-01' },
+        body: JSON.stringify({
+          model: 'claude-sonnet-5-5',
+          max_tokens: maxTokens,
+          system: system + '\n\nDeliver the report by calling the submit_report tool with that JSON object as its input.',
+          tools: [{ name: 'submit_report', description: 'Submit the finished website report.', input_schema: REPORT_SCHEMA }],
+          tool_choice: { type: 'tool', name: 'submit_report' },
+          messages: [{ role: 'user', content: user }]
+        })
+      });
+      const data = await aResp.json();
+      if (!aResp.ok) { console.error(JSON.stringify({ source: 'audit', status: aResp.status, error: data && data.error })); return { fail: 'api' }; }
+      if (data.stop_reason === 'max_tokens') console.error(JSON.stringify({ source: 'audit', truncated: maxTokens }));
+      const tool = (data.content || []).find(b => b.type === 'tool_use');
+      const fixed = tool && normalize(tool.input);
+      if (fixed) return { report: fixed };
+      const txt = (data.content || []).filter(b => b.type === 'text').map(b => b.text).join('');
       const m = txt.match(/\{[\s\S]*\}/);
-      if (m) { try { report = JSON.parse(m[0]); } catch (e2) {} }
+      if (m) { try { const r2 = normalize(JSON.parse(m[0])); if (r2) return { report: r2 }; } catch (e) {} }
+      console.error(JSON.stringify({ source: 'audit', unparsed: true, stop: data.stop_reason }));
+      return { fail: 'format' };
     }
-    if (!report) {
-      return res.status(200).json({ error: "I analyzed the site but couldn't format the report. Please try again." });
+
+    let out = await ask(8000);
+    if (!out.report && out.fail !== 'api') out = await ask(12000);
+    console.log(JSON.stringify({ source: 'audit', host, ok: !!out.report, fail: out.fail || null }));
+    if (!out.report) {
+      return res.status(200).json({ error: out.fail === 'api'
+        ? 'The analysis service is busy right now. Please try again in a minute, or call Siamak at 323-657-7752.'
+        : "I analyzed the site but couldn't format the report. Please try again." });
     }
+    const report = out.report;
 
     report.url = url;
     report.host = host;
