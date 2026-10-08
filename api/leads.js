@@ -75,6 +75,7 @@ module.exports = async function handler(req, res) {
       } else if (!RESEND) { emailErr = 'RESEND_API_KEY not set'; }
     } catch (e) { emailErr = String((e && e.message) || e); }
 
+    console.log(JSON.stringify({ source: 'leads', to: String(lead.email || '').replace(/^(.).*@/, '$1***@'), report: !!lead.report, pages: (lead.pages || []).length, emailed, attached, emailErr }));
     return res.status(200).json({ ok: true, emailed: emailed, attached: attached, emailErr: emailErr });
   } catch (err) {
     return res.status(200).json({ ok: false, error: err.message });
