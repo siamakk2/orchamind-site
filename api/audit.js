@@ -326,7 +326,8 @@ For the "preview" content: write it as polished marketing copy a professional co
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'x-api-key': apiKey, 'anthropic-version': '2023-06-01' },
         body: JSON.stringify({
-          model: 'claude-sonnet-5-5',
+          // Sonnet 5.5 refuses a forced tool_choice; 4.6 supports it and is proven here.
+          model: 'claude-sonnet-4-6',
           max_tokens: maxTokens,
           system: system + '\n\nDeliver the report by calling the submit_report tool with that JSON object as its input.',
           tools: [{ name: 'submit_report', description: 'Submit the finished website report.', input_schema: REPORT_SCHEMA }],
