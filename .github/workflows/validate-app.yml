@@ -73,3 +73,9 @@ jobs:
 
       - name: "Trial check-in emails - admin panel"
         run: node scripts/test-outreach-ui.js
+
+      - name: "Sign in with Google, Facebook, email link - server"
+        run: node scripts/test-oauth.js
+
+      - name: "Sign in with Google, Facebook, email link - login screen"
+        run: node scripts/test-oauth-ui.js

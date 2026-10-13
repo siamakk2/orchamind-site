@@ -773,6 +773,7 @@ button:active, .btn:active, .btn-ghost:active, .tab:active, [role="button"]:acti
 
     <!-- LOGIN FORM -->
     <div id="formLogin">
+      <div class="sso-wrap"><button type="button" class="sso-g" onclick="ssoStart('google')" style="width:100%;display:none;align-items:center;justify-content:center;gap:10px;border-radius:9px;padding:11px 14px;font-size:15px;font-weight:600;cursor:pointer;margin-bottom:9px;background:#fff;color:#1F1F1F;border:1.5px solid #747775;"><svg width="18" height="18" viewBox="0 0 48 48" aria-hidden="true"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg><span>Continue with Google</span></button><button type="button" class="sso-f" onclick="ssoStart('facebook')" style="width:100%;display:none;align-items:center;justify-content:center;gap:10px;border-radius:9px;padding:11px 14px;font-size:15px;font-weight:600;cursor:pointer;margin-bottom:9px;background:#1877F2;color:#fff;border:1.5px solid #1877F2;"><svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path fill="#fff" d="M24 12.07C24 5.41 18.63 0 12 0S0 5.4 0 12.07C0 18.1 4.39 23.1 10.13 24v-8.44H7.08v-3.49h3.04V9.41c0-3.02 1.8-4.7 4.54-4.7 1.31 0 2.68.24 2.68.24v2.97h-1.5c-1.5 0-1.96.93-1.96 1.89v2.26h3.32l-.53 3.5h-2.8V24C19.62 23.1 24 18.1 24 12.07"/></svg><span>Continue with Facebook</span></button><div class="sso-or" style="display:none;align-items:center;gap:10px;margin:6px 0 14px;color:#9aa7b4;font-size:12.5px;"><span style="flex:1;height:1px;background:#E1E8F0;"></span>or use your email<span style="flex:1;height:1px;background:#E1E8F0;"></span></div></div>
       <div style="margin-bottom:13px;"><label style="display:block;font-size:13px;font-weight:600;color:#0A1628;margin-bottom:6px;">Email</label>
         <input id="liUser" type="text" inputmode="email" autocomplete="username" placeholder="you@company.com" style="width:100%;border:1.5px solid #E1E8F0;border-radius:9px;padding:11px 14px;font-size:15px;outline:none;"></div>
       <div style="margin-bottom:16px;"><label style="display:block;font-size:13px;font-weight:600;color:#0A1628;margin-bottom:6px;">Password</label>
@@ -780,11 +781,23 @@ button:active, .btn:active, .btn-ghost:active, .tab:active, [role="button"]:acti
       <div style="text-align:right;margin:-8px 0 14px;"><a href="#" onclick="forgotPw();return false;" style="font-size:13px;color:#2D7FF9;font-weight:600;">Forgot password?</a></div>
       <button onclick="demoEnter()" style="width:100%;background:#fff;color:#1565C0;border:1.5px solid #1565C0;border-radius:9px;padding:11px 14px;font-size:14px;font-weight:600;cursor:pointer;margin-bottom:10px;">👀 Explore the demo — no account needed</button>
       <button onclick="authLogin()" id="liBtn" style="width:100%;background:#1565C0;color:#fff;border:none;border-radius:9px;padding:13px;font-size:15px;font-weight:700;cursor:pointer;">Log In</button>
+      <div style="text-align:center;margin-top:12px;"><a href="#" onclick="showForm('formLink');var e=document.getElementById('lkEmail'),u=document.getElementById('liUser');if(e&&u&&u.value)e.value=u.value;return false;" style="font-size:13.5px;color:#1565C0;font-weight:600;">&#9993;&#65039; Email me a sign-in link instead</a></div>
       <div style="text-align:center;margin-top:14px;font-size:13px;color:#5A6B7D;">New to Orchamind? <a href="#" onclick="showForm('formSignup');return false;" style="color:#2D7FF9;font-weight:700;">Create a free account</a></div>
+    </div>
+
+    <!-- EMAIL SIGN-IN LINK -->
+    <div id="formLink" style="display:none;">
+      <p style="font-size:13.5px;color:#5A6B7D;margin-bottom:14px;text-align:center;">No password needed. We will email you a link that signs you in.</p>
+      <div style="margin-bottom:14px;"><label style="display:block;font-size:13px;font-weight:600;color:#0A1628;margin-bottom:6px;">Email</label>
+        <input id="lkEmail" type="email" inputmode="email" autocomplete="email" placeholder="you@company.com" style="width:100%;border:1.5px solid #E1E8F0;border-radius:9px;padding:11px 14px;font-size:15px;outline:none;"></div>
+      <button onclick="sendSignInLink()" id="lkBtn" style="width:100%;background:#1565C0;color:#fff;border:none;border-radius:9px;padding:13px;font-size:15px;font-weight:700;cursor:pointer;">Email me a sign-in link</button>
+      <div id="lkMsg" style="font-size:13.5px;color:#1B8A4B;margin-top:12px;text-align:center;line-height:1.5;"></div>
+      <div style="text-align:center;margin-top:12px;"><a href="#" onclick="showForm('formLogin');return false;" style="font-size:13px;color:#5A6B7D;">&larr; Back to login</a></div>
     </div>
 
     <div id="formSignup" style="display:none;">
       <p style="font-size:13.5px;color:#5A6B7D;margin-bottom:16px;text-align:center;">Start your first month free — no credit card. After 30 days, Orchamind is $500/month.</p>
+      <div class="sso-wrap"><button type="button" class="sso-g" onclick="ssoStart('google')" style="width:100%;display:none;align-items:center;justify-content:center;gap:10px;border-radius:9px;padding:11px 14px;font-size:15px;font-weight:600;cursor:pointer;margin-bottom:9px;background:#fff;color:#1F1F1F;border:1.5px solid #747775;"><svg width="18" height="18" viewBox="0 0 48 48" aria-hidden="true"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg><span>Sign up with Google</span></button><button type="button" class="sso-f" onclick="ssoStart('facebook')" style="width:100%;display:none;align-items:center;justify-content:center;gap:10px;border-radius:9px;padding:11px 14px;font-size:15px;font-weight:600;cursor:pointer;margin-bottom:9px;background:#1877F2;color:#fff;border:1.5px solid #1877F2;"><svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path fill="#fff" d="M24 12.07C24 5.41 18.63 0 12 0S0 5.4 0 12.07C0 18.1 4.39 23.1 10.13 24v-8.44H7.08v-3.49h3.04V9.41c0-3.02 1.8-4.7 4.54-4.7 1.31 0 2.68.24 2.68.24v2.97h-1.5c-1.5 0-1.96.93-1.96 1.89v2.26h3.32l-.53 3.5h-2.8V24C19.62 23.1 24 18.1 24 12.07"/></svg><span>Sign up with Facebook</span></button><div class="sso-or" style="display:none;align-items:center;gap:10px;margin:6px 0 14px;color:#9aa7b4;font-size:12.5px;"><span style="flex:1;height:1px;background:#E1E8F0;"></span>or use your email<span style="flex:1;height:1px;background:#E1E8F0;"></span></div></div>
       <div style="margin-bottom:11px;"><label style="display:block;font-size:13px;font-weight:600;color:#0A1628;margin-bottom:6px;">Company name</label><input id="suCompany" type="text" placeholder="e.g. Howard Construction" style="width:100%;border:1.5px solid #E1E8F0;border-radius:9px;padding:11px 14px;font-size:15px;outline:none;"></div>
       <div style="margin-bottom:11px;"><label style="display:block;font-size:13px;font-weight:600;color:#0A1628;margin-bottom:6px;">Your name</label><input id="suName" type="text" placeholder="e.g. Phil Howard" style="width:100%;border:1.5px solid #E1E8F0;border-radius:9px;padding:11px 14px;font-size:15px;outline:none;"></div>
       <div style="margin-bottom:11px;"><label style="display:block;font-size:13px;font-weight:600;color:#0A1628;margin-bottom:6px;">Email</label><input id="suEmail" type="email" placeholder="you@company.com" style="width:100%;border:1.5px solid #E1E8F0;border-radius:9px;padding:11px 14px;font-size:15px;outline:none;"></div>
@@ -3255,9 +3268,9 @@ function authRegister(){
   var err=document.getElementById('authError');
   if(!co){err.textContent='Enter your company name.';return;}
   if(!em||!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(em)){err.textContent='Enter a valid email address \u2014 that is how you will sign in.';return;}
-  if(p.length<6){err.textContent='Choose a password of at least 6 characters.';return;}
+  if(!window._SSO&&p.length<6){err.textContent='Choose a password of at least 6 characters.';return;}
   var btn=document.getElementById('suBtn');btn.disabled=true;var old=btn.textContent;btn.textContent='Creating\u2026';err.textContent='';
-  fetch('/api/accounts',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'register',company:co,name:nm,email:em,username:u,password:p,ref:(window._REFCODE||'')})})
+  fetch('/api/accounts',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'register',company:co,name:nm,email:em,username:u,password:p,sso:(window._SSO||''),ref:(window._REFCODE||'')})})
     .then(function(r){return r.json();}).then(function(d){
       btn.disabled=false;btn.textContent=old;
       if(d&&d.ok&&d.user){
@@ -3267,7 +3280,7 @@ function authRegister(){
     }).catch(function(){btn.disabled=false;btn.textContent=old;err.textContent='Network error. Please try again.';});
 }
 function showForm(which){
-  ['formLogin','formChange','formSetup','formSignup'].forEach(function(f){document.getElementById(f).style.display='none';});
+  ['formLogin','formChange','formSetup','formSignup','formMfa','formLink'].forEach(function(f){var el=document.getElementById(f);if(el)el.style.display='none';});
   document.getElementById(which).style.display='block';
   document.getElementById('authError').textContent='';
 }
@@ -3353,12 +3366,70 @@ function demoEnter(){
   CURRENT_USER={username:'demo',name:'Demo',role:'demo'};
   enterApp();
 }
+/* ---- Sign in with Google / Facebook / email link (api/oauth.js) ---- */
+function loadSsoButtons(){
+  fetch('/api/oauth?config=1').then(function(r){return r.json();}).then(function(c){
+    if(!c||!c.ok) return;
+    var show=function(sel,on){ document.querySelectorAll(sel).forEach(function(el){ el.style.display=on?'flex':'none'; }); };
+    show('.sso-g',!!c.google); show('.sso-f',!!c.facebook); show('.sso-or',!!(c.google||c.facebook));
+  }).catch(function(){});
+}
+function ssoStart(p){
+  try{ if(typeof _omTrack==='function') _omTrack('sso_start',p); }catch(e){}
+  location.href='/auth/'+p+(window._REFCODE?('?ref='+encodeURIComponent(window._REFCODE)):'');
+}
+var _SSO_ERR={cancelled:'Sign-in was cancelled. You can try again or use your email.',expired:'That sign-in took too long or the link was already used. Please try again.',failed:'We could not finish signing you in. Please try again, or use your email.',noemail:'That account did not share an email address with us. Please use Google or your email instead.',unverified:'That account\'s email is not verified. Please use your email to sign in.',notset:'That sign-in option is not available yet. Please use your email.'};
+function _ssoClean(){ try{ history.replaceState(null,'',location.pathname); }catch(e){} }
+// Returns true when it has taken over the screen.
+function ssoReturn(qs){
+  var err=qs.get('autherr');
+  if(err){ _ssoClean(); showForm('formLogin'); authErr(_SSO_ERR[err]||_SSO_ERR.failed); return true; }
+  var m=qs.get('mfa');
+  if(m){ _ssoClean(); window._mfaUser=m; showForm('formMfa'); var s=document.getElementById('authSubtitle'); if(s)s.textContent='Check your email'; return true; }
+  if(qs.get('sso')){
+    window._SSO=qs.get('sso'); window._REFCODE=qs.get('ref')||'';
+    var pf=function(id,v){var el=document.getElementById(id);if(el&&v!=null)el.value=v;};
+    showForm('formSignup'); pf('suName',qs.get('name')||''); pf('suEmail',qs.get('email')||'');
+    var em=document.getElementById('suEmail'); if(em){ em.readOnly=true; em.style.background='#F5F7FA'; }
+    var pw=document.getElementById('suPass'); if(pw&&pw.parentNode) pw.parentNode.style.display='none';
+    document.querySelectorAll('#formSignup .sso-wrap').forEach(function(el){ el.style.display='none'; });
+    var s2=document.getElementById('authSubtitle'); if(s2) s2.textContent='One last step: your company name';
+    var co=document.getElementById('suCompany'); if(co) co.focus();
+    _ssoClean(); return true;
+  }
+  if(qs.get('signedin')==='1'){
+    _ssoClean();
+    fetch('/api/accounts',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'whoami'})})
+      .then(function(r){return r.json();}).then(function(d){
+        if(d&&d.ok&&d.user){
+          CURRENT_USER=d.user;
+          if(d.user.paused){ showRenewWall(d.user); return; }
+          try{sessionStorage.setItem('hci_session',JSON.stringify(CURRENT_USER));}catch(e){} enterApp();
+        } else { showForm('formLogin'); authErr((d&&d.error)||_SSO_ERR.failed); }
+      }).catch(function(){ showForm('formLogin'); authErr('Could not reach the server.'); });
+    return true;
+  }
+  return false;
+}
+function sendSignInLink(){
+  var em=(document.getElementById('lkEmail').value||'').trim(); var msg=document.getElementById('lkMsg');
+  if(!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(em)){ msg.style.color='#C62828'; msg.textContent='Enter the email address you use for Orchamind.'; return; }
+  var b=document.getElementById('lkBtn'); b.disabled=true; b.textContent='Sending\u2026'; msg.textContent='';
+  fetch('/api/oauth',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'sendLink',email:em})})
+    .then(function(r){return r.json();}).then(function(d){
+      b.disabled=false; b.textContent='Email me a sign-in link';
+      if(d&&d.ok){ msg.style.color='#1B8A4B'; msg.textContent=d.message||'Check your email for the sign-in link.'; }
+      else { msg.style.color='#C62828'; msg.textContent=(d&&d.error)||'Could not send the link.'; }
+    }).catch(function(){ b.disabled=false; b.textContent='Email me a sign-in link'; msg.style.color='#C62828'; msg.textContent='Network error. Please try again.'; });
+}
 function bootAuth(){
   var qs=new URLSearchParams(location.search);
   if(qs.get('app')==='1'||/^\/app\/?$/.test(location.pathname)){
+    loadSsoButtons();
+    if(qs.get('signedin')==='1'||qs.get('mfa')||qs.get('autherr')||qs.get('sso')){ if(ssoReturn(qs)) return; }
     var saved=null;try{saved=JSON.parse(sessionStorage.getItem('hci_session')||'null');}catch(e){}
-    if(saved&&saved.username&&saved.role!=='demo'){CURRENT_USER=saved;enterApp();return;}
-    if(qs.get('signup')==='1'){window._REFCODE=qs.get('ref')||'';showForm('formSignup');var _pf=function(id,v){var el=document.getElementById(id);if(el&&v)el.value=v;};_pf('suCompany',qs.get('company'));_pf('suName',qs.get('name'));_pf('suEmail',qs.get('email'));return;}
+    if(saved&&saved.username&&saved.role&&saved.role!=='demo'){CURRENT_USER=saved;enterApp();return;}
+    if(qs.get('signup')==='1'){window._REFCODE=qs.get('ref')||'';showForm('formSignup');var _st=document.getElementById('authSubtitle');if(_st)_st.textContent='Start your free month';try{if(typeof _omTrack==='function')_omTrack('view','signup form');}catch(e){}var _pf=function(id,v){var el=document.getElementById(id);if(el&&v)el.value=v;};_pf('suCompany',qs.get('company'));_pf('suName',qs.get('name'));_pf('suEmail',qs.get('email'));return;}
     fetch('/api/accounts',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'status'})})
       .then(function(r){return r.json();})
       .then(function(d){
@@ -4134,18 +4205,10 @@ function startApp(){
 (function(){
   if('serviceWorker' in navigator){try{navigator.serviceWorker.getRegistrations().then(function(rs){rs.forEach(function(r){try{r.unregister();}catch(e){}});});if(window.caches&&caches.keys){caches.keys().then(function(ks){ks.forEach(function(k){try{caches.delete(k);}catch(e){}});});}}catch(e){}}
   var isApp=false; try{ isApp=((new URLSearchParams(location.search).get('app')==='1')||/^\/app\/?$/.test(location.pathname)); }catch(e){}
-  if(isApp){
-    var saved=null; try{ saved=JSON.parse(sessionStorage.getItem('hci_session')||'null'); }catch(e){}
-    if(saved&&saved.username&&saved.role&&saved.role!=='demo'){ CURRENT_USER=saved; enterApp(); return; }
-    fetch('/api/accounts',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'status'})})
-      .then(function(r){return r.json();})
-      .then(function(d){
-        if(d&&d.ok&&!d.hasUsers){ showForm('formSetup'); var s=document.getElementById('authSubtitle'); if(s)s.textContent='Create your owner account'; }
-        else{ showForm('formLogin'); }
-      })
-      .catch(function(){ showForm('formLogin'); if(typeof authErr==='function')authErr('Could not reach the server.'); });
-    return;
-  }
+  // One login entry point: sign-in buttons, come-backs from Google/Facebook and
+  // the email link, and the website's "Start free" links (/app?signup=1), which
+  // used to open the login form because this block never looked at them.
+  if(isApp){ bootAuth(); return; }
   // DEMO: skip login, auto-enter with sample data
   CURRENT_USER={username:'demo',name:'Demo User',role:'manager'};
   document.getElementById('authWrap').style.display='none';

@@ -18,6 +18,14 @@
   ],
   "rewrites": [
     {
+      "source": "/auth/:provider/callback",
+      "destination": "/api/oauth?provider=:provider&step=callback"
+    },
+    {
+      "source": "/auth/:provider",
+      "destination": "/api/oauth?provider=:provider&step=start"
+    },
+    {
       "source": "/quote",
       "destination": "/quote.html"
     },

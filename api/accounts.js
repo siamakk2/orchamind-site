@@ -1,4 +1,5 @@
 var crypto = require('crypto');
+var authTokens = require('../lib/auth-tokens.js');
 
 function readBody(req) {
   var b = req.body;
@@ -158,12 +159,39 @@ module.exports = async function handler(req, res) {
       return res.status(200).json({ ok: true, user: { username: u, name: name, role: 'owner' } });
     }
 
+    // After Google / Facebook / an email link (api/oauth.js) the browser comes
+    // back to /app with a session cookie; this turns it into the same user
+    // object the password login returns.
+    if (action === 'whoami') {
+      var ws = verifyToken(readCookie());
+      if (!ws) {
+        var pm = String(req.headers.cookie || '').match(/(?:^|;\s*)orcha_pending=([^;]+)/);
+        var pend = pm ? authTokens.read(KEY, 'paused', decodeURIComponent(pm[1])) : null;
+        if (pend && pend.u) {
+          res.setHeader('Set-Cookie', 'orcha_pending=; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=0');
+          var prow = await getUser(pend.u);
+          if (prow) { var pUrl = await stripePortal(prow.stripe_customer, 'https://orchamind.com/app'); return res.status(200).json({ ok: true, paused: true, user: { username: prow.username, name: prow.name, role: prow.role || 'member', company: prow.company || '', paused: true, portalUrl: pUrl } }); }
+        }
+        return res.status(200).json({ ok: false, error: 'Please sign in again.' });
+      }
+      var wrow = await getUser(ws.username);
+      if (!wrow) return res.status(200).json({ ok: false, error: 'Please sign in again.' });
+      var wbrand = wrow;
+      if (wrow.owner && wrow.owner !== wrow.username) { try { var wo = await getUser(wrow.owner); if (wo) wbrand = wo; } catch (e) {} }
+      return res.status(200).json({ ok: true, user: { username: wrow.username, name: wrow.name, role: wrow.role || 'member', company: wrow.company || wbrand.company || '', profile: wbrand.profile || null, mustChange: false, billing: !!wrow.stripe_customer, mfaEnabled: !!wrow.mfa_enabled } });
+    }
+
     if (action === 'register') {
       var ru = (body.username || '').toLowerCase().trim();
       var rname = (body.name || '').trim();
       var rpass = body.password || '';
       var rco = (body.company || '').trim();
       var remail = (body.email || '').trim();
+      // Signing up with Google/Facebook: the email comes from the signed token
+      // (it was verified by the provider) and there is no password to type.
+      var sso = body.sso ? authTokens.read(KEY, 'sso-signup', String(body.sso)) : null;
+      if (body.sso && !sso) return res.status(200).json({ ok: false, error: 'That sign-up link has expired. Please tap Continue with Google or Facebook again.' });
+      if (sso) { remail = sso.email; rpass = crypto.randomBytes(24).toString('hex'); }
       if (!ru) { ru = await deriveUsername(remail, rco); }
       if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(remail)) return res.status(200).json({ ok: false, error: 'Enter a valid email address - that is how you will sign in.' });
       if (await getUserByEmail(remail)) return res.status(200).json({ ok: false, error: 'That email already has an Orchamind account. Try logging in, or use Forgot password.' });
@@ -197,7 +225,7 @@ module.exports = async function handler(req, res) {
       var insR = await sbFetch(base + '/accounts', { method: 'POST', headers: H, body: JSON.stringify(acctRow) });
       if (!insR.ok) { var erR = await insR.text(); return res.status(200).json({ ok: false, error: 'Could not create your account. ' + erR.slice(0, 140) }); }
       setSess(ru, 'owner');
-      try { await sbFetch(base + '/activity_log', { method: 'POST', headers: H, body: JSON.stringify({ type: 'signup', username: ru, detail: (rco || ru) + ' created a free account' }) }); } catch (e) {}
+      try { await sbFetch(base + '/activity_log', { method: 'POST', headers: H, body: JSON.stringify({ type: 'signup', username: ru, detail: (rco || ru) + ' created a free account' + (sso ? ' (with ' + (sso.p === 'facebook' ? 'Facebook' : 'Google') + ')' : '') }) }); } catch (e) {}
       if (prof.referredBy) { try { await sbFetch(base + '/activity_log', { method: 'POST', headers: H, body: JSON.stringify({ type: 'referral', username: prof.referredBy, detail: (rco || ru) + ' joined Orchamind via your invite' }) }); } catch (e) {} }
       return res.status(200).json({ ok: true, user: { username: ru, name: rname || rco, role: 'owner', company: rco, profile: prof, mustChange: false, billing: !!stripeSub, trialEnd: trialEnd } });
     }
