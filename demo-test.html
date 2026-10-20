@@ -5057,9 +5057,7 @@ function _planApply(text,msg){
   if(_planGeom&&obj.totalSqft){_planGeom.totalSqft=estNum(obj.totalSqft);}
   // Honesty flag: if the notes/assumptions say the upload was elevation-only (no floor plan),
   // the geometry is an approximation, not a read of the actual room layout — label it so.
-  var srcTxt=((obj.notes||'')+' '+((obj.assumptions||[]).join(' '))).toLowerCase();
-  _planGeomApprox = (!obj.geometry || !obj.geometry.rooms || obj.geometry.rooms.length<2)
-    || /elevation-only|no floor plan|proportional reading|area schedule was provided|no floor plan or area/.test(srcTxt);
+  _planGeomApprox = _planIsApprox(obj, window._planExtracted);
   _p3dGrow=0;_p3dGrowT0=Date.now();_plan3dBtn();
   _planRenderQ(obj.questions||[]);
   _planRenderCompliance(obj.complianceFlags||[]);
@@ -5068,6 +5066,20 @@ function _planApply(text,msg){
   // it, so the two can be compared before anything depends on it. The whole call
   // is guarded: a bug in here must never cost the contractor their estimate.
   try{ _planRenderQuantities(); }catch(e){ try{console.warn('[qty]',e&&e.message);}catch(_){ } }
+}
+// Is the 3D preview a guess from elevations only? Decided by what the plan
+// reader actually found on the sheets, not by searching the AI's notes for
+// phrases ("no floor plan dimension for the porch" used to trip it on a full
+// floor plan read).
+function _planIsApprox(obj, ext){
+  obj=obj||{}; ext=ext||{};
+  var geomOk=!!(obj.geometry&&obj.geometry.rooms&&obj.geometry.rooms.length>=2);
+  if(!geomOk) return true;
+  var indoor=(ext.rooms||[]).filter(function(r){ return r&&r.name&&!/porch|patio|deck|garage|carport|terrace|balcony/i.test(r.name); });
+  var floorSheet=(ext.sheets||[]).some(function(sh){ return sh&&sh.type==='floorplan'; });
+  if(indoor.length>=2||floorSheet) return false;                // a real floor plan was read
+  var srcTxt=((obj.notes||'')+' '+((obj.assumptions||[]).join(' '))).toLowerCase();
+  return /elevation-only|elevations only|no floor plan (was|sheet)|without a floor plan/.test(srcTxt);
 }
 function _planRenderQuantities(){
   var box=document.getElementById('estPlanQty'); if(!box) return;

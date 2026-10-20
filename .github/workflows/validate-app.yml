@@ -85,3 +85,6 @@ jobs:
 
       - name: "Photoreal pictures - app tab"
         run: node scripts/test-visuals-ui.js
+
+      - name: "3D preview approximation warning only when no floor plan was read"
+        run: node scripts/test-approx-flag.js
