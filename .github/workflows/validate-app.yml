@@ -79,3 +79,9 @@ jobs:
 
       - name: "Sign in with Google, Facebook, email link - login screen"
         run: node scripts/test-oauth-ui.js
+
+      - name: "Photoreal pictures - prompts, sheets, engine"
+        run: node scripts/test-plan-visuals.js
+
+      - name: "Photoreal pictures - app tab"
+        run: node scripts/test-visuals-ui.js

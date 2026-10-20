@@ -5,7 +5,7 @@
 // Single-call generation: no asset polling, no third-party render fees.
 var BUCKET = {};
 var WINDOW_MS = 10 * 60 * 1000;
-var MAX_PER_WINDOW = 6; // renders are cost-capped hard per IP
+var MAX_PER_WINDOW = 9; // cost-capped per IP: an estimate's 3 views (exterior, inside, 3D plan) x a retry each
 
 function allowedOrigin(o) {
   if (!o) return true;
@@ -43,7 +43,7 @@ module.exports = async function handler(req, res) {
     let body = req.body;
     if (typeof body === 'string') { try { body = JSON.parse(body); } catch (e) { body = {}; } }
     if (!body || typeof body !== 'object') body = {};
-    var prompt = (body.prompt || '').toString().slice(0, 1500);
+    var prompt = (body.prompt || '').toString().slice(0, 2400);
     if (!prompt) return res.status(200).json({ error: 'Nothing to render.' });
 
     var apiKey = process.env.GEMINI_API_KEY;
@@ -52,12 +52,30 @@ module.exports = async function handler(req, res) {
       return res.status(429).json({ error: 'Render limit reached — give it a few minutes.' });
     }
 
-    // Geometry anchor: massing-model snapshot (data URL) or a public reference URL.
+    // Geometry anchor. Either the contractor's own drawing sheets (mode
+    // "drawings": floor plan / elevation images, up to 3) or the app's massing
+    // snapshot (default). Drawings beat the massing model: they carry the real
+    // window positions, materials and proportions.
     var parts = [];
     var anchored = false;
+    var drawings = body.mode === 'drawings' && Array.isArray(body.references);
+    if (drawings) {
+      var total = 0;
+      body.references.slice(0, 3).forEach(function (ref) {
+        ref = String(ref || '');
+        if (ref.indexOf('data:image') !== 0 || ref.length > 2500000 || total + ref.length > 3900000) return;
+        total += ref.length;
+        var c = ref.indexOf(',');
+        parts.push({ inlineData: { mimeType: ref.substring(5, ref.indexOf(';')) || 'image/jpeg', data: ref.substring(c + 1) } });
+        anchored = true;
+      });
+      if (!anchored) drawings = false;
+    }
     var refData = (body.reference || '').toString();
     var refUrl = (body.referenceUrl || '').toString();
-    if (refData.indexOf('data:image') === 0 && refData.length <= 2500000) {
+    if (drawings) {
+      // handled above
+    } else if (refData.indexOf('data:image') === 0 && refData.length <= 2500000) {
       var comma = refData.indexOf(',');
       var mime = refData.substring(5, refData.indexOf(';'));
       parts.push({ inlineData: { mimeType: mime || 'image/jpeg', data: refData.substring(comma + 1) } });
@@ -72,11 +90,13 @@ module.exports = async function handler(req, res) {
         }
       }
     }
-    parts.push({ text: (anchored
+    parts.push({ text: (drawings
+      ? 'The attached images are THIS building\'s own architectural drawings (floor plan and/or elevations). Treat them as the authority: same footprint and proportions, same roof forms and heights, same window and door positions, same exterior materials and colors. Never add rooms, floors, wings or windows the drawings do not show. '
+      : anchored
       ? 'The attached image is the verified massing model of the building — its exact volumes, proportions, roof forms, glazing bands and porch. Generate a photorealistic render of THIS building, matching the massing precisely. '
       : '') + prompt });
 
-    console.log('[render] req; anchored:', anchored, 'prompt chars:', prompt.length);
+    console.log('[render] req; anchored:', anchored, 'drawings:', drawings, 'refs:', parts.length, 'prompt chars:', prompt.length);
     // Model chain. gemini-2.5-flash-image reached its published shutdown date on
     // 2026-10-02; gemini-3.1-flash-image is the GA successor (2K/4K output,
     // multi-reference). We try the current model first and fall back only if the
@@ -114,7 +134,7 @@ module.exports = async function handler(req, res) {
       return res.status(200).json({ error: 'Render did not complete — please try again.' });
     }
     console.log('[render] ok; anchored:', anchored, 'bytes:', img.length);
-    return res.status(200).json({ url: img, anchored: anchored });
+    return res.status(200).json({ url: img, anchored: anchored, drawings: drawings });
   } catch (err) {
     console.error('[render] exception:', err.message);
     return res.status(200).json({ error: 'Render error: ' + err.message });
