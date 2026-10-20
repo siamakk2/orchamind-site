@@ -96,6 +96,9 @@ module.exports = async function handler(req, res) {
       ? 'The attached image is the verified massing model of the building — its exact volumes, proportions, roof forms, glazing bands and porch. Generate a photorealistic render of THIS building, matching the massing precisely. '
       : '') + prompt });
 
+    // Picture shape. A 96-ft-long house squeezed into a square comes out too deep.
+    var ASPECTS = ['1:1', '4:3', '3:4', '3:2', '2:3', '16:9', '9:16', '21:9'];
+    var aspect = ASPECTS.indexOf(body.aspect) > -1 ? body.aspect : '';
     console.log('[render] req; anchored:', anchored, 'drawings:', drawings, 'refs:', parts.length, 'prompt chars:', prompt.length);
     // Model chain. gemini-2.5-flash-image reached its published shutdown date on
     // 2026-10-02; gemini-3.1-flash-image is the GA successor (2K/4K output,
@@ -108,9 +111,17 @@ module.exports = async function handler(req, res) {
       r = await fetch('https://generativelanguage.googleapis.com/v1beta/models/' + usedModel + ':generateContent', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'x-goog-api-key': apiKey },
-        body: JSON.stringify({ contents: [{ parts: parts }] })
+        body: JSON.stringify(aspect ? { contents: [{ parts: parts }], generationConfig: { imageConfig: { aspectRatio: aspect } } } : { contents: [{ parts: parts }] })
       });
       data = await r.json();
+      if (aspect && data && data.error && /aspect|imageConfig|image_config/i.test(data.error.message || '')) {
+        console.warn('[render] aspect not accepted, retrying without:', aspect);
+        aspect = '';
+        r = await fetch('https://generativelanguage.googleapis.com/v1beta/models/' + usedModel + ':generateContent', {
+          method: 'POST', headers: { 'Content-Type': 'application/json', 'x-goog-api-key': apiKey },
+          body: JSON.stringify({ contents: [{ parts: parts }] }) });
+        data = await r.json();
+      }
       var emsg = (data && data.error && (data.error.message || '')) || '';
       var unknownModel = r.status === 404 || /not found|not supported|unsupported model|is not available|invalid model/i.test(emsg);
       if (!unknownModel) break;               // real answer (or a real error) — stop here
@@ -134,7 +145,7 @@ module.exports = async function handler(req, res) {
       return res.status(200).json({ error: 'Render did not complete — please try again.' });
     }
     console.log('[render] ok; anchored:', anchored, 'bytes:', img.length);
-    return res.status(200).json({ url: img, anchored: anchored, drawings: drawings });
+    return res.status(200).json({ url: img, anchored: anchored, drawings: drawings, aspect: aspect || null });
   } catch (err) {
     console.error('[render] exception:', err.message);
     return res.status(200).json({ error: 'Render error: ' + err.message });

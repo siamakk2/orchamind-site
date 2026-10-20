@@ -5694,7 +5694,7 @@ function epvRenderView(kind){
   _epvSheetRefs(kind).then(function(refs){
     var body;
     if(refs.length&&facts){
-      body={prompt:OrchaVisuals.prompt(kind,facts),mode:'drawings',references:refs};
+      body={prompt:OrchaVisuals.prompt(kind,facts),mode:'drawings',references:refs,aspect:OrchaVisuals.aspect(kind,facts)};
     } else if(kind==='exterior'){
       // No drawings to show it: anchor on the verified massing model, as before.
       var ref=null;

@@ -64,6 +64,7 @@ var napaFiles = [{ f: { name: 'elev.jpg' }, kind: 'auto', isPdf: false }, { f: {
   check('3D plan is drawn from the contractor\'s FLOOR PLAN sheet only', p.mode === 'drawings' && p.references.length === 1 && /plan\.png/.test(p.references[0]));
   check('...told exactly 2 bedrooms, by name', /Exactly 2 bedrooms \(Bedroom 2; Master Bedroom\)/.test(p.prompt));
   check('...with the contractor\'s finish notes', /dark cedar siding/.test(p.prompt));
+  check('...in a wide picture that fits a 96 x 27 ft house', p.aspect === '21:9');
   check('the picture appears, labelled as drawn from these plans', doc.getElementById('epvPhoto').src.indexOf('data:image/png') === 0 && /3D floor plan · drawn from these plans/.test(doc.getElementById('epvPhotoLabel').textContent));
   check('the button steps aside and a Save link appears', doc.getElementById('epvRenderBtn').style.display === 'none' && doc.getElementById('epvPhotoSave').style.display === '' && doc.getElementById('epvPhotoSave').getAttribute('download') === 'orchamind-plan3d.jpg');
   check('the 3D plan choice gets a "done" dot', !!doc.querySelector('[data-shot="plan3d"] .dot') && !doc.querySelector('[data-shot="exterior"] .dot'));

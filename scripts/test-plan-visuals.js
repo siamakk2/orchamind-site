@@ -57,6 +57,14 @@ check('a huge room list still fits the limit', V.prompt('plan3d', V.facts(bigRoo
 var threw = false; try { V.prompt('aerial', f); } catch (e) { threw = true; }
 check('unknown view is refused', threw);
 
+console.log('\npicture shape');
+check('Napa 96 x 27 ft: a wide 21:9 3D plan, not a square', V.aspect('plan3d', f) === '21:9');
+check('depth not printed: worked out from the area (2,940 / 96 ft)', V.aspect('plan3d', V.facts({ totalPrintedSqft: 2940, stories: 1, overallDims: { widthFt: 96 } })) === '21:9');
+check('a 40 x 30 ft house gets 4:3', V.aspect('plan3d', V.facts({ overallDims: { widthFt: 40, depthFt: 30 } })) === '4:3');
+check('a deep narrow lot house is not stretched wrong', V.aspect('plan3d', V.facts({ overallDims: { widthFt: 25, depthFt: 60 } })) === '21:9');
+check('no size known: 4:3', V.aspect('plan3d', V.facts({})) === '4:3');
+check('outside and inside photos: 16:9', V.aspect('exterior', f) === '16:9' && V.aspect('interior', f) === '16:9');
+
 console.log('\nwhich sheets the engine sees');
 var staged = [{ kind: 'auto', isPdf: false }, { kind: 'auto', isPdf: false }];
 var ex = V.pickSheets('exterior', staged, napa.sheets);
@@ -96,6 +104,10 @@ function call(body, ip) {
   check('bad references: falls back to a plain render, never crashes', r.body.drawings === false && sent.contents[0].parts.length === 1);
   r = await call({ prompt: 'x', reference: jpg }, '3.3.3.3');
   check('old massing-model requests still work as before', /verified massing model/.test(sent.contents[0].parts[1].text) && r.body.anchored === true);
+  await call({ prompt: 'x', aspect: '21:9' }, '6.6.6.6');
+  check('engine passes the picture shape to the model', sent.generationConfig && sent.generationConfig.imageConfig.aspectRatio === '21:9');
+  await call({ prompt: 'x', aspect: '99:1' }, '7.7.7.7');
+  check('an unknown shape is ignored, never sent', !sent.generationConfig);
   var big = 'data:image/jpeg;base64,' + 'A'.repeat(2000000);
   await call({ prompt: 'x', mode: 'drawings', references: [big, big, big] }, '4.4.4.4');
   check('oversized set is trimmed to stay under the upload limit', sent.contents[0].parts.filter(function (p) { return p.inlineData; }).length === 1);
