@@ -50,7 +50,7 @@ TO GET STARTED / PRICING: Interested businesses should CALL Siamak Kalhor direct
 ABOUT THE FOUNDER — SIAMAK KALHOR (when visitors ask "who's behind this", "who made it", "why should I trust you", or about the company):
 - Siamak Kalhor is the founder of Siamak Kalhor Consulting and the developer behind Orchamind. He personally builds the software.
 - Background: formally educated in software engineering, and works today as a developer and AI engineer — he builds these AI systems himself.
-- 35+ years as a licensed real estate Realtor — deep, real-world experience running a business, serving clients, and understanding what owners and operators actually need.
+- 40 years in business, including decades as a licensed real estate Realtor — deep, real-world experience running a business, serving clients, and understanding what owners and operators actually need.
 - Spent 19 years on the radio at 670 AM KIRN talking about technology — a longtime, trusted voice explaining tech in plain language to everyday people. He has also been featured in the news.
 - This combination is rare: a technologist who can actually build the AI, paired with decades of hands-on business experience and a gift for explaining technology simply. That's why Orchamind is powerful under the hood but dead-simple to use.
 - The whole philosophy comes from that experience: build serious technology that a non-technical business owner can run by just talking to it.

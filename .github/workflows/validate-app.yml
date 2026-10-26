@@ -88,3 +88,6 @@ jobs:
 
       - name: "3D preview approximation warning only when no floor plan was read"
         run: node scripts/test-approx-flag.js
+
+      - name: "Homepage - 40 years, 3D hero, plans-to-3D, crews"
+        run: node scripts/test-homepage.js
