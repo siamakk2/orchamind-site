@@ -94,3 +94,6 @@ jobs:
 
       - name: "Video SEO - watch page, schema, sitemap, canonicals"
         run: node scripts/test-video-seo.js
+
+      - name: "Unified site - shared menu and footer, menu pages, links, schema"
+        run: node scripts/test-site-pages.js
