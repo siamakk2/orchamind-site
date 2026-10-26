@@ -385,6 +385,13 @@ section{padding:90px 0;}
     .audit-text h2{font-size:26px;}
   }
 
+
+.ex-grid{display:grid;grid-template-columns:minmax(0,1.25fr) minmax(0,.75fr);gap:56px;align-items:center;max-width:1100px;}
+.ex-vid{margin:0;justify-self:center;width:100%;max-width:320px;}
+.ex-vid video{display:block;width:100%;height:auto;aspect-ratio:9/16;border-radius:22px;background:#0A1628;box-shadow:0 30px 70px rgba(10,22,40,.28);border:1px solid var(--line);}
+.ex-vid figcaption{margin-top:12px;text-align:center;font-size:13.5px;color:var(--slate);}
+.ex-vid figcaption a{color:var(--signal);font-weight:600;}
+@media(max-width:900px){.ex-grid{grid-template-columns:1fr;gap:30px;text-align:center}.ex-grid .section-title{margin-left:auto!important;margin-right:auto!important}.ex-vid{max-width:280px}}
 /* ===== 2026-10 refresh: construction hero, 3D build stage, plans-to-3D, crews ===== */
 .hero-bg{position:absolute;inset:0;z-index:0;overflow:hidden;}
 .hero-bg img{width:100%;height:100%;object-fit:cover;object-position:70% 40%;opacity:.9;filter:saturate(1.1);}
@@ -766,9 +773,10 @@ footer a:hover{color:#1E6FE0;}
 
 
 <section class="explainer" id="what" style="background:var(--white);">
-  <div class="wrap" style="max-width:900px;text-align:center;">
-    <div class="section-eyebrow" style="text-align:center;">In plain English</div>
-    <h2 class="section-title" style="margin:0 auto 24px;max-width:20ch;">What is Orchamind?</h2>
+  <div class="wrap ex-grid">
+    <div class="ex-text">
+    <div class="section-eyebrow">In plain English</div>
+    <h2 class="section-title" style="margin:0 0 24px;max-width:20ch;">What is Orchamind?</h2>
     <p style="font-size:22px;line-height:1.5;color:var(--ink);margin-bottom:26px;font-weight:500;">
       It's like having the smartest office manager you've ever had — one who <b>remembers every job, every worker, and every hour</b>, never forgets anything, and works around the clock.
     </p>
@@ -778,6 +786,11 @@ footer a:hover{color:#1E6FE0;}
     <p style="font-size:18px;line-height:1.6;color:var(--slate);">
       No spreadsheets. No training. No tech skills. <b style="color:var(--ink);">If you can send a text message, you can run your entire operation with it.</b>
     </p>
+    </div>
+    <figure class="ex-vid">
+      <video controls playsinline preload="none" poster="/media/video/meet-orchamind-540.jpg" width="720" height="1280" aria-label="Meet Orchamind: the AI office manager you talk to (30 seconds)"><source src="/media/video/meet-orchamind.mp4" type="video/mp4"></video>
+      <figcaption>Meet Orchamind in 30 seconds &middot; <a href="/videos/meet-orchamind/">watch page &amp; transcript</a></figcaption>
+    </figure>
   </div>
 </section>
 

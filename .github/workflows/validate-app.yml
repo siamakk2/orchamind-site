@@ -91,3 +91,6 @@ jobs:
 
       - name: "Homepage - 40 years, 3D hero, plans-to-3D, crews"
         run: node scripts/test-homepage.js
+
+      - name: "Video SEO - watch page, schema, sitemap, canonicals"
+        run: node scripts/test-video-seo.js

@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-  <url><loc>https://orchamind.com/</loc><lastmod>2026-06-28</lastmod><changefreq>weekly</changefreq><priority>1.0</priority></url>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:video="http://www.google.com/schemas/sitemap-video/1.1">
+  <url><loc>https://orchamind.com/</loc><lastmod>2026-10-25</lastmod><changefreq>weekly</changefreq><priority>1.0</priority></url>
   <url><loc>https://orchamind.com/proposal-generator/</loc><lastmod>2026-06-28</lastmod><changefreq>monthly</changefreq><priority>0.9</priority></url>
   <url><loc>https://orchamind.com/how-to-write-construction-bid/</loc><lastmod>2026-06-28</lastmod><changefreq>monthly</changefreq><priority>0.8</priority></url>
   <url><loc>https://orchamind.com/how-to-estimate-a-job/</loc><lastmod>2026-06-28</lastmod><changefreq>monthly</changefreq><priority>0.8</priority></url>
@@ -28,4 +28,18 @@
   <url><loc>https://orchamind.com/features/materials-calculator/</loc><lastmod>2026-08-04</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>
   <url><loc>https://orchamind.com/contact/</loc><lastmod>2026-09-05</lastmod><changefreq>monthly</changefreq><priority>0.8</priority></url>
   <url><loc>https://orchamind.com/audit</loc><lastmod>2026-09-22</lastmod><changefreq>monthly</changefreq><priority>0.8</priority></url>
+  <url>
+    <loc>https://orchamind.com/videos/meet-orchamind/</loc>
+    <lastmod>2026-10-25</lastmod>
+    <video:video>
+      <video:thumbnail_loc>https://orchamind.com/media/video/meet-orchamind.jpg</video:thumbnail_loc>
+      <video:title>Meet Orchamind: the AI office manager you talk to</video:title>
+      <video:description>A 30-second look at Orchamind: run your construction jobs by talking to your phone, get a morning briefing and Risk Radar alerts, and write estimates from a photo of the plans.</video:description>
+      <video:content_loc>https://orchamind.com/media/video/meet-orchamind.mp4</video:content_loc>
+      <video:player_loc>https://orchamind.com/videos/meet-orchamind/</video:player_loc>
+      <video:duration>30</video:duration>
+      <video:publication_date>2026-10-25T20:30:00-07:00</video:publication_date>
+      <video:family_friendly>yes</video:family_friendly>
+    </video:video>
+  </url>
 </urlset>
